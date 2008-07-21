@@ -340,12 +340,12 @@ object ScalalaValues {
     
     override def get(row : Int, col : Int) : Double = {
       check(row,col);
-      return vector.get(row);
+      return vector.get(col);
     }
     
     override def set(row : Int, col : Int, value : Double) : Unit = {
       check(row,col);
-      vector.set(row, value);
+      vector.set(col, value);
     }
     
     override def elements : Iterator[MatrixEntry] = {
