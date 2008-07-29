@@ -234,6 +234,16 @@ object Scalala {
     return m
   }
   
+  def norm(v : Vector, n : Int) : Double = {
+    n match {
+      case 1 => v.elements.map(x => Math.abs(x.get)).reduceLeft(_+_);
+      case 2 => v.elements.map(x => x.get * x.get).reduceLeft(_+_);
+      case e if (e % 2 == 0) => v.elements.map(x => Math.pow(x.get,e)).reduceLeft(_+_);
+      case e if (e % 2 == 1) => v.elements.map(x => Math.pow(Math.abs(x.get),e)).reduceLeft(_+_);
+      case _ => throw new UnsupportedOperationException()
+    }
+  }
+  
   /** Turns the given matrices into a block diagonal matrix */
 //  def blkdiag(blocks : Seq[Matrix]) : Matrix = {
 //    def zeros : Array[Matrix] =
