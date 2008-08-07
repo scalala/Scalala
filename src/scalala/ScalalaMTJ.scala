@@ -22,7 +22,7 @@ package scalala
 import no.uib.cipr.matrix.{Matrices => MTJMatrices}
 import no.uib.cipr.matrix.{Matrix => MTJMatrix,MatrixEntry => MTJMatrixEntry}
 import no.uib.cipr.matrix.{DenseMatrix => MTJDenseMatrix, AbstractMatrix => MTJAbstractMatrix}
-import no.uib.cipr.matrix.{Vector => MTJVector, VectorEntry => MTJVectorEntry, DenseVector => MTJDenseVector}
+import no.uib.cipr.matrix.{Vector => MTJVector, VectorEntry => MTJVectorEntry, DenseVector => MTJDenseVector, AbstractVector => MTJAbstractVector}
 import no.uib.cipr.matrix.sparse.{SparseVector => MTJSparseVector,CompColMatrix => MTJCompColMatrix}
 
 /**
@@ -56,20 +56,56 @@ object ScalalaMTJ {
         override def get(row : Int, col : Int) = matrix.get(row,col);
         override def set(row : Int, col : Int, x : Double) = matrix.set(row,col,x);
         override def iterator : java.util.Iterator[MTJMatrixEntry] = {
-          val iter = matrix.elements
+          val iter = matrix.elements;
           
-          var _entry : MatrixEntry = null
+          var _entry : MatrixEntry = null;
           
           val entry = new MTJMatrixEntry {
             override def row = _entry.row;
             override def column = _entry.col;
             override def get = _entry.get;
             override def set(x: Double) = _entry.set(x);
-            override def toString = _entry.toString
+            override def toString = _entry.toString;
           }
           
           return new java.util.Iterator[MTJMatrixEntry] {
-            override def hasNext = iter.hasNext
+            override def hasNext = iter.hasNext;
+            override def next = {
+              _entry = iter.next;
+              entry;
+            }
+            override def remove =
+              throw new UnsupportedOperationException;
+          }
+        }
+      }
+    }
+  }
+  
+  def MTJVector[V<:MTJVector](wrapped : MTJVectorWrapper[V]) : V =
+    wrapped.vector;
+  
+  def MTJVector[V<:MTJVector](vector : Vector) : MTJVector = {
+    if (vector.isInstanceOf[MTJVectorWrapper[V]]) {
+      vector.asInstanceOf[MTJVectorWrapper[V]].vector;
+    } else {
+      new MTJAbstractVector(vector.size) {
+        override def get(index : Int) = vector.get(index);
+        override def set(index : Int, value : Double) = vector.set(index,value);
+        override def iterator : java.util.Iterator[MTJVectorEntry] = {
+          val iter = vector.elements;
+          
+          var _entry : VectorEntry = null;
+          
+          val entry = new MTJVectorEntry {
+            override def index = _entry.index;
+            override def get = _entry.get;
+            override def set(x : Double) = _entry.set(x);
+            override def toString = _entry.toString;
+          }
+          
+          return new java.util.Iterator[MTJVectorEntry] {
+            override def hasNext = iter.hasNext;
             override def next = {
               _entry = iter.next;
               entry;
@@ -87,7 +123,7 @@ object ScalalaMTJ {
   //
   
   /** Implicit promotion of MTJMatrix to a wrapped version */
-  implicit def MTJMatrixWrapper[M<:MTJMatrix](matrix : M) : MTJMatrixWrapper[M] =
+  implicit def ScalalaMatrix[M<:MTJMatrix](matrix : M) : MTJMatrixWrapper[M] =
     new MTJMatrixWrapper(matrix);
   
   /** Wraps an underlying MTJMatrix as a Matrix */
@@ -123,7 +159,7 @@ object ScalalaMTJ {
   }
   
   /** Implicit promotion of MTJVector to a wrapped version */
-  implicit def MTJVectorWrapper[V<:MTJVector](vector : V) : MTJVectorWrapper[V] =
+  implicit def ScalalaVector[V<:MTJVector](vector : V) : MTJVectorWrapper[V] =
     new MTJVectorWrapper(vector);
   
   /** Wraps an underlying MTJVector as a Vector */
@@ -155,7 +191,7 @@ object ScalalaMTJ {
   }
 }  
 
-object RichMTJObjects {
+object RichMTJ {
   /** The given scalar as an immutable matrix of the given size */
   case class ScalarMatrix(value : Double, rows : Int, cols : Int) extends MTJAbstractMatrix(rows,cols) {
     override def get(row : Int, col : Int) : Double = {
