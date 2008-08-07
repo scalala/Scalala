@@ -244,19 +244,24 @@ object Scalala {
     }
   }
   
-  /** Turns the given matrices into a block diagonal matrix */
-//  def blkdiag(blocks : Seq[Matrix]) : Matrix = {
-//    def zeros : Array[Matrix] =
-//      blocks.map(m => ScalarMatrix(0.0, m.rows, m.cols)).toArray
-//      
-//    def row(pos : Int) : Array[Matrix] = {
-//      val row = zeros
-//      row(pos) = blocks(pos)
-//      row
-//  }
-//    
-//    new BlockMatrix((0 until blocks.length).map{row}.toArray)
-//  }
+  /**
+   * Turns the given matrices into a block diagonal matrix.
+   * TODO: This currently involves too much conversion to MTJ types.
+   */
+  def blkdiag(blocks : Seq[Matrix]) : Matrix = {
+    import RichMTJ._
+    
+    def zeros : Array[no.uib.cipr.matrix.Matrix] =
+      blocks.map(m => ScalarMatrix(0.0, m.rows, m.cols)).toArray
+      
+    def row(pos : Int) = {
+      val row = zeros
+      row(pos) = MTJMatrix(blocks(pos))
+      row
+    }
+    
+    new BlockMatrix((0 until blocks.length).map{row}.toArray)
+  }
   
   //
   // Plotting
