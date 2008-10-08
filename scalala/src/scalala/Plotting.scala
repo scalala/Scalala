@@ -237,16 +237,32 @@ object Plotting {
     plot.setRangeAxis(yaxis)
     
     /** The plot title */
-    private var title_ : String = ""
+    // private var title_ : String = ""
     def title_=(str : String) : Unit = {
-      title_ = str
-      refresh()
+      chart.setTitle(str);
+      //title_ = str
+      //refresh()
     }
-    def title : String = title_
+    def title : String = chart.getTitle.getText;
 
     /** If we show a legend */
     private var legend_ : Boolean = false
     def legend_=(show : Boolean) : Unit = {
+      if (show != legend_) {
+        chart.removeLegend();
+        if (show) {
+          import org.jfree.chart.title._
+          import org.jfree.ui._
+          import org.jfree.chart.block._
+          import java.awt.Color;
+          val legend = new LegendTitle(this.plot);
+          legend.setMargin(new RectangleInsets(1.0, 1.0, 1.0, 1.0));
+          legend.setFrame(new LineBorder());
+          legend.setBackgroundPaint(Color.white);
+          legend.setPosition(RectangleEdge.BOTTOM);
+          chart.addSubtitle(legend);
+        }
+      }
       legend_ = show
       refresh()
     }
@@ -269,9 +285,12 @@ object Plotting {
       return series_
     }
 
-    /** Returns a new ChartPanel for this chart */
-    def panel = new ChartPanel(
-          new JFreeChart(title, JFreeChart.DEFAULT_TITLE_FONT, plot, legend))
+    /** The JFreeChart for this plot */
+    lazy val chart =
+      new JFreeChart(null, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
+    
+    /** The ChartPanel for this plot */
+    lazy val panel = new ChartPanel(chart);
     
     /** Shows the given chart */
     def refresh() = figure.refresh()
