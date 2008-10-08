@@ -35,9 +35,9 @@ object Scalala {
   implicit var _scalala_pool = new EvaluationPool();
   
   /** Implicit graphics context */
-  implicit var _scalab_figures = new Plotting.Figures();
-  implicit def _scalab_figure = _scalab_figures.figure;
-  implicit def _scalab_xyplot = _scalab_figures.figure.plot;
+  implicit var _scalala_figures = new Plotting.Figures();
+  implicit def _scalala_figure = _scalala_figures.figure;
+  implicit def _scalala_xyplot = _scalala_figures.figure.plot;
     
   implicit def iFigure(figures : Plotting.Figures) = figures.figure;
   implicit def iXYPlot(figures : Plotting.Figures) = figures.figure.plot;
@@ -235,12 +235,16 @@ object Scalala {
   }
   
   def norm(v : Vector, n : Int) : Double = {
-    n match {
-      case 1 => v.elements.map(x => Math.abs(x.get)).reduceLeft(_+_);
-      case 2 => v.elements.map(x => x.get * x.get).reduceLeft(_+_);
-      case e if (e % 2 == 0) => v.elements.map(x => Math.pow(x.get,e)).reduceLeft(_+_);
-      case e if (e % 2 == 1) => v.elements.map(x => Math.pow(Math.abs(x.get),e)).reduceLeft(_+_);
-      case _ => throw new UnsupportedOperationException()
+    if (n == 1) {
+      return v.elements.map(x => Math.abs(x.get)).reduceLeft(_+_);
+    } else if (n == 2) {
+      return Math.sqrt(v.elements.map(x => x.get * x.get).reduceLeft(_+_));
+    } else if (n % 2 == 0) {
+      return Math.pow(v.elements.map(x => Math.pow(x.get,n)).reduceLeft(_+_),1.0/n);
+    } else if (n % 2 == 1) {
+      return Math.pow(v.elements.map(x => Math.pow(Math.abs(x.get),n)).reduceLeft(_+_), 1.0/n);
+    } else {
+      throw new UnsupportedOperationException();
     }
   }
   
@@ -281,6 +285,21 @@ object Scalala {
     figure.plot = select-1
     figure.refresh
     return figure.plot
+  }
+
+  /** Sets the title of this figure. */
+  def title(title : String)(implicit xyplot : Plotting.XYPlot) {
+    xyplot.title = title;
+  }
+  
+  /** Sets the label of the x axis */
+  def xlabel(text : String)(implicit xyplot : Plotting.XYPlot) {
+    xyplot.xaxis.setLabel(text);
+  }
+  
+  /** Sets the label of the y axis */
+  def ylabel(text : String)(implicit xyplot : Plotting.XYPlot) {
+    xyplot.yaxis.setLabel(text);
   }
   
   /**
@@ -334,6 +353,11 @@ object Scalala {
     xyplot.plot.setDataset(series,dataset)
     xyplot.plot.setRenderer(series,new org.jfree.chart.renderer.xy.XYBarRenderer)
     xyplot.refresh
+  }
+  
+  /** Plots the given y versus 1 to y.size as x with line drawn */
+  def plot(y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
+    plot(1 to y.size, y)(xyplot);
   }
   
   /** Plots the given y versus the given x with line drawn */
@@ -476,6 +500,18 @@ object Scalala {
     xyplot.plot.getDomainAxis.setUpperBound(c.cols)
     xyplot.plot.setRenderer(series, renderer)
     xyplot.refresh
+  }
+  
+  /** Sets the lower and upper bounds of the current plot. */
+  def xlim(xmin : Double, xmax : Double)(implicit xyplot : Plotting.XYPlot) {
+    xyplot.plot.getDomainAxis.setLowerBound(xmin);
+    xyplot.plot.getDomainAxis.setUpperBound(xmax);
+  }
+  
+  /** Sets the lower and upper bounds of the current plot. */
+  def ylim(ymin : Double, ymax : Double)(implicit xyplot : Plotting.XYPlot) {
+    xyplot.plot.getRangeAxis.setLowerBound(ymin);
+    xyplot.plot.getRangeAxis.setUpperBound(ymax);
   }
   
   /** For re-plotting to same figure */
