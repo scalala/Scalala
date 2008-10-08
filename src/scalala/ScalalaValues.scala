@@ -425,6 +425,8 @@ object ScalalaValues {
   //
   // Type promotions
   //
+  // TODO: fix type promotions to matrices from sequences using same trick as vector
+  //
   
   implicit def iDenseMatrixFromInts[E<:Seq[Int]](data : Seq[E]) : Matrix = {
     val numRows = data.length
@@ -452,24 +454,43 @@ object ScalalaValues {
     return matrix
   }
   
-  implicit def iDenseVectorFromArray(data : Array[Double]) : Vector = {
-    DenseVector(data)
+  implicit def iDenseVectorFromArray(data : Array[Double]) : Vector =
+    DenseVector(data);
+  
+  implicit def iDenseVectorFromArray(data : Array[Float]) : Vector =
+    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
+  
+  implicit def iDenseVectorFromArray(data : Array[Int]) : Vector =
+    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
+  
+  implicit def iDenseVectorFromArray(data : Array[Long]) : Vector =
+    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
+  
+  implicit def iDenseVectorFromArray(data : Array[Short]) : Vector =
+    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
+  
+  implicit def iDenseVectorFromArray(data : Array[Byte]) : Vector =
+    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
+  
+  implicit def iDenseVectorFromIterable[T<:AnyVal](iter : Iterable[T]) : Vector = {
+    iDenseVectorFromSeq(iter.toList);
   }
   
-  implicit def iDenseVectorFromInts(seq : Seq[Int]) : Vector = {
-    val v = DenseVector(seq.length)
-    for (i <- 0 until seq.length) {
-      v.set(i, seq(i))
+  implicit def iDenseVectorFromSeq[T<:AnyVal](seq : Seq[T]) : Vector = {
+    val v = DenseVector(seq.length);
+    
+    if (seq.length >= 1) {
+      seq(0) match {
+        case (x:Double) => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Double];
+        case (x:Float)  => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Float];
+        case (x:Int)    => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Int];
+        case (x:Long)   => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Long];
+        case (x:Short)  => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Short];
+        case (x:Byte)   => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Byte];
+      }
     }
-    return v
-  }
-  
-  implicit def iDenseVectorFromDoubles(seq : Seq[Double]) : Vector = {
-    val v = DenseVector(seq.length)
-    for (i <- 0 until seq.length) {
-      v.set(i, seq(i))
-    }
-    return v
+    
+    return v;
   }
   
 }

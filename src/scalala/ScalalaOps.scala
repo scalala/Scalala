@@ -42,6 +42,7 @@ object ScalalaOps {
   implicit def iMatrix(op : MatrixOp[Many,Many]) : Matrix = op.asMatrix;
   implicit def iColVector[O<:MatrixOp[One,Many]](op : O) : Vector = op.asVector;
   implicit def iRowVector[O<:MatrixOp[Many,One]](op : O) : Vector = op.asVector;
+  implicit def iScalar(op : MatrixOp[One,One]) : Double = op.asScalar;
   
   //
   // For composition of MatrixOps
