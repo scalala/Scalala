@@ -105,9 +105,9 @@ object ScalalaOps {
   // Cardinality of a matrix dimension for MatrixOp
   //
   
-  sealed abstract case class Cardinality
-  sealed case class One extends Cardinality
-  sealed case class Many extends Cardinality
+  sealed abstract case class Cardinality()
+  sealed case class One() extends Cardinality()
+  sealed case class Many() extends Cardinality()
   
   type CC = Cardinality
 
