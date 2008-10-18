@@ -43,6 +43,9 @@ object ScalalaMTJ {
   def DenseVector(values : Array[Double]) : Vector =
     new MTJDenseVector(values, false)
   
+  def SparseVector(size : Int) : Vector =
+    new MTJSparseVector(size, Math.min(size/10,1000));
+  
   /** Returns an MTJMatrix for the given Matrix */
   def MTJMatrix[M<:MTJMatrix](wrapped : MTJMatrixWrapper[M]) : M =
     wrapped.matrix;
