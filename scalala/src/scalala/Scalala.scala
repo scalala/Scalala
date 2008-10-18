@@ -120,7 +120,13 @@ object Scalala {
   */
   
   /** Sums the elements of a vector */
-  def sum(v : Vector) : Double = v.map(_.get).reduceLeft(_ + _)
+  def sum(v : Vector) : Double = {
+    var sum = 0.0;
+    for (e <- v) {
+      sum += e.get;
+    }
+    return sum;
+  }
   
   /** Sums the columns of the given matrix, returning a row vector */
   def sum(m : Matrix) : Matrix = sum(m, 1);
@@ -149,10 +155,22 @@ object Scalala {
   }
   
   /** The maximum element of a vector */
-  def max(v : Vector) : Double = v.map(_.get).reduceLeft(Math.max)
+  def max(v : Vector) : Double = {
+    var m = Double.MinValue;
+    for (e <- v) {
+      m = Math.max(m,e.get);
+    }
+    return m;
+  }
   
   /** The minimum element of a vector */
-  def min(v : Vector) : Double = v.map(_.get).reduceLeft(Math.min)
+  def min(v : Vector) : Double = {
+    var m = Double.MaxValue;
+    for (e <- v) {
+      m = Math.min(m,e.get);
+    }
+    return m;
+  }
   
   ////////////////////////////////////////////////////////////////////////
   //
@@ -344,8 +362,8 @@ object Scalala {
     }
     
     // smallest gap between bins
-    val width = { bins.map(_.get).elements zip (bins.map(_.get).elements drop 1) map
-      (pair => Math.abs(pair._2-pair._1)) reduceLeft Math.min }
+    val width = { bins.elements zip (bins.elements drop 1) map
+      (pair => Math.abs(pair._2.get-pair._1.get)) reduceLeft Math.min }
     
     val dataset = new org.jfree.data.xy.XYBarDataset(
       Plotting.Dataset(bins, counts), width)
