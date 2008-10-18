@@ -661,9 +661,9 @@ object ScalalaOps {
     
     print("ScalalaOps: Numeric tests ... ")
     
-    val a  : Matrix = Array(Array(7,0),Array(9,-4),Array(11,1),Array(1,1))
-    val b  : Matrix = Array(Array(1,3,-1),Array(2,3,3))
-    val ex : Matrix = Array(Array(7,21,-7),Array(1,15,-21),Array(13,36,-8),Array(3,6,2))
+    val a  : Matrix = Array[Array[Int]](Array(7,0),Array(9,-4),Array(11,1),Array(1,1))
+    val b  : Matrix = Array[Array[Int]](Array(1,3,-1),Array(2,3,3))
+    val ex : Matrix = Array[Array[Int]](Array(7,21,-7),Array(1,15,-21),Array(13,36,-8),Array(3,6,2))
     asserteq((a  * b).asMatrix.toString, ex.toString)
     asserteq((a :* a).asMatrix.toString, (a :^ 2).asMatrix.toString)
     
