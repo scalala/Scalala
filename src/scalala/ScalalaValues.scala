@@ -30,7 +30,7 @@ import scalala.ScalalaValues._
  * the tensor is naturally considered a Vector.  If it is an (Int,Int),
  * then a Matrix.
  */
-sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] with Iterable[E] {
+sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
   /** Size of the tensor */
   def size : I
   
@@ -42,6 +42,16 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] with 
   
   /** Updates the value at the given index */
   def update(index : I, value : Double) : Unit
+  
+  /** Gets elements from this Tensor */
+  def elements : Iterator[E];
+  
+  /** Apply a function f to all elements of this vector. */
+  def foreach(f:(E => Unit)) : Unit = {
+    for (element <- elements) {
+      f(element);
+    }
+  }
   
   override def toString : String =
     elements.mkString("\n")
@@ -63,6 +73,89 @@ sealed trait TensorEntry[I] {
 trait Scalar extends Tensor[Unit,ScalarEntry] {}
 trait ScalarEntry extends TensorEntry[Unit] {}
 
+object Vector {
+  /**
+   * A projection mapping all entries in this Vector according
+   * to the given function.  This implementation is safe to use with
+   * sparse vectors.  In particular, if f(0) is 0 then only entries
+   * returned by the underlying .elements are iterated in the projection's
+   * .elements.  If not, all 0 entries will be returned as a single
+   * mutating VectorEntry that contains the value of f(0), with its
+   * index field mutated between calls to next.
+   */
+  class Projection(vector : Vector, f:(Double=>Double)) extends Vector {
+    val at0 = f(0.0);
+    override def size = vector.size;
+    override def get(i : Int) : Double = {
+      if (isDefinedAt(i)) {
+        return f(vector.get(i));
+      } else {
+        return at0;
+      }
+    }
+    
+    override def set(i : Int, value : Double) =
+      throw new UnsupportedOperationException();
+    
+    override def elements : Iterator[VectorEntry] = {
+      // this iterator maps all underlying elements but may miss 0's
+      val mappedIgnoringZeros = 
+        new Iterator[VectorEntry]() {
+          var _entry : VectorEntry = null;
+          val entry = new VectorEntry {
+            override def index = _entry.index;
+            override def get = f(_entry.get);
+            override def set(x:Double) =
+              throw new UnsupportedOperationException();
+          }
+      
+          val iter = vector.elements;
+        
+          override def hasNext = iter.hasNext;
+          override def next = {
+            _entry = iter.next;
+            entry;
+          }
+        };
+      
+      if (at0 == 0.0) {
+        // we can use the underlying iterator because f(0)=0.
+        mappedIgnoringZeros;	
+      } else {
+        // we need to iterate all elements because f(0) != 0
+        new Iterator[VectorEntry]() {
+          // which position are we
+          var _index = -1;
+          
+          // for when we're at an underlying entry
+          var _entry : VectorEntry = null;
+          
+          // for when we are at an entry skipped in the underlying vector
+          val mappedZeroEntry : VectorEntry = new VectorEntry {
+            override def index = _index;
+            override def get = at0;
+            override def set(x:Double) =
+              throw new UnsupportedOperationException();
+          }
+          
+          override def hasNext = _index+1 < size;
+          
+          override def next = {
+            // update the underlying mappedIgnoringZeros if it is time to
+            if ((_entry == null || _entry.index <= _index) && mappedIgnoringZeros.hasNext) {
+              _entry = mappedIgnoringZeros.next;
+            }
+            
+            // update index pointer and return the underlying entry or the zero entry
+            _index += 1;
+            if (_index != _entry.index) mappedZeroEntry else _entry;
+          }
+        }
+      }
+    }
+  }
+}
+
 /** Vectors are Tensors indexed by a single Int. */
 trait Vector extends Tensor[(Int),VectorEntry] {
   //
@@ -73,11 +166,23 @@ trait Vector extends Tensor[(Int),VectorEntry] {
   @inline override def update(index : Int, value : Double) = set(index, value);
   @inline override def isDefinedAt(index : Int) =
     index < size && index >= 0
+  
+  /**
+   * A projection mapping all entries in this Vector according
+   * to the given function.  This implementation is safe to use with
+   * sparse vectors.  In particular, if f(0) is 0 then only entries
+   * returned by the underlying .elements are iterated in the projection's
+   * .elements.  If not, all 0 entries will be returned as a single
+   * mutating VectorEntry that contains the value of f(0), with its
+   * index field mutated between calls to next.
+   */
+  def map(f:(Double=>Double)) = new Vector.Projection(this,f);
 }
 
+/** An entry in a Vector */
 trait VectorEntry extends TensorEntry[(Int)] {}
 
-/** Matrices are Tensors indexed by a pair of Ints. */
+/** A Matrix is indexed by a pair of Ints. */
 trait Matrix extends Tensor[(Int,Int),MatrixEntry] {
   //
   // pure abstract methods
@@ -308,6 +413,7 @@ trait Matrix extends Tensor[(Int,Int),MatrixEntry] {
   }
 }
 
+/** An entry in a matrix */
 trait MatrixEntry extends TensorEntry[(Int,Int)]{
   def row : Int
   def col : Int
@@ -425,72 +531,41 @@ object ScalalaValues {
   //
   // Type promotions
   //
-  // TODO: fix type promotions to matrices from sequences using same trick as vector
-  //
-  
-  implicit def iDenseMatrixFromInts[E<:Seq[Int]](data : Seq[E]) : Matrix = {
+
+  implicit def iDenseMatrixFromSeqSeq[T<:AnyVal](data : Seq[Seq[T]]) : Matrix = {
     val numRows = data.length
     val numCols = data map (_.length) reduceLeft Math.max
     val matrix  = DenseMatrix(numRows, numCols)
     for (i <- 0 until data.length) {
-      val row = data(i)
-      for (j <- 0 until row.length) {
-        matrix.set(i,j,row(j))
+      val seq = data(i)
+      if (seq.length >= 1) {
+             if (seq(0).isInstanceOf[Double]) { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Double]; }
+        else if (seq(0).isInstanceOf[Float])  { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Float]; }
+        else if (seq(0).isInstanceOf[Int])    { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Int]; }
+        else if (seq(0).isInstanceOf[Long])   { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Long]; }
+        else if (seq(0).isInstanceOf[Short])  { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Short]; }
+        else if (seq(0).isInstanceOf[Byte])   { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Byte]; }
+        else throw new ScalalaValueException("Unrecognized numeric type in sequence promotion");
       }
     }
     return matrix
-  }
-  
-  implicit def iDenseMatrixFromDoubles[E<:Seq[Double]](data : Seq[E]) : Matrix = {
-    val numRows = data.length
-    val numCols = data map (_.length) reduceLeft Math.max
-    val matrix  = DenseMatrix(numRows, numCols)
-    for (i <- 0 until data.length) {
-      val row = data(i)
-      for (j <- 0 until row.length) {
-        matrix.set(i,j,row(j))
-      }
-    }
-    return matrix
-  }
-  
-  implicit def iDenseVectorFromArray(data : Array[Double]) : Vector =
-    DenseVector(data);
-  
-  implicit def iDenseVectorFromArray(data : Array[Float]) : Vector =
-    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
-  
-  implicit def iDenseVectorFromArray(data : Array[Int]) : Vector =
-    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
-  
-  implicit def iDenseVectorFromArray(data : Array[Long]) : Vector =
-    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
-  
-  implicit def iDenseVectorFromArray(data : Array[Short]) : Vector =
-    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
-  
-  implicit def iDenseVectorFromArray(data : Array[Byte]) : Vector =
-    DenseVector(Array.fromFunction((i:Int) => data(i).asInstanceOf[Double])(data.size));
-  
-  implicit def iDenseVectorFromIterable[T<:AnyVal](iter : Iterable[T]) : Vector = {
-    iDenseVectorFromSeq(iter.toList);
   }
   
   implicit def iDenseVectorFromSeq[T<:AnyVal](seq : Seq[T]) : Vector = {
     val v = DenseVector(seq.length);
-    
     if (seq.length >= 1) {
-      seq(0) match {
-        case (x:Double) => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Double];
-        case (x:Float)  => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Float];
-        case (x:Int)    => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Int];
-        case (x:Long)   => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Long];
-        case (x:Short)  => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Short];
-        case (x:Byte)   => for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Byte];
-      }
+           if (seq(0).isInstanceOf[Double]) { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Double]; }
+      else if (seq(0).isInstanceOf[Float])  { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Float]; }
+      else if (seq(0).isInstanceOf[Int])    { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Int]; }
+      else if (seq(0).isInstanceOf[Long])   { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Long]; }
+      else if (seq(0).isInstanceOf[Short])  { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Short]; }
+      else if (seq(0).isInstanceOf[Byte])   { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Byte]; }
+      else throw new ScalalaValueException("Unrecognized numeric type in sequence promotion");
     }
-    
     return v;
   }
+
+  /** An exception thrown for an invalid value */
+  class ScalalaValueException(message : String) extends RuntimeException(message);
   
 }
