@@ -432,18 +432,14 @@ object ScalalaOps {
       val ds = f(s.asScalar)
       
       if (a.intermediate) {
-        for (i <- 0 until rows) {
-          for (j <- 0 until cols) {
-            ma.add(i,j,ds)
-          }
+        for (i <- 0 until rows; j <- 0 until cols) {
+          ma.add(i,j,ds)
         }
         return ma
       } else {
         val target = MTJMatrix(pool.request(rows,cols))
-        for (i <- 0 until rows) {
-          for (j <- 0 until cols) {
-            target.set(i,j,target.get(i,j)+ds)
-          }
+        for (i <- 0 until rows; j <- 0 until cols) {
+          target.set(i,j,target.get(i,j)+ds)
         }
         return target
       }
