@@ -41,7 +41,7 @@ object ScalalaMTJ {
     new MTJDenseVector(size);
   
   def DenseVector(values : Array[Double]) : Vector =
-    new MTJDenseVector(values, false)
+    new MTJDenseVector(values, false);
   
   def SparseVector(size : Int) : Vector =
     new MTJSparseVector(size, Math.min(size/10,1000));
@@ -348,12 +348,23 @@ object RichMTJ {
     }
     
     override def iterator : java.util.Iterator[MTJMatrixEntry] = {
-      import JavaImplicits._
+      def scalaIterator(iter : java.util.Iterator[MTJMatrixEntry]) =
+        new Iterator[MTJMatrixEntry] {
+          override def hasNext = iter.hasNext;
+          override def next = iter.next;
+        }
+      
       val iterators : Iterable[OffsetMatrix] =
         for (blockRow <- 0 until numBlockRows;
              blockCol <- 0 until numBlockCols)
         yield new OffsetMatrix(blocks(blockRow)(blockCol),rowOffsets(blockRow),colOffsets(blockCol));
-      iterators.map{block => iIterator(block.iterator)}.reduceLeft(_++_)
+      val iterator = iterators.map{block => scalaIterator(block.iterator)}.reduceLeft(_++_);
+
+      return new java.util.Iterator[MTJMatrixEntry] {
+        override def hasNext = iterator.hasNext
+        override def next = iterator.next
+        override def remove = throw new UnsupportedOperationException();
+      }
     }
   }
   

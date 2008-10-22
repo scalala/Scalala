@@ -57,32 +57,32 @@ object Scalala {
   //
   ////////////////////////////////////////////////////////////////////////
   
-  val NaN = java.lang.Double.NaN
-  def isnan(a : Double) : Boolean = java.lang.Double.isNaN(a)
+  val NaN = java.lang.Double.NaN;
+  def isnan(a : Double) : Boolean = java.lang.Double.isNaN(a);
     
   /** 100 evenly spaced points between a and b */
-  def linspace(a : Double, b : Double) : Vector = linspace(a,b,100)
+  def linspace(a : Double, b : Double) : Vector = linspace(a,b,100);
   
   /** n evenly spaced points between a and b */
   def linspace(a : Double, b : Double, n : Int) : Vector = {
-    val v = DenseVector(n)
-    val delta = (b - a) / (n - 1.0)
-    for (i <- 0 until n) { v.set(i, a + i*delta) }
-    return v
+    val v = DenseVector(n);
+    val delta = (b - a) / (n - 1.0);
+    for (i <- 0 until n) { v.set(i, a + i*delta); }
+    return v;
   }
   
   /** A vector of ones of the given size */
   def ones(n : Int) : Vector = {
-    val v = DenseVector(n)
+    val v = DenseVector(n);
     for (i <- 0 until n) v.set(i,1.0);
-    return v
+    return v;
   }
   
   /** A matrix of size m by n with 1 everywhere */
   def ones(rows : Int, cols : Int) : Matrix = {
-    val m = DenseMatrix(rows,cols)
+    val m = DenseMatrix(rows,cols);
     for (i <- 0 until rows; j <- 0 until cols) m.set(i,j,1.0);
-    return m
+    return m;
   }
   
   /** A vector of zeros of the given size */
@@ -192,8 +192,8 @@ object Scalala {
   // Random number generation
   //
   
-  import java.util.Random
-  implicit var _scalab_random = new java.util.Random
+  import java.util.Random;
+  implicit var _scalab_random = new java.util.Random;
   
   /** Returns a psuedo-random number from the interval 0 to 1 */
   def rand()(implicit rand : Random) = rand.nextDouble;
@@ -217,7 +217,7 @@ object Scalala {
   }
   
   /** Returns a pseudo-random gaussian variable */
-  def randn()(implicit rand : Random) = rand.nextGaussian
+  def randn()(implicit rand : Random) = rand.nextGaussian;
   
   /** Returns a vector of size n, each element from a gaussian*/
   def randn(n : Int)(implicit rand : Random) : Vector = {
@@ -244,14 +244,15 @@ object Scalala {
   
   /** Returns a diagonal matrix with the given vector on the diagonal */
   def diag(v : Vector) : Matrix = {
-    val nz : Array[Array[Int]] = (0 until v.size).map(i => Array(i)).toArray
+    val nz : Array[Array[Int]] = (0 until v.size).map(i => Array(i)).toArray;
     val m = new no.uib.cipr.matrix.sparse.CompColMatrix(v.size, v.size, nz)
     for (i <- 0 until v.size) {
-      m.set(i,i,v.get(i))
+      m.set(i,i,v.get(i));
     }
-    return m
+    return m;
   }
   
+  /** Returns the norm of the given vector. */
   def norm(v : Vector, n : Int) : Double = {
     if (n == 1) {
       return v.elements.map(x => Math.abs(x.get)).reduceLeft(_+_);
@@ -345,32 +346,32 @@ object Scalala {
    */
   def hist(data : Vector, bins : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
     def bucket(point : Double, lower : Int, upper : Int) : Int = {
-      val mid = (lower + upper) / 2 
+      val mid = (lower + upper) / 2;
       if (lower == upper) {
-        return upper
+        return upper;
       } else if (point < bins.get(mid)) {
-        return bucket(point, lower, mid)
+        return bucket(point, lower, mid);
       } else {
-        return bucket(point, mid+1, upper)
+        return bucket(point, mid+1, upper);
       }
     }
     
-    val counts = DenseVector(bins.size)
+    val counts = DenseVector(bins.size);
     for (point <- data) {
-      val bin = bucket(point.get, 0, bins.size-1)
-      counts.set(bin, counts.get(bin) + 1)
+      val bin = bucket(point.get, 0, bins.size-1);
+      counts.set(bin, counts.get(bin) + 1);
     }
     
     // smallest gap between bins
     val width = { bins.elements zip (bins.elements drop 1) map
-      (pair => Math.abs(pair._2.get-pair._1.get)) reduceLeft Math.min }
+      (pair => Math.abs(pair._2.get-pair._1.get)) reduceLeft Math.min };
     
     val dataset = new org.jfree.data.xy.XYBarDataset(
-      Plotting.Dataset(bins, counts), width)
-    val series = xyplot.nextSeries
-    xyplot.plot.setDataset(series,dataset)
-    xyplot.plot.setRenderer(series,new org.jfree.chart.renderer.xy.XYBarRenderer)
-    xyplot.refresh
+      Plotting.Dataset(bins, counts), width);
+    val series = xyplot.nextSeries;
+    xyplot.plot.setDataset(series,dataset);
+    xyplot.plot.setRenderer(series,new org.jfree.chart.renderer.xy.XYBarRenderer);
+    xyplot.refresh();
   }
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
@@ -380,7 +381,7 @@ object Scalala {
   
   /** Plots the given y versus the given x with line drawn */
   def plot(x : Vector, y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
-    plot(x,y,'-')(xyplot)
+    plot(x,y,'-')(xyplot);
   }
   
   /** Plots the given y versus the given x with the given style */
@@ -388,44 +389,43 @@ object Scalala {
     lazy val shapeDot = new java.awt.geom.Ellipse2D.Double(0,0,2,2);
     lazy val shapePlus = {
       val shape = new java.awt.geom.Path2D.Double();
-      shape.moveTo(-3,0)
-      shape.lineTo(3,0)
-      shape.moveTo(0,-3)
-      shape.lineTo(0,3)
-      shape
-    }
+      shape.moveTo(-3,0);
+      shape.lineTo(3,0);
+      shape.moveTo(0,-3);
+      shape.lineTo(0,3);
+      shape;
+    };
   
     
     // initialize dataset and series
-    val dataset = Plotting.Dataset(x,y)
-    val series = xyplot.nextSeries
+    val dataset = Plotting.Dataset(x,y);
+    val series = xyplot.nextSeries;
     
-    xyplot.plot.setDataset(series, dataset)
+    xyplot.plot.setDataset(series, dataset);
     
     // set the renderer
-    import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer
-    val renderer = new XYLineAndShapeRenderer()
+    val renderer = new org.jfree.chart.renderer.xy.XYLineAndShapeRenderer();
     
     style match {
     case '-' => {
-        renderer.setLinesVisible(true)
-        renderer.setShapesVisible(false)
+        renderer.setLinesVisible(true);
+        renderer.setShapesVisible(false);
       }
     case '.' => {
-        renderer.setLinesVisible(false)
-        renderer.setShapesVisible(true)
-        renderer.setShape(shapeDot)
+        renderer.setLinesVisible(false);
+        renderer.setShapesVisible(true);
+        renderer.setShape(shapeDot);
       }
     case '+' => {
-        renderer.setLinesVisible(false)
-        renderer.setShapesVisible(true)
-        renderer.setShape(shapePlus)
+        renderer.setLinesVisible(false);
+        renderer.setShapesVisible(true);
+        renderer.setShape(shapePlus);
       }
     case _ => { }
     }
     
-    xyplot.plot.setRenderer(series, renderer)
-    xyplot.refresh
+    xyplot.plot.setRenderer(series, renderer);
+    xyplot.refresh();
   }
   
   /**
@@ -433,22 +433,22 @@ object Scalala {
    * size and mapped with the given color.
    */
   def scatter(x : Vector, y : Vector, s : Vector, c : Vector)(implicit xyplot : Plotting.XYPlot) {
-    assert(x.size == y.size)
-    assert(y.size == s.size, y.size + " != " + s.size)
-    assert(s.size == c.size, s.size + " != " + c.size)
+    assert(x.size == y.size);
+    assert(y.size == s.size, y.size + " != " + s.size);
+    assert(s.size == c.size, s.size + " != " + c.size);
     
-    val dataset = Plotting.Dataset(x,y,s,c)
-    val series = xyplot.nextSeries
-    xyplot.plot.setDataset(series, dataset)
+    val dataset = Plotting.Dataset(x,y,s,c);
+    val series = xyplot.nextSeries;
+    xyplot.plot.setDataset(series, dataset);
     
-    val gradient = Gradients.GRADIENT_BLUE_TO_RED
+    val gradient = Plotting.Gradients.GRADIENT_BLUE_TO_RED;
     
     val paintscale = new org.jfree.chart.renderer.PaintScale {
-      override def getLowerBound = 0.0
-      override def getUpperBound = 1.0
+      override def getLowerBound = 0.0;
+      override def getUpperBound = 1.0;
       override def getPaint(value : Double) = {
-        val index = gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound)
-        gradient(Math.min(gradient.length-1, Math.max(0, index.toInt)))
+        val index = gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound);
+        gradient(Math.min(gradient.length-1, Math.max(0, index.toInt)));
       }
     }
     
@@ -461,24 +461,25 @@ object Scalala {
     import org.jfree.chart.renderer.xy.AbstractXYItemRenderer
     import org.jfree.chart.renderer.xy.XYBubbleRenderer
     import org.jfree.chart.renderer.xy.XYItemRendererState
-    val renderer = new XYBubbleRenderer(XYBubbleRenderer.SCALE_ON_DOMAIN_AXIS) {
-      val stroke = new java.awt.BasicStroke(0f)
+    
+    val renderer = new XYBubbleRenderer(XYBubbleRenderer.SCALE_ON_DOMAIN_AXIS) {;
+      val stroke = new java.awt.BasicStroke(0f);
       override def getItemPaint(series : Int, item : Int) : java.awt.Paint = {
-        paintscale.getPaint(c.get(item))
+        paintscale.getPaint(c.get(item));
       }
-      override def getItemStroke(series : Int, item : Int) = stroke
+      override def getItemStroke(series : Int, item : Int) = stroke;
     }
     
-    xyplot.plot.setRenderer(series, renderer)
-    xyplot.refresh
+    xyplot.plot.setRenderer(series, renderer);
+    xyplot.refresh;
   }
   
   def scatter(x : Vector, y : Vector, s : Double, c : Vector)(implicit xyplot : Plotting.XYPlot) {
-    scatter(x,y,ones(x.size)*s,c)(xyplot)
+    scatter(x,y,ones(x.size)*s,c)(xyplot);
   }
   
   def scatter(x : Vector, y : Vector, s : Vector, c : Double)(implicit xyplot : Plotting.XYPlot) {
-    scatter(x,y,s,ones(x.size)*c)(xyplot)
+    scatter(x,y,s,ones(x.size)*c)(xyplot);
   }
   
   /** Plots the given matrix as an image. */
@@ -490,34 +491,34 @@ object Scalala {
       override def set(row : Int, col : Int, x : Double) = c.set(rows-row-1,col,x);
     }
     
-    val dataset = Plotting.Dataset(inverted)
-    val series = xyplot.nextSeries
+    val dataset = Plotting.Dataset(inverted);
+    val series = xyplot.nextSeries;
     
-    xyplot.plot.setDataset(series, dataset)
+    xyplot.plot.setDataset(series, dataset);
     
     import org.jfree.chart.renderer.xy.XYBlockRenderer
-    val renderer = new XYBlockRenderer()
-    renderer.setBlockAnchor(org.jfree.ui.RectangleAnchor.TOP_LEFT)
+    val renderer = new XYBlockRenderer();
+    renderer.setBlockAnchor(org.jfree.ui.RectangleAnchor.TOP_LEFT);
     
-    val gradient = Gradients.GRADIENT_BLUE_TO_RED
+    val gradient = Plotting.Gradients.GRADIENT_BLUE_TO_RED;
     
     val paintscale = new org.jfree.chart.renderer.PaintScale {
-      override def getLowerBound = 0.0
-      override def getUpperBound = 1.0
+      override def getLowerBound = 0.0;
+      override def getUpperBound = 1.0;
       override def getPaint(value : Double) = {
-        val index = gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound)
-        gradient(Math.min(gradient.length-1, Math.max(0, index.toInt)))
+        val index = gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound);
+        gradient(Math.min(gradient.length-1, Math.max(0, index.toInt)));
       }
     }
     
-    renderer.setPaintScale(paintscale)
-    xyplot.plot.getRangeAxis.setInverted(true)
-    xyplot.plot.getRangeAxis.setLowerBound(0)
-    xyplot.plot.getRangeAxis.setUpperBound(c.rows)
-    xyplot.plot.getDomainAxis.setLowerBound(0)
-    xyplot.plot.getDomainAxis.setUpperBound(c.cols)
-    xyplot.plot.setRenderer(series, renderer)
-    xyplot.refresh
+    renderer.setPaintScale(paintscale);
+    xyplot.plot.getRangeAxis.setInverted(true);
+    xyplot.plot.getRangeAxis.setLowerBound(0);
+    xyplot.plot.getRangeAxis.setUpperBound(c.rows);
+    xyplot.plot.getDomainAxis.setLowerBound(0);
+    xyplot.plot.getDomainAxis.setUpperBound(c.cols);
+    xyplot.plot.setRenderer(series, renderer);
+    xyplot.refresh();
   }
   
   /** Sets the lower and upper bounds of the current plot. */
@@ -534,8 +535,8 @@ object Scalala {
   
   /** For re-plotting to same figure */
   def hold(state : Boolean)(implicit figures : Plotting.Figures) : Unit = {
-    val xyplot = figures.figure.plot
-    xyplot.hold = state
+    val xyplot = figures.figure.plot;
+    xyplot.hold = state;
   }
   
   ////////////////////////////////////////////////////////////////////////}
@@ -550,25 +551,25 @@ object Scalala {
    *   http://en.wikipedia.org/wiki/Pearson%27s_correlation_coefficient
    */
   def corr(x : Vector, y : Vector) : Double = {
-    val N = x.size
-    var sum_sq_x = 0.0
-    var sum_sq_y = 0.0
-    var sum_coproduct = 0.0
-    var mean_x = x.get(0)
-    var mean_y = y.get(0)
+    val N = x.size;
+    var sum_sq_x = 0.0;
+    var sum_sq_y = 0.0;
+    var sum_coproduct = 0.0;
+    var mean_x = x.get(0);
+    var mean_y = y.get(0);
     for (i <- 1 until N) {
-      val sweep = (i - 1.0) / i
-      val delta_x = x.get(i) - mean_x
-      val delta_y = y.get(i) - mean_y
-      sum_sq_x += delta_x * delta_x * sweep
-      sum_sq_y += delta_y * delta_y * sweep
-      sum_coproduct += delta_x * delta_y * sweep
-      mean_x += delta_x / i
-      mean_y += delta_y / i
+      val sweep = (i - 1.0) / i;
+      val delta_x = x.get(i) - mean_x;
+      val delta_y = y.get(i) - mean_y;
+      sum_sq_x += delta_x * delta_x * sweep;
+      sum_sq_y += delta_y * delta_y * sweep;
+      sum_coproduct += delta_x * delta_y * sweep;
+      mean_x += delta_x / i;
+      mean_y += delta_y / i;
     }
-    val pop_sd_x = Math.sqrt( sum_sq_x / N )
-    val pop_sd_y = Math.sqrt( sum_sq_y / N )
-    val cov_x_y = sum_coproduct / N
-    return cov_x_y / (pop_sd_x * pop_sd_y)
+    val pop_sd_x = Math.sqrt( sum_sq_x / N );
+    val pop_sd_y = Math.sqrt( sum_sq_y / N );
+    val cov_x_y = sum_coproduct / N;
+    return cov_x_y / (pop_sd_x * pop_sd_y);
   }
 }
