@@ -43,14 +43,39 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
   /** Updates the value at the given index */
   def update(index : I, value : Double) : Unit
   
+  /** Finds indexes where the given predicate is true */
+  def find(f : (Double => Boolean)) : Iterator[I] =
+    for (element <- elements if f(element.get)) yield element.index;
+  
   /** Gets elements from this Tensor */
   def elements : Iterator[E];
   
-  /** Apply a function f to all elements of this vector. */
+  /** Apply a function f to all elements of this tensor. */
   def foreach(f:(E => Unit)) : Unit = {
     for (element <- elements) {
       f(element);
     }
+  }
+  
+  //
+  // equality
+  //
+  
+  override def equals(other : Any) : Boolean = {
+    if (!other.isInstanceOf[Tensor[I,E]]) {
+      return false;
+    } else {
+      val mo = other.asInstanceOf[Tensor[I,E]];
+      if (this.size != mo.size) {
+        return false;
+      }
+      for (pair <- this.elements.zip(mo.elements)) {
+        if (pair._1.index != pair._2.index || pair._1.get != pair._2.get) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
   
   override def toString : String =
@@ -74,6 +99,10 @@ trait Scalar extends Tensor[Unit,ScalarEntry] {}
 trait ScalarEntry extends TensorEntry[Unit] {}
 
 object Vector {
+  /** Creates a vector from a sequence of doubles */
+  def apply(values : Double*) : Vector =
+    ScalalaMTJ.DenseVector(values.toArray);
+  
   /**
    * A projection mapping all entries in this Vector according
    * to the given function.  This implementation is safe to use with
@@ -167,6 +196,16 @@ trait Vector extends Tensor[(Int),VectorEntry] {
   @inline override def isDefinedAt(index : Int) =
     index < size && index >= 0
   
+  //
+  // extra selectors
+  //
+  
+  @inline def apply(elements : Iterator[Int]) : Vector =
+    (for (i <- elements) yield get(i)).toList
+  
+  @inline def apply(seq : Seq[Int]) : Vector =
+    apply(seq.elements);
+  
   /**
    * A projection mapping all entries in this Vector according
    * to the given function.  This implementation is safe to use with
@@ -259,7 +298,7 @@ trait Matrix extends Tensor[(Int,Int),MatrixEntry] {
   //
   // iterators and views -- to be overridden by subclasses for speed
   //
-  
+    
   /**
    * Returns all non-zero elements, incrementally by row first then by column
    * within row.
@@ -569,3 +608,23 @@ object ScalalaValues {
   class ScalalaValueException(message : String) extends RuntimeException(message);
   
 }
+
+object ScalalaValuesTest extends ScalalaTest.TestConsoleMain {
+  import ScalalaTest._
+  
+  def vector_find_test() {
+    val v = Vector(2,1,8,6);
+    assertEquals(v.find(_%2==0).toList, List(0,2,3));
+    assertEquals(v(v.find(_%2==0)), Vector(2,8,6));
+  }
+  
+  def matrix_apply_test() {
+    val m : Matrix = Array[Array[Double]](Array(1,2,3),Array(4,5,6));
+    assertEquals(m((_,0)),ColMatrix(List(1,4)));
+    assertEquals(m((_,1)),ColMatrix(List(2,5)));
+    assertEquals(m((_,2)),ColMatrix(List(3,6)));
+    assertEquals(m((0,_)),RowMatrix(List(1,2,3)));
+    assertEquals(m((1,_)),RowMatrix(List(4,5,6)));
+  }
+}
+
