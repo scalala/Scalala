@@ -43,6 +43,9 @@ object ScalalaMTJ {
   def DenseVector(values : Array[Double]) : Vector =
     new MTJDenseVector(values, false);
   
+  def DenseVector(values : Double*) : Vector =
+    new MTJDenseVector(values.toArray, false);
+  
   def SparseVector(size : Int) : Vector =
     new MTJSparseVector(size, Math.min(size/10,1000));
   
@@ -194,7 +197,7 @@ object ScalalaMTJ {
   }
 }  
 
-object RichMTJ {
+@deprecated object RichMTJ {
   /** The given scalar as an immutable matrix of the given size */
   case class ScalarMatrix(value : Double, rows : Int, cols : Int) extends MTJAbstractMatrix(rows,cols) {
     override def get(row : Int, col : Int) : Double = {
