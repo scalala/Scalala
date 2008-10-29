@@ -31,24 +31,32 @@ import scalala.ScalalaValues._
  * then a Matrix.
  */
 sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
+  //
+  // abstract methods: size, apply, update, elements
+  //
+  
   /** Size of the tensor */
   def size : I
+  
+  /** Updates the value at the given index */
+  def update(index : I, value : Double) : Unit
+
+  /** Gets elements from this Tensor */
+  def elements : Iterator[E];
+  
+  //
+  // common convenience methods
+  //
   
   /** Gets the value at the given index */
   def get(index : I) = apply(index)
   
   /** Sets the value at the given index */
-  def set(index : I, value : Double) : Unit = update(index, value)
-  
-  /** Updates the value at the given index */
-  def update(index : I, value : Double) : Unit
+  def set(index : I, value : Double) : Unit = update(index, value);
   
   /** Finds indexes where the given predicate is true */
   def find(f : (Double => Boolean)) : Iterator[I] =
     for (element <- elements if f(element.get)) yield element.index;
-  
-  /** Gets elements from this Tensor */
-  def elements : Iterator[E];
   
   /** Apply a function f to all elements of this tensor. */
   def foreach(f:(E => Unit)) : Unit = {
