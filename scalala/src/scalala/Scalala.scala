@@ -23,10 +23,12 @@ import ScalalaValues._
 import ScalalaOps._
 import ScalalaMTJ._
 
+import ScalalaTest._
+
 /**
  * A matlab-like environment and syntax for scala.
  */
-object Scalala {
+object Scalala extends TestConsoleMain {
   
   //
   // implicit context values
@@ -46,7 +48,7 @@ object Scalala {
   
   ////////////////////////////////////////////////////////////////////////}
   //
-  // Feature-complete Matlab commands
+  // Mostly feature-complete Matlab commands
   //
   // Primary difference is that some commands that normally return an
   // n x n square matrix now return a column vector of size n. e.g.
@@ -90,34 +92,6 @@ object Scalala {
   
   /** A matrix of size m by n with 0 everywhere */
   def zeros(rows : Int, cols : Int) : Matrix = DenseMatrix(rows,cols);
-  
-  /**
-   * Converts a Vector into a DenseVector if necessary, returning a casted
-   * reference to the input if possible.
-   */
-  /*
-  def full(vector : Vector) : DenseVector = {
-    if (vector.isInstanceOf[DenseVector]) {
-      vector.asInstanceOf[DenseVector]
-    } else {
-      new DenseVector(vector);
-    }
-  }
-  */
-  
-  /**
-   * Converts a Vector into a DenseVector if necessary, returning a casted
-   * reference to the input if possible.
-   */
-  /*
-  def full(matrix : Matrix) : DenseMatrix = {
-    if (matrix.isInstanceOf[DenseMatrix]) {
-      matrix.asInstanceOf[DenseMatrix]
-    } else {
-      new DenseMatrix(matrix);
-    }
-  }
-  */
   
   /** Sums the elements of a vector */
   def sum(v : Vector) : Double = {
@@ -171,6 +145,121 @@ object Scalala {
     }
     return m;
   }
+  
+  /** The maximum element of a matrix. */
+  def max(m : Matrix) : Double =
+    max(vec(m));
+  
+  /** The minimum element of a matrix. */
+  def min(m : Matrix) : Double =
+    min(vec(m));
+  
+  /** Returns the n'th euclidean norm of the given vector. */
+  def norm(v : Vector, n : Int) : Double = {
+    if (n == 1) {
+      return v.elements.map(x => Math.abs(x.get)).reduceLeft(_+_);
+    } else if (n == 2) {
+      return Math.sqrt(v.elements.map(x => x.get * x.get).reduceLeft(_+_));
+    } else if (n % 2 == 0) {
+      return Math.pow(v.elements.map(x => Math.pow(x.get,n)).reduceLeft(_+_),1.0/n);
+    } else if (n % 2 == 1) {
+      return Math.pow(v.elements.map(x => Math.pow(Math.abs(x.get),n)).reduceLeft(_+_), 1.0/n);
+    } else {
+      throw new UnsupportedOperationException();
+    }
+  }
+  
+  def _norm_test() {
+    val v = Vector(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
+    assertEquals(norm _, v, 1, 3.6577);
+    assertEquals(norm _, v, 2, 2.0915);
+    assertEquals(norm _, v, 3, 1.8405);
+    assertEquals(norm _, v, 4, 1.7541);
+    assertEquals(norm _, v, 5, 1.7146);
+    assertEquals(norm _, v, 6, 1.6940);
+  }
+  
+  
+  //
+  // Data formatters, mungers, etc
+  //
+  
+  def vec(m : Matrix) : Vector =
+    (for (row <- 0 until m.rows; col <- 0 until m.cols) yield m(row,col)).toList;
+    
+  /** Returns a square diagonal matrix of the given size */
+  def diag(n : Int) : Matrix = {
+    return diag(ones(n));
+  }
+  
+  /** Returns a diagonal matrix with the given vector on the diagonal */
+  def diag(v : Vector) : Matrix = {
+    val nz : Array[Array[Int]] = (0 until v.size).map(i => Array(i)).toArray;
+    val m = new no.uib.cipr.matrix.sparse.CompColMatrix(v.size, v.size, nz)
+    for (i <- 0 until v.size) {
+      m.set(i,i,v.get(i));
+    }
+    return m;
+  }
+  
+  /**
+   * Turns the given matrices into a block diagonal matrix.
+   * TODO: This currently involves too much conversion to MTJ types.
+   */
+  def blkdiag(blocks : Seq[Matrix]) : Matrix = {
+    import RichMTJ._
+    
+    def zeros : Array[no.uib.cipr.matrix.Matrix] =
+      blocks.map(m => ScalarMatrix(0.0, m.rows, m.cols)).toArray
+      
+    def row(pos : Int) = {
+      val row = zeros
+      row(pos) = MTJMatrix(blocks(pos))
+      row
+    }
+    
+    new BlockMatrix((0 until blocks.length).map{row}.toArray)
+  }
+  
+  /**
+   * For an input n rows by three column input matrix, returns a sparse
+   * matrix.  If multiple values are specified for a given (i,j) position,
+   * those values are added.
+   */
+  /*
+  def sparse(matrix : Matrix) : Matrix = {
+    
+  }
+  */
+  
+  /**
+   * Converts a Vector into a DenseVector if necessary, returning a casted
+   * reference to the input if possible.
+   */
+  /*
+  def full(vector : Vector) : DenseVector = {
+    if (vector.isInstanceOf[DenseVector]) {
+      vector.asInstanceOf[DenseVector]
+    } else {
+      new DenseVector(vector);
+    }
+  }
+  */
+  
+  /**
+   * Converts a Vector into a DenseVector if necessary, returning a casted
+   * reference to the input if possible.
+   */
+  /*
+  def full(matrix : Matrix) : DenseMatrix = {
+    if (matrix.isInstanceOf[DenseMatrix]) {
+      matrix.asInstanceOf[DenseMatrix]
+    } else {
+      new DenseMatrix(matrix);
+    }
+  }
+  */
+
   
   ////////////////////////////////////////////////////////////////////////
   //
@@ -235,55 +324,6 @@ object Scalala {
       m.set(i,j,rand.nextGaussian);
     }
     return m;
-  }
-  
-  /** Returns a square diagonal matrix of the given size */
-  def diag(n : Int) : Matrix = {
-    return diag(ones(n));
-  }
-  
-  /** Returns a diagonal matrix with the given vector on the diagonal */
-  def diag(v : Vector) : Matrix = {
-    val nz : Array[Array[Int]] = (0 until v.size).map(i => Array(i)).toArray;
-    val m = new no.uib.cipr.matrix.sparse.CompColMatrix(v.size, v.size, nz)
-    for (i <- 0 until v.size) {
-      m.set(i,i,v.get(i));
-    }
-    return m;
-  }
-  
-  /** Returns the norm of the given vector. */
-  def norm(v : Vector, n : Int) : Double = {
-    if (n == 1) {
-      return v.elements.map(x => Math.abs(x.get)).reduceLeft(_+_);
-    } else if (n == 2) {
-      return Math.sqrt(v.elements.map(x => x.get * x.get).reduceLeft(_+_));
-    } else if (n % 2 == 0) {
-      return Math.pow(v.elements.map(x => Math.pow(x.get,n)).reduceLeft(_+_),1.0/n);
-    } else if (n % 2 == 1) {
-      return Math.pow(v.elements.map(x => Math.pow(Math.abs(x.get),n)).reduceLeft(_+_), 1.0/n);
-    } else {
-      throw new UnsupportedOperationException();
-    }
-  }
-  
-  /**
-   * Turns the given matrices into a block diagonal matrix.
-   * TODO: This currently involves too much conversion to MTJ types.
-   */
-  def blkdiag(blocks : Seq[Matrix]) : Matrix = {
-    import RichMTJ._
-    
-    def zeros : Array[no.uib.cipr.matrix.Matrix] =
-      blocks.map(m => ScalarMatrix(0.0, m.rows, m.cols)).toArray
-      
-    def row(pos : Int) = {
-      val row = zeros
-      row(pos) = MTJMatrix(blocks(pos))
-      row
-    }
-    
-    new BlockMatrix((0 until blocks.length).map{row}.toArray)
   }
   
   //
@@ -503,8 +543,8 @@ object Scalala {
     val gradient = Plotting.Gradients.GRADIENT_BLUE_TO_RED;
     
     val paintscale = new org.jfree.chart.renderer.PaintScale {
-      override def getLowerBound = 0.0;
-      override def getUpperBound = 1.0;
+      override def getLowerBound = min(c);
+      override def getUpperBound = max(c);
       override def getPaint(value : Double) = {
         val index = gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound);
         gradient(Math.min(gradient.length-1, Math.max(0, index.toInt)));
@@ -551,25 +591,38 @@ object Scalala {
    *   http://en.wikipedia.org/wiki/Pearson%27s_correlation_coefficient
    */
   def corr(x : Vector, y : Vector) : Double = {
+    if (x.size != y.size) {
+      throw new IllegalArgumentException("Vectors must have same length");
+    }
+    if (x.size == 0) {
+      throw new IllegalArgumentException("Vectors must contain data");
+    }
+    
     val N = x.size;
     var sum_sq_x = 0.0;
     var sum_sq_y = 0.0;
     var sum_coproduct = 0.0;
-    var mean_x = x.get(0);
-    var mean_y = y.get(0);
-    for (i <- 1 until N) {
+    var mean_x = x(0);
+    var mean_y = y(0);
+    for (i <- 2 to N) {
       val sweep = (i - 1.0) / i;
-      val delta_x = x.get(i) - mean_x;
-      val delta_y = y.get(i) - mean_y;
-      sum_sq_x += delta_x * delta_x * sweep;
-      sum_sq_y += delta_y * delta_y * sweep;
-      sum_coproduct += delta_x * delta_y * sweep;
-      mean_x += delta_x / i;
-      mean_y += delta_y / i;
+      val delta_x = x.get(i-1) - mean_x;
+      val delta_y = y.get(i-1) - mean_y;
+      sum_sq_x += (delta_x * delta_x * sweep);
+      sum_sq_y += (delta_y * delta_y * sweep);
+      sum_coproduct += (delta_x * delta_y * sweep);
+      mean_x += (delta_x / i);
+      mean_y += (delta_y / i);
     }
     val pop_sd_x = Math.sqrt( sum_sq_x / N );
     val pop_sd_y = Math.sqrt( sum_sq_y / N );
     val cov_x_y = sum_coproduct / N;
     return cov_x_y / (pop_sd_x * pop_sd_y);
+  }
+  
+  def _corr_test() = {
+    assertEquals(corr _, Vector(1,2,3), Vector(2,3,3.4), 0.970725343394151);
+    assertThrows(corr _, Vector(1,2), Vector(2,3,3.4), classOf[IllegalArgumentException]);
+    assertThrows(corr _, Vector(), Vector(), classOf[IllegalArgumentException]);
   }
 }
