@@ -26,6 +26,13 @@ import ScalalaValues._
 object ScalalaOps {
   
   //
+  // scalar function library
+  //
+  val _ScalarIdentity = (x:Double) => x;
+  val _ScalarInverse  = (x:Double) => 1.0 / x;
+  val _ScalarNegation = (x:Double) => -x;
+  
+  //
   // Implicit conversions
   //
   
@@ -124,7 +131,7 @@ object ScalalaOps {
     def cols : Int
     def size = (rows,cols)
     
-    def isVector = { Math.min(rows,cols) == 1 }
+    def isVector = { rows == 1 || cols == 1 }
     def isScalar = { rows == 1 && cols == 1 }
     
     /** By default, all operations are intermediate */
@@ -242,16 +249,16 @@ object ScalalaOps {
     //
     
     def  * (s : MatrixOp[One,One]) =
-      MatrixMultScalar(this, s, {ss:Double => ss});
+      MatrixMultScalar(this, s, _ScalarIdentity);
     
     def  / (s : MatrixOp[One,One]) =
-      MatrixMultScalar(this, s, {ss:Double => 1.0 / ss});
+      MatrixMultScalar(this, s, _ScalarInverse);
     
     def  + (s : MatrixOp[One,One]) =
-      MatrixPlusScalar(this, s, {ss:Double => ss});
+      MatrixPlusScalar(this, s, _ScalarIdentity);
     
     def  - (s : MatrixOp[One,One]) =
-      MatrixPlusScalar(this, s, {ss:Double => -ss});
+      MatrixPlusScalar(this, s, _ScalarNegation);
     
     def  < (s : MatrixOp[One,One]) = {
       val cmp = s.asScalar;
@@ -631,44 +638,32 @@ object ScalalaOps {
       return rv
     }
   }
+}
+
+object ScalalaOpsTest extends ScalalaTest.TestConsoleMain {
+  import ScalalaTest._
+  
+  import Scalala._
+  import ScalalaOps._
+  import ScalalaValues._
   
   /** Some unit testing */
-  def test() {
-    import Scalala._
-    import ScalalaValues._
+  def _symbolic_test() {
+    val n = 5;
     
-    val n = 5
-    val m = 5;
+    val x = rand(n,n);
+    val y = rand(n,n);
     
-    val x = rand(n,m)
-    val y = rand(m,n)
-    
-    def asserteq[E](a : E, b : E) {
-      assert(a.toString == b.toString, "\nExpected "+b+";\nReceived "+a)
-    }
-    
-    print("ScalalaOps: Symbolic tests ... ")
-    
-    asserteq(x+y,   MatrixPlusMatrix(MatrixIdentity(x),MatrixIdentity(y)))
-    asserteq(y*2,   MatrixMultScalar(MatrixIdentity(y),ScalarIdentity(2.0),{x:Double=>x}))
-    asserteq(x+y*2, MatrixPlusMatrix(MatrixIdentity(x),MatrixMultScalar(MatrixIdentity(y),ScalarIdentity(2.0),{x:Double=>x})))
-    
-    println("OK")
-    
-    print("ScalalaOps: Numeric tests ... ")
-    
-    val a  : Matrix = Array[Array[Int]](Array(7,0),Array(9,-4),Array(11,1),Array(1,1))
-    val b  : Matrix = Array[Array[Int]](Array(1,3,-1),Array(2,3,3))
-    val ex : Matrix = Array[Array[Int]](Array(7,21,-7),Array(1,15,-21),Array(13,36,-8),Array(3,6,2))
-    asserteq((a  * b).asMatrix.toString, ex.toString)
-    asserteq((a :* a).asMatrix.toString, (a :^ 2).asMatrix.toString)
-    
-    println("OK")
+    assertEquals(x+y,   MatrixPlusMatrix(MatrixIdentity(x),MatrixIdentity(y)));
+    assertEquals(y*2,   MatrixMultScalar(MatrixIdentity(y),ScalarIdentity(2.0),_ScalarIdentity));
+    assertEquals(x+y*2, MatrixPlusMatrix(MatrixIdentity(x),MatrixMultScalar(MatrixIdentity(y),ScalarIdentity(2.0),_ScalarIdentity)));
   }
   
-  /** Main method runs some unit tests */
-  def main(argv : Array[String]) {
-    test()
+  def _numeric_test() {
+    val a  : Matrix = Array[Array[Int]](Array(7,0),Array(9,-4),Array(11,1),Array(1,1));
+    val b  : Matrix = Array[Array[Int]](Array(1,3,-1),Array(2,3,3));
+    val ex : Matrix = Array[Array[Int]](Array(7,21,-7),Array(1,15,-21),Array(13,36,-8),Array(3,6,2));
+    assertEquals((a  * b).asMatrix.toString, ex.toString);
+    assertEquals((a :* a).asMatrix.toString, (a :^ 2).asMatrix.toString);
   }
-  
 }
