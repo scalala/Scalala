@@ -32,7 +32,7 @@ import scalala.ScalalaValues._
  */
 sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
   //
-  // abstract methods: size, get, apply, elements, isDefinedAt, copy
+  // abstract methods: size, get, set, copy, elements, isDefinedAt, copy
   //
   
   /** Size of the tensor. */
