@@ -33,21 +33,6 @@ object ScalalaMTJ {
   //
   // Basic data type constructors
   //
-    
-  def DenseMatrix(rows : Int, cols : Int) : Matrix =
-    new MTJDenseMatrix(rows,cols);
-  
-  def DenseVector(size : Int) : Vector =
-    new MTJDenseVector(size);
-  
-  def DenseVector(values : Array[Double]) : Vector =
-    new MTJDenseVector(values, false);
-  
-  def DenseVector(values : Double*) : Vector =
-    new MTJDenseVector(values.toArray, false);
-  
-  def SparseVector(size : Int) : Vector =
-    new MTJSparseVector(size, Math.min(size/10,1000));
   
   /** Returns an MTJMatrix for the given Matrix */
   def MTJMatrix[M<:MTJMatrix](wrapped : MTJMatrixWrapper[M]) : M =
@@ -162,6 +147,8 @@ object ScalalaMTJ {
         }
       };
     }
+    
+    override def copy = new MTJMatrixWrapper(matrix.copy).asInstanceOf[this.type]
   }
   
   /** Implicit promotion of MTJVector to a wrapped version */
@@ -194,6 +181,8 @@ object ScalalaMTJ {
         }
       }
     }
+    
+    override def copy = new MTJVectorWrapper(vector.copy).asInstanceOf[this.type]
   }
 }  
 
