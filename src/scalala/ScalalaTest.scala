@@ -111,7 +111,7 @@ object ScalalaTestSuite {
   
   def main(argv : Array[String]) {
     for (c <- tests) {
-      Class.forName("scalala."+c).getMethod("main",classOf[Array[String]]).invoke(null,Array(Array[String]()));
+      Class.forName("scalala."+c).getMethod("main",classOf[Array[String]]).invoke(null,Array(Array[String]()):_*);
     }
   }
 }
