@@ -21,7 +21,6 @@ package scalala;
 
 import ScalalaValues._
 import ScalalaOps._
-import ScalalaMTJ._
 
 import ScalalaTest._
 
@@ -192,21 +191,19 @@ object Scalala extends TestConsoleMain {
     return diag(ones(n));
   }
   
-  /** Returns a diagonal matrix with the given vector on the diagonal */
-  def diag(v : Vector) : Matrix = {
-    val nz : Array[Array[Int]] = (0 until v.size).map(i => Array(i)).toArray;
-    val m = new no.uib.cipr.matrix.sparse.CompColMatrix(v.size, v.size, nz)
-    for (i <- 0 until v.size) {
-      m.set(i,i,v.get(i));
-    }
-    return m;
-  }
+  /**
+   * Returns a diagonal matrix with the given vector on the diagonal.
+   * Copies the contents of the underlying matrix.
+   */
+  def diag(v : Vector) : Matrix =
+    ScalalaValues.DiagonalMatrix(v.copy);
   
   /**
    * Turns the given matrices into a block diagonal matrix.
-   * TODO: This currently involves too much conversion to MTJ types.
+   * TODO: This currently involves explicit conversion to MTJ types.
    */
   def blkdiag(blocks : Seq[Matrix]) : Matrix = {
+    import ScalalaMTJ._
     import RichMTJ._
     
     def zeros : Array[no.uib.cipr.matrix.Matrix] =
@@ -214,7 +211,7 @@ object Scalala extends TestConsoleMain {
       
     def row(pos : Int) = {
       val row = zeros
-      row(pos) = MTJMatrix(blocks(pos))
+      row(pos) = ScalalaMTJ.MTJMatrix(blocks(pos))
       row
     }
     
@@ -529,6 +526,7 @@ object Scalala extends TestConsoleMain {
       override def cols = c.cols;
       override def get(row : Int, col : Int) = c.get(rows-row-1,col);
       override def set(row : Int, col : Int, x : Double) = c.set(rows-row-1,col,x);
+      override def copy = this;
     }
     
     val dataset = Plotting.Dataset(inverted);
