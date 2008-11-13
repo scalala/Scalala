@@ -9,5 +9,5 @@ CP=$ROOT/bin
 for LIB in $ROOT/lib/*.jar ; do CP=$CP:$LIB ; done
 
 # invoke scala
-scala -classpath $CP -i $SCALALA "$@"
+scala -classpath $CLASSPATH:$CP -i $SCALALA "$@"
 
