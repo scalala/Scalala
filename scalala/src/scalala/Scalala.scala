@@ -127,6 +127,9 @@ object Scalala extends TestConsoleMain {
     }
   }
   
+  /** Log each element of a vector or matrix */
+  def log(v : Vector) : Vector = v.map(x => Math.log(x));
+  
   /** The maximum element of a vector */
   def max(v : Vector) : Double = {
     var m = Double.MinValue;
@@ -269,9 +272,22 @@ object Scalala extends TestConsoleMain {
   //
   
   def dlmread(file : String) : Matrix = {
-    scala.io.Source.fromFile(file).getLines.map {
-      (line:String) => line.trim.split("\\s+").map(f => java.lang.Double.parseDouble(f)).toArray
-    }.toList
+    val numCols = scala.io.Source.fromFile(file).getLines.next.trim.split("\\s+").length;
+    val numRows = scala.io.Source.fromFile(file).getLines.map(_ => 1).reduceLeft(_+_);
+    
+    val m = DenseMatrix(numRows, numCols);
+    
+    var i = 0;
+    for (line <- scala.io.Source.fromFile(file).getLines) {
+      var j = 0;
+      for (entry <- line.trim.split("\\s+").map(f => java.lang.Double.parseDouble(f))) {
+        m(i,j) = entry;
+        j += 1;
+      }
+      i += 1;
+    }
+    
+    return m;
   }
   
   //
