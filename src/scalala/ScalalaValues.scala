@@ -112,7 +112,7 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
   //
   
   override def equals(other : Any) : Boolean = {
-    if (!other.isInstanceOf[Tensor[I,E]]) {
+    if (!other.isInstanceOf[Tensor[_,_]]) {
       return false;
     } else {
       val mo = other.asInstanceOf[Tensor[I,E]];
