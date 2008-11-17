@@ -446,7 +446,7 @@ object ScalalaOps {
       } else {
         val target = MTJMatrix(pool.request(rows,cols))
         for (i <- 0 until rows; j <- 0 until cols) {
-          target.set(i,j,target.get(i,j)+ds)
+          target.set(i,j,ma.get(i,j)+ds)
         }
         return target
       }
