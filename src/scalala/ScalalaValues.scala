@@ -187,6 +187,14 @@ object Vector {
   def apply(values : Double*) : Vector =
     ScalalaValues.DenseVector(values.toArray);
   
+  def apply(values : Array[Int]) : Vector = {
+    val v = ScalalaValues.DenseVector(values.length);
+    for (i <- 0 until values.length) {
+      v(i) = values(i);
+    }
+    v;
+  }
+  
   /**
    * A projection mapping all entries in this Vector according
    * to the given function.  This implementation is safe to use with
@@ -291,6 +299,24 @@ trait Vector extends Tensor[(Int),VectorEntry] {
   
   def canonical = 1;
   def ordered(key : Int) = elements;
+  
+  /** Default iterator */
+  override def elements : Iterator[VectorEntry] = {
+    for (i <- (0 until size).elements)
+      yield new VectorEntry {
+        override def index = i;
+        override def get = Vector.this.get(i);
+        override def set(d : Double) = Vector.this.set(i,d);
+      }
+  }
+  
+  def toArray = {
+    val a = new Array[Double](size);
+    for (entry <- elements) {
+      a(entry.index) = entry.get;
+    }
+    a;
+  }
 }
 
 /** An entry in a Vector */
@@ -397,6 +423,22 @@ trait Matrix extends Tensor[(Int,Int),MatrixEntry] {
       super.toString
     }
   }
+  
+  /** Returns a vector view of the given row. */
+  def row(i : Int) = new Vector {
+    override def size = cols;
+    override def get(j : Int) = Matrix.this.get(i, j);
+    override def set(j : Int, value : Double) = Matrix.this.set(i, j, value);
+    override def copy = ScalalaValues.DenseVector(this).asInstanceOf[this.type];
+  };
+  
+  /** Returns a vector view of the given column. */
+  def col(j : Int) = new Vector {
+    override def size = rows;
+    override def get(i : Int) = Matrix.this.get(i, j);
+    override def set(i : Int, value : Double) = Matrix.this.set(i, j, value);
+    override def copy = ScalalaValues.DenseVector(this).asInstanceOf[this.type];
+  }
 }
 
 /** An entry in a matrix */
@@ -420,6 +462,9 @@ object ScalalaValues {
     new no.uib.cipr.matrix.DenseVector(values, false);
   
   def DenseVector(values : Double*) : Vector =
+    new no.uib.cipr.matrix.DenseVector(values.toArray, false);
+  
+  def DenseVector(values : Vector) : Vector =
     new no.uib.cipr.matrix.DenseVector(values.toArray, false);
   
   def SparseVector(size : Int) : Vector =
