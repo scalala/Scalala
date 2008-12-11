@@ -127,6 +127,9 @@ object Scalala extends TestConsoleMain {
     }
   }
   
+  /** Log a numeric value */
+  @inline def log(v : Double) : Double = Math.log(v);
+  
   /** Log each element of a vector or matrix */
   def log(v : Vector) : Vector = v.map(x => Math.log(x));
   
@@ -458,6 +461,7 @@ object Scalala extends TestConsoleMain {
     
     // set the renderer
     val renderer = new org.jfree.chart.renderer.xy.XYLineAndShapeRenderer();
+    renderer.setPaint(xyplot.color(series));
     
     style match {
     case '-' => {
