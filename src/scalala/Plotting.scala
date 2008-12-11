@@ -223,8 +223,23 @@ object Plotting {
     }
   }
   
+  object XYPlot {
+    import java.awt.Color;
+    import java.awt.Paint;
+    import org.jfree.chart.ChartColor._;
+    
+    // color cycle ignoring bright colors
+    val colors = Array[Paint](
+       VERY_DARK_RED, VERY_DARK_BLUE, VERY_DARK_GREEN, VERY_DARK_YELLOW, VERY_DARK_MAGENTA, VERY_DARK_CYAN,
+       Color.darkGray,
+       DARK_RED, DARK_BLUE, DARK_GREEN, DARK_MAGENTA, DARK_CYAN
+    );
+  }
+  
   /** A two dimensional XY plot */
   class XYPlot(figure : Figure) {
+    import org.jfree.chart.plot.DefaultDrawingSupplier;
+    
     val plot  = new org.jfree.chart.plot.XYPlot()
     val xaxis : NumberAxis = new NumberAxis(null)
     val yaxis : NumberAxis = new NumberAxis(null)
@@ -235,6 +250,14 @@ object Plotting {
     Array(xaxis,yaxis) foreach (axis => axis.setAutoRangeIncludesZero(false))
     plot.setDomainAxis(xaxis)
     plot.setRangeAxis(yaxis)
+    
+    plot.setDrawingSupplier(new DefaultDrawingSupplier(
+      XYPlot.colors,
+      DefaultDrawingSupplier.DEFAULT_FILL_PAINT_SEQUENCE,
+      DefaultDrawingSupplier.DEFAULT_OUTLINE_PAINT_SEQUENCE,
+      DefaultDrawingSupplier.DEFAULT_STROKE_SEQUENCE,
+      DefaultDrawingSupplier.DEFAULT_OUTLINE_STROKE_SEQUENCE,
+      DefaultDrawingSupplier.DEFAULT_SHAPE_SEQUENCE));
     
     /** The plot title */
     // private var title_ : String = ""
@@ -279,12 +302,16 @@ object Plotting {
       } else {
         series_ = 0
         for (i <- 0 until plot.getDatasetCount()) {
-          plot.setDataset(i,null)
+          plot.setDataset(i,null);
         }
       }
       return series_
     }
 
+    def color(series : Int) : java.awt.Paint = {
+      XYPlot.colors(series % XYPlot.colors.length);
+    } 
+    
     /** The JFreeChart for this plot */
     lazy val chart =
       new JFreeChart(null, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
