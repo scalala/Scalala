@@ -17,39 +17,38 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala
+package scalala.library
 
-import ScalalaMTJ._
-import ScalalaValues._
-
-/** Operations that act on Scalala values */
-object ScalalaOps {
+/** Operations that act on Scalala value types. */
+trait Operators extends Library {
+  import OperatorSupport._;
   
-  //
-  // scalar function library
-  //
-  val _ScalarIdentity = (x:Double) => x;
-  val _ScalarInverse  = (x:Double) => 1.0 / x;
-  val _ScalarNegation = (x:Double) => -x;
+  implicit val scalalaOperatorEvaluationPool = new EvaluationPool(this);
   
   //
   // Implicit conversions
   //
   
-  implicit def iScalarOp(s : Int)(implicit pool : EvaluationPool)    : MatrixOp[One,One] = ScalarIdentity(s);
-  implicit def iScalarOp(s : Float)(implicit pool : EvaluationPool)  : MatrixOp[One,One] = ScalarIdentity(s);
-  implicit def iScalarOp(s : Long)(implicit pool : EvaluationPool)   : MatrixOp[One,One] = ScalarIdentity(s);
-  implicit def iScalarOp(s : Double)(implicit pool : EvaluationPool) : MatrixOp[One,One] = ScalarIdentity(s);
-  implicit def iScalarOp(s : Short)(implicit pool : EvaluationPool)  : MatrixOp[One,One] = ScalarIdentity(s);
-  implicit def iScalarOp(s : Byte)(implicit pool : EvaluationPool)   : MatrixOp[One,One] = ScalarIdentity(s);
+  implicit def iScalarOp(s : Int)(implicit pool : EvaluationPool)    : MatrixOp[One,One] = ScalarIdentity(s)(pool);
+  implicit def iScalarOp(s : Float)(implicit pool : EvaluationPool)  : MatrixOp[One,One] = ScalarIdentity(s)(pool);
+  implicit def iScalarOp(s : Long)(implicit pool : EvaluationPool)   : MatrixOp[One,One] = ScalarIdentity(s)(pool);
+  implicit def iScalarOp(s : Double)(implicit pool : EvaluationPool) : MatrixOp[One,One] = ScalarIdentity(s)(pool);
+  implicit def iScalarOp(s : Short)(implicit pool : EvaluationPool)  : MatrixOp[One,One] = ScalarIdentity(s)(pool);
+  implicit def iScalarOp(s : Byte)(implicit pool : EvaluationPool)   : MatrixOp[One,One] = ScalarIdentity(s)(pool);
   
-  implicit def iMatrixOp(m : Matrix)(implicit pool : EvaluationPool) : MatrixOp[Many,Many] = MatrixIdentity(m);
-  implicit def iVectorOp(v : Vector)(implicit pool : EvaluationPool) : MatrixOp[Many,One] = VectorIdentity(v);
+  implicit def iMatrixOp(v : Vector)(implicit pool : EvaluationPool) : MatrixOp[Many,One]  = VectorIdentity(v)(pool);
+  implicit def iMatrixOp(m : Matrix)(implicit pool : EvaluationPool) : MatrixOp[Many,Many] = MatrixIdentity(m)(pool);
   
   implicit def iMatrix(op : MatrixOp[Many,Many]) : Matrix = op.asMatrix;
   implicit def iColVector[O<:MatrixOp[One,Many]](op : O) : Vector = op.asVector;
   implicit def iRowVector[O<:MatrixOp[Many,One]](op : O) : Vector = op.asVector;
   implicit def iScalar(op : MatrixOp[One,One]) : Double = op.asScalar;
+}
+
+object OperatorSupport {
+  val _ScalarIdentity = (x:Double) => x;
+  val _ScalarInverse  = (x:Double) => 1.0 / x;
+  val _ScalarNegation = (x:Double) => -x;
   
   //
   // For composition of MatrixOps
@@ -69,7 +68,9 @@ object ScalalaOps {
   }
   
   /** Pool of instantiated objects to be modified */
-  class EvaluationPool {
+  class EvaluationPool(val scalala : Library) {
+    import scalala._;
+    
     var matrixs = new scala.collection.jcl.LinkedList[Matrix]()
     val vectors = new scala.collection.jcl.LinkedList[Vector]()
     
@@ -116,13 +117,15 @@ object ScalalaOps {
   sealed case class One() extends Cardinality()
   sealed case class Many() extends Cardinality()
   
-  type CC = Cardinality
+  private type CC = Cardinality
 
   //
   // Matrix operations
   //
   
   abstract class MatrixOp[ROW<:CC,COL<:CC](implicit pool : EvaluationPool) {
+    import pool.scalala.DenseVector;
+    
     //
     // Standard properties
     //
@@ -155,7 +158,7 @@ object ScalalaOps {
       
       val matrix = this.asMatrix;
       val vector = DenseVector(Math.max(rows,cols));
-      for (entry <- matrix) {
+      for (entry <- matrix.elements) {
         vector.set(Math.max(entry.row,entry.col),entry.get);
       }
       return vector;
@@ -189,13 +192,13 @@ object ScalalaOps {
     //
     
     def  +        (b : MatrixOp[ROW,COL]) =
-      MatrixPlusMatrix(this, b);
+      MatrixPlusMatrix(this, b)(pool);
     
     def  -        (b : MatrixOp[ROW,COL]) =
       MatrixPlusMatrixMultScalar(this, b, ScalarIdentity(-1.0));
     
     def  *[S<:CC] (b : MatrixOp[COL,S])   =
-      MatrixMultMatrix(this, b);
+      MatrixMultMatrix(this, b)(pool);
     
     def :*        (b : MatrixOp[ROW,COL]) =
       MatrixJoinInnerMap(this,b,{(row:Int,col:Int,ax:Double,bx:Double) => ax*bx});
@@ -305,7 +308,7 @@ object ScalalaOps {
     override def intermediate = false
     
     override def asScalar = s
-    override def asMatrix = ScalarMatrix(s,1,1)
+    override def asMatrix = pool.scalala.ScalarMatrix(s,1,1)
   } 
   
   case class VectorIdentity(v: Vector)(implicit pool : EvaluationPool) extends MatrixOp[Many,One] {
@@ -314,7 +317,7 @@ object ScalalaOps {
     override def intermediate = false
     
     override def asVector = v
-    override def asMatrix = ColMatrix(v)
+    override def asMatrix = pool.scalala.ColMatrix(v)
     
     override def toString : String = "VectorIdentity("+System.identityHashCode(v)+")"
   }
@@ -333,33 +336,35 @@ object ScalalaOps {
     override def rows = a.cols
     override def cols = a.rows
     
-    override def asMatrix : Matrix = TransposeMatrix(a.asMatrix)
+    override def asMatrix : Matrix = pool.scalala.TransposeMatrix(a.asMatrix)
   }
   
   //
   // basic pairwise matrix operations
   //
-    
+  
+  import ScalalaMTJ._;
+  
   case class MatrixPlusMatrix[ROW<:CC,COL<:CC](a: MatrixOp[ROW,COL], b: MatrixOp[ROW,COL])(implicit pool : EvaluationPool) extends MatrixOp[ROW,COL] {
     requireSameDimensions(a,b)
     override def rows = a.rows
     override def cols = a.cols
     
     override def asMatrix : Matrix = {
-      val ma = MTJMatrix(a.asMatrix)
-      val mb = MTJMatrix(b.asMatrix)
+      val ma = a.asMatrix;
+      val mb = b.asMatrix;
       if (a.intermediate && b.intermediate) {
-        val rv = ma.add(mb)
+        val rv = MTJMatrix(ma).add(MTJMatrix(mb));
         pool.release(mb)
         return rv
       } else if (a.intermediate) {
-        return ma.add(mb)
+        return MTJMatrix(ma).add(MTJMatrix(mb));
       } else if (b.intermediate) {
-        return mb.add(ma)
+        return MTJMatrix(mb).add(MTJMatrix(ma));
       } else {
-        val rv = MTJMatrix(pool.request(rows,cols))
-        rv.set(ma)
-        rv.add(mb)
+        val rv = MTJMatrix(pool.request(rows,cols));
+        rv.set(MTJMatrix(ma));
+        rv.add(MTJMatrix(mb));
         return rv
       }
     }
@@ -461,16 +466,16 @@ object ScalalaOps {
     override def asMatrix : Matrix = {
       val ma = a.asMatrix
       if (a.intermediate) {
-        for (entry <- ma) {
+        for (entry <- ma.elements) {
           entry.set(f(entry.get))
         }
         return ma
       } else {
         val rv = pool.request(rows,cols)
-        for (entry <- rv) {
+        for (entry <- rv.elements) {
           entry.set(0)
         }
-        for (entry <- ma) {
+        for (entry <- ma.elements) {
           rv.set(entry.row,entry.col,f(entry.get))
         }
         return rv
@@ -494,7 +499,7 @@ object ScalalaOps {
         return ma
       } else {
         val rv = pool.request(rows,cols)
-        for (entry <- rv) {
+        for (entry <- rv.elements) {
           entry.set(0)
         }
         for (i <- 0 until rows; j <- 0 until cols) {
@@ -598,7 +603,7 @@ object ScalalaOps {
       val mb = b.asMatrix
       val rv = pool.request(rows,cols)
       
-      for (entry <- rv) {
+      for (entry <- rv.elements) {
         entry.set(0)
       }
       for (pair <- inner) {
@@ -626,7 +631,7 @@ object ScalalaOps {
       val mb = b.asMatrix
       val rv = pool.request(rows,cols)
       
-      for (entry <- rv) {
+      for (entry <- rv.elements) {
         entry.set(0)
       }
       for (row <- 0 until rows; col <- 0 until cols) {
@@ -640,12 +645,12 @@ object ScalalaOps {
   }
 }
 
-object ScalalaOpsTest extends ScalalaTest.TestConsoleMain {
-  import ScalalaTest._
+object ScalalaOpsTest extends scalala.ScalalaTest.TestConsoleMain {
+  import scalala.ScalalaTest._
   
-  import Scalala._
-  import ScalalaOps._
-  import ScalalaValues._
+  import scalala.Scalala._;
+  
+  import OperatorSupport._;
   
   /** Some unit testing */
   def _symbolic_test() {

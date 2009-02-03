@@ -104,14 +104,3 @@ object ScalalaTest {
     }
   }
 }
-
-
-object ScalalaTestSuite {
-  val tests = List("Scalala","ScalalaOpsTest","ScalalaValuesTest")
-  
-  def main(argv : Array[String]) {
-    for (c <- tests) {
-      Class.forName("scalala."+c).getMethod("main",classOf[Array[String]]).invoke(null,Array(Array[String]()):_*);
-    }
-  }
-}

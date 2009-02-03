@@ -19,8 +19,6 @@
  */
 package scalala
 
-import scalala.ScalalaValues._
-
 //
 // Value types for linear algebra, including matrices, vectors, scalars.
 //
@@ -82,12 +80,12 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
   @inline override def apply(index : I) = get(index);
   
   /** Selects for the given elements, returning them as a vector. */
-  @inline def apply(elements : Iterator[I]) : Vector =
-    (for (i <- elements) yield get(i)).toList
+  @inline def apply(elements : Iterator[I]) : Iterator[Double] =
+    elements.map(get);
   
   /** Selects for the given elements, returning them as a vector. */
-  @inline def apply(seq : Seq[I]) : Vector =
-    apply(seq.elements);
+  @inline def apply(seq : Seq[I]) : Seq[Double] =
+    seq.map(get);
 
   /** Updates the value at the given index by calling set(index,value). */
   @inline def update(index : I, value : Double) : Unit =
@@ -101,11 +99,24 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
     for (e <- Tensor.this.elements if f(e.get)) yield e.index; 
   
   /** Apply a function f to all elements of this tensor. */
-  def foreach(f:(E => Unit)) : Unit = {
+  def foreach(f : (E => Unit)) : Unit = {
     for (element <- elements) {
       f(element);
     }
   }
+  
+//  /** Apply a function f to all elements of this tensor. */
+//  def foreach(f : (Double => Unit)) : Unit = {
+//    for (element <- elements) { f(element.get); }
+//  }
+
+  
+//  /** Tensor projection. */
+//  def map(f : (Double => Double)) = new Projection(f);
+//  
+//  class Projection(f : (Double => Double)) extends Tensor[I,E] {
+//    override def get(i : I) = f(Tensor.this.get(i));
+//  }
   
   //
   // equality
@@ -119,7 +130,7 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
       if (this.size != mo.size) {
         return false;
       }
-      for (pair <- this.ordered(canonical).zip(mo.ordered(canonical))) {
+      for (pair <- (this.ordered(canonical) zip mo.ordered(canonical))) {
         if (pair._1.index != pair._2.index || pair._1.get != pair._2.get) {
           return false;
         }
@@ -163,7 +174,53 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
   }
   
   override def toString : String =
-    elements.mkString("\n")
+    elements.take(20).mkString("\n");
+  
+  //
+  // operations
+  //
+  
+  def *= (s : Double) {
+    foreach((entry:E) => entry.set(entry.get * s));
+  }
+  
+  def /= (s : Double) {
+    foreach((entry:E) => entry.set(entry.get / s));
+  }
+  
+  def += (s : Double) {
+    foreach((entry:E) => entry.set(entry.get + s));
+  }
+  
+  def -= (s : Double) {
+    foreach((entry:E) => entry.set(entry.get - s));
+  }
+  
+  private def ensure (t : Tensor[I,E]) {
+    if (this.size != t.size) {
+      throw new IllegalArgumentException("Incompatible domain sizes");
+    }
+  }
+  
+  def :*= (t : Tensor[I,E]) {
+    ensure(t);
+    foreach((entry:E) => entry.set(entry.get * t(entry.index)));
+  }
+  
+  def :/= (t : Tensor[I,E]) {
+    ensure(t);
+    foreach((entry:E) => entry.set(entry.get / t(entry.index)));
+  }
+  
+  def += (t : Tensor[I,E]) {
+    ensure(t);
+    foreach((entry:E) => entry.set(entry.get + t(entry.index)));
+  }
+  
+  def -= (t : Tensor[I,E]) {
+    ensure(t);
+    foreach((entry:E) => entry.set(entry.get - t(entry.index)));
+  }
 }
 
 /**
@@ -184,11 +241,14 @@ trait ScalarEntry extends TensorEntry[Unit] {}
 
 object Vector {
   /** Creates a vector from a sequence of doubles */
+  def apply(values : Array[Double]) : Vector =
+    Scalala.DenseVector(values.toArray);
+  
   def apply(values : Double*) : Vector =
-    ScalalaValues.DenseVector(values.toArray);
+    Scalala.DenseVector(values.toArray);
   
   def apply(values : Array[Int]) : Vector = {
-    val v = ScalalaValues.DenseVector(values.length);
+    val v = Scalala.DenseVector(values.length);
     for (i <- 0 until values.length) {
       v(i) = values(i);
     }
@@ -338,7 +398,7 @@ trait Matrix extends Tensor[(Int,Int),MatrixEntry] {
   def get(row : Int, col : Int) : Double
 
   /** Sets the given element to the given value. */
-  def set(row : Int, col : Int, value : Double) : Unit
+  def set(row : Int, col : Int, value : Double) : Unit;
   
   //
   // accessors
@@ -351,16 +411,17 @@ trait Matrix extends Tensor[(Int,Int),MatrixEntry] {
   
   /** For matrix((_,1)) and matrix((0,_)) */
   def apply(select : (Int=>(Int,Int))) : Matrix = {
+    import Scalala._;
     // find whether row or column
     select(-1) match {
     case (-1,-1)  => throw new IllegalArgumentException("Index of out range")
-    case (-1,col) => {ColMatrix((0 until rows).map(row => get(row,col)).toList)}
-    case (row,-1) => {RowMatrix((0 until cols).map(col => get(row,col)).toList)}
+    case (-1,col) => {ColMatrix(DenseVector((0 until rows).map(row => get(row,col))))}
+    case (row,-1) => {RowMatrix(DenseVector((0 until cols).map(col => get(row,col))))}
     case _        => throw new IllegalArgumentException("Invalid index selector")
     }
   }
   
-  def check(row : Int, col : Int) = {
+  @inline protected def check(row : Int, col : Int) = {
     if (!isDefinedAt((row,col))) {
       throw new IndexOutOfBoundsException();
     }
@@ -429,7 +490,7 @@ trait Matrix extends Tensor[(Int,Int),MatrixEntry] {
     override def size = cols;
     override def get(j : Int) = Matrix.this.get(i, j);
     override def set(j : Int, value : Double) = Matrix.this.set(i, j, value);
-    override def copy = ScalalaValues.DenseVector(this).asInstanceOf[this.type];
+    override def copy = Vector(this.toArray).asInstanceOf[this.type];
   };
   
   /** Returns a vector view of the given column. */
@@ -437,7 +498,7 @@ trait Matrix extends Tensor[(Int,Int),MatrixEntry] {
     override def size = rows;
     override def get(i : Int) = Matrix.this.get(i, j);
     override def set(i : Int, value : Double) = Matrix.this.set(i, j, value);
-    override def copy = ScalalaValues.DenseVector(this).asInstanceOf[this.type];
+    override def copy = Vector(this.toArray).asInstanceOf[this.type];
   }
 }
 
@@ -448,237 +509,11 @@ trait MatrixEntry extends TensorEntry[(Int,Int)]{
   override def index : (Int,Int) = (row,col)
 }
 
+/** An exception thrown for an invalid value */
+class ScalalaValueException(message : String) extends RuntimeException(message);
 
-object ScalalaValues {
-  import ScalalaMTJ._
-  
-  def DenseMatrix(rows : Int, cols : Int) : Matrix =
-    new no.uib.cipr.matrix.DenseMatrix(rows,cols);
-  
-  def DenseVector(size : Int) : Vector =
-    new no.uib.cipr.matrix.DenseVector(size);
-  
-  def DenseVector(values : Array[Double]) : Vector =
-    new no.uib.cipr.matrix.DenseVector(values, false);
-  
-  def DenseVector(values : Double*) : Vector =
-    new no.uib.cipr.matrix.DenseVector(values.toArray, false);
-  
-  def DenseVector(values : Vector) : Vector =
-    new no.uib.cipr.matrix.DenseVector(values.toArray, false);
-  
-  def SparseVector(size : Int) : Vector =
-    new no.uib.cipr.matrix.sparse.SparseVector(size, Math.min(size/10,1000));
-  
-  //
-  // Lightweight wrappers for matrices backed by scalars or vectors
-  //
-
-  /** The given scalar as an immutable matrix of the given size */
-  case class ScalarMatrix(value : Double, val rows : Int, val cols : Int) extends Matrix {
-    override def get(row : Int, col : Int) : Double = {
-      check(row,col);
-      return value;
-    }
-    override def set(row : Int, col : Int, value : Double) = {
-      throw new UnsupportedOperationException("Cannot change values in ScalarMatrix");
-    }
-    override def copy = new ScalarMatrix(value, rows, cols).asInstanceOf[this.type];
-  }
-  
-  /** The given vector as a row matrix */
-  case class RowMatrix(val vector : Vector) extends Matrix {
-    override def rows = 1;
-    override def cols = vector.size;
-    
-    override def get(row : Int, col : Int) : Double = {
-      check(row,col);
-      return vector.get(col);
-    }
-    
-    override def set(row : Int, col : Int, value : Double) : Unit = {
-      check(row,col);
-      vector.set(col, value);
-    }
-    
-    override def elements : Iterator[MatrixEntry] = {
-      val iter = vector.elements
-      val entry = new MatrixEntry {
-        var inner : VectorEntry = null
-        override def get = inner.get
-        override def row = 0
-        override def col = inner.index
-        override def set(value : Double) = inner.set(value)
-      }
-      new Iterator[MatrixEntry] {
-        override def hasNext = iter.hasNext
-        override def next = { entry.inner = iter.next; entry; }
-      }
-    }
-    
-    /** Any ordering results in just iterating vector entries. */
-    override def ordered(order : (Int,Int)) = elements;
-    
-    override def copy = RowMatrix(vector.copy).asInstanceOf[this.type];
-  }
-  
-  /** The given vector as a column matrix */
-  case class ColMatrix(val vector : Vector) extends Matrix {
-    override def rows = vector.size;
-    override def cols = 1;
-    
-    override def get(row : Int, col : Int) : Double = {
-      check(row,col);
-      return vector.get(row);
-    }
-    
-    override def set(row : Int, col : Int, value : Double) : Unit = {
-      check(row,col);
-      vector.set(row, value);
-    }
-    
-    override def elements : Iterator[MatrixEntry] = {
-      val iter = vector.elements
-      val entry = new MatrixEntry {
-        var inner : VectorEntry = null
-        override def get = inner.get
-        override def row = inner.index
-        override def col = 0
-        override def set(value : Double) = inner.set(value)
-      }
-      new Iterator[MatrixEntry] {
-        override def hasNext = iter.hasNext
-        override def next = { entry.inner = iter.next; entry; }
-      }
-    }
-    
-    /** Any ordering results in just iterating vector entries. */
-    override def ordered(order : (Int,Int)) = elements;
-    
-    override def copy = ColMatrix(vector.copy).asInstanceOf[this.type];
-  }
-  
-  /** A matrix pretending to be the transpose of the given matrix */
-  case class TransposeMatrix(matrix : Matrix) extends Matrix {
-    override def rows = matrix.cols;
-    override def cols = matrix.rows;
-    
-    override def get(row : Int, col : Int) : Double =
-      return matrix.get(col,row);
-    
-    override def set(row : Int, col : Int, value : Double) : Unit =
-      matrix.set(col,row,value);
-    
-    override def elements : Iterator[MatrixEntry] =
-      wrap(matrix.elements);
-    
-    override def ordered(order : (Int,Int)) = {
-      order match {
-        case ((1,2)) => wrap(super.ordered((2,1)));
-        case ((2,1)) => wrap(super.ordered((1,2)));
-        case _       => throw new IllegalArgumentException;
-      }
-    }
-    
-    /** Wraps the given underlying MatrixEntry iterator. */
-    private def wrap(iter : Iterator[MatrixEntry]) = {
-      val entry = new MatrixEntry {
-        var inner : MatrixEntry = null;
-        override def get = inner.get;
-        override def row = inner.col;
-        override def col = inner.row;
-        override def set(value : Double) = inner.set(value);
-      }
-      new Iterator[MatrixEntry] {
-        override def hasNext = iter.hasNext;
-        override def next = { entry.inner = iter.next; entry; }
-      }
-    }
-    
-    override def copy = TransposeMatrix(matrix.copy).asInstanceOf[this.type]
-  }
-  
-  /** A matrix whose diagonal entries are taken from the given vector */
-  case class DiagonalMatrix(vector : Vector) extends Matrix {
-    override def rows = vector.size;
-    override def cols = vector.size;
-    
-    override def get(row : Int, col : Int) : Double =
-      if (row == col) vector(row) else 0;
-    
-    override def set(row : Int, col : Int, value : Double) : Unit = {
-      if (row != col) {
-        throw new IllegalArgumentException("Cannot set off-diagonal elements of a DiagonalMatrix");
-      }
-      vector.set(row,value);
-    }
-    
-    /** Returns elements wrapped around the underlying vector's elements. */
-    override def elements : Iterator[MatrixEntry] = {
-      val iter = vector.elements;
-      val entry = new MatrixEntry {
-        var inner : VectorEntry = null;
-        override def get = inner.get;
-        override def row = inner.index;
-        override def col = inner.index;
-        override def set(value : Double) = inner.set(value);
-      }
-      new Iterator[MatrixEntry] {
-        override def hasNext = iter.hasNext;
-        override def next = { entry.inner = iter.next; entry; }
-      }
-    }
-    
-    /** Either ordering of row or column first returns diagonal elements. */
-    override def ordered(order : (Int,Int)) = elements;
-    
-    override def copy = DiagonalMatrix(vector.copy).asInstanceOf[this.type];
-  }
-  
-  //
-  // Type promotions
-  //
-
-  implicit def iDenseMatrixFromSeqSeq[T<:AnyVal](data : Seq[Seq[T]]) : Matrix = {
-    val numRows = data.length
-    val numCols = data map (_.length) reduceLeft Math.max
-    val matrix  = DenseMatrix(numRows, numCols)
-    for (i <- 0 until data.length) {
-      val seq = data(i)
-      if (seq.length >= 1) {
-             if (seq(0).isInstanceOf[Double]) { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Double]; }
-        else if (seq(0).isInstanceOf[Float])  { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Float]; }
-        else if (seq(0).isInstanceOf[Int])    { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Int]; }
-        else if (seq(0).isInstanceOf[Long])   { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Long]; }
-        else if (seq(0).isInstanceOf[Short])  { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Short]; }
-        else if (seq(0).isInstanceOf[Byte])   { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Byte]; }
-        else throw new ScalalaValueException("Unrecognized numeric type in sequence promotion");
-      }
-    }
-    return matrix
-  }
-  
-  implicit def iDenseVectorFromSeq[T<:AnyVal](seq : Seq[T]) : Vector = {
-    val v = DenseVector(seq.length);
-    if (seq.length >= 1) {
-           if (seq(0).isInstanceOf[Double]) { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Double]; }
-      else if (seq(0).isInstanceOf[Float])  { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Float]; }
-      else if (seq(0).isInstanceOf[Int])    { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Int]; }
-      else if (seq(0).isInstanceOf[Long])   { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Long]; }
-      else if (seq(0).isInstanceOf[Short])  { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Short]; }
-      else if (seq(0).isInstanceOf[Byte])   { for (i <- 0 until seq.length) v(i) = seq(i).asInstanceOf[Byte]; }
-      else throw new ScalalaValueException("Unrecognized numeric type in sequence promotion");
-    }
-    return v;
-  }
-
-  /** An exception thrown for an invalid value */
-  class ScalalaValueException(message : String) extends RuntimeException(message);
-  
-}
-
-object ScalalaValuesTest extends ScalalaTest.TestConsoleMain {
-  import ScalalaTest._
+trait ScalalaValuesTest extends library.Library with library.Implicits {
+  import ScalalaTest._;
   
   def matrix_ordered_test() {
     val m : Matrix = Array[Array[Int]](Array(1,2,3),Array(4,5,6),Array(7,8,9));
@@ -688,14 +523,14 @@ object ScalalaValuesTest extends ScalalaTest.TestConsoleMain {
   
   def matrix_find_test() {
     val m : Matrix = Array[Array[Int]](Array(1,2,3),Array(4,5,6),Array(7,8,9));
-    assertEquals(m.find(_%2==0).toList, List((1,0),(0,1),(2,1),(1,2)))
-    assertEquals(m(m.find(_%2==0)), Vector(4,2,8,6))
+    assertEquals(m.find(_%2==0).toList, List((1,0),(0,1),(2,1),(1,2)));
+    assertEquals(m(m.find(_%2==0)).toList, List(4,2,8,6));
   }
   
   def vector_find_test() {
     val v = Vector(2,1,8,6);
     assertEquals(v.find(_%2==0).toList, List(0,2,3));
-    assertEquals(v(v.find(_%2==0)), Vector(2,8,6));
+    assertEquals(v(v.find(_%2==0)).toList, List(2,8,6));
   }
   
   def matrix_apply_test() {
