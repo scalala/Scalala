@@ -202,6 +202,11 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
     }
   }
   
+  def :=  (t : Tensor[I,E]) {
+    ensure(t);
+    foreach((entry:E) => entry.set(t(entry.index)));
+  } 
+  
   def :*= (t : Tensor[I,E]) {
     ensure(t);
     foreach((entry:E) => entry.set(entry.get * t(entry.index)));
@@ -240,13 +245,15 @@ trait Scalar extends Tensor[Unit,ScalarEntry] {}
 trait ScalarEntry extends TensorEntry[Unit] {}
 
 object Vector {
-  /** Creates a vector from a sequence of doubles */
+  /** Creates a vector by wrapping a double array.  Shallow copy. */
   def apply(values : Array[Double]) : Vector =
-    Scalala.DenseVector(values.toArray);
+    Scalala.DenseVector(values);
   
+  /** Creates a vector from a sequence of doubles.  Deep copy. */
   def apply(values : Double*) : Vector =
     Scalala.DenseVector(values.toArray);
   
+  /** Creates a vector from a sequence of ints.  Deep copy. */
   def apply(values : Array[Int]) : Vector = {
     val v = Scalala.DenseVector(values.length);
     for (i <- 0 until values.length) {
