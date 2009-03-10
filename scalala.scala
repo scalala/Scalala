@@ -1,5 +1,3 @@
-import scalala._
-import scalala.Scalala._
-import scalala.ScalalaOps._
-import scalala.ScalalaValues._
+import scalala._;
+import scalala.Scalala._;
 
