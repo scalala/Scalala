@@ -256,44 +256,105 @@ trait Plotting extends Library with Vectors with Matrices with Operators with Im
     scatter(x,y,s,ones(x.size)*c)(xyplot);
   }
   
-  /** Plots the given matrix as an image. */
-  def imagesc(c : Matrix)(implicit xyplot : Plotting.XYPlot) {
-    val inverted = new Matrix {
-      override def rows = c.rows;
-      override def cols = c.cols;
-      override def get(row : Int, col : Int) = c.get(rows-row-1,col);
-      override def set(row : Int, col : Int, x : Double) = c.set(rows-row-1,col,x);
-      override def copy = this;
-    }
+  /** An XY stacked area chart. */
+  def stacked(x : Vector, y : Seq[Vector], names : Seq[String])(implicit xyplot : Plotting.XYPlot) {
+    import org.jfree.data.xy.{AbstractXYDataset, TableXYDataset};
+    val dataset = new AbstractXYDataset with TableXYDataset {
+      override def getX(series : Int, item : Int) = x(item);
+      override def getY(series : Int, item : Int) = y(series)(item);
+      override def getSeriesKey(series : Int) = names(series);
+      override def getSeriesCount = y.size;
+      override def getItemCount = x.size;
+      override def getItemCount(series : Int) = y(series).size;
+    };
     
-    val dataset = Plotting.Dataset(inverted);
+    import org.jfree.chart.renderer.xy.StackedXYAreaRenderer2;
+    
+    val renderer = new StackedXYAreaRenderer2(null,null);
+    renderer.setOutline(true);
+
+    // add dataset and renderer
+    val series = xyplot.nextSeries;
+    xyplot.plot.setDataset(series,dataset);
+    xyplot.plot.setRenderer(series, renderer);
+    xyplot.refresh;
+  }
+  
+  /** An XY stacked area chart with default names. */
+  def stacked(x : Vector, y : Seq[Vector])(implicit xyplot : Plotting.XYPlot) {
+    stacked(x, y, y.elements.zipWithIndex.map(_._2.toString).collect)(xyplot);
+  }
+  
+  /**
+   * Displays an image in the current figure, where each cell in the matrix provides
+   * color for one square of the image.
+   * 
+   * @param x The range on the x axis for drawing the image.  If x._1 < x._2, the matrix column numbers are inverted.
+   * @param y The range on the y axis for drawing the image.  If y._1 < y._2, the matrix row numbers are inverted.
+   */
+  private def image(x : (Double,Double), y : (Double,Double), c : Matrix, lower : Double, upper : Double)(implicit xyplot : Plotting.XYPlot) {
+    import org.jfree.chart.axis.NumberAxis;
+    
+    val (minX,maxX) = (Math.min(x._1,x._2),Math.max(x._1,x._2));
+    val (minY,maxY) = (Math.min(y._1,y._2),Math.max(y._1,y._2));
+    
+    val dataset = Plotting.Dataset(c, x, y);
     val series = xyplot.nextSeries;
     
     xyplot.plot.setDataset(series, dataset);
     
-    import org.jfree.chart.renderer.xy.XYBlockRenderer
-    val renderer = new XYBlockRenderer();
-    renderer.setBlockAnchor(org.jfree.ui.RectangleAnchor.TOP_LEFT);
-    
+    // initialize paint scale
     val gradient = Plotting.Gradients.GRADIENT_BLUE_TO_RED;
-    
     val paintscale = new org.jfree.chart.renderer.PaintScale {
-      override def getLowerBound = min(c);
-      override def getUpperBound = max(c);
+      override def getLowerBound = lower;
+      override def getUpperBound = upper;
       override def getPaint(value : Double) = {
         val index = gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound);
         gradient(Math.min(gradient.length-1, Math.max(0, index.toInt)));
       }
     }
     
+    // initialize renderer
+    import org.jfree.chart.renderer.xy.XYBlockRenderer
+    val renderer = new XYBlockRenderer();
     renderer.setPaintScale(paintscale);
+    renderer.setBlockAnchor(org.jfree.ui.RectangleAnchor.BOTTOM_LEFT);
+    renderer.setBlockWidth((maxX - minX) / c.cols);
+    renderer.setBlockHeight((maxY - minY) / c.rows);
+    
     xyplot.plot.getRangeAxis.setInverted(true);
-    xyplot.plot.getRangeAxis.setLowerBound(0);
-    xyplot.plot.getRangeAxis.setUpperBound(c.rows);
-    xyplot.plot.getDomainAxis.setLowerBound(0);
-    xyplot.plot.getDomainAxis.setUpperBound(c.cols);
+    xyplot.plot.getRangeAxis.setLowerBound(minY);
+    xyplot.plot.getRangeAxis.setUpperBound(maxY);
+    if (maxY - minY == c.rows && minY == minY.intValue) {
+      xyplot.plot.getRangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+    }
+    xyplot.plot.getDomainAxis.setLowerBound(Math.min(x._1,x._2));
+    xyplot.plot.getDomainAxis.setUpperBound(Math.max(x._1,x._2));
+    if (maxX - minX == c.cols && minX == minX.intValue) {
+      xyplot.plot.getDomainAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+    }
     xyplot.plot.setRenderer(series, renderer);
     xyplot.refresh();
+  }
+  
+  /** Plots the given matrix as an image. */
+  def image(c : Matrix)(implicit xyplot : Plotting.XYPlot) {
+    image((0,c.cols),(0,c.rows),c,0.0,1.0)(xyplot);
+  }
+  
+  /** Plots the given matrix as an image. */
+  def image(x : (Double,Double), y : (Double,Double), c : Matrix)(implicit xyplot : Plotting.XYPlot) {
+    image(x,y,c,0.0,1.0)(xyplot);
+  }
+  
+  /** Plots the given matrix as an image. */
+  def imagesc(c : Matrix)(implicit xyplot : Plotting.XYPlot) {
+    image((0,c.cols),(0,c.rows),c,min(c),max(c))(xyplot);
+  }
+  
+  /** Plots the given matrix as an image. */
+  def imagesc(x : (Double,Double), y : (Double,Double), c : Matrix)(implicit xyplot : Plotting.XYPlot) {
+    image(x, y, c, min(c), max(c))(xyplot);
   }
   
   /** Sets the lower and upper bounds of the current plot. */
@@ -351,18 +412,34 @@ object Plotting {
   
   /** Returns a JFreeChart XYZDataset for plotting all elements of the matrix */
   def Dataset(m : Matrix) : XYZDataset = {
-    def getCol(item : Int) = (item - (item % m.rows)) / m.rows
-    def getRow(item : Int) = item % m.rows
+    Dataset(m, (0., 0.+m.cols), (0., 0.+m.rows));
+  }
+  
+  def Dataset(m : Matrix, x : (Double,Double), y : (Double,Double)) : XYZDataset = {
+    val (minX,maxX) = (Math.min(x._1,x._2),Math.max(x._1,x._2));
+    val (minY,maxY) = (Math.min(y._1,y._2),Math.max(y._1,y._2));
+    
+    val scaleX = (maxX - minX) / m.cols;
+    val scaleY = (maxY - minY) / m.rows;
+    
+    val invertX = x._1 > x._2;
+    val invertY = y._1 > y._2;
+    
+    def getCol(item : Int) = (item - (item % m.rows)) / m.rows;
+    def getRow(item : Int) = item % m.rows;
     
     new org.jfree.data.xy.AbstractXYZDataset() {
       override def getX(series : Int, item : Int) : Number = {
-        if (series == 0) getCol(item) else null
+        if (series != 0) return null;
+        (if (invertX) (m.cols - getCol(item) - 1) else (getCol(item))) * scaleX + minX;
       }
       override def getY(series : Int, item : Int) : Number = {
-        if (series == 0) m.rows-getRow(item) else null
+        if (series != 0) return null;
+        (if (invertY) (m.rows - getRow(item) - 1) else (getRow(item))) * scaleY + minY;
       }
       override def getZ(series : Int, item : Int) : Number = {
-        if (series == 0) m.get(getRow(item), getCol(item)) else null
+        if (series != 0) return null;
+        m.get(getRow(item), getCol(item));
       }
       override def getItemCount(series : Int) = m.rows * m.cols
       override def getSeriesKey(series: Int) = "1"

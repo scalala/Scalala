@@ -85,6 +85,22 @@ trait Vectors extends Library with Operators with Implicits {
   def mean(v : Vector) : Double =
     sum(v) / v.size;
   
+  /** Returns the sum vector of a bunch of vectors. */
+  def sum(vectors : Seq[Vector]) : Vector = {
+    val sum = vectors(0).copy;
+    for (vector <- vectors.elements.drop(1)) {
+      sum += vector;
+    }
+    sum;
+  }
+  
+  /** Returns the mean vector of a bunch of vectors. */
+  def mean(vectors : Seq[Vector]) : Vector = {
+    val rv = sum(vectors);
+    rv /= vectors.size;
+    rv;
+  }
+  
   /**
    * Returns the standard deviation of the values in the vector:
    * sqrt(sumsq (v - mean(v)) / (v.size - 1)).

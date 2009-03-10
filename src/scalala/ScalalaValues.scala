@@ -123,7 +123,9 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
   //
   
   override def equals(other : Any) : Boolean = {
-    if (!other.isInstanceOf[Tensor[_,_]]) {
+    if (other.asInstanceOf[AnyRef] eq this) {
+      return true;
+    } else if (!other.isInstanceOf[Tensor[_,_]]) {
       return false;
     } else {
       val mo = other.asInstanceOf[Tensor[I,E]];
@@ -154,7 +156,7 @@ sealed trait Tensor[I,E<:TensorEntry[I]] extends PartialFunction[I,Double] {
           case (i:Int)             => i;
           case (i:Int,j:Int)       => i*j;
           case (i:Int,j:Int,k:Int) => i*j*k;
-          case _       => throw new RuntimeException("Unexpected tensor size");
+          case _       => throw new ScalalaValueException("Unexpected tensor size");
         }
       }
       
