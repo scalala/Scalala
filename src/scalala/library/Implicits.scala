@@ -28,11 +28,11 @@ trait Implicits extends Library {
   //
 
   implicit def iDenseMatrixFromSeqSeq[T<:AnyVal](data : Seq[Seq[T]]) : Matrix = {
-    val numRows = data.length
-    val numCols = data map (_.length) reduceLeft Math.max
-    val matrix  = DenseMatrix(numRows, numCols)
+    val numRows = data.length;
+    val numCols = data map (_.length) reduceLeft Math.max;
+    val matrix  = DenseMatrix(numRows, numCols);
     for (i <- 0 until data.length) {
-      val seq = data(i)
+      val seq = data(i);
       if (seq.length >= 1) {
              if (seq(0).isInstanceOf[Double]) { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Double]; }
         else if (seq(0).isInstanceOf[Float])  { for (j <- 0 until seq.length) matrix(i,j) = seq(j).asInstanceOf[Float]; }
@@ -52,6 +52,7 @@ trait Implicits extends Library {
   
   implicit def iDenseVectorFromSeq[T<:AnyVal](seq : Seq[T]) : Vector = {
     if (seq.isInstanceOf[Array[Double]]) {
+      // special case for Array[Double] as a pass-through
       return iDenseVectorFromDoubleArray(seq.asInstanceOf[Array[Double]]);
     }
     
@@ -67,5 +68,4 @@ trait Implicits extends Library {
     }
     return v;
   }
-
 }
