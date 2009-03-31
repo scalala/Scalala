@@ -51,6 +51,12 @@ trait Vectors extends Library with Operators with Implicits {
     return sum;
   }
   
+  type HasDoubleValues = {
+    def values : Iterator[Double];
+  }
+  
+  def sum(v : HasDoubleValues) : Double = v.values.foldLeft(0.0)(_ + _);
+  
   /** Log each element of a vector or matrix */
   def log(v : Vector) : Vector = v.map(Math.log);
 

@@ -19,10 +19,6 @@
  */
 package scalala
 
-//
-// Value types for linear algebra, including matrices, vectors, scalars.
-//
-
 /**
  * A TensorValue is multi-dimensional array value.  If E is Int, then
  * the tensor is naturally considered a Vector.  If it is an (Int,Int),
@@ -276,6 +272,8 @@ object Vector {
   class Projection(vector : Vector, f:(Double=>Double)) extends Vector {
     val at0 = f(0.0);
     
+    // override def domain = vector.domain;
+    
     override def size = vector.size;
     
     override def get(i : Int) : Double = {
@@ -352,6 +350,7 @@ object Vector {
 
 /** Vectors are Tensors indexed by a single Int. */
 trait Vector extends Tensor[(Int),VectorEntry] {
+  //override def domain = Helpers.rangeToSet(0 until size);
   @inline override def isDefinedAt(index : Int) =
     index < size && index >= 0
   
