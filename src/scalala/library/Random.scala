@@ -25,7 +25,7 @@ import scalala.tensor.{Tensor,Vector,Matrix};
  * Random number generation.
  */
 trait Random extends Library {
-  implicit val _scalab_random = new java.util.Random;
+  implicit val _scalala_random = new java.util.Random;
   
   /** Returns a psuedo-random number from the interval 0 to 1 */
   def rand()(implicit rand : java.util.Random) = rand.nextDouble;
