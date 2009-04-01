@@ -40,39 +40,11 @@ object ScalalaTest {
   def assertEquals(v1 : =>Double, v2 : =>Double, tolerance : Double) : Unit =
     if (Math.abs(v1 - v2) > tolerance) throw new AssertionException(v1 + "!=" + v2);
   
-  /** Two-arg function application with expected output. */
-  def assertEquals[IN1,IN2,OUT](f : ((IN1,IN2) => OUT), in1 : IN1, in2 : IN2, out : OUT, valid : ((OUT,OUT) => Boolean)) : Unit =
-    if (!valid(f(in1,in2),out)) throw AssertionException(f.toString + "(" + in1 + "," + in2 + ") != "+out);
-  
-  /** Two-arg function application with "==" equality on outputs. */
-  def assertEquals[IN1,IN2,OUT<:AnyRef](f :((IN1,IN2) => OUT), in1 : IN1, in2 : IN2, out : OUT) : Unit =
-    assertEquals(f, in1, in2, out, ((a:OUT, b:OUT) => a == b)); 
-  
-  /** Two-arg function application with "eq" equality on outputs. */
-  def assertEq[IN1,IN2,OUT<:AnyRef](f :((IN1,IN2) => OUT), in1 : IN1, in2 : IN2, out : OUT) : Unit =
-    assertEquals(f, in1, in2, out, ((a:OUT, b:OUT) => a eq b)); 
-  
-  /** Two-arg function application with numerical return value and tolerance. */
-  def assertEquals[IN1,IN2](f : ((IN1,IN2) => Double), in1 : IN1, in2 : IN2, out : Double, tolerance : Double) : Unit =
-    assertEquals(f, in1, in2, out, (a:Double, b:Double) => Math.abs(a-b) < tolerance);
-  
-  /** Two-arg function application with numerical return value and default tolerance of 1e-6. */
-  def assertEquals[IN1,IN2](f : ((IN1,IN2) => Double), in1 : IN1, in2 : IN2, out : Double) : Unit =
-    assertEquals(f, in1, in2, out, TOLERANCE);
-  
-  /** Two-arg function application with numerical return value and tolerance. */
-  def assertEquals[IN1,IN2](f : ((IN1,IN2) => Float), in1 : IN1, in2 : IN2, out : Float, tolerance : Float) : Unit =
-    assertEquals(f, in1, in2, out, (a:Float, b:Float) => Math.abs(a-b) < tolerance);
-  
-  /** Two-arg function application with numerical return value and default tolerance of 1e-6f. */
-  def assertEquals[IN1,IN2](f : ((IN1,IN2) => Float), in1 : IN1, in2 : IN2, out : Float) : Unit =
-    assertEquals(f, in1, in2, out, TOLERANCE.asInstanceOf[Float]);
-  
   /** Two-arg function application with expected exception. */
-  def assertThrows[IN1,IN2,OUT](f : ((IN1,IN2) => OUT), in1 : IN1, in2 : IN2, exType : java.lang.Class[_ <: java.lang.Throwable]) : Unit = {
-    def die() = throw AssertionException(f.toString + "("+in1+","+in2+") did not throw "+exType);
+  def assertThrows[V](f : =>V, exType : java.lang.Class[_ <: java.lang.Throwable]) : Unit = {
+    def die() = throw AssertionException("Evaluation did not throw "+exType+": "+f.toString);
     try {
-      f(in1, in2);
+      val x = f.toString;
       // should have thrown but didn't
       die();
     } catch {

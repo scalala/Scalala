@@ -60,6 +60,7 @@ object Scalala extends Scalala
  */
 object ScalalaTestSuite extends Scalala
   with scalala.tensor.operators.OperatorTest
+  with StatisticsTest
   with ScalalaTest.TestConsoleMain
 {
   // Test suite

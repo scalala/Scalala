@@ -17,9 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library
-
-import scalala.ScalalaTest._;
+package scalala.library;
 
 import scalala.tensor.{Tensor,Vector,Matrix};
 
@@ -61,10 +59,14 @@ trait Statistics extends Library {
     val cov_x_y = sum_coproduct / N;
     return cov_x_y / (pop_sd_x * pop_sd_y);
   }
-  
+}
+
+trait StatisticsTest extends Library with Statistics {
+  import scalala.ScalalaTest._;
+
   def _corr_test() = {
-    assertEquals(corr _, Vector(1,2,3), Vector(2,3,3.4), 0.970725343394151);
-    assertThrows(corr _, Vector(1,2), Vector(2,3,3.4), classOf[IllegalArgumentException]);
-    assertThrows(corr _, Vector(), Vector(), classOf[IllegalArgumentException]);
+    assertEquals(corr(Vector(1,2,3), Vector(2,3,3.4)), 0.97072, 1e-5);
+    assertThrows(corr(Vector(1,2), Vector(2,3,3.4)), classOf[IllegalArgumentException]);
+    assertThrows(corr(Vector(), Vector()), classOf[IllegalArgumentException]);
   }
 }

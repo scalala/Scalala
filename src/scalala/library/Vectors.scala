@@ -21,7 +21,6 @@ package scalala.library
 
 import scalala.collection.PartialMap;
 import scalala.tensor.Vector;
-import scalala.ScalalaTest._;
 
 trait Vectors extends Library with Operators {
   /** 100 evenly spaced points between a and b */
@@ -63,7 +62,7 @@ trait Vectors extends Library with Operators {
   def log(v : Vector) : Vector = {
     val x = v.copy;
     x := v.map(Math.log _);
-    x.asInstanceOf[Vector];
+    x;
   }
 
   /** The maximum active value of the map (does not consider default). */
@@ -78,7 +77,7 @@ trait Vectors extends Library with Operators {
    * Returns the sum of the squares of the elements of the vector.
    */
   def sumsq[I](v : PartialMap[I,Double]) : Double =
-    sum(v.map((x:Double) => x*x));
+    sum(v.map(x => x*x));
   
   /** Returns the mean of the vector: sum(v) / v.size. */
   def mean[I](v : PartialMap[I,Double]) : Double =
@@ -123,6 +122,10 @@ trait Vectors extends Library with Operators {
       throw new UnsupportedOperationException();
     }
   }
+}
+
+trait VectorsTest extends Library with Vectors {  
+  import scalala.ScalalaTest._;
   
   def _norm_test() {
     val v = Vector(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
@@ -134,5 +137,4 @@ trait Vectors extends Library with Operators {
     assertEquals(norm(v,6), 1.6940, 1e-4);
     assertEquals(norm(v,Double.PositiveInfinity), 1.6656, 1e-4);
   }
-  
 }
