@@ -19,12 +19,12 @@
  */
 package scalala.library
 
+import scalala.tensor.{Tensor,Vector,Matrix};
+
 trait Matrices extends Library with Vectors {
   /** A matrix of size m by n with 1 everywhere */
   def ones(rows : Int, cols : Int) : Matrix = {
-    val m = DenseMatrix(rows,cols);
-    for (i <- 0 until rows; j <- 0 until cols) m.set(i,j,1.0);
-    return m;
+    Matrix(Array.fromFunction(i => 1.0)(rows*cols),rows,cols);
   }
   
   /** A matrix of size m by n with 0 everywhere */
@@ -39,14 +39,14 @@ trait Matrices extends Library with Vectors {
       case 1 => {
         val sum = DenseMatrix(1, m.cols);
         for (entry <- m.elements) {
-          sum(0, entry.col) += entry.get;
+          sum(0, entry._1._2) += entry._2;
         }
         sum;
       }
       case 2 => {
         val sum = DenseMatrix(m.rows, 1);
         for (entry <- m.elements) {
-          sum(entry.row, 0) += entry.get;
+          sum(entry._1._1, 0) += entry._2;
         }
         sum;
       }
@@ -70,13 +70,7 @@ trait Matrices extends Library with Vectors {
   //
   
   def vec(m : Matrix) : Vector = {
-    val v = DenseVector(m.rows * m.cols);
-    var i = 0;
-    for (e <- m.elements) {
-      v(i) = e.get;
-      i += 1;
-    }
-    v;
+    Vector(Array.fromFunction(i => m(i % m.rows, i / m.rows))(m.rows * m.cols));
   }
     
   /** Returns a square diagonal matrix of the given size */
@@ -94,6 +88,8 @@ trait Matrices extends Library with Vectors {
   /**
    * Turns the given matrices into a block diagonal matrix.
    */
+  // TODO re-implement
+  /*
   def blkdiag(blocks : Seq[Matrix]) : Matrix = {
     def zeros() : Array[Matrix] =
       blocks.map(m => ScalarMatrix(0.0, m.rows, m.cols)).toArray
@@ -106,4 +102,5 @@ trait Matrices extends Library with Vectors {
     
     BlockMatrix((0 until blocks.length).map(row).toArray)
   }
+  */
 }

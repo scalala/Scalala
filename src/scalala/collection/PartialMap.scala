@@ -90,7 +90,7 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   }
   
   /** A view of this object mapped with the given value function. */
-  def map[O](f : (B => O)) : PartialMap.Projection[A,B,O] = {
+  def map[O](f : (B => O)) : PartialMap[A,O] = {
     new PartialMap.Projection[A,B,O](this) {
       override def func(b : B) = f(b);
     }

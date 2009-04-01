@@ -17,7 +17,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library
+package scalala.library;
+
+import scalala.tensor.{Tensor,Vector,Matrix};
 
 /**
  * Random number generation.
@@ -41,7 +43,7 @@ trait Random extends Library {
   def rand(rows : Int, cols : Int)(implicit rand : java.util.Random) : Matrix = {
     val m = DenseMatrix(rows,cols);
     for (i <- 0 until rows; j <- 0 until cols) {
-      m.set(i,j,rand.nextDouble);
+      m(i,j) = rand.nextDouble;
     }
     return m;
   }
@@ -62,7 +64,7 @@ trait Random extends Library {
   def randn(rows : Int, cols : Int)(implicit rand : java.util.Random) : Matrix = {
     val m = DenseMatrix(rows,cols);
     for (i <- 0 until rows; j <- 0 until cols) {
-      m.set(i,j,rand.nextGaussian);
+      m(i,j) = rand.nextGaussian;
     }
     return m;
   }

@@ -1,3 +1,22 @@
+/*
+ * Distributed as part of Scalala, a linear algebra library.
+ * 
+ * Copyright (C) 2008- Daniel Ramage
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
+ */
 package scalala.tensor.operators;
 
 import scalala.ScalalaTest._;
@@ -6,8 +25,10 @@ import scalala.tensor._;
 import scalala.tensor.dense._;
 import OperatorSupport._;
 
-object OperatorTest extends TestConsoleMain {
-  def vector_test() = {
+import scalala.Scalala.Vector;
+
+trait OperatorTest {
+  def _vector_test() = {
     val x = Vector(1,2,3);
     
     x += 2;
@@ -25,7 +46,7 @@ object OperatorTest extends TestConsoleMain {
     assertEquals(2*.5+2*2+2*1, z * y.t);
   }
   
-  def matrix_test() = {
+  def _matrix_test() = {
     val A = new DenseMatrix(Array(1,2,3,4,5,6),2,3);
     val b = Vector(1,.5,1);
     
@@ -33,7 +54,7 @@ object OperatorTest extends TestConsoleMain {
     assertEquals(Vector(1*1+.5*3+1*5, 1*2+.5*4+1*6), (b.t * A.t).value);
   }
   
-  def implicits_test() = {
+  def _implicits_test() = {
     import TensorImplicits._;
     
     val x = Array(1.0,2.0,3.0);
@@ -45,4 +66,8 @@ object OperatorTest extends TestConsoleMain {
     x :*= y;
     assertEquals(x.toList, List(6.0, 8.0, 6.0));
   }
+}
+
+  
+object OperatorTest extends OperatorTest with TestConsoleMain {
 }

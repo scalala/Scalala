@@ -19,77 +19,70 @@
  */
 package scalala.library
 
-import scalala.Vector;
+import scalala.collection.PartialMap;
+import scalala.tensor.Vector;
 import scalala.ScalalaTest._;
 
-trait Vectors extends Library with Operators with Implicits {
+trait Vectors extends Library with Operators {
   /** 100 evenly spaced points between a and b */
   def linspace(a : Double, b : Double) : Vector = linspace(a,b,100);
   
   /** n evenly spaced points between a and b */
   def linspace(a : Double, b : Double, n : Int) : Vector = {
-    val v = DenseVector(n);
     val delta = (b - a) / (n - 1.0);
-    for (i <- 0 until n) { v.set(i, a + i*delta); }
-    return v;
+    Vector(Array.fromFunction(i => a + i*delta)(n));
   }
   
   /** A vector of ones of the given size */
   def ones(n : Int) : Vector = {
-    val v = DenseVector(n);
-    for (i <- 0 until n) v.set(i,1.0);
-    return v;
+    Vector(Array.fromFunction(i => 1.0)(n));
   }
 
   /** A vector of zeros of the given size */
   def zeros(n : Int) : Vector = DenseVector(n);
   
   /** Sums the elements of a vector */
-  def sum(v : Vector) : Double = {
+  def sum[I](v : PartialMap[I,Double]) : Double = {
     var sum = 0.0;
-    for (e <- v.elements) { sum += e.get }
+    if (v.default == 0.0) {
+      for (x <- v.activeValues) { sum += x; } 
+    } else if (v.domain.isFinite) {
+      var numActive = 0;
+      for (x <- v.activeValues) {
+        sum += x;
+        numActive += 1;
+      } 
+      sum += (v.domain.asInstanceOf[scalala.collection.domain.FiniteDomain[_]].size - numActive) * v.default;
+    } else {
+      for (x <- v.values) { sum += x; }
+    }
     return sum;
   }
   
-  type HasDoubleValues = {
-    def values : Iterator[Double];
-  }
-  
-  def sum(v : HasDoubleValues) : Double = v.values.foldLeft(0.0)(_ + _);
-  
   /** Log each element of a vector or matrix */
-  def log(v : Vector) : Vector = v.map(Math.log);
+  def log(v : Vector) : Vector = {
+    val x = v.copy;
+    x := v.map(Math.log _);
+    x.asInstanceOf[Vector];
+  }
 
-  /** The maximum element of a vector */
-  def max(v : Vector) : Double = {
-    var m = Double.MinValue;
-    for (e <- v.elements) {
-      m = Math.max(m,e.get);
-    }
-    return m;
-  }
+  /** The maximum active value of the map (does not consider default). */
+  def max[I](v : PartialMap[I,Double]) : Double =
+    v.activeValues.foldLeft(Double.MinValue)(Math.max);
   
-  /** The minimum element of a vector */
-  def min(v : Vector) : Double = {
-    var m = Double.MaxValue;
-    for (e <- v.elements) {
-      m = Math.min(m,e.get);
-    }
-    return m;
-  }
+  /** The minimum active value of the map (does not consider default). */
+  def min[I](v : PartialMap[I,Double]) : Double =
+    v.activeValues.foldLeft(Double.MaxValue)(Math.min);
 
   /**
    * Returns the sum of the squares of the elements of the vector.
    */
-  def sumsq(v : Vector) : Double = {
-    var s = 0.0;
-    v.foreach(e => s += e.get * e.get )
-    return s;
-  }
+  def sumsq[I](v : PartialMap[I,Double]) : Double =
+    sum(v.map((x:Double) => x*x));
   
   /** Returns the mean of the vector: sum(v) / v.size. */
-  def mean(v : Vector) : Double =
-    sum(v) / v.size;
+  def mean[I](v : PartialMap[I,Double]) : Double =
+    sum(v) / v.domain.asInstanceOf[scalala.collection.domain.FiniteDomain[_]].size;
   
   /** Returns the sum vector of a bunch of vectors. */
   def sum(vectors : Seq[Vector]) : Vector = {
@@ -112,18 +105,20 @@ trait Vectors extends Library with Operators with Implicits {
    * sqrt(sumsq (v - mean(v)) / (v.size - 1)).
    */
   def std(v : Vector) : Double =
-    sqrt(sumsq (v - mean(v)) / (v.size - 1));
+    sqrt(sumsq(v - mean(v)) / (v.size - 1));
   
   /** Returns the n'th euclidean norm of the given vector. */
-  def norm(v : Vector, n : Int) : Double = {
+  def norm[I](v : PartialMap[I,Double], n : Double) : Double = {
     if (n == 1) {
-      return v.elements.map(e => Math.abs(e.get)).foldLeft(0.0)(_+_);
+      return sum(v.map(Math.abs));
     } else if (n == 2) {
-      return Math.sqrt(v.elements.map(x => x.get * x.get).foldLeft(0.0)(_+_));
+      return sqrt(sum(v.map(x => x * x)));
     } else if (n % 2 == 0) {
-      return Math.pow(v.elements.map(x => Math.pow(x.get,n)).foldLeft(0.0)(_+_),1.0/n);
+      return Math.pow(sum(v.map(x => Math.pow(x, n))), 1.0 / n);
     } else if (n % 2 == 1) {
-      return Math.pow(v.elements.map(x => Math.pow(Math.abs(x.get),n)).foldLeft(0.0)(_+_), 1.0/n);
+      return Math.pow(sum(v.map(x => Math.pow(Math.abs(x), n))), 1.0 / n);
+    } else if (n == Double.PositiveInfinity) {
+      return max(v.map(Math.abs));
     } else {
       throw new UnsupportedOperationException();
     }
@@ -131,12 +126,13 @@ trait Vectors extends Library with Operators with Implicits {
   
   def _norm_test() {
     val v = Vector(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
-    assertEquals(norm _, v, 1, 3.6577);
-    assertEquals(norm _, v, 2, 2.0915);
-    assertEquals(norm _, v, 3, 1.8405);
-    assertEquals(norm _, v, 4, 1.7541);
-    assertEquals(norm _, v, 5, 1.7146);
-    assertEquals(norm _, v, 6, 1.6940);
+    assertEquals(norm(v,1), 3.6577, 1e-4);
+    assertEquals(norm(v,2), 2.0915, 1e-4);
+    assertEquals(norm(v,3), 1.8405, 1e-4);
+    assertEquals(norm(v,4), 1.7541, 1e-4);
+    assertEquals(norm(v,5), 1.7146, 1e-4);
+    assertEquals(norm(v,6), 1.6940, 1e-4);
+    assertEquals(norm(v,Double.PositiveInfinity), 1.6656, 1e-4);
   }
   
 }

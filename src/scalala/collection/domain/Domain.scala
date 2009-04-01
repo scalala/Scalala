@@ -1,4 +1,4 @@
-package scalala.collection.domain {
+package scalala.collection.domain;
 
 /** An exception thrown when encountering an invalid domain. */
 class DomainException(msg : String) extends RuntimeException(msg) {
@@ -6,7 +6,7 @@ class DomainException(msg : String) extends RuntimeException(msg) {
 }
 
 /** The domain of a PartialMap; acts like an immutable set. */
-abstract case class Domain[I]() extends Iterable[I] {
+sealed abstract case class Domain[I]() extends Iterable[I] {
   /** Returns true if this domain is finite (and therefore iterable). */
   def isFinite : Boolean;
   
@@ -17,6 +17,9 @@ abstract case class Domain[I]() extends Iterable[I] {
 /** A finite Domain with equality based on iterating all elements equality. */
 trait FiniteDomain[I] extends Domain[I] {
   override def isFinite = true;
+
+  /** Returns the number of elements in this domain. */
+  def size : Int;
   
   protected def canEqual(other : Any) : Boolean = other match {
     case that : FiniteDomain[_] => true;
@@ -75,6 +78,7 @@ class TypeDomain[I<:AnyRef](val manifest : scala.reflect.Manifest[I]) extends Do
 case class SetDomain[I](val set : scala.collection.Set[I]) extends Domain1[I] with FiniteDomain[I] {
   override def contains(element : I) = set.contains(element);
   override def elements = set.elements;
+  override def size = set.size;
   override def equals(other : Any) = other match {
     case that : SetDomain[_] => (this eq that) || (this.set == that.set);
     case _ => super.equals(other);
@@ -85,10 +89,9 @@ case class SetDomain[I](val set : scala.collection.Set[I]) extends Domain1[I] wi
 case class IntSpanDomain(start : Int, end : Int) extends Domain1[Int] with FiniteDomain[Int] {
   override def contains(i : Int) = i >= start && i < end;
   override def elements = (start until end).elements;
+  override def size = end - start;
   override def equals(other : Any) = other match {
     case IntSpanDomain(s2,e2) => (start == s2 && end == e2)
     case _ => super.equals(other);
   }
-}
-
 }

@@ -17,22 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor;
+package scalala.library
 
-import scalala.collection.PartialMap;
-import scalala.collection.domain.{Domain, Domain1, IntSpanDomain};
-
-/**
- * A standard numerical Tensor1 defined over 0 inclusive to
- * size exclusive.
- * 
- * @author dramage
- */
-trait Vector extends Tensor1[Int] {
-  def size : Int;
-  
-  final override val domain1 : Domain1[Int] = IntSpanDomain(0, size);
-  
-  /** Returns an array copy of this tensor. */
-  def toArray = Array.fromFunction(i => this(i))(size);
-}
+/** A trait alias for convenient access to scalala.tensor.operators.OperatorSupport. */
+trait Operators extends scalala.tensor.operators.OperatorSupport { }

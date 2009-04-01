@@ -24,16 +24,16 @@ import scalala.library._;
 /**
  * A matlab-like environment and syntax for scala.  This is the default
  * library, using the MTJ back-end and all modules in the scalala.library
- * package.
+ * package.  The companion object inherits this trait, so all of Scalala
+ * can be imported with the single line import scalala.Scalala._;
  * 
  * @author dramage
  */
-object Scalala extends Library
-  with MTJValues
+trait Scalala extends Library
   with Implicits
+  with Operators
   with Matrices
   with Vectors
-  with Operators
   with Plotting
   with Random
   with Statistics
@@ -42,16 +42,24 @@ object Scalala extends Library
   // This object inherits all its method from the component mixins.
 }
 
-object ScalalaTestSuite extends Library
-  with MTJValues
-  with Implicits
-  with Matrices
-  with Vectors
-  with Operators
-  with Random
-  with Statistics
-  with IO
-  with ScalalaValuesTest
+/**
+ * A matlab-like environment and syntax for scala.  This is the default
+ * library, using the MTJ back-end and all modules in the scalala.library
+ * package.  All of Scalala can be imported direclty with
+ * import scalala.Scalala._;
+ * 
+ * @author dramage
+ */
+object Scalala extends Scalala
+{
+  // This object inherits all its method from the component mixins.
+}
+
+/**
+ * The global test suite.
+ */
+object ScalalaTestSuite extends Scalala
+  with scalala.tensor.operators.OperatorTest
   with ScalalaTest.TestConsoleMain
 {
   // Test suite

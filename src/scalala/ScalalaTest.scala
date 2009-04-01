@@ -34,8 +34,11 @@ object ScalalaTest {
   
   case class AssertionException(message : String) extends Exception;
   
-  def assertEquals[V1,V2](v1 : V1, v2 : V2) : Unit =
+  def assertEquals[V1,V2](v1 : =>V1, v2 : =>V2) : Unit =
     if (v1 != v2) throw new AssertionException(v1 + "!=" + v2);
+  
+  def assertEquals(v1 : =>Double, v2 : =>Double, tolerance : Double) : Unit =
+    if (Math.abs(v1 - v2) > tolerance) throw new AssertionException(v1 + "!=" + v2);
   
   /** Two-arg function application with expected output. */
   def assertEquals[IN1,IN2,OUT](f : ((IN1,IN2) => OUT), in1 : IN1, in2 : IN2, out : OUT, valid : ((OUT,OUT) => Boolean)) : Unit =

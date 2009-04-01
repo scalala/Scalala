@@ -17,7 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library
+package scalala.library;
+
+import scalala.collection.domain.{Domain,Domain2};
+import scalala.tensor.{Tensor,Vector,Matrix};
+import scalala.tensor.dense.{DenseVector,DenseMatrix};
 
 /**
  * Where a function shares its name with a Matlab function, the
@@ -32,35 +36,51 @@ package scalala.library
  * which shouldn't need its own conversion back to a vector.
  */
 trait Library {
-  def DenseMatrix(rows : Int, cols : Int) : Matrix;
+  def Vector(values : Array[Double]) : Vector =
+    new DenseVector(values);
   
-  def DenseVector(size : Int) : Vector;
+  def Vector(values : Double*) : Vector =
+    new DenseVector(values.toArray);
   
-  def DenseVector(values : Array[Double]) : Vector;
+  def DenseVector(size : Int) : Vector =
+    new DenseVector(size);
   
-  def DenseVector(values : Double*) : Vector;
+  def DenseVector(values : {def toArray : Array[Double]}) : Vector =
+    new DenseVector(values.toArray);
   
-  def DenseVector(values : Vector) : Vector;
+  def DenseVector[T<:AnyVal](values : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : Vector = {
+    import scalala.tensor.TensorImplicits._;
+    val x = new DenseVector(values.size);
+    x := values;
+    x;
+  }
   
-  def SparseVector(size : Int) : Vector;
+  def Matrix(values : Array[Double], rows : Int, cols : Int) : Matrix =
+    new DenseMatrix(values, rows, cols);
+  
+  def DenseMatrix(rows : Int, cols : Int) : Matrix =
+    new DenseMatrix(rows,cols);
   
   def DiagonalMatrix(diagonal : Vector) : Matrix = {
     new Matrix {
       override def rows = diagonal.size;
       override def cols = diagonal.size;
-      override def get(row : Int, col : Int) = 
-        if (row == col) diagonal.get(row) else 0.0;
-      override def set(row : Int, col : Int, value : Double) = {
+      override def apply(row : Int, col : Int) = 
+        if (row == col) diagonal(row) else 0.0;
+      override def update(row : Int, col : Int, value : Double) = {
         if (row == col) {
-          diagonal.set(row,value)
+          diagonal(row) = value;
         } else {
           throw new UnsupportedOperationException();
         }
       }
+      override def activeDomain = diagonal.activeDomain.map(x => (x,x));
       override def copy = DiagonalMatrix(diagonal.copy).asInstanceOf[this.type];
+      override def create[J](d : Domain[J]) = diagonal.create(d);
     }
   }
   
+  /*
   def ScalarMatrix(value : Double, rows : Int, cols : Int) : Matrix = {
     val _rows = rows;
     val _cols = cols;
@@ -80,11 +100,11 @@ trait Library {
       override def cols = 1;
       override def get(row : Int, col : Int) = {
         check(row,col);
-        vector.get(row);
+        vector(row);
       }
       override def set(row : Int, col : Int, value : Double) = {
         check(row,col);
-        vector.set(row,value);
+        vector(row) = value;
       }
       override def copy = ColMatrix(vector.copy).asInstanceOf[this.type];
     }
@@ -96,11 +116,11 @@ trait Library {
       def cols = vector.size;
       override def get(row : Int, col : Int) = {
         check(row,col);
-        vector.get(col);
+        vector(col);
       }
       override def set(row : Int, col : Int, value : Double) = {
         check(row,col);
-        vector.set(col,value);
+        vector(col) = value;
       }
       override def copy = RowMatrix(vector.copy).asInstanceOf[this.type];
     }
@@ -110,8 +130,8 @@ trait Library {
     new Matrix {
       def rows = matrix.cols;
       def cols = matrix.rows;
-      override def get(row : Int, col : Int) = matrix.get(col,row);
-      override def set(row : Int, col : Int, value : Double) = matrix.set(col,row,value);
+      override def get(row : Int, col : Int) = matrix(col,row);
+      override def set(row : Int, col : Int, value : Double) = matrix(col,row) = value;
       override def copy = TransposeMatrix(matrix.copy).asInstanceOf[this.type];
     }
   }
@@ -119,6 +139,7 @@ trait Library {
   def BlockMatrix(blocks : Seq[Seq[Matrix]]) : Matrix = {
     throw new UnsupportedOperationException();
   }
+  */
   
   //
   // basic scala ops from Math.

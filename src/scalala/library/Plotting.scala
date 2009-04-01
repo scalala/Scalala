@@ -19,7 +19,10 @@
  */
 package scalala.library;
 
-trait Plotting extends Library with Vectors with Matrices with Operators with Implicits {
+import scalala.collection.PartialMap;
+import scalala.tensor.{Tensor,Vector,Matrix};
+
+trait Plotting extends Library with Vectors with Matrices with Operators {
   
   /** Implicit graphics context */
   implicit var _scalala_figures = new Plotting.Figures();
@@ -103,13 +106,13 @@ trait Plotting extends Library with Vectors with Matrices with Operators with Im
   }
   
   /** Plots a histogram of the given data into 10 equally spaced bins */
-  def hist(data : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def hist[I](data : PartialMap[I,Double])(implicit xyplot : Plotting.XYPlot) : Unit = {
     hist(data, 10)(xyplot)
   }
   
   
   /** Plots a histogram of the given data into the given number of bins */
-  def hist(data : Vector, nbins : Int)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def hist[I](data : PartialMap[I,Double], nbins : Int)(implicit xyplot : Plotting.XYPlot) : Unit = {
     hist(data, linspace(min(data),max(data),nbins))(xyplot)
   }
   
@@ -117,12 +120,12 @@ trait Plotting extends Library with Vectors with Matrices with Operators with Im
    * Plots a histogram of the given data into bins with centers at the given
    * positions.
    */
-  def hist(data : Vector, bins : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def hist[I](data : PartialMap[I,Double], bins : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
     def bucket(point : Double, lower : Int, upper : Int) : Int = {
       val mid = (lower + upper) / 2;
       if (lower == upper) {
         return upper;
-      } else if (point < bins.get(mid)) {
+      } else if (point < bins(mid)) {
         return bucket(point, lower, mid);
       } else {
         return bucket(point, mid+1, upper);
@@ -130,14 +133,14 @@ trait Plotting extends Library with Vectors with Matrices with Operators with Im
     }
     
     val counts = DenseVector(bins.size);
-    for (point <- data.elements) {
-      val bin = bucket(point.get, 0, bins.size-1);
-      counts.set(bin, counts.get(bin) + 1);
+    for (point <- data.values) {
+      val bin = bucket(point, 0, bins.size-1);
+      counts(bin) += 1;
     }
     
     // smallest gap between bins
-    val width = { bins.elements zip (bins.elements drop 1) map
-      (pair => Math.abs(pair._2.get-pair._1.get)) reduceLeft Math.min };
+    val width = { bins.values zip (bins.values drop 1) map
+      (pair => Math.abs(pair._2 - pair._1)) reduceLeft Math.min };
     
     val dataset = new org.jfree.data.xy.XYBarDataset(
       Plotting.Dataset(bins, counts), width);
@@ -148,17 +151,17 @@ trait Plotting extends Library with Vectors with Matrices with Operators with Im
   }
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
-  def plot(y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
-    plot(1 to y.size, y)(xyplot);
+  def plot[I](y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
+    plot(Vector(Array.fromFunction(i => i+1.0)(y.size)), y)(xyplot);
   }
   
   /** Plots the given y versus the given x with line drawn */
-  def plot(x : Vector, y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double])(implicit xyplot : Plotting.XYPlot) : Unit = {
     plot(x,y,'-')(xyplot);
   }
   
   /** Plots the given y versus the given x with the given style */
-  def plot(x : Vector, y : Vector, style : Char)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double], style : Char)(implicit xyplot : Plotting.XYPlot) : Unit = {
     lazy val shapeDot = new java.awt.geom.Ellipse2D.Double(0,0,2,2);
     lazy val shapePlus = {
       val shape = new java.awt.geom.Path2D.Double();
@@ -239,7 +242,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators with Im
     val renderer = new XYBubbleRenderer(XYBubbleRenderer.SCALE_ON_DOMAIN_AXIS) {;
       val stroke = new java.awt.BasicStroke(0f);
       override def getItemPaint(series : Int, item : Int) : java.awt.Paint = {
-        paintscale.getPaint(c.get(item));
+        paintscale.getPaint(c(item));
       }
       override def getItemStroke(series : Int, item : Int) = stroke;
     }
@@ -248,6 +251,8 @@ trait Plotting extends Library with Vectors with Matrices with Operators with Im
     xyplot.refresh;
   }
   
+  // TODO: reinstate
+  /*
   def scatter(x : Vector, y : Vector, s : Double, c : Vector)(implicit xyplot : Plotting.XYPlot) {
     scatter(x,y,ones(x.size)*s,c)(xyplot);
   }
@@ -255,6 +260,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators with Im
   def scatter(x : Vector, y : Vector, s : Vector, c : Double)(implicit xyplot : Plotting.XYPlot) {
     scatter(x,y,s,ones(x.size)*c)(xyplot);
   }
+  */
   
   /** An XY stacked area chart. */
   def stacked(x : Vector, y : Seq[Vector], names : Seq[String])(implicit xyplot : Plotting.XYPlot) {
@@ -395,16 +401,17 @@ object Plotting {
   import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer
   
   /** Returns a JFreeChart XYDataset for plotting y vs x. */
-  def Dataset(x : Vector, y : Vector) : XYDataset = {
-    assert(x.size == y.size)
+  def Dataset[I](x : PartialMap[I,Double], y : PartialMap[I,Double]) : XYDataset = {
+    assert(x.activeDomain == y.activeDomain);
+    val domain = x.activeDomain.toArray;
     new org.jfree.data.xy.AbstractXYDataset() {
       override def getX(series : Int, item : Int) : Number = {
-        if (series == 0) { java.lang.Double.valueOf(x.get(item)) } else null
+        if (series == 0) { java.lang.Double.valueOf(x(domain(item))) } else null
       }
       override def getY(series : Int, item : Int) : Number = {
-        if (series == 0) { java.lang.Double.valueOf(y.get(item)) } else null
+        if (series == 0) { java.lang.Double.valueOf(y(domain(item))) } else null
       }
-      override def getItemCount(series : Int) = x.size
+      override def getItemCount(series : Int) = domain.size;
       override def getSeriesKey(series : Int) = "1"
       override def getSeriesCount() = 1
     }
@@ -439,7 +446,7 @@ object Plotting {
       }
       override def getZ(series : Int, item : Int) : Number = {
         if (series != 0) return null;
-        m.get(getRow(item), getCol(item));
+        m(getRow(item), getCol(item));
       }
       override def getItemCount(series : Int) = m.rows * m.cols
       override def getSeriesKey(series: Int) = "1"
@@ -454,13 +461,13 @@ object Plotting {
     
     new org.jfree.data.xy.AbstractXYZDataset {
       override def getX(series : Int, item : Int) : Number = {
-        if (series == 0) x.get(item) else null
+        if (series == 0) x(item) else null
       }
       override def getY(series : Int, item : Int) : Number = {
-        if (series == 0) y.get(item) else null
+        if (series == 0) y(item) else null
       }
       override def getZ(series : Int, item : Int) : Number = {
-        if (series == 0) z.get(item) else null
+        if (series == 0) z(item) else null
       }
       override def getItemCount(series : Int) = x.size
       override def getSeriesKey(series: Int) = "1"
@@ -476,16 +483,16 @@ object Plotting {
     
     new org.jfree.data.xy.AbstractXYZDataset with XYZWDataset {
       override def getX(series : Int, item : Int) : Number = {
-        if (series == 0) x.get(item) else null
+        if (series == 0) x(item) else null
       }
       override def getY(series : Int, item : Int) : Number = {
-        if (series == 0) y.get(item) else null
+        if (series == 0) y(item) else null
       }
       override def getZ(series : Int, item : Int) : Number = {
-        if (series == 0) z.get(item) else null
+        if (series == 0) z(item) else null
       }
       override def getW(series : Int, item : Int) : Number = {
-        if (series == 0) w.get(item) else null
+        if (series == 0) w(item) else null
       }
       override def getItemCount(series : Int) = x.size
       override def getSeriesKey(series: Int) = "1"

@@ -1,3 +1,22 @@
+/*
+ * Distributed as part of Scalala, a linear algebra library.
+ * 
+ * Copyright (C) 2008- Daniel Ramage
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
+ */
 package scalala.tensor;
 
 import scalala.collection.domain.{Domain, Domain1, Domain2, DomainException};
@@ -10,9 +29,53 @@ trait TensorImplicits {
   import scalala.collection.domain.IntSpanDomain;
   import spans.IntSpans._;
   
+  /*
+  implicit def iSeqToPartialMap[T](seq : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : PartialMap[Int,T] = {
+    val _default =
+        (if      (manifest.erasure == classOf[Byte])    0.asInstanceOf[Byte];
+         else if (manifest.erasure == classOf[Short])   0.asInstanceOf[Short];
+         else if (manifest.erasure == classOf[Int])     0;
+         else if (manifest.erasure == classOf[Long])    0l;
+         else if (manifest.erasure == classOf[Float])   0f;
+         else if (manifest.erasure == classOf[Double])  0.0;
+         else if (manifest.erasure == classOf[Boolean]) false;
+         else if (manifest.erasure == classOf[Char])    0.asInstanceOf[Char];
+         else null
+        ).asInstanceOf[T];
+    
+    return new PartialMap[Int,T] {
+      override val activeDomain : Set[Int] = 0 until seq.length;
+      override val domain : Domain[Int] = IntSpanDomain(0, seq.length);
+      override val default = _default;
+      override def apply(i : Int) = seq(i);
+    };
+  }
+  */
+  
+  implicit def iSeqToDoublePartialMap[T<:AnyVal](seq : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : PartialMap[Int,Double] = {
+    val convert : (T=>Double) =
+        (if      (manifest.erasure == classOf[Byte])    ((x:Byte)    => x.asInstanceOf[Double]);
+         else if (manifest.erasure == classOf[Short])   ((x:Short)   => x.asInstanceOf[Double]);
+         else if (manifest.erasure == classOf[Int])     ((x:Int)     => x.asInstanceOf[Double]);
+         else if (manifest.erasure == classOf[Long])    ((x:Long)    => x.asInstanceOf[Double]);
+         else if (manifest.erasure == classOf[Float])   ((x:Float)   => x.asInstanceOf[Double]);
+         else if (manifest.erasure == classOf[Double])  ((x:Double)  => x.asInstanceOf[Double]);
+         else if (manifest.erasure == classOf[Boolean]) ((x:Boolean) => x.asInstanceOf[Double]);
+         else if (manifest.erasure == classOf[Char])    ((x:Char)    => x.asInstanceOf[Double]);
+         else throw new IllegalArgumentException("Unexpected value type")
+       ).asInstanceOf[T=>Double];
+    
+    return new PartialMap[Int,Double] {
+      override val activeDomain : Set[Int] = 0 until seq.length;
+      override val domain : Domain[Int] = IntSpanDomain(0, seq.length);
+      override val default = 0.0;
+      override def apply(i : Int) = convert(seq(i));
+    };
+  }
+  
   implicit def iArrayToVector(x : Array[Double]) =
     new dense.DenseVector(x);
-  
+
   implicit def iArrayToPartialMap(x : Array[Float]) = {
     new PartialMap[Int,Double] {
       override def default = 0;
@@ -138,6 +201,12 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
     this(activeDomain) = ((x:Double) => Math.pow(x,s));
   }
   
+  /** Each element becomes itself modulo the given scala. */
+  def %= (s : Double) = {
+    this.default %= s;
+    this(activeDomain) = ((x:Double) => x % s);
+  }
+  
   //
   // Assignments and updates from another PartialMap.
   //
@@ -177,6 +246,13 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
     this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x-t(i));
   }
 
+  /** Modulos each value in this map by the corresponding value in the other map. */
+  def :%= (t : PartialMap[I,Double]) {
+    ensure(t);
+    this.default = this.default % t.default;
+    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x%t(i));
+  }
+  
   /** += with another PartialMap is a fixed alias for :+= */
   final def += (t : PartialMap[I,Double]) = this.:+=(t);
   
@@ -188,45 +264,45 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   //
     
   /** Assigns each element in this map to the corresponding value as returned by the given operation. */
-  def :=  (op : TensorOp[I]) : Unit = {
+  def :=[T<:Tensor[I]]  (op : TensorOp[I,T]) : Unit = {
     op match {
-      case op : TensorOp[_] => this := op.value;
+      case op : TensorOp[_,_] => this := op.value;
     }
   }
   
   /** Increments each element in this map by the corresponding value as returned by the given operation. */
-  def :+= (op : TensorOp[I]) : Unit = {
+  def :+=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = {
     op match {
-      case op : TensorOp[_] => this :+= op.value;
+      case op : TensorOp[_,_] => this :+= op.value;
     }
   }
   
   /** Decrements each element in this map by the corresponding value as returned by the given operation. */
-  def :-= (op : TensorOp[I]) : Unit = {
+  def :-=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = {
     op match {
-      case op : TensorOp[_] => this :-= op.value;
+      case op : TensorOp[_,_] => this :-= op.value;
     }
   }
   
   /** Multiplies each element in this map by the corresponding value as returned by the given operation. */
-  def :*= (op : TensorOp[I]) : Unit = {
+  def :*=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = {
     op match {
-      case op : TensorOp[_] => this :*= op.value;
+      case op : TensorOp[_,_] => this :*= op.value;
     }
   }
   
   /** Divides each element in this map by the corresponding value as returned by the given operation. */
-  def :/= (op : TensorOp[I]) : Unit = {
+  def :/=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = {
     op match {
-      case op : TensorOp[_] => this :/= op.value;
+      case op : TensorOp[_,_] => this :/= op.value;
     }
   }
   
   /** += with a TensorOp is a fixed alias for :+= */
-  final def += (op : TensorOp[I]) : Unit = this.:+=(op);
+  final def +=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = this.:+=(op);
   
   /** -= with a TensorOp is a fixed alias for :-= */
-  final def -= (op : TensorOp[I]) : Unit = this.:-=(op);
+  final def -=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = this.:-=(op);
   
   
   /*
