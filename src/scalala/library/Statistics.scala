@@ -23,6 +23,8 @@ import scalala.tensor.{Tensor,Vector,Matrix};
 
 /**
  * Some statistical routines.
+ * 
+ * @author dramage
  */
 trait Statistics extends Library {
   /**

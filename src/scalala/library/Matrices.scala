@@ -21,6 +21,11 @@ package scalala.library
 
 import scalala.tensor.{Tensor,Vector,Matrix};
 
+/**
+ * Basic matrix functions.
+ * 
+ * @author dramage
+ */
 trait Matrices extends Library with Vectors {
   /** A matrix of size m by n with 1 everywhere */
   def ones(rows : Int, cols : Int) : Matrix = {

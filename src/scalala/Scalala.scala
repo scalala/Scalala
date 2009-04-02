@@ -23,9 +23,18 @@ import scalala.library._;
 
 /**
  * A matlab-like environment and syntax for scala.  This is the default
- * library, using the MTJ back-end and all modules in the scalala.library
- * package.  The companion object inherits this trait, so all of Scalala
+ * library, using all modules in the scalala.library package.  The
+ * companion object inherits this trait, so all of Scalala
  * can be imported with the single line import scalala.Scalala._;
+ * 
+ * Where a function shares its name with a Matlab function, the
+ * behavior should be more or less consist with its Matlab
+ * counterpart. The primary difference is that some commands that normally
+ * return an n x n square matrix now return a column vector of size n. e.g.
+ * ones(n) here is a vector that would be ones(n,1) in matlab.  The
+ * main reason for the distinction is that Vector and Matrix are
+ * different types in MTJ, so ones(n,1) returns a Matrix of size n by 1
+ * which shouldn't need its own conversion back to a vector.
  * 
  * @author dramage
  */
@@ -44,9 +53,17 @@ trait Scalala extends Library
 
 /**
  * A matlab-like environment and syntax for scala.  This is the default
- * library, using the MTJ back-end and all modules in the scalala.library
- * package.  All of Scalala can be imported direclty with
- * import scalala.Scalala._;
+ * library, using all modules in the scalala.library package.  All of
+ * Scalala can be imported direclty with import scalala.Scalala._;
+ * 
+ * Where a function shares its name with a Matlab function, the
+ * behavior should be more or less consist with its Matlab
+ * counterpart. The primary difference is that some commands that normally
+ * return an n x n square matrix now return a column vector of size n. e.g.
+ * ones(n) here is a vector that would be ones(n,1) in matlab.  The
+ * main reason for the distinction is that Vector and Matrix are
+ * different types in MTJ, so ones(n,1) returns a Matrix of size n by 1
+ * which shouldn't need its own conversion back to a vector.
  * 
  * @author dramage
  */
@@ -57,6 +74,8 @@ object Scalala extends Scalala
 
 /**
  * The global test suite.
+ * 
+ * @author dramage
  */
 object ScalalaTestSuite extends Scalala
   with scalala.tensor.operators.OperatorTest

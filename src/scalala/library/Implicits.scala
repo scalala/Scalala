@@ -19,5 +19,9 @@
  */
 package scalala.library
 
-/** A trait alias for convenient access to scalala.tensor.TensorImplicits. */
+/**
+ * A trait alias for convenient access to scalala.tensor.TensorImplicits.
+ * 
+ * @author dramage
+ */
 trait Implicits extends scalala.tensor.TensorImplicits with Library { }

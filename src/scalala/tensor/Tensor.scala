@@ -23,7 +23,10 @@ import scalala.collection.domain.{Domain, Domain1, Domain2, DomainException};
 import scalala.collection.{PartialMap, MutablePartialMap};
 import scalala.tensor.operators.TensorOp;
 
-/** Implicit type promotions from arrays. */
+/**
+ * Implicit type promotions from arrays.
+ * @author dramage
+ */
 trait TensorImplicits {
   import dense.DenseVector;
   import scalala.collection.domain.IntSpanDomain;
@@ -126,8 +129,8 @@ object TensorImplicits extends TensorImplicits { }
 
 /**
  * A double-valued mutable partial map with support for assignment operators.
- * See Tensor1 and Tensor2 for tensors defined over a domain of 1 key
- * (e.g. Vector) and 2 key (e.g. Matrix), respectively.
+ * See {@link Tensor1} and {@link Tensor2} for tensors defined over a domain of 1 key
+ * (e.g. {@link Vector}) and 2 key (e.g. {@link Matrix}), respectively.
  * 
  * @author dramage
  */

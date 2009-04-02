@@ -19,5 +19,10 @@
  */
 package scalala.library
 
-/** A trait alias for convenient access to scalala.tensor.operators.OperatorSupport. */
+/**
+ * A trait alias for convenient access to
+ * {@link scalala.tensor.operators.OperatorSupport}.
+ * 
+ * @author dramage
+ */
 trait Operators extends scalala.tensor.operators.OperatorSupport { }

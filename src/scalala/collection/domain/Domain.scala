@@ -19,12 +19,18 @@
  */
 package scalala.collection.domain;
 
-/** An exception thrown when encountering an invalid domain. */
+/**
+ * An exception thrown when encountering an invalid domain.
+ * @author dramage
+ */
 class DomainException(msg : String) extends RuntimeException(msg) {
   def this() = this("");
 }
 
-/** The domain of a PartialMap; acts like an immutable set. */
+/**
+ * The domain of a PartialMap; acts like an immutable set.
+ * @author dramage
+ */
 sealed abstract case class Domain[I]() extends Iterable[I] {
   /** Returns true if this domain is finite (and therefore iterable). */
   def isFinite : Boolean;
@@ -33,7 +39,10 @@ sealed abstract case class Domain[I]() extends Iterable[I] {
   def contains(element : I) : Boolean;
 }
 
-/** A finite Domain with equality based on iterating all elements equality. */
+/**
+ * A finite Domain with equality based on iterating all elements equality.
+ * @author dramage
+ */
 trait FiniteDomain[I] extends Domain[I] {
   override def isFinite = true;
 
@@ -57,19 +66,28 @@ trait FiniteDomain[I] extends Domain[I] {
     elements.foldLeft(1)((hash,kv) => 41 * hash + kv.hashCode);
 }
 
-/** A Domain with infinitely many elements which cannot be iterated. */
+/**
+ * A Domain with infinitely many elements which cannot be iterated.
+ * @author dramage
+ */
 trait InfiniteDomain[I] extends Domain[I] {
   override def isFinite = false;
   override def elements =
     throw new DomainException("Cannot iterate over infinite domain");
 }
 
-/** The domain of a 1D PartialMap. */
+/**
+ * The domain of a 1D PartialMap.
+ * @author dramage
+ */
 abstract case class Domain1[A]() extends Domain[A] {
   def cross[B](other : Domain1[B]) : Domain2[A,B] = new Domain2(this, other);
 }
 
-/** The domain of a 2D PartialMap. */
+/**
+ * The domain of a 2D PartialMap.
+ * @author dramage
+ */
 case class Domain2[A,B](_1 : Domain1[A], _2 : Domain1[B]) extends Domain[(A,B)] {
   def transpose : Domain2[B,A] = new Domain2(_2, _1);
   
@@ -83,7 +101,10 @@ case class Domain2[A,B](_1 : Domain1[A], _2 : Domain1[B]) extends Domain[(A,B)] 
     for (a <- _1.elements; b <- _2.elements) yield (a,b);
 }
 
-/** An infinite domain consisting of all instances of a given type. */
+/**
+ * An infinite domain consisting of all instances of a given type.
+ * @author dramage
+ */
 class TypeDomain[I<:AnyRef](val manifest : scala.reflect.Manifest[I]) extends Domain1[I] with InfiniteDomain[I] {
   override def contains(element : I) = true;
   override def equals(other : Any) = other match {
@@ -93,7 +114,10 @@ class TypeDomain[I<:AnyRef](val manifest : scala.reflect.Manifest[I]) extends Do
   override def hashCode = manifest.toString.hashCode;
 }
 
-/** A domain consisting of the members of the given set. */
+/**
+ * A domain consisting of the members of the given set.
+ * @author dramage
+ */
 case class SetDomain[I](val set : scala.collection.Set[I]) extends Domain1[I] with FiniteDomain[I] {
   override def contains(element : I) = set.contains(element);
   override def elements = set.elements;
@@ -104,7 +128,10 @@ case class SetDomain[I](val set : scala.collection.Set[I]) extends Domain1[I] wi
   }
 }
 
-/** A range of integers over from start (inclusive) to end (exclusive). */
+/**
+ * A range of integers over from start (inclusive) to end (exclusive).
+ * @author dramage
+ */
 case class IntSpanDomain(start : Int, end : Int) extends Domain1[Int] with FiniteDomain[Int] {
   override def contains(i : Int) = i >= start && i < end;
   override def elements = (start until end).elements;

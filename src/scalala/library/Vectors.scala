@@ -22,6 +22,11 @@ package scalala.library
 import scalala.collection.PartialMap;
 import scalala.tensor.Vector;
 
+/**
+ * Basic vector functions.
+ * 
+ * @author dramage
+ */
 trait Vectors extends Library with Operators {
   /** 100 evenly spaced points between a and b */
   def linspace(a : Double, b : Double) : Vector = linspace(a,b,100);

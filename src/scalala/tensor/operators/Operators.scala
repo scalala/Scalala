@@ -22,6 +22,11 @@ package scalala.tensor.operators;
 import scalala.collection.domain.{Domain, Domain1, Domain2, IntSpanDomain, DomainException};
 import scalala.tensor.{Tensor, Tensor1, Tensor2};
 
+/**
+ * Implicit conversions between TensorOp's and Tensors.
+ * 
+ * @author dramage
+ */
 trait OperatorSupport {
   /** Implicitly promotes a Tensor to a TensorIdentity operation. */
   implicit def iTensorOp[I](t : Tensor[I]) : TensorOp[I,Tensor[I]] =

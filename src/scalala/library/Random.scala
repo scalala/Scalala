@@ -23,6 +23,8 @@ import scalala.tensor.{Tensor,Vector,Matrix};
 
 /**
  * Random number generation.
+ * 
+ * @author dramage
  */
 trait Random extends Library {
   implicit val _scalala_random = new java.util.Random;

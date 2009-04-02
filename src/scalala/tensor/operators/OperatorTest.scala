@@ -27,6 +27,11 @@ import OperatorSupport._;
 
 import scalala.Scalala.Vector;
 
+/**
+ * Test code for Operators.
+ * 
+ * @author dramage
+ */
 trait OperatorTest {
   def _vector_test() = {
     val x = Vector(1,2,3);

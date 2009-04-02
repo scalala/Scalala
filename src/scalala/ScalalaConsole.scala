@@ -19,6 +19,11 @@
  */
 package scalala;
 
+/**
+ * Runs Scalala in a console.
+ * 
+ * @author dlwh,dramage
+ */
 object ScalalaConsole {
   def main(args : Array[String]) {
     val method = Class.forName("scala.tools.nsc.MainGenericRunner").getMethod("main", classOf[Array[String]]);

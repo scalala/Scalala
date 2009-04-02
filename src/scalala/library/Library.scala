@@ -24,16 +24,9 @@ import scalala.tensor.{Tensor,Vector,Matrix};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
 
 /**
- * Where a function shares its name with a Matlab function, the
- * behavior should be more or less consist with its Matlab
- * counterpart.
+ * Basic data type construction and manipulation.
  * 
- * The primary difference is that some commands that normally return an
- * n x n square matrix now return a column vector of size n. e.g.
- * ones(n) here is a vector that would be ones(n,1) in matlab.  The
- * main reason for the distinction is that Vector and Matrix are
- * different types in MTJ, so ones(n,1) returns a Matrix of size n by 1
- * which shouldn't need its own conversion back to a vector.
+ * @author dramage
  */
 trait Library {
   def Vector(values : Array[Double]) : Vector =

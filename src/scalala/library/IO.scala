@@ -21,7 +21,11 @@ package scalala.library;
 
 import scalala.tensor.{Matrix};
 
-/** Input and output routines. */
+/**
+ * Input and output routines.
+ * 
+ * @author dramage
+ */
 trait IO extends Library {
   
   import java.lang.Double.parseDouble;

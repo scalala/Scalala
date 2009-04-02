@@ -58,7 +58,7 @@ object ScalalaTest {
     // threw the right thing.  return without issue.
   }
   
-  /** Hook for doing tests in a class by reflection. */
+  /** Hook for doing tests in a class by reflection. @author dramage */
   trait TestConsoleMain {
     def main(argv : Array[String]) {
       for (method <- getClass.getMethods if (method.getName().endsWith("_test"))) {

@@ -22,6 +22,11 @@ package scalala.library;
 import scalala.collection.PartialMap;
 import scalala.tensor.{Tensor,Vector,Matrix};
 
+/**
+ * Matlab-like plotting routines.
+ * 
+ * @author dramage
+ */
 trait Plotting extends Library with Vectors with Matrices with Operators {
   
   /** Implicit graphics context */

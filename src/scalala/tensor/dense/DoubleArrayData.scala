@@ -19,5 +19,9 @@
  */
 package scalala.tensor.dense;
 
-/** An abstract class taht contains a dense double array as a data backing. */
+/**
+ * An abstract class taht contains a dense double array as a data backing.
+ * 
+ * @author dramage
+ */
 abstract class DoubleArrayData(val data : Array[Double]);
