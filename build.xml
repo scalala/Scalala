@@ -52,13 +52,14 @@
 
    <scalatest wildcard="scalala." runpath="classes/" />
  </target>
- <target name="docs">
+
+ <target name="doc">
    <mkdir dir="${docs.dir}"/>
    <scaladoc
      srcdir="${src.dir}"
      destdir="${docs.dir}"
-     windowtitle="ScalaNLP core documentation"
-     doctitle="ScalaNLP API"
+     windowtitle="Scalala documentation"
+     doctitle="Scalala API"
      classpathref="project.classpath">
      <include name="**/*.scala"/>
    </scaladoc>
