@@ -1,23 +1,22 @@
 <project name="analysis" default="compile" basedir=".">
   <property name="src.dir" value="src/" />
   <property name="test.src.dir" value="test/src/" />
-  <property name="build.dir" value="bin/" />
+  <property name="build.dir" value="target/classes/" />
   <property name="docs.dir" value="docs/" />
   <property name="lib.dir" value="lib/" />
 
-  <!-- 3. Define project CLASSPATH. -->
-
   <property environment="env" />
+
+  <!-- Define project CLASSPATH. -->
   <path id="project.classpath">
     <pathelement location="${build.dir}" />
     
     <fileset dir="${env.SCALA_HOME}/lib/"> <include name="*.jar" /> </fileset>
-
+    
     <fileset dir="${lib.dir}"> <include name="*.jar" /> </fileset>
   </path>
 
-  <!-- 4. Define scala compiler command. -->
-
+  <!-- Define scala compiler, scaladoc, etc command -->
   <taskdef resource="scala/tools/ant/antlib.xml">
     <classpath>
       <pathelement location="${env.SCALA_HOME}/lib/scala-compiler.jar" />
@@ -25,8 +24,7 @@
     </classpath>
   </taskdef>
 
-  <!-- 5. Compiles sources by using "scalac" command. -->
-
+  <!-- Compile sources with new scalac command. -->
   <target name="compile" depends="">
     <mkdir dir="${build.dir}"/>
 
@@ -45,24 +43,24 @@
     </scalac>
   </target>
 
- <target name="test" depends="compile-test">
-   <taskdef name="scalatest" classname="org.scalatest.tools.ScalaTestTask">
-     <classpath refid="project.classpath"/>
-   </taskdef>
+  <target name="test" depends="compile-test">
+    <taskdef name="scalatest" classname="org.scalatest.tools.ScalaTestTask">
+      <classpath refid="project.classpath"/>
+    </taskdef>
 
-   <scalatest wildcard="scalala." runpath="classes/" />
- </target>
+    <scalatest wildcard="scalala." runpath="classes/" />
+  </target>
 
- <target name="doc">
-   <mkdir dir="${docs.dir}"/>
-   <scaladoc
-     srcdir="${src.dir}"
-     destdir="${docs.dir}"
-     windowtitle="Scalala documentation"
-     doctitle="Scalala API"
-     classpathref="project.classpath">
-     <include name="**/*.scala"/>
-   </scaladoc>
- </target>
+  <target name="scaladoc">
+    <mkdir dir="${docs.dir}"/>
+    <scaladoc
+      srcdir="${src.dir}"
+      destdir="${docs.dir}"
+      windowtitle="Scalala documentation"
+      doctitle="Scalala API"
+      classpathref="project.classpath">
+      <include name="**/*.scala"/>
+    </scaladoc>
+  </target>
 </project>
 
