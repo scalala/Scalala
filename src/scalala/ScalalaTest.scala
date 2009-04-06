@@ -69,8 +69,14 @@ object ScalalaTest {
         } catch {
           case ite : java.lang.reflect.InvocationTargetException => {
             ite.getCause match {
-              case ae : AssertionException => println("FAILED "+ae.message);
-              case oe : Exception => println("FAILED "+oe);
+              case ae : AssertionException => {
+                println("FAILED "+ae.message);
+                ae.printStackTrace();
+              }
+              case oe : Throwable => {
+                println("FAILED "+oe);
+                oe.printStackTrace();
+              }
             }
           }
           case oe : Exception => println("FRAMEWORK FAILURE "+oe);
