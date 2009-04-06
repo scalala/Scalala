@@ -19,7 +19,7 @@
  */
 package scalala.tensor;
 
-import scalala.collection.domain.{Domain2, IntSpanDomain};
+import scalala.collection.domain.{Domain, Domain2, IntSpanDomain};
 
 /**
  * A standard numerical Tensor2 defined over (0,0) inclusive to 
@@ -40,47 +40,34 @@ trait Matrix extends Tensor2[Int,Int] {
   
   @inline final def size = (rows, cols);
   
-  final override val domain2 : Domain2[Int,Int] =
-    Domain2(IntSpanDomain(0, rows), IntSpanDomain(0, cols));
+  val _domain2 = Domain2(IntSpanDomain(0, rows), IntSpanDomain(0, cols));
+  final override def domain2 = _domain2;
+  
+  override def getRow(row : Int) = new Vector {
+    override def size = cols;
+    override def apply(i : Int) = Matrix.this.apply(row,i);
+    override def update(i : Int, value : Double) = Matrix.this.update(row,i,value);
+    override def activeDomain = Matrix.this.activeDomainInRow(row);
+    override def create[J](domain : Domain[J]) = Matrix.this.create(domain);
+  }
+  
+  override def getCol(col : Int) = new Vector {
+    override def size = rows;
+    override def apply(i : Int) = Matrix.this.apply(i,col);
+    override def update(i : Int, value : Double) = Matrix.this.update(i,col,value);
+    override def activeDomain = Matrix.this.activeDomainInCol(col);
+    override def create[J](domain : Domain[J]) = Matrix.this.create(domain);
+  }
   
   /*
-  def apply(select : (Int => (Int,Int))) : Matrix = {
+  def apply(select : (Int => (Int,Int))) : Vector = {
     select(-1) match {
       case (-1,-1)  => throw new IllegalArgumentException("Index of out range");
-      case (-1,col) => this.select((0,col),(rows,col));
-      case (row,-1) => this.select((row,0),(row,cols));
+      case (-1,col) => getCol(col);
+      case (row,-1) => getRow(row);
       case _        => throw new IllegalArgumentException("Invalid index selector");
     }
   }
   */
   
-  /**
-   * Selects the given submatrix.  Writes are passed through.
-   */
-  /*
-  def select(start : (Int,Int), end : (Int,Int)) = new Matrix.Projection(this) {
-    override def rows = end._1 - start._1;
-    override def cols = end._2 - start._2;
-    
-    @inline final def transformRow(row : Int) = row + start._1;
-    @inline final def transformCol(col : Int) = col + start._2;
-    
-    override def update(row : Int, col : Int, value : Double) =
-      inner.update(transformRow(row), transformCol(col), value);
-    
-    override def apply(row : Int, col : Int) = 
-      inner.apply(transformRow(row), transformCol(col));
-    
-    override def copy = {
-      // TODO: implement
-      throw new UnsupportedOperationException
-    }
-    
-    override val activeDomain : Set[(Int,Int)] = {
-      // TODO: make more efficient for sparse matrices
-      // inner.activeDomain intersect (start until end);
-      (0,0) until (rows,cols);
-    }
-  }
-  */
 }

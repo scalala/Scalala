@@ -20,8 +20,9 @@
 package scalala.library;
 
 import scalala.collection.domain.{Domain,Domain2};
-import scalala.tensor.{Tensor,Vector,Matrix};
+import scalala.tensor.{Tensor,Vector,Matrix,DiagonalMatrix};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
+import scalala.tensor.sparse.{SparseVector};
 
 /**
  * Basic data type construction and manipulation.
@@ -48,30 +49,20 @@ trait Library {
     x;
   }
   
+  def SparseVector(size : Int) : Vector =
+    new SparseVector(size);
+  
+  def SparseVector(size : Int, nonzeros : Int) : Vector =
+    new SparseVector(size, nonzeros);
+  
   def Matrix(values : Array[Double], rows : Int, cols : Int) : Matrix =
     new DenseMatrix(values, rows, cols);
   
   def DenseMatrix(rows : Int, cols : Int) : Matrix =
     new DenseMatrix(rows,cols);
   
-  def DiagonalMatrix(diagonal : Vector) : Matrix = {
-    new Matrix {
-      override def rows = diagonal.size;
-      override def cols = diagonal.size;
-      override def apply(row : Int, col : Int) = 
-        if (row == col) diagonal(row) else 0.0;
-      override def update(row : Int, col : Int, value : Double) = {
-        if (row == col) {
-          diagonal(row) = value;
-        } else {
-          throw new UnsupportedOperationException();
-        }
-      }
-      override def activeDomain = diagonal.activeDomain.map(x => (x,x));
-      override def copy = DiagonalMatrix(diagonal.copy).asInstanceOf[this.type];
-      override def create[J](d : Domain[J]) = diagonal.create(d);
-    }
-  }
+  def DiagonalMatrix(diagonal : Vector) : Matrix =
+    new DiagonalMatrix(diagonal);
   
   /*
   def ScalarMatrix(value : Double, rows : Int, cols : Int) : Matrix = {

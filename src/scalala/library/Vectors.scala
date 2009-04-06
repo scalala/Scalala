@@ -65,7 +65,7 @@ trait Vectors extends Library with Operators {
   
   /** Log each element of a vector or matrix */
   def log(v : Vector) : Vector = {
-    val x = v.copy;
+    val x = v.copy.asInstanceOf[Vector];
     x := v.map(Math.log _);
     x;
   }
@@ -90,7 +90,7 @@ trait Vectors extends Library with Operators {
   
   /** Returns the sum vector of a bunch of vectors. */
   def sum(vectors : Seq[Vector]) : Vector = {
-    val sum = vectors(0).copy;
+    val sum = vectors(0).copy.asInstanceOf[Vector];
     for (vector <- vectors.elements.drop(1)) {
       sum += vector;
     }
@@ -129,6 +129,11 @@ trait Vectors extends Library with Operators {
   }
 }
 
+/**
+ * Some tests for the vectors package.
+ * 
+ * @author dramage
+ */
 trait VectorsTest extends Library with Vectors {  
   import scalala.ScalalaTest._;
   

@@ -194,7 +194,7 @@ object OperatorSupport extends OperatorSupport { }
   case class TensorIdentity[I,T<:Tensor[I]](tensor : T) extends TensorOp[I,T] {
     override def domain = tensor.domain;
     override def value = tensor;
-    override val working = tensor.copy;
+    override val working = tensor.copy.asInstanceOf[T];
   }
   
   /** An operator between a tensor and scalar. */
@@ -315,11 +315,7 @@ object OperatorSupport extends OperatorSupport { }
       val t2v = t2.value;
       val rv = t1v.create(domain2).asInstanceOf[Tensor2[A1,B2]];
       for (i <- domain2._1; j <- domain2._2) {
-        var dot = 0.0;
-        for (k <- innerDomain) {
-          dot += t1v(i,k) * t2v(k,j);
-        }
-        rv(i,j) = dot;
+        rv(i,j) = t1v.getRow(i) dot t2v.getCol(j);
       }
       rv;
     }
@@ -333,11 +329,7 @@ object OperatorSupport extends OperatorSupport { }
       val vv = vector.value;
       val rv = vv.create(domain1).asInstanceOf[Tensor1[I]];
       for (i <- domain1) {
-        var dot = 0.0;
-        for (j <- matrix.domain2._2) {
-          dot += mv(i,j) * vv(j);
-        }
-        rv(i) = dot;
+        rv(i) = mv.getRow(i) dot vv;
       }
       rv;
     }
@@ -351,11 +343,7 @@ object OperatorSupport extends OperatorSupport { }
       val mv = matrix.value;
       val rv = vv.create(domain1).asInstanceOf[Tensor1[J]];
       for (j <- domain1) {
-        var dot = 0.0;
-        for (i <- matrix.domain2._1) {
-          dot += vv(i) * mv(i,j);
-        }
-        rv(j) = dot;
+        rv(j) = vv dot mv.getCol(j);
       }
       rv;
     }

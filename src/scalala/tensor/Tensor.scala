@@ -20,7 +20,7 @@
 package scalala.tensor;
 
 import scalala.collection.domain.{Domain, Domain1, Domain2, DomainException};
-import scalala.collection.{PartialMap, MutablePartialMap};
+import scalala.collection.{PartialMap, MutablePartialMap, MergeableSet, IntSpanSet};
 import scalala.tensor.operators.TensorOp;
 
 /**
@@ -31,29 +31,6 @@ trait TensorImplicits {
   import dense.DenseVector;
   import scalala.collection.domain.IntSpanDomain;
   import spans.IntSpans._;
-  
-  /*
-  implicit def iSeqToPartialMap[T](seq : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : PartialMap[Int,T] = {
-    val _default =
-        (if      (manifest.erasure == classOf[Byte])    0.asInstanceOf[Byte];
-         else if (manifest.erasure == classOf[Short])   0.asInstanceOf[Short];
-         else if (manifest.erasure == classOf[Int])     0;
-         else if (manifest.erasure == classOf[Long])    0l;
-         else if (manifest.erasure == classOf[Float])   0f;
-         else if (manifest.erasure == classOf[Double])  0.0;
-         else if (manifest.erasure == classOf[Boolean]) false;
-         else if (manifest.erasure == classOf[Char])    0.asInstanceOf[Char];
-         else null
-        ).asInstanceOf[T];
-    
-    return new PartialMap[Int,T] {
-      override val activeDomain : Set[Int] = 0 until seq.length;
-      override val domain : Domain[Int] = IntSpanDomain(0, seq.length);
-      override val default = _default;
-      override def apply(i : Int) = seq(i);
-    };
-  }
-  */
   
   implicit def iSeqToDoublePartialMap[T<:AnyVal](seq : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : PartialMap[Int,Double] = {
     val convert : (T=>Double) =
@@ -69,9 +46,9 @@ trait TensorImplicits {
        ).asInstanceOf[T=>Double];
     
     return new PartialMap[Int,Double] {
-      override val activeDomain : Set[Int] = 0 until seq.length;
-      override val domain : Domain[Int] = IntSpanDomain(0, seq.length);
-      override val default = 0.0;
+      override def default = 0.0;
+      override def domain : Domain[Int] = IntSpanDomain(0, seq.length);
+      override def activeDomain : MergeableSet[Int] = IntSpanSet(0,seq.length);
       override def apply(i : Int) = convert(seq(i));
     };
   }
@@ -82,8 +59,8 @@ trait TensorImplicits {
   implicit def iArrayToPartialMap(x : Array[Float]) = {
     new PartialMap[Int,Double] {
       override def default = 0;
-      override val domain = IntSpanDomain(0, x.size);
-      override val activeDomain : Set[Int] = (0 until x.size);
+      override def domain = IntSpanDomain(0, x.size);
+      override def activeDomain : MergeableSet[Int] = IntSpanSet(0, x.length);
       override def apply(i : Int) = x(i);
     }
   }
@@ -91,8 +68,8 @@ trait TensorImplicits {
   implicit def iArrayToPartialMap(x : Array[Int]) = {
     new PartialMap[Int,Double] {
       override def default = 0;
-      override val domain = IntSpanDomain(0, x.size);
-      override val activeDomain : Set[Int] = (0 until x.size);
+      override def domain = IntSpanDomain(0, x.size);
+      override def activeDomain : MergeableSet[Int] = IntSpanSet(0, x.length);
       override def apply(i : Int) = x(i);
     }
   }
@@ -100,8 +77,8 @@ trait TensorImplicits {
   implicit def iArrayToPartialMap(x : Array[Long]) = {
     new PartialMap[Int,Double] {
       override def default = 0;
-      override val domain = IntSpanDomain(0, x.size);
-      override val activeDomain : Set[Int] = (0 until x.size);
+      override def domain = IntSpanDomain(0, x.size);
+      override def activeDomain : MergeableSet[Int] = IntSpanSet(0, x.length);
       override def apply(i : Int) = x(i);
     }
   }
@@ -109,8 +86,8 @@ trait TensorImplicits {
   implicit def iArrayToPartialMap(x : Array[Short]) = {
     new PartialMap[Int,Double] {
       override def default = 0;
-      override val domain = IntSpanDomain(0, x.size);
-      override val activeDomain : Set[Int] = (0 until x.size);
+      override def domain = IntSpanDomain(0, x.size);
+      override def activeDomain : MergeableSet[Int] = IntSpanSet(0, x.length);
       override def apply(i : Int) = x(i);
     }
   }
@@ -118,8 +95,8 @@ trait TensorImplicits {
   implicit def iArrayToPartialMap(x : Array[Byte]) = {
     new PartialMap[Int,Double] {
       override def default = 0;
-      override val domain = IntSpanDomain(0, x.size);
-      override val activeDomain : Set[Int] = (0 until x.size);
+      override def domain = IntSpanDomain(0, x.size);
+      override def activeDomain : MergeableSet[Int] = IntSpanSet(0, x.length);
       override def apply(i : Int) = x(i);
     }
   }
@@ -139,7 +116,11 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   def create[J](domain : Domain[J]) : Tensor[J];
   
   /** Returns a deep copy of this data structure. */
-  def copy : this.type;
+  def copy : Tensor[I] = {
+    val rv = create(domain);
+    rv := this;
+    rv;
+  }
   
   private var _default = 0.0;
   
@@ -224,8 +205,13 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   /** Multiplies each value in this map by the corresponding value in the other map. */
   def :*= (t : PartialMap[I,Double]) {
     ensure(t);
+    // if our default is 0 then we can skip active elements in the other domain
+    val domain = {
+      if (this.default == 0.0) (this.activeDomain)
+      else                     (this.activeDomain ++ t.activeDomain)
+    }
     this.default = this.default * t.default;
-    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x*t(i));
+    this(domain) = ((i : I, x : Double) => x*t(i));
   }
 
   /** Divides each value in this map by the corresponding value in the other map. */
@@ -402,9 +388,23 @@ trait Tensor1[I] extends Tensor[I] {
   def domain1 : Domain1[I];
   
   /** Returns the inner product of this tensor with another. */
-  def dot(other : Tensor1[I]) = {
-    if (other.domain != this.domain) throw new DomainException("Domains do not match");
-    this.join(other)((a,b) => a * b).values.foldLeft(0.0)(_+_);
+  def dot(that : Tensor1[I]) : Double = {
+    if (that.domain != this.domain)
+      throw new DomainException("Domains do not match");
+    
+    if (this.default == 0.0 || that.default == 0.0) {
+      var sum = 0.0;
+      for (k <- this.activeDomain ** that.activeDomain) {
+        sum += (this(k) * that(k));
+      }
+      return sum;
+    } else {
+      var sum = 0.0;
+      for (value <- this.join(that)(_ * _).values) {
+        sum += value;
+      }
+      return sum;
+    }
   }
 }
 
@@ -441,14 +441,45 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
         inner.update(col, row, value);
     
       override def copy =
-        inner.copy.transpose.asInstanceOf[this.type];
+        inner.copy.asInstanceOf[Tensor2[I1,I2]].transpose;
     
       override def create[J](domain : Domain[J]) =
         inner.create(domain);
       
-      override val activeDomain : Set[(I2,I1)] =
-        inner.activeDomain.map(tup => (tup._2,tup._1));
+      override def activeDomain : MergeableSet[(I2,I1)] = {
+        new MergeableSet[(I2,I1)] {
+          override def size = Tensor2.this.activeDomain.size;
+          override def elements = Tensor2.this.activeDomain.elements.map(tup => (tup._2,tup._1));
+          override def contains(i : (I2,I1)) = Tensor2.this.activeDomain.contains((i._2,i._1));
+        };
+      }
+      
+      override def getRow(row : I2) = inner.getCol(row);
+      
+      override def getCol(col : I1) = inner.getRow(col);
     }
+  }
+  
+  /** Selects a row from this Tensor2 as a Tensor1. */
+  def getRow(row : I1) : Tensor1[I2]
+  
+  /** Selects a column from this Tensor2 as a Tensor1. */
+  def getCol(col : I2) : Tensor1[I1]
+  
+  /** Gets the active domain in the given row. */
+  def activeDomainInRow(row : I1) : MergeableSet[I2] = {
+    new MergeableSet[I2] {
+      override def elements = Tensor2.this.activeDomain.elements.filter(_._1 == row).map(_._2);
+      override def contains(col : I2) = Tensor2.this.activeDomain.contains((row,col));
+    };
+  }
+  
+  /** Gets the active domain in the given column. */
+  def activeDomainInCol(col : I2) : MergeableSet[I1] = {
+    new MergeableSet[I1] {
+      override def elements = Tensor2.this.activeDomain.elements.filter(_._2 == col).map(_._1);
+      override def contains(row : I1) = Tensor2.this.activeDomain.contains((row,col));
+    };
   }
 }
 
@@ -471,11 +502,20 @@ object Tensor2 {
     override def create[J](domain : Domain[J]) : Tensor[J] =
       inner.create(domain);
     
-    override def activeDomain : Set[(I1,I2)] =
+    override def activeDomain : MergeableSet[(I1,I2)] =
       inner.activeDomain;
+    
+    override def getRow(row : I1) = inner.getRow(row);
+    
+    override def getCol(col : I2) = inner.getCol(col);
+    
+    override def activeDomainInRow(row : I1) = inner.activeDomainInRow(row);
+    
+    override def activeDomainInCol(col : I2) = inner.activeDomainInCol(col);
   }
   
   /** The given Tensor1 as a single column in a Tensor2. */
+  /*
   class Column[I1,I2](tensor : Tensor1[I1], newDomain : Domain1[I2], newValue : I2) extends Tensor2[I1,I2] {
     override def domain2 =
       Domain2(tensor.domain1, newDomain);
@@ -499,4 +539,5 @@ object Tensor2 {
     override def activeDomain : Set[(I1,I2)] =
       tensor.activeDomain.map(v => (v,newValue));
   }
+  */
 }

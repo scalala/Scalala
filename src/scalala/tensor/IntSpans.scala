@@ -182,7 +182,7 @@ object IntSpans {
   }
   
   /** A set of (Int,Int)'s represented compactly by a set of Range2D's. */
-  class RangeSet2D(inRanges : List[Range2D]) extends Set[(Int,Int)] {
+  case class RangeSet2D(inRanges : List[Range2D]) extends Set[(Int,Int)] {
     val ranges =
       (for (i <- 0 until inRanges.length;
            if !(0 until i).map(j => inRanges(j).contains(inRanges(i))).contains(true))
@@ -202,4 +202,9 @@ object IntSpans {
     override def -(elem : (Int,Int)) = throw new UnsupportedOperationException();
     override def +(elem : (Int,Int)) = throw new UnsupportedOperationException();
     override def empty[B] = Set[B]();
+    
+    override def ++(other : Iterable[(Int,Int)]) = other match {
+      case RangeSet2D(otherRanges) => RangeSet2D(inRanges ++ otherRanges);
+      case _ => super.++(other);
+    }
   }

@@ -43,7 +43,7 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   def default : B;
   
   /** Returns the subset of domain for which a value may be non-default. */
-  def activeDomain : Set[A];
+  def activeDomain : MergeableSet[A];
   
   //
   // default implementations
@@ -183,9 +183,9 @@ object PartialMap {
     def merge(val1 : B1, val2 : B2) : O;
     
     override def domain = pm1.domain;
-    override val default = merge(pm1.default, pm2.default);
+    override def default = merge(pm1.default, pm2.default);
     override def apply(i : A) = merge(pm1(i),pm2(i));
-    override val activeDomain = pm1.activeDomain ++ pm2.activeDomain;
+    override def activeDomain = pm1.activeDomain ++ pm2.activeDomain;
   }
   
   class JoinException(msg : String) extends RuntimeException(msg);

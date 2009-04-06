@@ -88,7 +88,7 @@ trait Matrices extends Library with Vectors {
    * Copies the contents of the underlying matrix.
    */
   def diag(v : Vector) : Matrix =
-    DiagonalMatrix(v.copy);
+    DiagonalMatrix(v.copy.asInstanceOf[Vector]);
   
   /**
    * Turns the given matrices into a block diagonal matrix.
