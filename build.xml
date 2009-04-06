@@ -24,6 +24,10 @@
     </classpath>
   </taskdef>
 
+  <target name="clean" depends="">
+    <delete dir="${build.dir}" />
+  </target>
+
   <!-- Compile sources with new scalac command. -->
   <target name="compile" depends="">
     <mkdir dir="${build.dir}"/>
