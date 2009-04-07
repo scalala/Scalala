@@ -50,37 +50,6 @@ trait OperatorSupport {
   
   /** Implicitly promotes a TensorOp to its Tensor value. */
   implicit def iTensor[I,T<:Tensor[I]](op : TensorOp[I,T]) : T = op.value;
-  
-  /** Implicitly promotes a TensorOp to a Vector value if possible. */
-  /*
-  implicit def iVector[I,T<:Tensor1[I]](op : VectorOp[I,T]) : Vector = {
-    op.domain1 match {
-      case IntSpanDomain(0, top) => op.value.asInstanceOf[scalala.tensor.Vector];
-      case _ => throw new IllegalArgumentException("Not a vector operation");
-    }
-  }
-  */
-  
-  /** Implicitly promotes a TensorOp to a Vector value if possible. */
-  /*
-  implicit def iVector[I](op : RowVectorOp[I]) : Vector = {
-    op.domain1 match {
-      case IntSpanDomain(0, top) => op.value.asInstanceOf[scalala.tensor.Vector];
-      case _ => throw new IllegalArgumentException("Not a vector operation");
-    }
-  }
-  */
-  
-  /** Implicitly promotes a TensorOp to a Vector value if possible. */
-  /*
-  implicit def iMatrix[I,J](op : MatrixOp[I,J]) : Vector = {
-    op.domain2 match {
-      case Domain2(IntSpanDomain(0,rows),IntSpanDomain(0,cols)) =>
-        op.value.asInstanceOf[scalala.tensor.Vector];
-      case _ => throw new IllegalArgumentException("Not a matrix operation");
-    }
-  }
-  */
 }
 
 object OperatorSupport extends OperatorSupport { }
@@ -217,8 +186,11 @@ object OperatorSupport extends OperatorSupport { }
     /** Matrix-vector multiplication. */
     def *[T2<:Tensor1[I2]] (op : VectorOp[I2,T2]) = MatrixInnerMultVector(this, op);
     
-    /** Matrix inverse */
+    /** Matrix solve. */
     def \[J,T2<:Tensor2[I1,J]] (op : MatrixOp[I1,J,T2]) = MatrixSolveMatrix(this, op);
+    
+    /** Matrix-vector solve. */
+    def \[T2<:Tensor1[I1]] (op : VectorOp[I1,T2]) = MatrixSolveVector(this, op);
   }
   
   /** An underlying tensor. */
@@ -493,12 +465,26 @@ object OperatorSupport extends OperatorSupport { }
     if (m1.domain2._1 != m2.domain2._1) throw new DomainException;
     override def create[J](d : Domain[J]) = m1.create(d);
     override def domain2 = Domain2(m1.domain2._2, m2.domain2._2);
-    override def value2 : Tensor2[I,J] = {
+    override lazy val value2 : Tensor2[I,J] = {
       val X = m1.create(domain2);
-      if (!X.isInstanceOf[scalala.tensor.MatrixSolver[_,_]]) {
+      if (!X.isInstanceOf[scalala.tensor.MatrixMatrixSolver[_,_]]) {
         throw new UnsupportedOperationException("Type "+X.getClass+" does not support matrix solving");
       }
       X := this;
-      return X.asInstanceOf[Tensor2[I,J]];
+      X.asInstanceOf[Tensor2[I,J]];
     }
+  }
+  
+  case class MatrixSolveVector[I,J,T1<:Tensor2[I,J],T2<:Tensor1[I]](m : MatrixOp[I,J,T1], v : VectorOp[I,T2]) extends VectorOp[J,Tensor1[J]] {
+    if (m.domain2._1 != v.domain1) throw new DomainException;
+    override def create[J](d : Domain[J]) = v.create(d);
+    override def domain1 = m.domain2._2;
+    override lazy val value1 : Tensor1[J] = {
+      val X = v.create(domain1); // create a column matrix
+      if (!X.isInstanceOf[scalala.tensor.MatrixVectorSolver[_]]) {
+        throw new UnsupportedOperationException("Type "+X.getClass+" does not support matrix solving");
+      }
+      X := this;
+      X.asInstanceOf[Tensor1[J]];
+    } 
   }

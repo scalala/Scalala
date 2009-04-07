@@ -24,6 +24,7 @@ import scalala.collection.domain.{Domain, IntSpanDomain, DomainException};
 
 import scalala.tensor.Vector;
 import scalala.tensor.sparse.SparseVector;
+import scalala.tensor.operators._;
 
 import scalala.tensor.Tensor.CreateException;
 
@@ -33,7 +34,7 @@ import scalala.tensor.Tensor.CreateException;
  * @author dramage
  */
 class DenseVector(data : Array[Double]) extends
-  DoubleArrayData(data) with Vector with DenseTensor[Int] {
+  DoubleArrayData(data) with Vector with DenseTensor[Int] with MatrixVectorSolver[Int] {
   
   def this(size : Int) = this(new Array[Double](size));
   
@@ -61,5 +62,25 @@ class DenseVector(data : Array[Double]) extends
       i += 1;
     }
     sum;
+  }
+  
+  /** Assigns each element in this map to the corresponding value as returned by the given operation. */
+  override def :=[T<:Tensor[Int]]  (op : TensorOp[Int,T]) : Unit = {
+    def isDense[QI,QT<:Tensor[QI]](op : TensorOp[QI,QT]) : Boolean = op match {
+      case MatrixTranspose(aT) => isDense(aT);
+      case _ => op.value.isInstanceOf[DenseTensor[_]];
+    }
+    
+    op match {
+      case MatrixSolveVector(a, b) if isDense(a) && isDense(b) =>
+        import scalala.Scalala._;
+        val _b = b.working.asInstanceOf[DenseVector];
+        val _B = new DenseMatrix(_b.data, _b.size, 1);
+        val _X = new DenseMatrix(this.data, this.size, 1);
+        _X := a.asInstanceOf[MatrixOp[Int,Int,Tensor2[Int,Int]]] \ _B;
+      case MatrixSolveVector(a, b) =>
+        throw new UnsupportedOperationException("DenseMatrix solution requires both arguments to be dense");
+      case _ => super.:=(op);
+    }
   }
 }

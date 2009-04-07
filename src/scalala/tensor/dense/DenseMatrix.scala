@@ -34,7 +34,7 @@ import scalala.tensor.operators._;
  * @author dramage
  */
 class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
-  DoubleArrayData(data) with Matrix with MatrixSolver[Int,Int] with DenseTensor[(Int,Int)] {
+  DoubleArrayData(data) with Matrix with MatrixMatrixSolver[Int,Int] with DenseTensor[(Int,Int)] {
   
   if (nRows * nCols != data.length) throw new Predef.IllegalArgumentException;
   
@@ -147,5 +147,7 @@ trait DenseMatrixSolveTest {
     val _C = new DenseMatrix(Array(1.0, 2.0, 3.0, 4.0, 5.0, -1.0), 2, 3);
     val _D = new DenseMatrix(Array(2.0, 0.0, 3.0, 3.0), 2, 2);
     assertEquals(DenseMatrix(Array(0.0091743, 0.0825688, 0.3486239, 0.2935780, 0.6422018, 0.1559633), 3, 2), (_C \ _D).value, 1e-7);
+    
+    assertEquals(Vector(0.0091743, 0.0825688, 0.3486239), (_C \ Vector(2, 0)).value, 1e-7);
   }
 }

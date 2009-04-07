@@ -25,7 +25,14 @@ package scalala.tensor;
  * 
  * @author dramage
  */
-trait MatrixSolver[I,J] extends Tensor2[I,J] {
-}
+trait MatrixMatrixSolver[I,J] extends Tensor2[I,J] { }
+
+/**
+ * A simple marker trait that denotes that this tensor is capable
+ * of solving operators.MatrixSolveVector in its := method.
+ * 
+ * @author dramage
+ */
+trait MatrixVectorSolver[I] extends Tensor1[I] { }
 
 class MatrixSingularException extends RuntimeException;
