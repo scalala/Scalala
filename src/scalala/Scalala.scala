@@ -79,6 +79,7 @@ object Scalala extends Scalala
  */
 object ScalalaTestSuite extends Scalala
   with scalala.tensor.operators.OperatorTest
+  with scalala.tensor.sparse.SparseVectorTest
   with StatisticsTest
   with ScalalaTest.TestConsoleMain
 {
