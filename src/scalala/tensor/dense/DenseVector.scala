@@ -77,7 +77,7 @@ class DenseVector(data : Array[Double]) extends
         val _b = b.working.asInstanceOf[DenseVector];
         val _B = new DenseMatrix(_b.data, _b.size, 1);
         val _X = new DenseMatrix(this.data, this.size, 1);
-        _X := a.asInstanceOf[MatrixOp[Int,Int,Tensor2[Int,Int]]] \ _B;
+        _X := MatrixSolveMatrix(a.asInstanceOf[MatrixOp[Int,Int,DenseMatrix]], _B);
       case MatrixSolveVector(a, b) =>
         throw new UnsupportedOperationException("DenseMatrix solution requires both arguments to be dense");
       case _ => super.:=(op);

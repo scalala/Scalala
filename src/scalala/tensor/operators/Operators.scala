@@ -28,6 +28,13 @@ import scalala.tensor.{Tensor, Tensor1, Tensor2};
  * @author dramage
  */
 trait OperatorSupport {
+  /** Implicit promotion to a ScalarOp for tensor operations. */
+  implicit def iScalarOp[I](s : Double) = ScalarOp(s);
+  implicit def iScalarOp[I](s : Float)  = ScalarOp(s);
+  implicit def iScalarOp[I](s : Short)  = ScalarOp(s);
+  implicit def iScalarOp[I](s : Int)    = ScalarOp(s);
+  implicit def iScalarOp[I](s : Long)   = ScalarOp(s);
+  
   /** Implicitly promotes a Tensor to a TensorIdentity operation. */
   implicit def iTensorOp[I](t : Tensor[I]) : TensorOp[I,Tensor[I]] =
     TensorIdentity(t);
@@ -54,6 +61,79 @@ trait OperatorSupport {
 
 object OperatorSupport extends OperatorSupport { }
 
+/**
+ * A promoted type for scalars that supports operations with matrices.
+ */
+case class ScalarOp(s : Double) {
+  import OperatorSupport._;
+  
+  def + [I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorPlusScalar(t, s);
+  def - [I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorPlusScalar(TensorNegation(t), s);
+  def * [I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorMultScalar(t, s);
+  def / [I,T<:Tensor[I]] (t : TensorOp[I,T]) = ScalarDivTensor(s,t);
+  def < [I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorGTScalar(t,s);
+  def > [I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorLTScalar(t,s);
+  def <=[I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorGTEScalar(t,s);
+  def >=[I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorLTEScalar(t,s);
+  def &&[I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorAndScalar(t,s);
+  def ||[I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorOrScalar(t,s);
+  
+  def + [I] (t : Tensor[I]) = TensorPlusScalar(t, s);
+  def - [I] (t : Tensor[I]) = TensorPlusScalar(TensorNegation(t), s);
+  def * [I] (t : Tensor[I]) = TensorMultScalar(t, s);
+  def / [I] (t : Tensor[I]) = ScalarDivTensor(s,t);
+  def < [I] (t : Tensor[I]) = TensorGTScalar(t,s);
+  def > [I] (t : Tensor[I]) = TensorLTScalar(t,s);
+  def <=[I] (t : Tensor[I]) = TensorGTEScalar(t,s);
+  def >=[I] (t : Tensor[I]) = TensorLTEScalar(t,s);
+  def &&[I] (t : Tensor[I]) = TensorAndScalar(t,s);
+  def ||[I] (t : Tensor[I]) = TensorOrScalar(t,s);
+  
+  def + [I] (t : Tensor1[I]) = TensorPlusScalar[I,Tensor1[I]](t, s);
+  def - [I] (t : Tensor1[I]) = TensorPlusScalar[I,Tensor1[I]](-t, s);
+  def * [I] (t : Tensor1[I]) = TensorMultScalar[I,Tensor1[I]](t, s);
+  def / [I] (t : Tensor1[I]) = ScalarDivTensor[I,Tensor1[I]](s,t);
+  def < [I] (t : Tensor1[I]) = TensorGTScalar[I,Tensor1[I]](t,s);
+  def > [I] (t : Tensor1[I]) = TensorLTScalar[I,Tensor1[I]](t,s);
+  def <=[I] (t : Tensor1[I]) = TensorGTEScalar[I,Tensor1[I]](t,s);
+  def >=[I] (t : Tensor1[I]) = TensorLTEScalar[I,Tensor1[I]](t,s);
+  def &&[I] (t : Tensor1[I]) = TensorAndScalar[I,Tensor1[I]](t,s);
+  def ||[I] (t : Tensor1[I]) = TensorOrScalar[I,Tensor1[I]](t,s);
+  
+  def + (t : Vector) = TensorPlusScalar[Int,Vector](t, s);
+  def - (t : Vector) = TensorPlusScalar[Int,Vector](-t, s);
+  def * (t : Vector) = TensorMultScalar[Int,Vector](t, s);
+  def / (t : Vector) = ScalarDivTensor[Int,Vector](s,t);
+  def < (t : Vector) = TensorGTScalar[Int,Vector](t,s);
+  def > (t : Vector) = TensorLTScalar[Int,Vector](t,s);
+  def <=(t : Vector) = TensorGTEScalar[Int,Vector](t,s);
+  def >=(t : Vector) = TensorLTEScalar[Int,Vector](t,s);
+  def &&(t : Vector) = TensorAndScalar[Int,Vector](t,s);
+  def ||(t : Vector) = TensorOrScalar[Int,Vector](t,s);
+  
+  def + [I,J] (t : Tensor2[I,J]) = TensorPlusScalar[(I,J),Tensor2[I,J]](t, s);
+  def - [I,J] (t : Tensor2[I,J]) = TensorPlusScalar[(I,J),Tensor2[I,J]](-t, s);
+  def * [I,J] (t : Tensor2[I,J]) = TensorMultScalar[(I,J),Tensor2[I,J]](t, s);
+  def / [I,J] (t : Tensor2[I,J]) = ScalarDivTensor[(I,J),Tensor2[I,J]](s,t);
+  def < [I,J] (t : Tensor2[I,J]) = TensorGTScalar[(I,J),Tensor2[I,J]](t,s);
+  def > [I,J] (t : Tensor2[I,J]) = TensorLTScalar[(I,J),Tensor2[I,J]](t,s);
+  def <=[I,J] (t : Tensor2[I,J]) = TensorGTEScalar[(I,J),Tensor2[I,J]](t,s);
+  def >=[I,J] (t : Tensor2[I,J]) = TensorLTEScalar[(I,J),Tensor2[I,J]](t,s);
+  def &&[I,J] (t : Tensor2[I,J]) = TensorAndScalar[(I,J),Tensor2[I,J]](t,s);
+  def ||[I,J] (t : Tensor2[I,J]) = TensorOrScalar[(I,J),Tensor2[I,J]](t,s);
+  
+  def + (t : Matrix) = TensorPlusScalar[(Int,Int),Matrix](t, s);
+  def - (t : Matrix) = TensorPlusScalar[(Int,Int),Matrix](-t, s);
+  def * (t : Matrix) = TensorMultScalar[(Int,Int),Matrix](t, s);
+  def / (t : Matrix) = ScalarDivTensor[(Int,Int),Matrix](s,t);
+  def < (t : Matrix) = TensorGTScalar[(Int,Int),Matrix](t,s);
+  def > (t : Matrix) = TensorLTScalar[(Int,Int),Matrix](t,s);
+  def <=(t : Matrix) = TensorGTEScalar[(Int,Int),Matrix](t,s);
+  def >=(t : Matrix) = TensorLTEScalar[(Int,Int),Matrix](t,s);
+  def &&(t : Matrix) = TensorAndScalar[(Int,Int),Matrix](t,s);
+  def ||(t : Matrix) = TensorOrScalar[(Int,Int),Matrix](t,s);
+  
+}
 
   /**
    * Operations applicable to any tensor: updates by a scalar and
@@ -79,11 +159,14 @@ object OperatorSupport extends OperatorSupport { }
     /** Creates a new tensor for the requested domain type. */
     def create[J](d : Domain[J]) : Tensor[J];
     
+    /** Unary minus returns a tensor negation. */
+    def unary_- : TensorOp[I,T] = TensorNegation(this);
+    
     // scalar operators
     def  + (s : Double) = TensorPlusScalar(this, s);
     def  - (s : Double) = TensorPlusScalar(this, -s);
-    def  * (s : Double) = TensorMultScalar(this, s);
-    def  / (s : Double) = TensorMultScalar(this, 1.0 / s);
+    def  * (s : Double) : TensorScalarOp[I,T] = TensorMultScalar(this, s);
+    def  / (s : Double) : TensorScalarOp[I,T] = TensorMultScalar(this, 1.0 / s);
     def  ^ (s : Double) = TensorPowScalar(this, s);
     def  < (s : Double) = TensorLTScalar(this, s);
     def  > (s : Double) = TensorGTScalar(this, s);
@@ -141,6 +224,11 @@ object OperatorSupport extends OperatorSupport { }
     /** Transposes this matrix. */
     def t = VectorToRow(this);
     
+    override def unary_- = this match {
+      case VectorNegation(n) => n.asInstanceOf[VectorOp[I,T]];
+      case _ => VectorNegation(this);
+    }
+    
     /** Vector-vector multiplication. */
     def *[T2<:Tensor1[I]] (op : RowVectorOp[I,T2]) = VectorOuterMultVector(this, op);
   }
@@ -155,6 +243,11 @@ object OperatorSupport extends OperatorSupport { }
     
     /** Transposes this matrix. */
     def t = VectorToCol(this);
+    
+    override def unary_- = this match {
+      case RowVectorNegation(n) => n.asInstanceOf[RowVectorOp[I,T]];
+      case _ => RowVectorNegation(this);
+    }
     
     /** Vector-matrix inner multiplication. */
     def *[J,T2<:Tensor2[I,J]] (op : MatrixOp[I,J,T2]) = VectorInnerMultMatrix(this, op);
@@ -179,6 +272,11 @@ object OperatorSupport extends OperatorSupport { }
     
     /** Transposes this tensor. */
     def t = MatrixTranspose(this);
+    
+    override def unary_- = this match {
+      case MatrixNegation(n) => n.asInstanceOf[MatrixOp[I1,I2,T]];
+      case _ => MatrixNegation(this);
+    }
     
     /** Matrix-matrix multiplication. */
     def *[J,T2<:Tensor2[I2,J]] (op : MatrixOp[I2,J,T2]) = MatrixInnerMultMatrix(this, op);
@@ -246,6 +344,25 @@ object OperatorSupport extends OperatorSupport { }
     }
   }
   
+  case class TensorNegation[I,T<:Tensor[I]](tensor : TensorOp[I,T]) extends TensorOp[I,T] {
+    override def domain = tensor.domain;
+    override def create[J](d : Domain[J]) = tensor.create(d);
+    override def value = negated;
+    
+    lazy val negated : T = {
+      tensor match {
+        case TensorNegation(n) =>
+          n.value.asInstanceOf[T];
+        case _ =>
+          val rv = tensor.working;
+          rv *= -1;
+          rv;
+      }
+    }
+    
+    override def unary_- : TensorOp[I,T] = tensor;
+  }
+  
   case class TensorPlusScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorScalarOp(tensor,scalar) {
     override def  + (s : Double) = TensorPlusScalar(tensor, scalar + s);
     override def  - (s : Double) = TensorPlusScalar(tensor, scalar - s);
@@ -262,6 +379,17 @@ object OperatorSupport extends OperatorSupport { }
     override lazy val value = {
       val rv = tensor.working;
       rv *= scalar;
+      rv;
+    }
+  }
+  
+  case class ScalarDivTensor[I,T<:Tensor[I]](scalar : Double, tensor : TensorOp[I,T]) extends TensorScalarOp(tensor, scalar) {
+    override def * (s : Double) = ScalarDivTensor(scalar * s, tensor);
+    override def / (s : Double) = ScalarDivTensor(scalar / s, tensor);
+    override lazy val value = {
+      val rv = tensor.working;
+      rv.default = scalar / rv.default;
+      rv(rv.activeDomain) = ((x:Double) => scalar / x);
       rv;
     }
   }
@@ -375,9 +503,24 @@ object OperatorSupport extends OperatorSupport { }
     override def value1 = tensor1;
   }
   
+  case class VectorNegation[I,T<:Tensor1[I]](tensor1 : VectorOp[I,T]) extends TensorNegation[I,T](tensor1) with VectorOp[I,T] {
+    override def domain1 = tensor1.domain;
+    override def value1 = negated.asInstanceOf[T];
+  }
+  
+  case class RowVectorNegation[I,T<:Tensor1[I]](tensor1 : RowVectorOp[I,T]) extends TensorNegation[I,T](tensor1) with RowVectorOp[I,T] {
+    override def domain1 = tensor1.domain;
+    override def value1 = negated.asInstanceOf[T];
+  }
+  
   case class MatrixIdentity[I,J,T<:Tensor2[I,J]](tensor2 : T) extends TensorIdentity[(I,J),T](tensor2) with MatrixOp[I,J,T] {
     override def domain2 = tensor2.domain;
     override def value2 = tensor2;
+  }
+  
+  case class MatrixNegation[I,J,T<:Tensor2[I,J]](tensor2 : MatrixOp[I,J,T]) extends TensorNegation[(I,J),T](tensor2) with MatrixOp[I,J,T] {
+    override def domain2 = tensor2.domain;
+    override def value2 = negated.asInstanceOf[T];
   }
   
   case class VectorToRow[I,T<:Tensor1[I]](op : VectorOp[I,T]) extends RowVectorOp[I,T] {

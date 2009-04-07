@@ -78,6 +78,17 @@ trait OperatorTest {
     x :*= y;
     assertEquals(x.toList, List(6.0, 8.0, 6.0));
   }
+  
+  def _scalars_test() = {
+    import OperatorSupport._;
+    
+    val x = Vector(1,1,1);
+    x += 2 * Vector(1,2,3);
+    assertEquals(x, Vector(3,5,7));
+    
+    x := 2 / Vector(1,2,3);
+    assertEquals(x, Vector(2,1,2./3.));
+  }
 }
 
   
