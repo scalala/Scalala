@@ -21,7 +21,7 @@ package scalala.tensor;
 
 import scalala.collection.domain.{Domain, Domain1, Domain2, DomainException};
 import scalala.collection.{PartialMap, MutablePartialMap, MergeableSet, IntSpanSet};
-import scalala.tensor.operators.TensorOp;
+import scalala.tensor.operators._;
 
 /**
  * Implicit type promotions from arrays.
@@ -262,6 +262,16 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   /** Increments each element in this map by the corresponding value as returned by the given operation. */
   def :+=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = {
     op match {
+      case TensorMultScalar(tOp, s) => {
+        val t = tOp.value;
+        this.default += (t.default * s);
+        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (t(i) * s));
+      }
+      case TensorPlusScalar(tOp, s) => {
+        val t = tOp.value;
+        this.default += (t.default + s);
+        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (t(i) + s));
+      }
       case op : TensorOp[_,_] => this :+= op.value;
     }
   }
@@ -269,6 +279,16 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   /** Decrements each element in this map by the corresponding value as returned by the given operation. */
   def :-=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = {
     op match {
+      case TensorMultScalar(tOp, s) => {
+        val t = tOp.value;
+        this.default -= (t.default * s);
+        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (t(i) * s));
+      }
+      case TensorPlusScalar(tOp, s) => {
+        val t = tOp.value;
+        this.default -= (t.default + s);
+        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (t(i) + s));
+      }
       case op : TensorOp[_,_] => this :-= op.value;
     }
   }
@@ -276,6 +296,16 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   /** Multiplies each element in this map by the corresponding value as returned by the given operation. */
   def :*=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = {
     op match {
+      case TensorMultScalar(tOp, s) => {
+        val t = tOp.value;
+        this.default *= (t.default * s);
+        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (t(i) * s));
+      }
+      case TensorPlusScalar(tOp, s) => {
+        val t = tOp.value;
+        this.default *= (t.default + s);
+        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (t(i) + s));
+      }
       case op : TensorOp[_,_] => this :*= op.value;
     }
   }
@@ -283,6 +313,16 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   /** Divides each element in this map by the corresponding value as returned by the given operation. */
   def :/=[T<:Tensor[I]] (op : TensorOp[I,T]) : Unit = {
     op match {
+      case TensorMultScalar(tOp, s) => {
+        val t = tOp.value;
+        this.default /= (t.default * s);
+        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (t(i) * s));
+      }
+      case TensorPlusScalar(tOp, s) => {
+        val t = tOp.value;
+        this.default /= (t.default + s);
+        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (t(i) + s));
+      }
       case op : TensorOp[_,_] => this :/= op.value;
     }
   }

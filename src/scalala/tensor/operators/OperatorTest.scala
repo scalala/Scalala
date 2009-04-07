@@ -36,6 +36,8 @@ trait OperatorTest {
   def _vector_test() = {
     val x = Vector(1,2,3);
     
+    assertEquals(new DenseMatrix(Array(1.,2.,3.,2.,4.,6.,3.,6.,9.), 3, 3), (x * x.t).value);
+    
     x += 2;
     assertEquals(x, Vector(3,4,5));
     
@@ -46,9 +48,7 @@ trait OperatorTest {
     assertEquals(x, Vector(2,0,3));
     
     assertEquals(2*.5+2*2+2*1, y.t * z);
-    assertEquals(2*.5+2*2+2*1, y * z.t);
     assertEquals(2*.5+2*2+2*1, z.t * y);
-    assertEquals(2*.5+2*2+2*1, z * y.t);
   }
   
   def _matrix_vector_test() = {
@@ -63,7 +63,7 @@ trait OperatorTest {
     val A = new DenseMatrix(Array(0.652639,0.954604,0.112813,0.594183,0.086937,0.689550,0.941195,0.429511,0.970387,0.357748,0.984985,0.416206), 3, 4);
     val B = new DenseMatrix(Array(0.595799,0.115880,0.941191,0.786414,0.019879,0.533605,0.537067,0.612046),4,2);
     val C = new DenseMatrix(Array(1.62488,1.75768,1.38775,1.05448,0.89890,1.14609),3,2);
-    assertEquals((A * B).value.join(C)((v1:Double,v2:Double) => Math.abs(v1 - v2) < 1e-5), C.map((x:Double) => true));
+    assertEquals(A * B, C, 1e-5);
   }
   
   def _implicits_test() = {

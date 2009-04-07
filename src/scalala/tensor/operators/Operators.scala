@@ -112,28 +112,53 @@ object OperatorSupport extends OperatorSupport { }
     
     // scalar operators
     def  + (s : Double) = TensorPlusScalar(this, s);
-    def  - (s : Double) = TensorMinusScalar(this, s);
+    def  - (s : Double) = TensorPlusScalar(this, -s);
     def  * (s : Double) = TensorMultScalar(this, s);
-    def  / (s : Double) = TensorDivScalar(this, s);
+    def  / (s : Double) = TensorMultScalar(this, 1.0 / s);
     def  ^ (s : Double) = TensorPowScalar(this, s);
-    // def  < (s : Double) = TensorLTScalar(this, s);
-    // def  > (s : Double) = TensorGTScalar(this, s);
-    // def <= (s : Double) = TensorLTEScalar(this, s);
-    // def >= (s : Double) = TensorGTEScalar(this, s);
-    // def && (s : Double) = TensorAndTensor(this, s);
-    // def || (s : Double) = TensorOrTensor(this, s);
+    def  < (s : Double) = TensorLTScalar(this, s);
+    def  > (s : Double) = TensorGTScalar(this, s);
+    def <= (s : Double) = TensorLTEScalar(this, s);
+    def >= (s : Double) = TensorGTEScalar(this, s);
+    def && (s : Double) = TensorAndScalar(this, s);
+    def || (s : Double) = TensorOrScalar(this, s);
+    
+    /** Colon prefix is required to avoid conflation with .equals */
+    final def :== (s : Double) = TensorEqScalar(this, s);
+    
+    /** Colon prefix is required to avoid conflation with .equals */
+    final def :!= (s : Double) = TensorNeScalar(this, s);
     
     // tensor operators
-    def :+ (op : TensorOp[I,T]) = TensorPlusTensor(this,op);
-    def :- (op : TensorOp[I,T]) = TensorMinusTensor(this,op);
-    def :* (op : TensorOp[I,T]) = TensorMultTensor(this,op);
-    def :/ (op : TensorOp[I,T]) = TensorDivTensor(this,op);
+    def :+  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorPlusTensor(this,op);
+    def :-  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorMinusTensor(this,op);
+    def :*  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorMultTensor(this,op);
+    def :/  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorDivTensor(this,op);
+    def :<  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorLTTensor(this, op);
+    def :>  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorGTTensor(this, op);
+    def :<= [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorLTETensor(this, op);
+    def :>= [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorGTETensor(this, op);
+    def :== [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorEqTensor(this, op);
+    def :!= [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorNeTensor(this, op);
+    def :&& [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorAndTensor(this, op);
+    def :|| [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorOrTensor(this, op);
     
     /** Fixed alias for :+ */
-    final def + (op : TensorOp[I,T]) = this :+ op;
-    
+    final def +[T2<:Tensor[I]] (op : TensorOp[I,T2]) = this :+ op;
     /** Fixed alias for :- */
-    final def - (op : TensorOp[I,T]) = this :- op;
+    final def -[T2<:Tensor[I]] (op : TensorOp[I,T2]) = this :- op;
+    /** Fixed alias for :< */
+    final def <[T2<:Tensor[I]] (op : TensorOp[I,T2]) = this :< op;
+    /** Fixed alias for :> */
+    final def >[T2<:Tensor[I]] (op : TensorOp[I,T2]) = this :> op;
+    /** Fixed alias for :<= */
+    final def <=[T2<:Tensor[I]] (op : TensorOp[I,T2]) = this :<= op;
+    /** Fixed alias for :>= */
+    final def >=[T2<:Tensor[I]] (op : TensorOp[I,T2]) = this :>= op;
+    /** Fixed alias for :&& */
+    final def &&[T2<:Tensor[I]] (op : TensorOp[I,T2]) = this :&& op;
+    /** Fixed alias for :|| */
+    final def ||[T2<:Tensor[I]] (op : TensorOp[I,T2]) = this :|| op;
   }
 
   /** Extra operators for Tensor1 implementations as a column. */
@@ -148,7 +173,7 @@ object OperatorSupport extends OperatorSupport { }
     def t = VectorToRow(this);
     
     /** Vector-vector multiplication. */
-    def *[T2<:Tensor1[I]] (op : RowVectorOp[I,T2]) = (this.value1 dot op.value1);
+    def *[T2<:Tensor1[I]] (op : RowVectorOp[I,T2]) = VectorOuterMultVector(this, op);
   }
 
   /** Extra operators for Tensor1 implementations as a row. */
@@ -162,10 +187,10 @@ object OperatorSupport extends OperatorSupport { }
     /** Transposes this matrix. */
     def t = VectorToCol(this);
     
-    /** Vector-matrix multiplication. */
+    /** Vector-matrix inner multiplication. */
     def *[J,T2<:Tensor2[I,J]] (op : MatrixOp[I,J,T2]) = VectorInnerMultMatrix(this, op);
     
-    /** Vector-vector multiplication. */
+    /** Vector-vector inner multiplication. */
     def *[T2<:Tensor1[I]] (op : VectorOp[I,T2]) = (this.value1 dot op.value1);
   }
   
@@ -210,14 +235,48 @@ object OperatorSupport extends OperatorSupport { }
     override def create[J](d : Domain[J]) = tensor.create(d);
   }
   
-  /** An operator between two tensors defined on the same domain */
+  /** An operation applied to a tensors values only. */
+  abstract class TensorFunctionOp[I,T<:Tensor[I]](tensor : TensorOp[I,T]) extends TensorOp[I,T] {
+    /** Function to apply to elements to compute new value. */
+    def function(x : Double) : Double;
+    
+    override def domain = tensor.domain;
+    override def create[J](d : Domain[J]) = tensor.create(d);
+    override lazy val value = {
+      val rv = tensor.working;
+      rv.default = function(rv.default);
+      for (e <- rv.activeDomain) {
+        rv(e) = function(rv(e));
+      }
+      rv;
+    }
+  }
+  
+  /** An operator between two tensors defined on the same domain. */
   abstract class TensorTensorOp[I,T1<:Tensor[I],T2<:Tensor[I]](tensorA : TensorOp[I,T1], tensorB : TensorOp[I,T2]) extends TensorOp[I,T1] {
     if (tensorA.domain != tensorB.domain) throw new Predef.IllegalArgumentException;
     override def domain = tensorA.domain;
     override def create[J](d : Domain[J]) = tensorA.create(d);
   }
   
+  abstract class TensorTensorFunctionOp[I,T1<:Tensor[I],T2<:Tensor[I]](tensorA : TensorOp[I,T1], tensorB : TensorOp[I,T2]) extends TensorTensorOp(tensorA, tensorB) {
+    /** Function of paired elements to compute new value. */
+    def function(a : Double, b : Double) : Double;
+    
+    override lazy val value = {
+      val rv = tensorA.working;
+      val tb = tensorB.value;
+      rv.default = function(rv.default, tb.default);
+      for (e <- rv.activeDomain ++ tb.activeDomain) {
+        rv(e) = function(rv(e),tb(e));
+      }
+      rv;
+    }
+  }
+  
   case class TensorPlusScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorScalarOp(tensor,scalar) {
+    override def  + (s : Double) = TensorPlusScalar(tensor, scalar + s);
+    override def  - (s : Double) = TensorPlusScalar(tensor, scalar - s);
     override lazy val value = {
       val rv = tensor.working;
       rv += scalar;
@@ -225,25 +284,12 @@ object OperatorSupport extends OperatorSupport { }
     }
   }
   
-  case class TensorMinusScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorScalarOp(tensor,scalar) {
-    override lazy val value = {
-      val rv = tensor.working;
-      rv -= scalar;
-      rv;
-    }
-  }
   case class TensorMultScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorScalarOp(tensor,scalar) {
+    override def * (s : Double) = TensorMultScalar(tensor, scalar * s);
+    override def / (s : Double) = TensorMultScalar(tensor, scalar / s);
     override lazy val value = {
       val rv = tensor.working;
       rv *= scalar;
-      rv;
-    }
-  }
-  
-  case class TensorDivScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorScalarOp(tensor,scalar) {
-    override lazy val value = {
-      val rv = tensor.working;
-      rv /= scalar;
       rv;
     }
   }
@@ -254,6 +300,70 @@ object OperatorSupport extends OperatorSupport { }
       rv ^= scalar;
       rv;
     }
+  }
+  
+  case class TensorLTScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorFunctionOp[I,T](tensor) {
+    override def function(x : Double) = if (x < scalar) 1.0 else 0.0;
+  }
+  
+  case class TensorGTScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorFunctionOp[I,T](tensor) {
+    override def function(x : Double) = if (x > scalar) 1.0 else 0.0;
+  }
+  
+  case class TensorLTEScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorFunctionOp[I,T](tensor) {
+    override def function(x : Double) = if (x <= scalar) 1.0 else 0.0;
+  }
+  
+  case class TensorGTEScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorFunctionOp[I,T](tensor) {
+    override def function(x : Double) = if (x >= scalar) 1.0 else 0.0;
+  }
+
+  case class TensorEqScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorFunctionOp[I,T](tensor) {
+    override def function(x : Double) = if (x == scalar) 1.0 else 0.0;
+  }
+  
+  case class TensorNeScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorFunctionOp[I,T](tensor) {
+    override def function(x : Double) = if (x != scalar) 1.0 else 0.0;
+  }
+  
+  case class TensorOrScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorFunctionOp[I,T](tensor) {
+    override def function(x : Double) = if (x != 0.0 || scalar != 0) 1.0 else 0.0;
+  }
+  
+  case class TensorAndScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorFunctionOp[I,T](tensor) {
+    override def function(x : Double) = if (x != 0.0 && scalar != 0) 1.0 else 0.0;
+  }
+  
+  case class TensorLTTensor[I,T1<:Tensor[I],T2<:Tensor[I]](t1 : TensorOp[I,T1], t2 : TensorOp[I,T2]) extends TensorTensorFunctionOp(t1,t2) {
+    override def function(a : Double, b : Double) = if (a < b) 1.0 else 0.0;
+  }
+  
+  case class TensorGTTensor[I,T1<:Tensor[I],T2<:Tensor[I]](t1 : TensorOp[I,T1], t2 : TensorOp[I,T2]) extends TensorTensorFunctionOp(t1,t2) {
+    override def function(a : Double, b : Double) = if (a > b) 1.0 else 0.0;
+  }
+  
+  case class TensorLTETensor[I,T1<:Tensor[I],T2<:Tensor[I]](t1 : TensorOp[I,T1], t2 : TensorOp[I,T2]) extends TensorTensorFunctionOp(t1,t2) {
+    override def function(a : Double, b : Double) = if (a <= b) 1.0 else 0.0;
+  }
+  
+  case class TensorGTETensor[I,T1<:Tensor[I],T2<:Tensor[I]](t1 : TensorOp[I,T1], t2 : TensorOp[I,T2]) extends TensorTensorFunctionOp(t1,t2) {
+    override def function(a : Double, b : Double) = if (a >= b) 1.0 else 0.0;
+  }
+  
+  case class TensorEqTensor[I,T1<:Tensor[I],T2<:Tensor[I]](t1 : TensorOp[I,T1], t2 : TensorOp[I,T2]) extends TensorTensorFunctionOp(t1,t2) {
+    override def function(a : Double, b : Double) = if (a == b) 1.0 else 0.0;
+  }
+  
+  case class TensorNeTensor[I,T1<:Tensor[I],T2<:Tensor[I]](t1 : TensorOp[I,T1], t2 : TensorOp[I,T2]) extends TensorTensorFunctionOp(t1,t2) {
+    override def function(a : Double, b : Double) = if (a != b) 1.0 else 0.0;
+  }
+  
+  case class TensorAndTensor[I,T1<:Tensor[I],T2<:Tensor[I]](t1 : TensorOp[I,T1], t2 : TensorOp[I,T2]) extends TensorTensorFunctionOp(t1,t2) {
+    override def function(a : Double, b : Double) = if (a != 0 && b != 0) 1.0 else 0.0;
+  }
+  
+  case class TensorOrTensor[I,T1<:Tensor[I],T2<:Tensor[I]](t1 : TensorOp[I,T1], t2 : TensorOp[I,T2]) extends TensorTensorFunctionOp(t1,t2) {
+    override def function(a : Double, b : Double) = if (a != 0 || b != 0) 1.0 else 0.0;
   }
   
   case class TensorPlusTensor[I,T1<:Tensor[I],T2<:Tensor[I]](tensorA : TensorOp[I,T1], tensorB : TensorOp[I,T2]) extends TensorTensorOp(tensorA,tensorB) {
@@ -364,6 +474,21 @@ object OperatorSupport extends OperatorSupport { }
     override def create[J](d : Domain[J]) = vector.create(d);
   }
 
+  case class VectorOuterMultVector[I,T1<:Tensor1[I],T2<:Tensor1[I]](v1 : VectorOp[I,T1], v2 : RowVectorOp[I,T2]) extends MatrixOp[I,I,Tensor2[I,I]] {
+    if (v1.domain != v2.domain) throw new DomainException;
+    override def domain2 = Domain2(v1.domain1,v1.domain1);
+    override lazy val value2 : Tensor2[I,I] = {
+      val v1v = v1.value;
+      val v2v = v2.value;
+      val rv = v1v.create(domain2).asInstanceOf[Tensor2[I,I]];
+      for (i <- v1.domain; j <- v1.domain) {
+        rv(i,j) = v1v(i) * v2v(j);
+      }
+      rv;
+    }
+    override def create[J](d : Domain[J]) = v1.create(d);
+  }
+  
   case class MatrixSolveMatrix[K,I,J,T1<:Tensor2[K,I],T2<:Tensor2[K,J]](m1 : MatrixOp[K,I,T1], m2 : MatrixOp[K,J,T2]) extends MatrixOp[I,J,Tensor2[I,J]] {
     if (m1.domain2._1 != m2.domain2._1) throw new DomainException;
     override def create[J](d : Domain[J]) = m1.create(d);
