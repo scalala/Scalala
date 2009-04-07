@@ -241,4 +241,160 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
     case IntSpanDomain(0,len) => new SparseVector(size);
     case _ => throw new CreateException("Cannot create sparse with domain "+domain);
   }
+  
+  /** Optimized implementation for SpraseVectors. */
+  override def dot(other : Tensor1[Int]) : Double = other match {
+    case that : SparseVector => dot(that);
+    case _ => super.dot(other);
+  }
+  
+  /** Optimized implementation for SpraseVectors. */
+  def dot(that : SparseVector) : Double = {
+    if (this.size != that.size) {
+      throw new scalala.collection.domain.DomainException("Vectors have different sizes");
+    }
+    var o1 = 0;    // offset into this.data, this.index
+    var o2 = 0;    // offset into that.data, that.index
+    var sum = 0.0; // the dot product
+    
+    val thisDefault = this.default;
+    val thatDefault = that.default;
+    
+    if (thisDefault == 0 && thatDefault == 0) {
+      while (o1 < this.used && o2 < that.used) {
+        val i1 = this.index(o1);
+        val i2 = that.index(o2);
+        if (i1 == i2) {
+          sum += (this.data(o1) * that.data(o2));
+          o1 += 1;
+          o2 += 1;
+        } else if (i1 < i2) {
+          o1 += 1;
+        } else { // i2 > i1
+          o2 += 1;
+        }
+      }
+    } else if (thisDefault == 0) { // && thatDefault != 0
+      while (o1 < this.used && o2 < that.used) {
+        val i1 = this.index(o1);
+        val i2 = that.index(o2);
+        if (i1 == i2) {
+          sum += (this.data(o1) * that.data(o2));
+          o1 += 1;
+          o2 += 1;
+        } else if (i1 < i2) {
+          sum += (thatDefault * this.data(o1));
+          o1 += 1;
+        } else { // i2 > i1
+          o2 += 1;
+        }
+      }
+      // consume remainder of this
+      while (o1 < this.used) {
+        sum += (thatDefault * this.data(o1));
+        o1 += 1;
+      }
+    } else if (thatDefault == 0) { // thisDefault != 0
+      while (o1 < this.used && o2 < that.used) {
+        val i1 = this.index(o1);
+        val i2 = that.index(o2);
+        if (i1 == i2) {
+          sum += (this.data(o1) * that.data(o2));
+          o1 += 1;
+          o2 += 1;
+        } else if (i1 < i2) {
+          o1 += 1;
+        } else { // i2 > i1
+          sum += (thisDefault * that.data(o2));
+          o2 += 1;
+        }
+      }
+      // consume remainder of that
+      while (o2 < that.used) {
+        sum += (thisDefault * that.data(o2));
+        o2 += 1;
+      }
+    } else { // thisDefault != 0 && thatDefault != 0
+      var counted = 0;
+      while (o1 < this.used && o2 < that.used) {
+        val i1 = this.index(o1);
+        val i2 = that.index(o2);
+        if (i1 == i2) {
+          sum += (this.data(o1) * that.data(o2));
+          o1 += 1;
+          o2 += 1;
+          counted += 1;
+        } else if (i1 < i2) {
+          sum += (thatDefault * this.data(o1));
+          o1 += 1;
+          counted += 1;
+        } else { // i2 > i1
+          sum += (thisDefault * that.data(o2));
+          o2 += 1;
+          counted += 1;
+        }
+      }
+      // consume remainder of this
+      while (o1 < this.used) {
+        sum += (thatDefault * this.data(o1));
+        o1 += 1;
+        counted += 1;
+      }
+      // consume remainder of that
+      while (o2 < that.used) {
+        sum += (thisDefault * that.data(o2));
+        o2 += 1;
+        counted += 1;
+      }
+      // add in missing product total
+      sum += ((size - counted) * (thisDefault * thatDefault));
+    }
+    
+    return sum;
+  }
+}
+
+trait SparseVectorTest {
+  import scalala.ScalalaTest._;
+  import scalala.tensor.dense.DenseVector;
+  
+  def _sparse_test() {
+    val sparse = new SparseVector(10);
+    val dense  = new scalala.tensor.dense.DenseVector(10);
+    
+    val values = List((2,2),(4,4),(3,3),(0,-1),(5,5),(1,1),(9,9),(7,7),(8,8),(3,3));
+    
+    for ((index,value) <- values) {
+      sparse(index) = value;
+      dense(index) = value;
+      assertEquals(dense, sparse);
+    }
+  }
+  
+  def _sparse_dot_test() {
+    val x = new SparseVector(10);
+    val y = new SparseVector(10);
+    
+    def densedot(a : SparseVector, b : SparseVector) =
+      new DenseVector(a.toArray) dot new DenseVector (b.toArray);
+    
+    x(2) = 3;
+    y(2) = 4;
+    assertEquals(densedot(x,y), x dot y);
+    
+    x(7) = 2;
+    y += 1;
+    assertEquals(densedot(x,y), x dot y);
+    
+    y -= 1;
+    y(7) = .5;
+    assertEquals(densedot(x,y), x dot y);
+    
+    x += 1;
+    y(8) = 2;
+    assertEquals(densedot(x,y), x dot y);
+    
+    y += 1;
+    assertEquals(densedot(x,y), x dot y);
+  }
 }
