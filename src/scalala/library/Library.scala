@@ -55,7 +55,7 @@ trait Library {
   def SparseVector(size : Int, nonzeros : Int) : Vector =
     new SparseVector(size, nonzeros);
   
-  def Matrix(values : Array[Double], rows : Int, cols : Int) : Matrix =
+  def DenseMatrix(values : Array[Double], rows : Int, cols : Int) : Matrix =
     new DenseMatrix(values, rows, cols);
   
   def DenseMatrix(rows : Int, cols : Int) : Matrix =
