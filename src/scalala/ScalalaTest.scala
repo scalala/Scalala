@@ -30,6 +30,8 @@ package scalala
  */
 object ScalalaTest {
   
+  import scalala.collection.PartialMap;
+  
   val TOLERANCE = 1e-4;
   
   case class AssertionException(message : String) extends Exception;
@@ -39,6 +41,10 @@ object ScalalaTest {
   
   def assertEquals(v1 : =>Double, v2 : =>Double, tolerance : Double) : Unit =
     if (Math.abs(v1 - v2) > tolerance) throw new AssertionException(v1 + "!=" + v2);
+  
+  def assertEquals[I](v1 : PartialMap[I,Double], v2 : PartialMap[I,Double], tolerance : Double) : Unit =
+    if ((v1 join v2)((a:Double,b:Double) => Math.abs(a - b) < tolerance).values.contains(false))
+      throw new AssertionException(v1 + "!=" + v2);
   
   /** Two-arg function application with expected exception. */
   def assertThrows[V](f : =>V, exType : java.lang.Class[_ <: java.lang.Throwable]) : Unit = {

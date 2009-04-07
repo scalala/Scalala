@@ -19,9 +19,11 @@
  */
 package scalala.tensor.dense;
 
-import scalala.tensor.Vector;
 import scalala.collection.{MergeableSet, IntSpanSet};
-import scalala.collection.domain.{Domain, IntSpanDomain};
+import scalala.collection.domain.{Domain, IntSpanDomain, DomainException};
+
+import scalala.tensor.Vector;
+import scalala.tensor.sparse.SparseVector;
 
 import scalala.tensor.Tensor.CreateException;
 
@@ -43,4 +45,21 @@ class DenseVector(data : Array[Double]) extends
   override def activeDomain : MergeableSet[Int] = IntSpanSet(0, size);
   
   override def copy = new DenseVector(data.toArray).asInstanceOf[DenseVector.this.type];
+  
+  override def dot(other : Tensor1[Int]) : Double = other match {
+    case dense  : DenseVector  => dot(dense);
+    case sparse : SparseVector => sparse.dot(this);
+    case _ => super.dot(other);
+  }
+  
+  def dot(that : DenseVector) = {
+    if (this.size != that.size) throw new DomainException();
+    var i = 0;
+    var sum = 0.0;
+    while (i < data.length) {
+      sum += this.data(i) * that.data(i);
+      i += 1;
+    }
+    sum;
+  }
 }

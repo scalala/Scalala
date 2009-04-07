@@ -107,6 +107,9 @@ object OperatorSupport extends OperatorSupport { }
      */
     def working : T = value;
     
+    /** Creates a new tensor for the requested domain type. */
+    def create[J](d : Domain[J]) : Tensor[J];
+    
     // scalar operators
     def  + (s : Double) = TensorPlusScalar(this, s);
     def  - (s : Double) = TensorMinusScalar(this, s);
@@ -188,6 +191,9 @@ object OperatorSupport extends OperatorSupport { }
     
     /** Matrix-vector multiplication. */
     def *[T2<:Tensor1[I2]] (op : VectorOp[I2,T2]) = MatrixInnerMultVector(this, op);
+    
+    /** Matrix inverse */
+    def \[J,T2<:Tensor2[I1,J]] (op : MatrixOp[I1,J,T2]) = MatrixSolveMatrix(this, op);
   }
   
   /** An underlying tensor. */
@@ -195,17 +201,20 @@ object OperatorSupport extends OperatorSupport { }
     override def domain = tensor.domain;
     override def value = tensor;
     override val working = tensor.copy.asInstanceOf[T];
+    override def create[J](d : Domain[J]) = tensor.create(d);
   }
   
   /** An operator between a tensor and scalar. */
   abstract class TensorScalarOp[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorOp[I,T] {
     override def domain = tensor.domain;
+    override def create[J](d : Domain[J]) = tensor.create(d);
   }
   
   /** An operator between two tensors defined on the same domain */
   abstract class TensorTensorOp[I,T1<:Tensor[I],T2<:Tensor[I]](tensorA : TensorOp[I,T1], tensorB : TensorOp[I,T2]) extends TensorOp[I,T1] {
     if (tensorA.domain != tensorB.domain) throw new Predef.IllegalArgumentException;
     override def domain = tensorA.domain;
+    override def create[J](d : Domain[J]) = tensorA.create(d);
   }
   
   case class TensorPlusScalar[I,T<:Tensor[I]](tensor : TensorOp[I,T], scalar : Double) extends TensorScalarOp(tensor,scalar) {
@@ -293,17 +302,20 @@ object OperatorSupport extends OperatorSupport { }
     override def domain1 = op.domain1;
     override def value1 = op.value1;
     override def working = op.working;
+    override def create[J](d : Domain[J]) = op.create(d);
   }
   
   case class VectorToCol[I,T<:Tensor1[I]](op : RowVectorOp[I,T]) extends VectorOp[I,T] {
     override def domain1 = op.domain1;
     override def value1 = op.value1;
     override def working = op.working;
+    override def create[J](d : Domain[J]) = op.create(d);
   }
   
   case class MatrixTranspose[A,B,T<:Tensor2[A,B]](op : MatrixOp[A,B,T]) extends MatrixOp[B,A,Tensor2[B,A]] {
     override lazy val domain2 = op.domain2.transpose;
     override lazy val value2 = op.value2.transpose;
+    override def create[J](d : Domain[J]) = op.create(d);
   }
   
   case class MatrixInnerMultMatrix[A1,INNER,B2,T1<:Tensor2[A1,INNER],T2<:Tensor2[INNER,B2]](t1 : MatrixOp[A1,INNER,T1], t2 : MatrixOp[INNER,B2,T2]) extends MatrixOp[A1,B2,Tensor2[A1,B2]] {
@@ -313,12 +325,13 @@ object OperatorSupport extends OperatorSupport { }
       val innerDomain = t1.domain2._2;
       val t1v = t1.value;
       val t2v = t2.value;
-      val rv = t1v.create(domain2).asInstanceOf[Tensor2[A1,B2]];
+      val rv = create(domain2).asInstanceOf[Tensor2[A1,B2]];
       for (i <- domain2._1; j <- domain2._2) {
         rv(i,j) = t1v.getRow(i) dot t2v.getCol(j);
       }
       rv;
     }
+    override def create[J](d : Domain[J]) = t1.create(d);
   }
  
   case class MatrixInnerMultVector[I,J,T1<:Tensor2[I,J],T2<:Tensor1[J]](matrix : MatrixOp[I,J,T1], vector : VectorOp[J,T2]) extends VectorOp[I,Tensor1[I]] {
@@ -327,12 +340,13 @@ object OperatorSupport extends OperatorSupport { }
     override lazy val value1 : Tensor1[I] = {
       val mv = matrix.value;
       val vv = vector.value;
-      val rv = vv.create(domain1).asInstanceOf[Tensor1[I]];
+      val rv = create(domain1).asInstanceOf[Tensor1[I]];
       for (i <- domain1) {
         rv(i) = mv.getRow(i) dot vv;
       }
       rv;
     }
+    override def create[J](d : Domain[J]) = vector.create(d);
   }
   
   case class VectorInnerMultMatrix[I,J,T1<:Tensor1[I],T2<:Tensor2[I,J]](vector : RowVectorOp[I,T1], matrix : MatrixOp[I,J,T2]) extends RowVectorOp[J,Tensor1[J]] {
@@ -346,5 +360,20 @@ object OperatorSupport extends OperatorSupport { }
         rv(j) = vv dot mv.getCol(j);
       }
       rv;
+    }
+    override def create[J](d : Domain[J]) = vector.create(d);
+  }
+
+  case class MatrixSolveMatrix[K,I,J,T1<:Tensor2[K,I],T2<:Tensor2[K,J]](m1 : MatrixOp[K,I,T1], m2 : MatrixOp[K,J,T2]) extends MatrixOp[I,J,Tensor2[I,J]] {
+    if (m1.domain2._1 != m2.domain2._1) throw new DomainException;
+    override def create[J](d : Domain[J]) = m1.create(d);
+    override def domain2 = Domain2(m1.domain2._2, m2.domain2._2);
+    override def value2 : Tensor2[I,J] = {
+      val X = m1.create(domain2);
+      if (!X.isInstanceOf[scalala.tensor.MatrixSolver[_,_]]) {
+        throw new UnsupportedOperationException("Type "+X.getClass+" does not support matrix solving");
+      }
+      X := this;
+      return X.asInstanceOf[Tensor2[I,J]];
     }
   }

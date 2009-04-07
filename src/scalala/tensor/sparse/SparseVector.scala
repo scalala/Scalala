@@ -21,9 +21,10 @@ package scalala.tensor.sparse
 
 import scalala.tensor.Vector;
 import scalala.collection.MergeableSet;
-import scalala.collection.domain.{Domain, IntSpanDomain};
+import scalala.collection.domain.{Domain, IntSpanDomain, DomainException};
 
 import scalala.tensor.Tensor.CreateException;
+import scalala.tensor.dense.DenseVector;
 
 /**
  * A sparse vector implementation based on an array of indeces and
@@ -244,14 +245,50 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
   
   /** Optimized implementation for SpraseVectors. */
   override def dot(other : Tensor1[Int]) : Double = other match {
-    case that : SparseVector => dot(that);
+    case sparse : SparseVector => dot(sparse);
+    case dense  : DenseVector => dot(dense);
     case _ => super.dot(other);
+  }
+  
+  def dot(that : DenseVector) : Double = {
+    if (this.size != that.size) {
+      throw new DomainException();
+    }
+    val thisDefault = this.default;
+    var sum = 0.0;
+    if (thisDefault == 0) {
+      var o = 0;
+      while (o < this.used) {
+        sum += (this.data(o) * that.data(this.index(o)));
+        o += 1;
+      }
+    } else {
+      var o1 = 0;
+      var i2 = 0;
+      while (o1 < this.used) {
+        val i1 = this.index(o1);
+        if (i1 == i2) {
+          sum += (this.data(o1) * that.data(i2));
+          o1 += 1;
+          i2 += 1;
+        } else { // i1 < i2
+          sum += (thisDefault * that.data(i2));
+          i2 += 1;
+        }
+      }
+      // consume remander of that
+      while (i2 < that.data.length) {
+        sum += (thisDefault * that.data(i2));
+        i2 += 1;
+      }
+    }
+    return sum;
   }
   
   /** Optimized implementation for SpraseVectors. */
   def dot(that : SparseVector) : Double = {
     if (this.size != that.size) {
-      throw new scalala.collection.domain.DomainException("Vectors have different sizes");
+      throw new DomainException("Vectors have different sizes");
     }
     var o1 = 0;    // offset into this.data, this.index
     var o2 = 0;    // offset into that.data, that.index
@@ -356,6 +393,7 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
 
 trait SparseVectorTest {
   import scalala.ScalalaTest._;
+  import scalala.Scalala._;
   import scalala.tensor.dense.DenseVector;
   
   def _sparse_test() {
@@ -374,27 +412,37 @@ trait SparseVectorTest {
   def _sparse_dot_test() {
     val x = new SparseVector(10);
     val y = new SparseVector(10);
+    val d = rand(10);
     
-    def densedot(a : SparseVector, b : SparseVector) =
+    def densedot(a : Vector, b : Vector) =
       new DenseVector(a.toArray) dot new DenseVector (b.toArray);
+
+    def checks() = {
+      assertEquals(densedot(x,y), x dot y);
+      assertEquals(densedot(y,x), y dot x);
+      assertEquals(densedot(x,d), x dot d);
+      assertEquals(densedot(d,x), d dot x);
+      assertEquals(densedot(y,d), y dot d);
+      assertEquals(densedot(d,y), d dot y);
+    }
     
     x(2) = 3;
     y(2) = 4;
-    assertEquals(densedot(x,y), x dot y);
+    checks();
     
     x(7) = 2;
     y += 1;
-    assertEquals(densedot(x,y), x dot y);
+    checks();
     
     y -= 1;
     y(7) = .5;
-    assertEquals(densedot(x,y), x dot y);
+    checks();
     
     x += 1;
     y(8) = 2;
-    assertEquals(densedot(x,y), x dot y);
+    checks();
     
     y += 1;
-    assertEquals(densedot(x,y), x dot y);
+    checks();
   }
 }
