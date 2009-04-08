@@ -27,7 +27,7 @@ import scalala.tensor.{Tensor, Tensor1, Tensor2};
  * 
  * @author dramage
  */
-trait OperatorSupport {
+trait OperatorImplicits {
   /** Implicit promotion to a ScalarOp for tensor operations. */
   implicit def iScalarOp[I](s : Double) = ScalarOp(s);
   implicit def iScalarOp[I](s : Float)  = ScalarOp(s);
@@ -59,13 +59,13 @@ trait OperatorSupport {
   implicit def iTensor[I,T<:Tensor[I]](op : TensorOp[I,T]) : T = op.value;
 }
 
-object OperatorSupport extends OperatorSupport { }
+object OperatorImplicits extends OperatorImplicits { }
 
 /**
  * A promoted type for scalars that supports operations with matrices.
  */
 case class ScalarOp(s : Double) {
-  import OperatorSupport._;
+  import OperatorImplicits._;
   
   def + [I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorPlusScalar(t, s);
   def - [I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorPlusScalar(TensorNegation(t), s);

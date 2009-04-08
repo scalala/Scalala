@@ -157,7 +157,7 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
     elements.foldLeft(1)((hash,kv) => 41 * hash + kv.hashCode);
   
   override def toString = 
-    getClass.getName+"["+default+"]\n ("+activeElements.mkString("\n  ")+")";
+    getClass.getName+"[domain="+domain+" active="+activeDomain.size+" default="+default+"]\n ("+activeElements.mkString("\n  ")+")";
 }
 
 /**

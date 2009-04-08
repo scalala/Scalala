@@ -25,4 +25,4 @@ package scalala.library
  * 
  * @author dramage
  */
-trait Operators extends scalala.tensor.operators.OperatorSupport { }
+trait Operators extends scalala.tensor.operators.OperatorImplicits { }

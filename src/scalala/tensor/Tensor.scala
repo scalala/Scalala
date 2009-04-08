@@ -24,7 +24,8 @@ import scalala.collection.{PartialMap, MutablePartialMap, MergeableSet, IntSpanS
 import scalala.tensor.operators._;
 
 /**
- * Implicit type promotions from arrays.
+ * Implicit type promotions from arrays and sequences.
+ * 
  * @author dramage
  */
 trait TensorImplicits {

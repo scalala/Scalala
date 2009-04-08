@@ -23,7 +23,7 @@ import scalala.ScalalaTest._;
 
 import scalala.tensor._;
 import scalala.tensor.dense._;
-import OperatorSupport._;
+import OperatorImplicits._;
 
 import scalala.Scalala.Vector;
 
@@ -80,8 +80,6 @@ trait OperatorTest {
   }
   
   def _scalars_test() = {
-    import OperatorSupport._;
-    
     val x = Vector(1,1,1);
     x += 2 * Vector(1,2,3);
     assertEquals(x, Vector(3,5,7));
