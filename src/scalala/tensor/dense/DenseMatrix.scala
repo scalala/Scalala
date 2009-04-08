@@ -55,9 +55,14 @@ class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
   override def update(row : Int, col : Int, value : Double) =
     data(index(row,col)) = value;
 
-  override def activeDomain : MergeableSet[(Int,Int)] = ProductSet(IntSpanSet(0, rows), IntSpanSet(0, cols));
-  override def activeDomainInRow(row : Int) = IntSpanSet(0, cols);
-  override def activeDomainInCol(col : Int) = IntSpanSet(0, rows);
+  private val _domain = ProductSet(IntSpanSet(0, rows), IntSpanSet(0, cols));
+  override final def activeDomain = _domain;
+  
+  private val _rowDomain = IntSpanSet(0, cols);
+  override final def activeDomainInRow(row : Int) = _rowDomain;
+  
+  private val _colDomain = IntSpanSet(0, rows);
+  override def activeDomainInCol(col : Int) = _colDomain;
   
   override def copy = new DenseMatrix(data.toArray, rows, cols).asInstanceOf[this.type];
   
