@@ -28,7 +28,10 @@ import scalala.collection.domain.{Domain, Domain2, IntSpanDomain};
  * @author dramage
  */
 trait Matrix extends Tensor2[Int,Int] {
+  /** The number of rows in this matrix. */
   def rows : Int;
+  
+  /** The number of columns in this matrix. */
   def cols : Int;
   
   @inline final protected def check(row : Int, col : Int) = {
@@ -38,10 +41,11 @@ trait Matrix extends Tensor2[Int,Int] {
     }
   }
   
+  /** Returns (rows,cols). */
   @inline final def size = (rows, cols);
   
-  val _domain2 = Domain2(IntSpanDomain(0, rows), IntSpanDomain(0, cols));
-  final override def domain2 = _domain2;
+  private val _domain = Domain2(IntSpanDomain(0, rows), IntSpanDomain(0, cols));
+  final override def domain = _domain;
   
   override def getRow(row : Int) = new Vector {
     override def size = cols;

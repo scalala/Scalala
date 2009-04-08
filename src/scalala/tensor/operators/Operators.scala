@@ -132,7 +132,6 @@ case class ScalarOp(s : Double) {
   def >=(t : Matrix) = TensorLTEScalar[(Int,Int),Matrix](t,s);
   def &&(t : Matrix) = TensorAndScalar[(Int,Int),Matrix](t,s);
   def ||(t : Matrix) = TensorOrScalar[(Int,Int),Matrix](t,s);
-  
 }
 
   /**
@@ -215,11 +214,7 @@ case class ScalarOp(s : Double) {
 
   /** Extra operators for Tensor1 implementations as a column. */
   trait VectorOp[I,T<:Tensor1[I]] extends TensorOp[I,T] {
-    final override def domain = domain1;
-    def domain1 : Domain1[I];
-    
-    final override def value = value1;
-    def value1 : T;
+    override def domain : Domain1[I];
     
     /** Transposes this matrix. */
     def t = VectorToRow(this);
@@ -235,11 +230,7 @@ case class ScalarOp(s : Double) {
 
   /** Extra operators for Tensor1 implementations as a row. */
   trait RowVectorOp[I,T<:Tensor1[I]] extends TensorOp[I,T] {
-    final override def domain = domain1;
-    def domain1 : Domain1[I];
-    
-    final override def value = value1;
-    def value1 : T;
+    override def domain : Domain1[I];
     
     /** Transposes this matrix. */
     def t = VectorToCol(this);
@@ -253,22 +244,13 @@ case class ScalarOp(s : Double) {
     def *[J,T2<:Tensor2[I,J]] (op : MatrixOp[I,J,T2]) = VectorInnerMultMatrix(this, op);
     
     /** Vector-vector inner multiplication. */
-    def *[T2<:Tensor1[I]] (op : VectorOp[I,T2]) = (this.value1 dot op.value1);
+    def *[T2<:Tensor1[I]] (op : VectorOp[I,T2]) = (this.value dot op.value);
   }
   
   /** Extra operators for Tensor2 implementations. */
   trait MatrixOp[I1,I2,T<:Tensor2[I1,I2]] extends TensorOp[(I1,I2),T] {
     /** Fixed alias for domain2. */
-    final override def domain = domain2;
-    
-    /** Domain for this operation. */
-    def domain2 : Domain2[I1,I2];
-    
-    /** Fixed alias for value2. */
-    final override def value = value2;
-    
-    /** Value of this operation. */
-    def value2 : T;
+    override def domain : Domain2[I1,I2];
     
     /** Transposes this tensor. */
     def t = MatrixTranspose(this);
@@ -497,59 +479,59 @@ case class ScalarOp(s : Double) {
   }
   
   case class VectorIdentity[I,T<:Tensor1[I]](tensor1 : T) extends TensorIdentity[I,T](tensor1) with VectorOp[I,T] {
-    override def domain1 = tensor1.domain;
-    override def value1 = tensor1;
+    override def domain = tensor1.domain;
+    override def value = tensor1;
   }
   
   case class VectorNegation[I,T<:Tensor1[I]](tensor1 : VectorOp[I,T]) extends TensorNegation[I,T](tensor1) with VectorOp[I,T] {
-    override def domain1 = tensor1.domain;
-    override def value1 = negated.asInstanceOf[T];
+    override def domain = tensor1.domain;
+    override def value = negated.asInstanceOf[T];
   }
   
   case class RowVectorNegation[I,T<:Tensor1[I]](tensor1 : RowVectorOp[I,T]) extends TensorNegation[I,T](tensor1) with RowVectorOp[I,T] {
-    override def domain1 = tensor1.domain;
-    override def value1 = negated.asInstanceOf[T];
+    override def domain = tensor1.domain;
+    override def value = negated.asInstanceOf[T];
   }
   
   case class MatrixIdentity[I,J,T<:Tensor2[I,J]](tensor2 : T) extends TensorIdentity[(I,J),T](tensor2) with MatrixOp[I,J,T] {
-    override def domain2 = tensor2.domain;
-    override def value2 = tensor2;
+    override def domain = tensor2.domain;
+    override def value = tensor2;
   }
   
   case class MatrixNegation[I,J,T<:Tensor2[I,J]](tensor2 : MatrixOp[I,J,T]) extends TensorNegation[(I,J),T](tensor2) with MatrixOp[I,J,T] {
-    override def domain2 = tensor2.domain;
-    override def value2 = negated.asInstanceOf[T];
+    override def domain = tensor2.domain;
+    override def value = negated.asInstanceOf[T];
   }
   
   case class VectorToRow[I,T<:Tensor1[I]](op : VectorOp[I,T]) extends RowVectorOp[I,T] {
-    override def domain1 = op.domain1;
-    override def value1 = op.value1;
+    override def domain = op.domain;
+    override def value = op.value;
     override def working = op.working;
     override def create[J](d : Domain[J]) = op.create(d);
   }
   
   case class VectorToCol[I,T<:Tensor1[I]](op : RowVectorOp[I,T]) extends VectorOp[I,T] {
-    override def domain1 = op.domain1;
-    override def value1 = op.value1;
+    override def domain = op.domain;
+    override def value = op.value;
     override def working = op.working;
     override def create[J](d : Domain[J]) = op.create(d);
   }
   
   case class MatrixTranspose[A,B,T<:Tensor2[A,B]](op : MatrixOp[A,B,T]) extends MatrixOp[B,A,Tensor2[B,A]] {
-    override lazy val domain2 = op.domain2.transpose;
-    override lazy val value2 = op.value2.transpose;
+    override lazy val domain = op.domain.transpose;
+    override lazy val value = op.value.transpose;
     override def create[J](d : Domain[J]) = op.create(d);
   }
   
   case class MatrixInnerMultMatrix[A1,INNER,B2,T1<:Tensor2[A1,INNER],T2<:Tensor2[INNER,B2]](t1 : MatrixOp[A1,INNER,T1], t2 : MatrixOp[INNER,B2,T2]) extends MatrixOp[A1,B2,Tensor2[A1,B2]] {
-    if (t1.domain2._2 != t2.domain2._1) throw new Predef.IllegalArgumentException;
-    override lazy val domain2 = Domain2(t1.domain2._1, t2.domain2._2);
-    override lazy val value2 : Tensor2[A1,B2] = {
-      val innerDomain = t1.domain2._2;
+    if (t1.domain._2 != t2.domain._1) throw new Predef.IllegalArgumentException;
+    override lazy val domain = Domain2(t1.domain._1, t2.domain._2);
+    override lazy val value : Tensor2[A1,B2] = {
+      val innerDomain = t1.domain._2;
       val t1v = t1.value;
       val t2v = t2.value;
-      val rv = create(domain2).asInstanceOf[Tensor2[A1,B2]];
-      for (i <- domain2._1; j <- domain2._2) {
+      val rv = create(domain).asInstanceOf[Tensor2[A1,B2]];
+      for (i <- domain._1; j <- domain._2) {
         rv(i,j) = t1v.getRow(i) dot t2v.getCol(j);
       }
       rv;
@@ -558,13 +540,13 @@ case class ScalarOp(s : Double) {
   }
  
   case class MatrixInnerMultVector[I,J,T1<:Tensor2[I,J],T2<:Tensor1[J]](matrix : MatrixOp[I,J,T1], vector : VectorOp[J,T2]) extends VectorOp[I,Tensor1[I]] {
-    if (matrix.domain2._2 != vector.domain1) throw new DomainException;
-    override def domain1 = matrix.domain2._1;
-    override lazy val value1 : Tensor1[I] = {
+    if (matrix.domain._2 != vector.domain) throw new DomainException;
+    override def domain = matrix.domain._1;
+    override lazy val value : Tensor1[I] = {
       val mv = matrix.value;
       val vv = vector.value;
-      val rv = create(domain1).asInstanceOf[Tensor1[I]];
-      for (i <- domain1) {
+      val rv = create(domain).asInstanceOf[Tensor1[I]];
+      for (i <- domain) {
         rv(i) = mv.getRow(i) dot vv;
       }
       rv;
@@ -573,13 +555,13 @@ case class ScalarOp(s : Double) {
   }
   
   case class VectorInnerMultMatrix[I,J,T1<:Tensor1[I],T2<:Tensor2[I,J]](vector : RowVectorOp[I,T1], matrix : MatrixOp[I,J,T2]) extends RowVectorOp[J,Tensor1[J]] {
-    if (vector.domain1 != matrix.domain2._1) throw new DomainException;
-    override def domain1 = matrix.domain2._2;
-    override lazy val value1 : Tensor1[J] = {
+    if (vector.domain != matrix.domain._1) throw new DomainException;
+    override def domain = matrix.domain._2;
+    override lazy val value : Tensor1[J] = {
       val vv = vector.value;
       val mv = matrix.value;
-      val rv = vv.create(domain1).asInstanceOf[Tensor1[J]];
-      for (j <- domain1) {
+      val rv = vv.create(domain).asInstanceOf[Tensor1[J]];
+      for (j <- domain) {
         rv(j) = vv dot mv.getCol(j);
       }
       rv;
@@ -589,11 +571,11 @@ case class ScalarOp(s : Double) {
 
   case class VectorOuterMultVector[I,T1<:Tensor1[I],T2<:Tensor1[I]](v1 : VectorOp[I,T1], v2 : RowVectorOp[I,T2]) extends MatrixOp[I,I,Tensor2[I,I]] {
     if (v1.domain != v2.domain) throw new DomainException;
-    override def domain2 = Domain2(v1.domain1,v1.domain1);
-    override lazy val value2 : Tensor2[I,I] = {
+    override def domain = Domain2(v1.domain,v1.domain);
+    override lazy val value : Tensor2[I,I] = {
       val v1v = v1.value;
       val v2v = v2.value;
-      val rv = v1v.create(domain2).asInstanceOf[Tensor2[I,I]];
+      val rv = v1v.create(domain).asInstanceOf[Tensor2[I,I]];
       for (i <- v1.domain; j <- v1.domain) {
         rv(i,j) = v1v(i) * v2v(j);
       }
@@ -603,11 +585,11 @@ case class ScalarOp(s : Double) {
   }
   
   case class MatrixSolveMatrix[K,I,J,T1<:Tensor2[K,I],T2<:Tensor2[K,J]](m1 : MatrixOp[K,I,T1], m2 : MatrixOp[K,J,T2]) extends MatrixOp[I,J,Tensor2[I,J]] {
-    if (m1.domain2._1 != m2.domain2._1) throw new DomainException;
+    if (m1.domain._1 != m2.domain._1) throw new DomainException;
     override def create[J](d : Domain[J]) = m1.create(d);
-    override def domain2 = Domain2(m1.domain2._2, m2.domain2._2);
-    override lazy val value2 : Tensor2[I,J] = {
-      val X = m1.create(domain2);
+    override def domain = Domain2(m1.domain._2, m2.domain._2);
+    override lazy val value : Tensor2[I,J] = {
+      val X = m1.create(domain);
       if (!X.isInstanceOf[scalala.tensor.MatrixMatrixSolver[_,_]]) {
         throw new UnsupportedOperationException("Type "+X.getClass+" does not support matrix solving");
       }
@@ -617,11 +599,11 @@ case class ScalarOp(s : Double) {
   }
   
   case class MatrixSolveVector[I,J,T1<:Tensor2[I,J],T2<:Tensor1[I]](m : MatrixOp[I,J,T1], v : VectorOp[I,T2]) extends VectorOp[J,Tensor1[J]] {
-    if (m.domain2._1 != v.domain1) throw new DomainException;
+    if (m.domain._1 != v.domain) throw new DomainException;
     override def create[J](d : Domain[J]) = v.create(d);
-    override def domain1 = m.domain2._2;
-    override lazy val value1 : Tensor1[J] = {
-      val X = v.create(domain1);
+    override def domain = m.domain._2;
+    override lazy val value : Tensor1[J] = {
+      val X = v.create(domain);
       if (!X.isInstanceOf[scalala.tensor.MatrixVectorSolver[_]]) {
         throw new UnsupportedOperationException("Type "+X.getClass+" does not support matrix solving");
       }

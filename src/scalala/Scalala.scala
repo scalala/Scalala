@@ -51,22 +51,6 @@ trait Scalala extends Library
   // This object inherits all its method from the component mixins.
 }
 
-/**
- * A matlab-like environment and syntax for scala.  This is the default
- * library, using all modules in the scalala.library package.  All of
- * Scalala can be imported direclty with import scalala.Scalala._;
- * 
- * Where a function shares its name with a Matlab function, the
- * behavior should be more or less consist with its Matlab
- * counterpart. The primary difference is that some commands that normally
- * return an n x n square matrix now return a column vector of size n. e.g.
- * ones(n) here is a vector that would be ones(n,1) in matlab.  The
- * main reason for the distinction is that Vector and Matrix are
- * different types in MTJ, so ones(n,1) returns a Matrix of size n by 1
- * which shouldn't need its own conversion back to a vector.
- * 
- * @author dramage
- */
 object Scalala extends Scalala
 {
   // This object inherits all its method from the component mixins.
@@ -85,5 +69,5 @@ object ScalalaTestSuite extends Scalala
   with StatisticsTest
   with ScalalaTest.TestConsoleMain
 {
-  // Test suite
+  // This object inherits all its method from the component mixins.
 }

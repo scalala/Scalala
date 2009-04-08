@@ -31,8 +31,8 @@ import scalala.collection.domain.{Domain, Domain1, IntSpanDomain};
 trait Vector extends Tensor1[Int] {
   def size : Int;
   
-  lazy val _domain1 = IntSpanDomain(0, size);
-  final override def domain1 : Domain1[Int] = _domain1;
+  private val _domain = IntSpanDomain(0, size);
+  final override def domain : Domain1[Int] = _domain;
   
   /** Returns an array copy of this tensor. */
   def toArray = Array.fromFunction(i => this(i))(size);

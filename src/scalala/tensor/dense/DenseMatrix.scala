@@ -70,7 +70,7 @@ class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
     
     op match {
       case MatrixSolveMatrix(a, b) if isDense(a) && isDense(b) =>
-        if (a.domain2._1 == a.domain2._2) {
+        if (a.domain._1 == a.domain._2) {
           // LUSolve
           val _A = a.working.asInstanceOf[DenseMatrix]; // will be overwritten
           val _B = b.value.asInstanceOf[DenseMatrix];   // won't be overwritten

@@ -185,7 +185,7 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
     this(activeDomain) = ((x:Double) => Math.pow(x,s));
   }
   
-  /** Each element becomes itself modulo the given scala. */
+  /** Each element becomes itself modulo the given scalar. */
   def %= (s : Double) = {
     this.default %= s;
     this(activeDomain) = ((x:Double) => x % s);
@@ -235,6 +235,13 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
     this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x-t(i));
   }
 
+  /** Raises each value in this map by the corresponding value in the other map. */
+  def :^= (t : PartialMap[I,Double]) {
+    ensure(t);
+    this.default = Math.pow(this.default, t.default);
+    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => Math.pow(x,t(i)));
+  }
+  
   /** Modulos each value in this map by the corresponding value in the other map. */
   def :%= (t : PartialMap[I,Double]) {
     ensure(t);
@@ -368,11 +375,8 @@ object Tensor {
 
 /** A one-axis tensor is defined on single elements from a domain. */
 trait Tensor1[I] extends Tensor[I] {
-  /** Fixed alias for domain1. */
-  final override def domain = domain1;
-  
   /** Returns the domain of this tensor, typed as a Domain1. */
-  def domain1 : Domain1[I];
+  override def domain : Domain1[I];
   
   /** Returns the inner product of this tensor with another. */
   def dot(that : Tensor1[I]) : Double = {
@@ -404,10 +408,7 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
   def update(i : I1, j : I2, value : Double) : Unit;
   
   /** Returns the domain of this tensor, typed as a Domain2. */
-  def domain2 : Domain2[I1,I2];
-  
-  /** Fixed alias for domain2. */
-  @inline final override def domain = domain2;
+  override def domain : Domain2[I1,I2];
   
   /** Fixed alias for apply(i,j). */
   @inline final override def apply(pos : (I1,I2)) = apply(pos._1, pos._2);
@@ -418,8 +419,8 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
   def transpose : Tensor2[I2,I1] = {
     val inner = this;
     new Tensor2[I2,I1] {
-      override def domain2 =
-        inner.domain2.transpose;
+      override def domain =
+        inner.domain.transpose;
     
       override def apply(row : I2, col : I1) =
         inner.apply(col, row);
@@ -477,8 +478,8 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
  */
 object Tensor2 {
   abstract class Projection[I1,I2](protected val inner : Tensor2[I1,I2]) extends Tensor2[I1,I2] {
-    override def domain2 =
-      inner.domain2;
+    override def domain =
+      inner.domain;
     
     override def apply(row : I1, col : I2) =
       inner.apply(row,col);
