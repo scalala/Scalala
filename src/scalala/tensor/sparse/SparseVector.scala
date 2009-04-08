@@ -30,15 +30,32 @@ import scalala.tensor.dense.DenseVector;
  * A sparse vector implementation based on an array of indeces and
  * an array of values.  Inserting a new value takes on the order
  * of the number of non-zeros.  Getting a value takes on the order
- * of the log of the number of non-zeros, with special constant
- * time shortcuts for getting the previously accessed element or
- * its successor.
+ * of the log of the number of non-default values, with special
+ * constant time shortcuts for getting the previously accessed
+ * element or its successor.
  * 
  * @author dramage
  */
-class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
+class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   if (domainSize < 0)
     throw new IllegalArgumentException("Invalid domain size: "+domainSize);
+  
+  /** Data array will be reassigned as the sparse vector grows. */
+  var data : Array[Double] = new Array[Double](initialNonzeros);
+  
+  /** Index will be reassigned as the sparse vector grows. */
+  var index : Array[Int] = new Array[Int](initialNonzeros);
+  
+  /** How many elements of data,index are used. */
+  var used : Int = 0;
+  
+  /** The previous index and offset found by apply or update. */
+  var lastOffset = -1;
+  var lastIndex = -1;
+
+  /** Constructs a new SparseVector with initially 0 allocation. */
+  def this(size : Int) =
+    this(size, 0);
 
   /** Use the given index and data arrays, of which the first inUsed are valid. */
   def use(inIndex : Array[Int], inData : Array[Double], inUsed : Int) = {
@@ -68,25 +85,6 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
     lastIndex = -1;
   }
   
-  /** Data array will be reassigned as the sparse vector grows. */
-  var data : Array[Double] = new Array[Double](nonzeros);
-  
-  /** Index will be reassigned as the sparse vector grows. */
-  var index : Array[Int] = new Array[Int](nonzeros);
-  
-  /** How many elements of data,index are used. */
-  var used : Int = 0;
-  
-  /** The previous index and offset found by apply or update. */
-  var lastOffset = -1;
-  var lastIndex = -1;
-
-  // constructors
-  
-  /** Constructs a new SparseVector with initially 0 allocation. */
-  def this(size : Int) =
-    this(size, 0);
-  
   override def size = domainSize;
   
   override def activeDomain = new MergeableSet[Int] {
@@ -111,9 +109,11 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
 
   /** Zeros this vector, return */
   override def zero() = {
-    use(new Array[Int](nonzeros), new Array[Double](nonzeros), 0);
+    use(new Array[Int](initialNonzeros),
+        new Array[Double](initialNonzeros), 0);
   }
   
+  /** Records that the given index was found at this.index(offset). */
   protected final def found(index : Int, offset : Int) : Int = {
     lastOffset = offset;
     lastIndex = index;
@@ -158,8 +158,8 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
         }
       }
 
-      //System.err.println("-- "+(lastIndex,lastOffset,i,begin,end))
-      assert(begin >= 0 && end >= begin, "Invalid range: "+begin+" to "+end);
+      assert(begin >= 0 && end >= begin,
+             "Invalid range: "+begin+" to "+end);
       
       var mid = (end + begin) >> 1;
       
@@ -186,6 +186,19 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
     if (offset >= 0) data(offset) else default;
   }
   
+  /**
+   * Sets the given value at the given index if the value is not
+   * equal to the current default.  The data and
+   * index arrays will be grown to support the insertion if
+   * necessary.  The growth schedule doubles the amount
+   * of allocated memory at each allocation request up until
+   * the sparse vector contains 1024 elements, at which point
+   * the growth is additive: an additional n * 1024 spaces will
+   * be allocated for n in 1,2,4,8,16.  The largest amount of
+   * space added to this vector will be an additional 16*1024*(8+4) = 
+   * 196608 bytes, although more space is needed temporarily
+   * while moving to the new arrays.
+   */
   override def update(i : Int, value : Double) = {
     val offset = findOffset(i);
     if (offset >= 0) {
@@ -203,7 +216,11 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
       if (used > data.length) {
         val newLength = {
           if (data.length < 8) { 8 }
-          else if (data.length > 1024) { data.length + 1024 }
+          else if (data.length > 16*1024) { data.length + 16*1024 }
+          else if (data.length > 8*1024)  { data.length +  8*1024 }
+          else if (data.length > 4*1024)  { data.length +  4*1024 }
+          else if (data.length > 2*1024)  { data.length +  2*1024 }
+          else if (data.length > 1*1024)  { data.length +  1*1024 }
           else { data.length * 2 }
         }
         
@@ -231,6 +248,39 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
     }
   }
   
+  /** Compacts the vector by removing all stored default values. */
+  def compact() {
+    val _default = default;
+      
+    val nz = { // number of non-zeros
+      var _nz = 0;
+      var i = 0;
+      while (i < used) {
+        if (data(i) != _default) {
+          _nz += 1;
+        }
+        i += 1;
+      }
+      _nz;
+    }
+    
+    val newData  = new Array[Double](nz);
+    val newIndex = new Array[Int](nz);
+    
+    var i = 0;
+    var o = 0;
+    while (i < used) {
+      if (data(i) != _default) {
+        newData(o) = data(i);
+        newIndex(o) = index(i);
+        o += 1;
+      }
+      i += 1;
+    }
+    
+    use(newIndex, newData, nz);
+  }
+  
   override def copy = {
     val rv = new SparseVector(size, 0);
     rv.use(index.toArray, data.toArray, used);
@@ -243,13 +293,14 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
     case _ => throw new CreateException("Cannot create sparse with domain "+domain);
   }
   
-  /** Optimized implementation for SpraseVectors. */
+  /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = other match {
     case sparse : SparseVector => dot(sparse);
     case dense  : DenseVector => dot(dense);
     case _ => super.dot(other);
   }
   
+  /** Optimized implementation for SpraseVector dot DenseVector. */
   def dot(that : DenseVector) : Double = {
     if (this.size != that.size) {
       throw new DomainException();
@@ -285,7 +336,7 @@ class SparseVector(domainSize : Int, nonzeros : Int) extends Vector {
     return sum;
   }
   
-  /** Optimized implementation for SpraseVectors. */
+  /** Optimized implementation for SpraseVector dot SparseVector. */
   def dot(that : SparseVector) : Double = {
     if (this.size != that.size) {
       throw new DomainException("Vectors have different sizes");
