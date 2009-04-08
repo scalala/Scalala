@@ -66,6 +66,7 @@ object OperatorImplicits extends OperatorImplicits { }
  */
 case class ScalarOp(s : Double) {
   import OperatorImplicits._;
+  import TensorImplicits._;
   
   def + [I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorPlusScalar(t, s);
   def - [I,T<:Tensor[I]] (t : TensorOp[I,T]) = TensorPlusScalar(TensorNegation(t), s);
@@ -132,6 +133,17 @@ case class ScalarOp(s : Double) {
   def >=(t : Matrix) = TensorLTEScalar[(Int,Int),Matrix](t,s);
   def &&(t : Matrix) = TensorAndScalar[(Int,Int),Matrix](t,s);
   def ||(t : Matrix) = TensorOrScalar[(Int,Int),Matrix](t,s);
+  
+  def +  (t : Array[Double]) = TensorPlusScalar(t, s);
+  def -  (t : Array[Double]) = TensorPlusScalar(TensorNegation(t), s);
+  def *  (t : Array[Double]) = TensorMultScalar(t, s);
+  def /  (t : Array[Double]) = ScalarDivTensor(s,t);
+  def <  (t : Array[Double]) = TensorGTScalar(t,s);
+  def >  (t : Array[Double]) = TensorLTScalar(t,s);
+  def <= (t : Array[Double]) = TensorGTEScalar(t,s);
+  def >= (t : Array[Double]) = TensorLTEScalar(t,s);
+  def && (t : Array[Double]) = TensorAndScalar(t,s);
+  def || (t : Array[Double]) = TensorOrScalar(t,s);
 }
 
   /**

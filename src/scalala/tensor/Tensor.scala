@@ -56,6 +56,9 @@ trait TensorImplicits {
   implicit def iArrayToVector(x : Array[Double]) =
     new dense.DenseVector(x);
 
+  implicit def iArrayToVectorOp(x : Array[Double]) =
+    operators.VectorIdentity[Int,Vector](iArrayToVector(x));
+  
   implicit def iArrayToPartialMap(x : Array[Float]) = {
     new PartialMap[Int,Double] {
       override def default = 0;
