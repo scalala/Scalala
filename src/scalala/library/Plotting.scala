@@ -407,7 +407,8 @@ object Plotting {
   
   /** Returns a JFreeChart XYDataset for plotting y vs x. */
   def Dataset[I](x : PartialMap[I,Double], y : PartialMap[I,Double]) : XYDataset = {
-    assert(x.activeDomain == y.activeDomain);
+    if (x.activeDomain != y.activeDomain)
+      throw new IllegalArgumentException("Active domains do not match");
     val domain = x.activeDomain.toArray;
     new org.jfree.data.xy.AbstractXYDataset() {
       override def getX(series : Int, item : Int) : Number = {
