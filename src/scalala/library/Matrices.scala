@@ -83,6 +83,13 @@ trait Matrices extends Library with Vectors {
     return diag(ones(n));
   }
   
+  /** Returns a dense vector with ones on the diagonal. */
+  def eye(n : Int) : Matrix = {
+    val rv = DenseMatrix(n,n);
+    rv := diag(ones(n));
+    rv;
+  } 
+  
   /**
    * Returns a diagonal matrix with the given vector on the diagonal.
    * Copies the contents of the underlying matrix.
