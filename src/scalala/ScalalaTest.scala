@@ -21,10 +21,9 @@ package scalala
 
 /**
  * A simple, lightweight testing framework inspired by SUnit but with
- * substantially less overhead.  Any Object that extends the inner
- * TestConsoleMain class will automatically have all methods whose
- * name ends in ("_test") called.  Each of these methods may use
- * any of the assertion methods in this object.
+ * less overhead.  Any Object that extends the inner TestConsoleMain class
+ * will automatically have all methods whose name ends in ("_test") called.
+ * Each of these methods may use any of the assertion methods in this object.
  * 
  * @author dramage
  */

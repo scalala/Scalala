@@ -51,6 +51,11 @@ trait Scalala extends Library
   // This object inherits all its method from the component mixins.
 }
 
+/**
+ * Global object for importing the entire Scalala environment.
+ * 
+ * @author dramage
+ */
 object Scalala extends Scalala
 {
   // This object inherits all its method from the component mixins.

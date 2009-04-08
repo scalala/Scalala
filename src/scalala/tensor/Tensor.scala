@@ -30,7 +30,6 @@ import scalala.tensor.operators._;
 trait TensorImplicits {
   import dense.DenseVector;
   import scalala.collection.domain.IntSpanDomain;
-  import spans.IntSpans._;
   
   implicit def iSeqToDoublePartialMap[T<:AnyVal](seq : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : PartialMap[Int,Double] = {
     val convert : (T=>Double) =
