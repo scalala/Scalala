@@ -182,10 +182,10 @@ case class ScalarOp(s : Double) {
     final def :!= (s : Double) = TensorNeScalar(this, s);
     
     // tensor operators
-    def :+  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorPlusTensor(this,op);
-    def :-  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorMinusTensor(this,op);
-    def :*  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorMultTensor(this,op);
-    def :/  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorDivTensor(this,op);
+    def :+  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorPlusTensor(this, op);
+    def :-  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorMinusTensor(this, op);
+    def :*  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorMultTensor(this, op);
+    def :/  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorDivTensor(this, op);
     def :<  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorLTTensor(this, op);
     def :>  [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorGTTensor(this, op);
     def :<= [T2<:Tensor[I]] (op : TensorOp[I,T2]) = TensorLTETensor(this, op);
@@ -315,9 +315,7 @@ case class ScalarOp(s : Double) {
     override lazy val value = {
       val rv = tensor.working;
       rv.default = function(rv.default);
-      for (e <- rv.activeDomain) {
-        rv(e) = function(rv(e));
-      }
+      rv(rv.activeDomain) = function _;
       rv;
     }
   }
@@ -623,7 +621,7 @@ case class ScalarOp(s : Double) {
     override def create[J](d : Domain[J]) = v.create(d);
     override def domain1 = m.domain2._2;
     override lazy val value1 : Tensor1[J] = {
-      val X = v.create(domain1); // create a column matrix
+      val X = v.create(domain1);
       if (!X.isInstanceOf[scalala.tensor.MatrixVectorSolver[_]]) {
         throw new UnsupportedOperationException("Type "+X.getClass+" does not support matrix solving");
       }
