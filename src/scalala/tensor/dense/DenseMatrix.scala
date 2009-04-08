@@ -133,6 +133,47 @@ class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
       case _ => super.:=(op);
     }
   }
+  
+  override def toString() = {
+    val (prefix,format) = {
+      if (data.elements.forall(x => x == x.floor)) {
+        ("",
+         ((x:Double) =>
+           x.asInstanceOf[Int].toString));
+      } else {
+        val logs = data.map(x => Math.log(Math.abs(x)));
+        val exponent = ((logs.reduceLeft(Math.max) / Math.log(10)) + 1e-3).asInstanceOf[Int];
+        if (Math.abs(exponent) >= 3) { // account for rounding
+          val scale = Math.pow(10,exponent);
+          ("  1.0e"+(if (exponent >= 0) "+" else "") + exponent+" * \n\n",
+           ((x:Double) =>
+            if (x == 0)
+              String.format("% 7d", int2Integer(0))
+            else
+              String.format("% 4.4f", double2Double(x / scale))));
+        } else {
+          ("",
+           ((x:Double) =>
+            if (x == 0)
+              String.format("% 7d", int2Integer(0))
+            else
+              String.format("% 4.4f", double2Double(x))));
+        }
+      }
+    }
+    
+    def colWidth(col : Int) : Int =
+      Math.max(4,(0 until rows).map((row:Int) => format(this(row,col)).length).reduceLeft(Math.max));
+    
+    val columnWidths = (0 until nCols).map(colWidth).toArray;
+    
+    val builder = for (row <- 0 until rows; col <- 0 until cols) yield {
+      val element = format(this(row,col));
+      "  " + (" " * (columnWidths(col)-element.length)) + element + (if (col == cols-1) "\n" else "");
+    }
+    
+    (List(prefix).elements ++ builder.elements).mkString("");
+  }
 }
 
 trait DenseMatrixSolveTest {

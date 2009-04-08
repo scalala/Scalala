@@ -83,4 +83,6 @@ class DenseVector(data : Array[Double]) extends
       case _ => super.:=(op);
     }
   }
+  
+  override def toString() = new DenseMatrix(data, size, 1).toString();
 }
