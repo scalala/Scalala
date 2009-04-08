@@ -78,6 +78,7 @@ object Scalala extends Scalala
  * @author dramage
  */
 object ScalalaTestSuite extends Scalala
+  with scalala.collection.MergeableSetTest
   with scalala.tensor.operators.OperatorTest
   with scalala.tensor.sparse.SparseVectorTest
   with scalala.tensor.dense.DenseMatrixSolveTest
