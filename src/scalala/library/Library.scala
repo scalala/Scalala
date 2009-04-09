@@ -34,7 +34,12 @@ trait Library {
     new DenseVector(values);
   
   def Vector(values : Double*) : Vector =
-    new DenseVector(values.toArray);
+    Vector(values.asInstanceOf[Collection[Double]]);
+  
+  def Vector(values : Collection[Double]) : Vector = values match {
+    case array : Array[Double] => new DenseVector(array);
+    case _ => new DenseVector(values.toArray);
+  }
   
   def DenseVector(size : Int) : Vector =
     new DenseVector(size);
