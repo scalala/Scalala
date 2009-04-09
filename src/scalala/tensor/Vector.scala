@@ -36,4 +36,6 @@ trait Vector extends Tensor1[Int] {
   
   /** Returns an array copy of this tensor. */
   def toArray = Array.fromFunction(i => this(i))(size);
+  
+  override def copy : Vector = super.copy.asInstanceOf[Vector];
 }

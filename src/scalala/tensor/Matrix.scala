@@ -63,6 +63,8 @@ trait Matrix extends Tensor2[Int,Int] {
     override def create[J](domain : Domain[J]) = Matrix.this.create(domain);
   }
   
+  override def copy : Matrix = super.copy.asInstanceOf[Matrix];
+  
   /*
   def apply(select : (Int => (Int,Int))) : Vector = {
     select(-1) match {
