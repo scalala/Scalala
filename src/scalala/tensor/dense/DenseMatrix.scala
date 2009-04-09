@@ -140,29 +140,42 @@ class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
   }
   
   override def toString() = {
+    def formatInt(x : Double) : String = {
+      if (x.isPosInfinity)
+        " Inf"
+      else if (x.isNegInfinity) 
+        "-Inf"
+      else if (x.isNaN)
+        " NaN"
+      else
+        x.asInstanceOf[Int].toString;
+    }
+    
+    def formatDouble(x : Double) : String = {
+      if (x == 0)
+        "      0"
+      else if (x.isPosInfinity)
+        "    Inf"
+      else if (x.isNegInfinity) 
+        "   -Inf"
+      else if (x.isNaN)
+        "    NaN"
+      else
+        String.format("% 4.4f", double2Double(x));
+    }
+    
     val (prefix,format) = {
-      if (data.elements.forall(x => x == x.floor)) {
-        ("",
-         ((x:Double) =>
-           x.asInstanceOf[Int].toString));
+      if (data.elements.forall(x => x.isNaN || x.isInfinite || x == x.floor)) {
+        ("", formatInt _);
       } else {
-        val logs = data.map(x => Math.log(Math.abs(x)));
-        val exponent = ((logs.reduceLeft(Math.max) / Math.log(10)) + 1e-3).asInstanceOf[Int];
-        if (Math.abs(exponent) >= 3) { // account for rounding
+        val maxlog = scalala.Scalala.max(for (value <- data; if !value.isInfinite && !value.isNaN) yield Math.log(value));
+        val exponent = ((maxlog / Math.log(10)) + 1e-3).asInstanceOf[Int];
+        if (Math.abs(exponent) >= 3) {
           val scale = Math.pow(10,exponent);
           ("  1.0e"+(if (exponent >= 0) "+" else "") + exponent+" * \n\n",
-           ((x:Double) =>
-            if (x == 0)
-              String.format("% 7d", int2Integer(0))
-            else
-              String.format("% 4.4f", double2Double(x / scale))));
+           ((x:Double) => formatDouble(x / scale)));
         } else {
-          ("",
-           ((x:Double) =>
-            if (x == 0)
-              String.format("% 7d", int2Integer(0))
-            else
-              String.format("% 4.4f", double2Double(x))));
+          ("", formatDouble _);
         }
       }
     }
