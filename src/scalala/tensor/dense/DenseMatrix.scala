@@ -66,6 +66,11 @@ class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
   
   override def copy = new DenseMatrix(data.toArray, rows, cols).asInstanceOf[this.type];
   
+  override def zero = java.util.Arrays.fill(data, 0.0);
+  
+  private def log(msg : String) =
+    System.err.println("DenseMatrix: "+msg);
+  
   /** Assigns each element in this map to the corresponding value as returned by the given operation. */
   override def :=[T<:Tensor[(Int,Int)]]  (op : TensorOp[(Int,Int),T]) : Unit = {
     def isDense[QI,QJ,QT<:Tensor2[QI,QJ]](op : MatrixOp[QI,QJ,QT]) : Boolean = op match {
@@ -74,7 +79,32 @@ class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
     }
     
     op match {
-      case MatrixSolveMatrix(a, b) if isDense(a) && isDense(b) =>
+      case MatrixInnerMultMatrix(a, b) if isDense(a) && isDense(b) =>
+        if (this.domain._1 != a.domain._1 || this.domain._2 != b.domain._2 || a.domain._2 != b.domain._1)
+          throw new IllegalArgumentException("Domains do not match in matrix multiply");
+        
+        val (transA,_A) = a match {
+          case MatrixTranspose(aT) => (true, aT.value.asInstanceOf[DenseMatrix]);
+          case _ =>                   (false, a.value.asInstanceOf[DenseMatrix]);
+        }
+        
+        val (transB,_B) = b match {
+          case MatrixTranspose(bT) => (true, bT.value.asInstanceOf[DenseMatrix]);
+          case _ =>                   (false, b.value.asInstanceOf[DenseMatrix]);
+        }
+        
+        log("running gemm");
+        
+        this.zero;
+        Numerics.blas.gemm(transA, transB,
+                           this.rows, this.cols, _A.cols,
+                           1, _A.data, _A.rows, _B.data, _B.rows,
+                           1, this.data, this.rows);
+      
+      case MatrixSolveMatrix(a, b) =>
+        if (!isDense(a) || !isDense(b))
+          throw new UnsupportedOperationException("DenseMatrix solution requires both arguments to be dense");
+
         if (a.domain._1 == a.domain._2) {
           // LUSolve
           val _A = a.working.asInstanceOf[DenseMatrix]; // will be overwritten
@@ -133,8 +163,6 @@ class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
           val N = if (!trans) _A.cols else _A.rows;
           for (j <- 0 until nrhs; i <- 0 until N) this(i,j) = _Xtmp(i,j);
         }
-      case MatrixSolveMatrix(b, x) =>
-        throw new UnsupportedOperationException("DenseMatrix solution requires both arguments to be dense");
       case _ => super.:=(op);
     }
   }
@@ -166,15 +194,18 @@ class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
     
     val (prefix,format) = {
       if (data.elements.forall(x => x.isNaN || x.isInfinite || x == x.floor)) {
+        // special case for ints
         ("", formatInt _);
       } else {
         val maxlog = scalala.Scalala.max(for (value <- data; if !value.isInfinite && !value.isNaN) yield Math.log(value));
         val exponent = ((maxlog / Math.log(10)) + 1e-3).asInstanceOf[Int];
         if (Math.abs(exponent) >= 3) {
+          // special case for very large or small numbers
           val scale = Math.pow(10,exponent);
           ("  1.0e"+(if (exponent >= 0) "+" else "") + exponent+" * \n\n",
            ((x:Double) => formatDouble(x / scale)));
         } else {
+          // general case
           ("", formatDouble _);
         }
       }

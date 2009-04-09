@@ -48,8 +48,8 @@ object Numerics {
   }
   */
   
+  val blas   = new JLAPACK_BLASkernel();
   val lapack = new JLAPACK_LAPACKkernel();
-  
 }
 
 class JLAPACK_LAPACKkernel {
@@ -576,6 +576,196 @@ class JLAPACK_LAPACKkernel {
                 0, work, 0, lwork, iwork, 0, liwork, info);
         m[0] = mW.val;
         return info.val;
+    }
+    */
+}
+
+class JLAPACK_BLASkernel() {
+  import org.netlib.blas._;
+  
+  /*
+    public double dot(int N, double[] X, double[] Y) {
+        return Ddot.ddot(N, X, 0, 1, Y, 0, 1);
+    }
+
+    public double nrm2(int N, double[] X) {
+        return Dnrm2.dnrm2(N, X, 0, 1);
+    }
+
+    public double asum(int N, double[] X) {
+        return Dasum.dasum(N, X, 0, 1);
+    }
+
+    public int idamax(int N, double[] X) {
+        return Idamax.idamax(N, X, 0, 1);
+    }
+
+    public void swap(int N, double[] X, double[] Y) {
+        Dswap.dswap(N, X, 0, 1, Y, 0, 1);
+    }
+
+    public void copy(int N, double[] X, double[] Y) {
+        Dcopy.dcopy(N, X, 0, 1, Y, 0, 1);
+    }
+
+    public void axpy(int N, double alpha, double[] X, double[] Y) {
+        Daxpy.daxpy(N, alpha, X, 0, 1, Y, 0, 1);
+    }
+
+    public void scal(int N, double alpha, double[] X) {
+        Dscal.dscal(N, alpha, X, 0, 1);
+    }
+
+    public void gemv(Transpose TransA, int M, int N, double alpha, double[] A,
+            int lda, double[] X, double beta, double[] Y) {
+        Dgemv.dgemv(trans(TransA), M, N, alpha, A, 0, lda, X, 0, 1, beta, Y, 0,
+                1);
+    }
+
+    public void gbmv(Transpose TransA, int M, int N, int KL, int KU,
+            double alpha, double[] A, int lda, double[] X, double beta,
+            double[] Y) {
+        Dgbmv.dgbmv(trans(TransA), M, N, KL, KU, alpha, A, 0, lda, X, 0, 1,
+                beta, Y, 0, 1);
+    }
+
+    public void trmv(UpLo uplo, Transpose TransA, Diag diag, int N, double[] A,
+            int lda, double[] X) {
+        Dtrmv.dtrmv(uplo(uplo), trans(TransA), diag(diag), N, A, 0, lda, X, 0,
+                1);
+    }
+
+    public void tbmv(UpLo uplo, Transpose TransA, Diag diag, int N, int K,
+            double[] A, int lda, double[] X) {
+        Dtbmv.dtbmv(uplo(uplo), trans(TransA), diag(diag), N, K, A, 0, lda, X,
+                0, 1);
+    }
+
+    public void tpmv(UpLo uplo, Transpose TransA, Diag diag, int N,
+            double[] Ap, double[] X) {
+        Dtpmv.dtpmv(uplo(uplo), trans(TransA), diag(diag), N, Ap, 0, X, 0, 1);
+    }
+
+    public void trsv(UpLo uplo, Transpose TransA, Diag diag, int N, double[] A,
+            int lda, double[] X) {
+        Dtrsv.dtrsv(uplo(uplo), trans(TransA), diag(diag), N, A, 0, lda, X, 0,
+                1);
+    }
+
+    public void tbsv(UpLo uplo, Transpose TransA, Diag diag, int N, int K,
+            double[] A, int lda, double[] X) {
+        Dtbsv.dtbsv(uplo(uplo), trans(TransA), diag(diag), N, K, A, 0, lda, X,
+                0, 1);
+    }
+
+    public void tpsv(UpLo uplo, Transpose TransA, Diag diag, int N,
+            double[] Ap, double[] X) {
+        Dtpsv.dtpsv(uplo(uplo), trans(TransA), diag(diag), N, Ap, 0, X, 0, 1);
+    }
+
+    public void symv(UpLo uplo, int N, double alpha, double[] A, int lda,
+            double[] X, double beta, double[] Y) {
+        Dsymv.dsymv(uplo(uplo), N, alpha, A, 0, lda, X, 0, 1, beta, Y, 0, 1);
+    }
+
+    public void sbmv(UpLo uplo, int N, int K, double alpha, double[] A,
+            int lda, double[] X, double beta, double[] Y) {
+        Dsbmv.dsbmv(uplo(uplo), N, K, alpha, A, 0, lda, X, 0, 1, beta, Y, 0, 1);
+    }
+
+    public void spmv(UpLo uplo, int N, double alpha, double[] Ap, double[] X,
+            double beta, double[] Y) {
+        Dspmv.dspmv(uplo(uplo), N, alpha, Ap, 0, X, 0, 1, beta, Y, 0, 1);
+    }
+
+    public void ger(int M, int N, double alpha, double[] X, double[] Y,
+            double[] A, int lda) {
+        Dger.dger(M, N, alpha, X, 0, 1, Y, 0, 1, A, 0, lda);
+    }
+
+    public void syr(UpLo uplo, int N, double alpha, double[] X, double[] A,
+            int lda) {
+        Dsyr.dsyr(uplo(uplo), N, alpha, X, 0, 1, A, 0, lda);
+    }
+
+    public void spr(UpLo uplo, int N, double alpha, double[] X, double[] Ap) {
+        Dspr.dspr(uplo(uplo), N, alpha, X, 0, 1, Ap, 0);
+    }
+
+    public void syr2(UpLo uplo, int N, double alpha, double[] X, double[] Y,
+            double[] A, int lda) {
+        Dsyr2.dsyr2(uplo(uplo), N, alpha, X, 0, 1, Y, 0, 1, A, 0, lda);
+    }
+
+    public void spr2(UpLo uplo, int N, double alpha, double[] X, double[] Y,
+            double[] A) {
+        Dspr2.dspr2(uplo(uplo), N, alpha, X, 0, 1, Y, 0, 1, A, 0);
+    }
+   */
+
+  def gemm(transA : Boolean, transB : Boolean, M : Int, N : Int, K : Int,
+           alpha : Double, A : Array[Double], lda : Int, B : Array[Double],
+           ldb : Int, beta : Double, C : Array[Double], ldc : Int) =
+    Dgemm.dgemm(trans(transA), trans(transB), M, N, K, alpha, A, 0, lda, B,
+                0, ldb, beta, C, 0, ldc);
+
+    /*
+    public void symm(Side side, UpLo uplo, int M, int N, double alpha,
+            double[] A, int lda, double[] B, int ldb, double beta, double[] C,
+            int ldc) {
+        Dsymm.dsymm(side(side), uplo(uplo), M, N, alpha, A, 0, lda, B, 0, ldb,
+                beta, C, 0, ldc);
+    }
+
+    public void syrk(UpLo uplo, Transpose Trans, int N, int K, double alpha,
+            double[] A, int lda, double beta, double[] C, int ldc) {
+        Dsyrk.dsyrk(uplo(uplo), trans(Trans), N, K, alpha, A, 0, lda, beta, C,
+                0, ldc);
+    }
+
+    public void syr2k(UpLo uplo, Transpose Trans, int N, int K, double alpha,
+            double[] A, int lda, double[] B, int ldb, double beta, double[] C,
+            int ldc) {
+        Dsyr2k.dsyr2k(uplo(uplo), trans(Trans), N, K, alpha, A, 0, lda, B, 0,
+                ldb, beta, C, 0, ldc);
+    }
+
+    public void trmm(Side side, UpLo uplo, Transpose TransA, Diag diag, int M,
+            int N, double alpha, double[] A, int lda, double[] B, int ldb) {
+        Dtrmm.dtrmm(side(side), uplo(uplo), trans(TransA), diag(diag), M, N,
+                alpha, A, 0, lda, B, 0, ldb);
+    }
+
+    public void trsm(Side side, UpLo uplo, Transpose TransA, Diag diag, int M,
+            int N, double alpha, double[] A, int lda, double[] B, int ldb) {
+        Dtrsm.dtrsm(side(side), uplo(uplo), trans(TransA), diag(diag), M, N,
+                alpha, A, 0, lda, B, 0, ldb);
+    }
+     */
+
+  private def trans(trans : Boolean) =
+    if (trans) "T" else "N";
+
+  /*
+    private String uplo(UpLo uplo) {
+        if (uplo == UpLo.Lower)
+            return "L";
+        else
+            return "U";
+    }
+
+    private String diag(Diag diag) {
+        if (diag == Diag.NonUnit)
+            return "N";
+        else
+            return "U";
+    }
+
+    private String side(Side side) {
+        if (side == Side.Left)
+            return "L";
+        else
+            return "R";
     }
     */
 }
