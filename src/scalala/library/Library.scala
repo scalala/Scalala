@@ -135,7 +135,9 @@ trait Library {
   /** Log a numeric value */
   @inline def log(v : Double) : Double = Math.log(v);
   
-  val NaN = java.lang.Double.NaN;
+  val NaN = Double.NaN;
+  
+  val Inf = Double.PositiveInfinity;
   
   @inline def isnan(a : Double) : Boolean = java.lang.Double.isNaN(a);
 
