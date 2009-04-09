@@ -32,7 +32,7 @@ import scalala.tensor.dense.DenseVector;
  * of the number of non-zeros.  Getting a value takes on the order
  * of the log of the number of non-default values, with special
  * constant time shortcuts for getting the previously accessed
- * element or its successor.
+ * element or its successor.  Note that this class is not threadsafe.
  * 
  * @author dramage
  */
@@ -67,15 +67,11 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
       throw new IllegalArgumentException("Index and data must be non-null");
     if (inIndex.size < inUsed)
       throw new IllegalArgumentException("Used is greater than provided array");
-    for (i <- 1 until used) {
-      if (inIndex(i-1) > inIndex(i)) {
-        throw new IllegalArgumentException("Input index is not sorted at "+i);
-      }
+    for (i <- 1 until used; if (inIndex(i-1) > inIndex(i))) {
+      throw new IllegalArgumentException("Input index is not sorted at "+i);
     }
-    for (i <- 0 until used) {
-      if (inIndex(i) < 0) {
-        throw new IllegalArgumentException("Input index is less than 0 at "+i);
-      }
+    for (i <- 0 until used; if (inIndex(i) < 0)) {
+      throw new IllegalArgumentException("Input index is less than 0 at "+i);
     }
     
     data = inData;
