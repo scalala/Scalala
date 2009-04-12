@@ -819,24 +819,24 @@ trait MatrixOp[I1,I2] extends TensorOp[(I1,I2)] {
   type Transpose <: Tensor2[I2,I1];
   
   override def domain : Domain2[I1,I2];
-    
+  
   /** Transposes this tensor. */
   def t = MatrixTranspose(this);
-    
+  
   override def unary_- : MatrixOp[I1,I2] = this match {
     case MatrixNegation(n) => n.asInstanceOf[MatrixOp[I1,I2]];
     case _ => MatrixNegation(this);
   }
-    
+  
   /** Matrix-matrix multiplication. */
   def *[J] (op : MatrixOp[I2,J]) = MatrixInnerMultMatrix(this, op);
-    
+  
   /** Matrix-vector multiplication. */
   def * (op : VectorOp[I2]) = MatrixInnerMultVector(this, op);
-    
+  
   /** Matrix solve. */
   def \[J] (op : MatrixOp[I1,J]) = MatrixSolveMatrix(this, op);
-    
+  
   /** Matrix-vector solve. */
   def \ (op : VectorOp[I1]) = MatrixSolveVector(this, op);
   
@@ -1106,24 +1106,24 @@ case class MatrixOrTensor[I,J](override val tensor : MatrixOp[I,J], override val
 }
 
 
-/*
 package dense {
   import scalala.tensor.dense._;
   
   trait DenseMatrixOp extends MatrixOp[Int,Int] {
-    type Value = DenseMatrix;
+    override type Value = DenseMatrix;
+    override type Transpose = DenseMatrix;
     
     def rows = domain._1.asInstanceOf[IntSpanDomain].end;
     def cols = domain._2.asInstanceOf[IntSpanDomain].end;
 
-    // override def t = DenseMatrixTranspose(this);
+    override def t = DenseMatrixTranspose(this);
     
     override def create[J](domain : Domain[J]) = 
       new DenseMatrix(new Array[Double](0),0,0).create(domain);
   }
   
-  abstract case class DenseMatrixTranspose(op : DenseMatrixOp) extends DenseMatrixOp {
-  }
+  case class DenseMatrixNegation(override val tensor : DenseMatrixOp) extends MatrixNegation[Int,Int](tensor) with DenseMatrixOp {}
+  case class DenseMatrixTranspose(override val op : DenseMatrixOp) extends MatrixTranspose[Int,Int](op) with DenseMatrixOp {}
   
   //c <- alpha * a * b + beta * c
   case class GEMM(alpha : Double, a : DenseMatrixOp, b : DenseMatrixOp, beta : Double, c : DenseMatrixOp) extends DenseMatrixOp {
@@ -1154,4 +1154,3 @@ package dense {
     }
   }
 }
-*/
