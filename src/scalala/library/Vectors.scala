@@ -95,14 +95,14 @@ trait Vectors extends Library with Operators {
     sumcount(v)._1;
   
   /** Returns the sum of the values of the value of the operation. */
-  def sum[I,T<:Tensor[I]](op : TensorOp[I,T]) : Double =
+  def sum[I](op : TensorOp[I]) : Double =
     sum(op.value);
   
   /** Log each element of a vector or matrix */
   def log[I](v : PartialMap[I,Double]) = v.map(Math.log _);
   def log(v : Iterator[Double]) = v.map(Math.log);
   def log[S<:Collection[Double]](v : S) = v.map(Math.log);
-  def log[I,T<:Tensor[I]](op : TensorOp[I,T]) : Double =
+  def log[I](op : TensorOp[I]) : Double =
     log(op.value);
   
   /** The maximum active value of the map (does not consider default). */
@@ -110,7 +110,7 @@ trait Vectors extends Library with Operators {
     v.activeValues.reduceLeft(Math.max);
   def max(v : Iterator[Double]) : Double = v.reduceLeft(Math.max);
   def max(v : Collection[Double]) : Double = max(v.elements);
-  def max[I,T<:Tensor[I]](op : TensorOp[I,T]) : Double = max(op.value);
+  def max[I](op : TensorOp[I]) : Double = max(op.value);
   
   /** The minimum active value of the map (does not consider default). */
   def min[I](v : PartialMap[I,Double]) : Double =
@@ -118,7 +118,7 @@ trait Vectors extends Library with Operators {
 
   def min(v : Iterator[Double]) : Double = v.reduceLeft(Math.min);
   def min(v : Collection[Double]) : Double = min(v.elements);
-  def min[I,T<:Tensor[I]](op : TensorOp[I,T]) : Double = min(op.value);
+  def min[I](op : TensorOp[I]) : Double = min(op.value);
   
   /**
    * Returns the sum of the squares of the elements of the vector.
@@ -126,7 +126,7 @@ trait Vectors extends Library with Operators {
   def sumsq[I](v : PartialMap[I,Double]) : Double = sum(v.map((x:Double) => x*x));
   def sumsq(v : Iterator[Double]) = sum(v.map(x => x*x));
   def sumsq(v : Seq[Double]) = sum(v.map(x => x*x));
-  def sumsq[I,T<:Tensor[I]](op : TensorOp[I,T]) : Double = sumsq(op.value);
+  def sumsq[I](op : TensorOp[I]) : Double = sumsq(op.value);
   
   /** Returns the mean of the vector: sum(v) / v.size. */
   def mean[I](v : PartialMap[I,Double]) : Double = {
@@ -145,7 +145,7 @@ trait Vectors extends Library with Operators {
   /** Returns the mean of the given elements. */
   def mean(v : Seq[Double]) : Double = mean(v.elements);
   
-  def mean[I,T<:Tensor[I]](op : TensorOp[I,T]) : Double = mean(op.value);
+  def mean[I](op : TensorOp[I]) : Double = mean(op.value);
   
   /** Returns the sum vector of a bunch of vectors. */
   def sum(vectors : Seq[Vector]) : Vector = {

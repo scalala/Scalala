@@ -65,8 +65,8 @@ class DenseVector(data : Array[Double]) extends
   }
   
   /** Assigns each element in this map to the corresponding value as returned by the given operation. */
-  override def :=[T<:Tensor[Int]]  (op : TensorOp[Int,T]) : Unit = {
-    def isDense[QI,QT<:Tensor[QI]](op : TensorOp[QI,QT]) : Boolean = op match {
+  override def :=  (op : TensorOp[Int]) : Unit = {
+    def isDense[QI](op : TensorOp[QI]) : Boolean = op match {
       case MatrixTranspose(aT) => isDense(aT);
       case _ => op.value.isInstanceOf[DenseTensor[_]];
     }
@@ -77,7 +77,7 @@ class DenseVector(data : Array[Double]) extends
         val _b = b.working.asInstanceOf[DenseVector];
         val _B = new DenseMatrix(_b.data, _b.size, 1);
         val _X = new DenseMatrix(this.data, this.size, 1);
-        _X := MatrixSolveMatrix(a.asInstanceOf[MatrixOp[Int,Int,DenseMatrix]], _B);
+        _X := MatrixSolveMatrix(a.asInstanceOf[MatrixOp[Int,Int]], _B);
       case MatrixSolveVector(a, b) =>
         throw new UnsupportedOperationException("DenseMatrix solution requires both arguments to be dense");
       case _ => super.:=(op);

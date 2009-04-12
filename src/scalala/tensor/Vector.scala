@@ -22,6 +22,8 @@ package scalala.tensor;
 import scalala.collection.PartialMap;
 import scalala.collection.domain.{Domain, Domain1, IntSpanDomain};
 
+import scalala.tensor.operators._;
+
 /**
  * A standard numerical Tensor1 defined over 0 inclusive to
  * size exclusive.
