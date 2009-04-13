@@ -29,7 +29,7 @@ import scalala.tensor.{Tensor,Vector,Matrix};
 trait Matrices extends Library with Vectors {
   /** A matrix of size m by n with 1 everywhere */
   def ones(rows : Int, cols : Int) : Matrix = {
-    DenseMatrix(Array.fromFunction(i => 1.0)(rows*cols),rows,cols);
+    DenseMatrix(rows,cols,Array.fromFunction(i => 1.0)(rows*cols));
   }
   
   /** A matrix of size m by n with 0 everywhere */

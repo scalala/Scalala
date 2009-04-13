@@ -76,8 +76,8 @@ class DenseVector(data : Array[Double]) extends
       case MatrixSolveVector(a, b) if isDense(a) && isDense(b) =>
         import scalala.Scalala._;
         val _b = b.working.asInstanceOf[DenseVector];
-        val _B = new DenseMatrix(_b.data, _b.size, 1);
-        val _X = new DenseMatrix(this.data, this.size, 1);
+        val _B = new DenseMatrix(_b.size, 1, _b.data);
+        val _X = new DenseMatrix(this.size, 1, this.data);
         _X := MatrixSolveMatrix(a.asInstanceOf[MatrixOp[Int,Int]], _B);
       case MatrixSolveVector(a, b) =>
         throw new UnsupportedOperationException("DenseMatrix solution requires both arguments to be dense");
@@ -85,5 +85,5 @@ class DenseVector(data : Array[Double]) extends
     }
   }
   
-  override def toString() = new DenseMatrix(data, size, 1).toString();
+  override def toString() = new DenseMatrix(size, 1, data).toString();
 }

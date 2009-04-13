@@ -29,21 +29,19 @@ import scalala.Scalala.Vector;
 
 /*
 package test {
+  
   trait TensorOp[I] {
     type Op <: TensorOp[I]
     
-    private val _pack = pack;
-    def pack : TensorOperatorPack;
-    
-    def + (s : Double) : Op = pack.mkTensorPlusScalar(this, s);
+    def + (s : Double) = new TensorPlusScalar(this, s) with Op;
+  }
+  
+  abstract case class TensorPlusScalar[I](tensor : TensorOp[I], scalar : Double) extends TensorOp[I] {
   }
   
   trait TensorOperatorPack {
     type Op[I] = TensorOp[I]
     
-    case class TensorPlusScalar[I](tensor : TensorOp[I], scalar : Double) extends Op[I] {
-      override def pack = TensorOperatorPack.this;
-    }
     
     def mkTensorPlusScalar[I](tensor : TensorOp[I], scalar : Double) =
       TensorPlusScalar(tensor,scalar);

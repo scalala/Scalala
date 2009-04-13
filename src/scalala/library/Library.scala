@@ -63,8 +63,12 @@ trait Library {
   def Matrix(rows : Int, cols : Int)(values : Double*) : Matrix =
     new DenseMatrix(values.toArray, rows, cols);
   
-  def DenseMatrix(values : Array[Double], rows : Int, cols : Int) : Matrix =
-    new DenseMatrix(values, rows, cols);
+  def DenseMatrix(rows : Int, cols : Int, values : Collection[Double]) : Matrix = {
+    values match {
+      case array : Array[Double] => new DenseMatrix(array, rows, cols);
+      case _ => new DenseMatrix(values.toArray, rows, cols);
+    }
+  }
   
   def DenseMatrix(rows : Int, cols : Int) : Matrix =
     new DenseMatrix(rows,cols);
@@ -72,80 +76,28 @@ trait Library {
   def DiagonalMatrix(diagonal : Vector) : Matrix =
     new DiagonalMatrix(diagonal);
   
-  /*
-  def ScalarMatrix(value : Double, rows : Int, cols : Int) : Matrix = {
-    val _rows = rows;
-    val _cols = cols;
-    new Matrix {
-      override def rows = _rows;
-      override def cols = _cols;
-      override def get(row : Int, col : Int) = value;
-      override def set(row : Int, col : Int, value : Double) =
-        throw new UnsupportedOperationException();
-      override def copy = this;
-    }
-  }
-  
-  def ColMatrix(vector : Vector) : Matrix = {
-    new Matrix {
-      override def rows = vector.size;
-      override def cols = 1;
-      override def get(row : Int, col : Int) = {
-        check(row,col);
-        vector(row);
-      }
-      override def set(row : Int, col : Int, value : Double) = {
-        check(row,col);
-        vector(row) = value;
-      }
-      override def copy = ColMatrix(vector.copy).asInstanceOf[this.type];
-    }
-  }
-  
-  def RowMatrix(vector : Vector) : Matrix = {
-    new Matrix {
-      def rows = 1;
-      def cols = vector.size;
-      override def get(row : Int, col : Int) = {
-        check(row,col);
-        vector(col);
-      }
-      override def set(row : Int, col : Int, value : Double) = {
-        check(row,col);
-        vector(col) = value;
-      }
-      override def copy = RowMatrix(vector.copy).asInstanceOf[this.type];
-    }
-  }
-  
-  def TransposeMatrix(matrix : Matrix) : Matrix = {
-    new Matrix {
-      def rows = matrix.cols;
-      def cols = matrix.rows;
-      override def get(row : Int, col : Int) = matrix(col,row);
-      override def set(row : Int, col : Int, value : Double) = matrix(col,row) = value;
-      override def copy = TransposeMatrix(matrix.copy).asInstanceOf[this.type];
-    }
-  }
-  
-  def BlockMatrix(blocks : Seq[Seq[Matrix]]) : Matrix = {
-    throw new UnsupportedOperationException();
-  }
-  */
-  
   //
   // basic scala ops from Math.
   //
   
   /** Log a numeric value */
-  @inline def log(v : Double) : Double = Math.log(v);
+  final def log(v : Double) : Double = Math.log(v);
   
-  val NaN = Double.NaN;
+  /** Alias for Double.NaN */
+  final val NaN = Double.NaN;
   
-  val Inf = Double.PositiveInfinity;
+  /** Alias for Double.NaN */
+  final val nan = NaN;
   
-  @inline def isnan(a : Double) : Boolean = java.lang.Double.isNaN(a);
+  /** Alias for Double.PositiveInfinity */
+  final val Inf = Double.PositiveInfinity;
+  
+  /** Alias for Double.PositiveInfinity */
+  final val inf = Inf;
+  
+  /** Alias for x.isNaN. */
+  final def isnan(x : Double) = x.isNaN;
 
   /** Alias for Math.sqrt. */
-  @inline def sqrt(x : Double) = Math.sqrt(x);
+  final def sqrt(x : Double) = Math.sqrt(x);
 }

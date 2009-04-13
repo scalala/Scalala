@@ -33,13 +33,13 @@ import scalala.tensor.operators._;
  * 
  * @author dramage
  */
-class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
+class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
   DoubleArrayData(data) with Matrix with MatrixMatrixSolver[Int,Int] with DenseTensor[(Int,Int)] {
   
   if (nRows * nCols != data.length) throw new Predef.IllegalArgumentException;
   
   def this(nRows : Int, nCols : Int) =
-    this(new Array[Double](nRows * nCols), nRows, nCols);
+    this(nRows, nCols, new Array[Double](nRows * nCols));
   
   @inline final def index(row : Int, col : Int) : Int = {
     check(row,col);
@@ -64,7 +64,7 @@ class DenseMatrix(data : Array[Double], nRows : Int, nCols : Int) extends
   private val _colDomain = IntSpanSet(0, rows);
   override def activeDomainInCol(col : Int) = _colDomain;
   
-  override def copy = new DenseMatrix(data.toArray, rows, cols).asInstanceOf[this.type];
+  override def copy = new DenseMatrix(rows, cols, data.toArray).asInstanceOf[this.type];
   
   override def zero = java.util.Arrays.fill(data, 0.0);
   
@@ -230,13 +230,13 @@ trait DenseMatrixSolveTest {
   import scalala.Scalala._;
   
   def _solve_test() {
-    val _A = new DenseMatrix(Array(1.0, 2.0, 3.0, 4.0), 2, 2);
-    val _B = new DenseMatrix(Array(2.0, 0.0, 3.0, 3.0), 2, 2);
-    assertEquals(new DenseMatrix(Array(-4.0, 2.0, -1.5, 1.5), 2, 2), (_A \ _B) value);
+    val _A = new DenseMatrix(2, 2, Array(1.0, 2.0, 3.0, 4.0));
+    val _B = new DenseMatrix(2, 2, Array(2.0, 0.0, 3.0, 3.0));
+    assertEquals(new DenseMatrix(2, 2, Array(-4.0, 2.0, -1.5, 1.5)), (_A \ _B) value);
     
-    val _C = new DenseMatrix(Array(1.0, 2.0, 3.0, 4.0, 5.0, -1.0), 2, 3);
-    val _D = new DenseMatrix(Array(2.0, 0.0, 3.0, 3.0), 2, 2);
-    assertEquals(DenseMatrix(Array(0.0091743, 0.0825688, 0.3486239, 0.2935780, 0.6422018, 0.1559633), 3, 2), (_C \ _D).value, 1e-7);
+    val _C = new DenseMatrix(2, 3, Array(1.0, 2.0, 3.0, 4.0, 5.0, -1.0));
+    val _D = new DenseMatrix(2, 2, Array(2.0, 0.0, 3.0, 3.0));
+    assertEquals(new DenseMatrix(3, 2, Array(0.0091743, 0.0825688, 0.3486239, 0.2935780, 0.6422018, 0.1559633)), (_C \ _D).value, 1e-7);
     
     assertEquals(Vector(0.0091743, 0.0825688, 0.3486239), (_C \ Vector(2, 0)).value, 1e-7);
   }
