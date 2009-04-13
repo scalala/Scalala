@@ -54,7 +54,11 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   def this(size : Int) =
     this(size, 0);
   
-  /** Constructs a new SparseVector from the given array of Ints */
+  /**
+   * Constructs a new SparseVector of the given size, initially using
+   * the given (sorted) array of integers as the set of non-zeros in the
+   * vector.
+   */
   def this(size : Int, indices : Array[Int]) = {
     this(size, 0);
     use(indices, indices.length);
