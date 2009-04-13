@@ -70,7 +70,7 @@ trait OperatorTest {
   def _vector_test() = {
     val x = Vector(1,2,3);
     
-    assertEquals(new DenseMatrix(Array(1.,2.,3.,2.,4.,6.,3.,6.,9.), 3, 3), (x * x.t).value);
+    assertEquals(new DenseMatrix(3, 3, Array(1.,2.,3.,2.,4.,6.,3.,6.,9.)), (x * x.t).value);
     
     x += 2;
     assertEquals(x, Vector(3,4,5));
@@ -86,7 +86,7 @@ trait OperatorTest {
   }
   
   def _matrix_vector_test() = {
-    val A = new DenseMatrix(Array(1,2,3,4,5,6),2,3);
+    val A = new DenseMatrix(2, 3, Array(1,2,3,4,5,6));
     val b = Vector(1,.5,1);
     
     assertEquals(Vector(1*1+.5*3+1*5, 1*2+.5*4+1*6), (A*b).value);
@@ -94,9 +94,9 @@ trait OperatorTest {
   }
   
   def _matrix_matrix_test() = {
-    val A = new DenseMatrix(Array(0.652639,0.954604,0.112813,0.594183,0.086937,0.689550,0.941195,0.429511,0.970387,0.357748,0.984985,0.416206), 3, 4);
-    val B = new DenseMatrix(Array(0.595799,0.115880,0.941191,0.786414,0.019879,0.533605,0.537067,0.612046),4,2);
-    val C = new DenseMatrix(Array(1.62488,1.75768,1.38775,1.05448,0.89890,1.14609),3,2);
+    val A = new DenseMatrix(3, 4, Array(0.652639,0.954604,0.112813,0.594183,0.086937,0.689550,0.941195,0.429511,0.970387,0.357748,0.984985,0.416206));
+    val B = new DenseMatrix(4, 2, Array(0.595799,0.115880,0.941191,0.786414,0.019879,0.533605,0.537067,0.612046));
+    val C = new DenseMatrix(3, 2, Array(1.62488,1.75768,1.38775,1.05448,0.89890,1.14609));
     assertEquals(A * B, C, 1e-5);
   }
   

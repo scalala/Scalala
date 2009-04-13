@@ -61,12 +61,12 @@ trait Library {
     new SparseVector(size, nonzeros);
   
   def Matrix(rows : Int, cols : Int)(values : Double*) : Matrix =
-    new DenseMatrix(values.toArray, rows, cols);
+    new DenseMatrix(rows, cols, values.toArray);
   
   def DenseMatrix(rows : Int, cols : Int, values : Collection[Double]) : Matrix = {
     values match {
-      case array : Array[Double] => new DenseMatrix(array, rows, cols);
-      case _ => new DenseMatrix(values.toArray, rows, cols);
+      case array : Array[Double] => new DenseMatrix(rows, cols, array);
+      case _ => new DenseMatrix(rows, cols, values.toArray);
     }
   }
   

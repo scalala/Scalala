@@ -1422,7 +1422,7 @@ package dense {
     override def t = DenseMatrixTranspose(this);
     
     override def create[J](domain : Domain[J]) = 
-      new DenseMatrix(new Array[Double](0),0,0).create(domain);
+      new DenseMatrix(0,0).create(domain);
   }
   
   case class DenseMatrixNegation(override val tensor : DenseMatrixOp) extends MatrixNegation[Int,Int](tensor) with DenseMatrixOp {}
