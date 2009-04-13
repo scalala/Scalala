@@ -531,6 +531,8 @@ case class Tensor1Negation[I](override val tensor : Tensor1Op[I]) extends Tensor
 
 case class Tensor1PlusScalar[I](override val tensor : Tensor1Op[I], override val scalar : Double) extends TensorPlusScalar(tensor, scalar) with Tensor1Op[I] {
   override def domain = tensor.domain;
+  override def  + (s : Double) = Tensor1PlusScalar(tensor, scalar + s);
+  override def  - (s : Double) = Tensor1PlusScalar(tensor, scalar - s);
 }
 
 case class Tensor1MultScalar[I](override val tensor : Tensor1Op[I], override val scalar : Double) extends TensorMultScalar(tensor, scalar) with Tensor1Op[I] {
@@ -715,6 +717,8 @@ case class RowTensor1Negation[I](override val tensor : RowTensor1Op[I]) extends 
 
 case class RowTensor1PlusScalar[I](override val tensor : RowTensor1Op[I], override val scalar : Double) extends TensorPlusScalar(tensor, scalar) with RowTensor1Op[I] {
   override def domain = tensor.domain;
+  override def  + (s : Double) = RowTensor1PlusScalar(tensor, scalar + s);
+  override def  - (s : Double) = RowTensor1PlusScalar(tensor, scalar - s);
 };
 
 case class RowTensor1MultScalar[I](override val tensor : RowTensor1Op[I], override val scalar : Double) extends TensorMultScalar(tensor, scalar) with RowTensor1Op[I] {
@@ -871,7 +875,6 @@ trait VectorOp extends Tensor1Op[Int] {
 }
 
 case class VectorIdentity(override val tensor : Vector) extends Tensor1Identity[Int](tensor) with VectorOp {
-  override def domain = tensor.domain;
   override def value : Value = tensor.asInstanceOf[Value];
 }
 
@@ -884,103 +887,60 @@ case class VectorToCol(op : RowVectorOp) extends VectorOp {
 }
   
 case class VectorNegation(override val tensor : VectorOp) extends Tensor1Negation[Int](tensor) with VectorOp {
-  override def domain = tensor.domain;
   override def value = negated.asInstanceOf[Value];
 }
 
 case class VectorPlusScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1PlusScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
+  override def  + (s : Double) = VectorPlusScalar(tensor, scalar + s);
+  override def  - (s : Double) = VectorPlusScalar(tensor, scalar - s);
 }
 
 case class VectorMultScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1MultScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
   override def * (s : Double) = VectorMultScalar(tensor, scalar * s);
   override def / (s : Double) = VectorMultScalar(tensor, scalar / s);
 }
 
-case class VectorPowScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1PowScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorPowScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1PowScalar(tensor, scalar) with VectorOp {}
 
-case class VectorLTScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1LTScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorLTScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1LTScalar(tensor, scalar) with VectorOp {}
 
-case class VectorGTScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1GTScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorGTScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1GTScalar(tensor, scalar) with VectorOp {}
 
-case class VectorLTEScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1LTEScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorLTEScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1LTEScalar(tensor, scalar) with VectorOp {}
 
-case class VectorGTEScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1GTEScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorGTEScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1GTEScalar(tensor, scalar) with VectorOp {}
 
-case class VectorAndScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1AndScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorAndScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1AndScalar(tensor, scalar) with VectorOp {}
 
-case class VectorOrScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1OrScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorOrScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1OrScalar(tensor, scalar) with VectorOp {}
 
-case class VectorEqScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1EqScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorEqScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1EqScalar(tensor, scalar) with VectorOp {}
 
-case class VectorNeScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1NeScalar(tensor, scalar) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorNeScalar(override val tensor : VectorOp, override val scalar : Double) extends Tensor1NeScalar(tensor, scalar) with VectorOp {}
 
-case class VectorPlusTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1PlusTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorPlusTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1PlusTensor(tensor, tensorB) with VectorOp {}
 
-case class VectorMinusTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1MinusTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorMinusTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1MinusTensor(tensor, tensorB) with VectorOp {}
 
-case class VectorMultTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1MultTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorMultTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1MultTensor(tensor, tensorB) with VectorOp {}
 
-case class VectorDivTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1DivTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorDivTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1DivTensor(tensor, tensorB) with VectorOp {}
 
-case class VectorLTTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1LTTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorLTTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1LTTensor(tensor, tensorB) with VectorOp {}
 
-case class VectorGTTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1GTTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorGTTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1GTTensor(tensor, tensorB) with VectorOp {}
 
-case class VectorLTETensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1LTETensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorLTETensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1LTETensor(tensor, tensorB) with VectorOp {}
 
-case class VectorGTETensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1GTETensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorGTETensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1GTETensor(tensor, tensorB) with VectorOp {}
 
-case class VectorEqTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1EqTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorEqTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1EqTensor(tensor, tensorB) with VectorOp {}
 
-case class VectorNeTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1NeTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorNeTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1NeTensor(tensor, tensorB) with VectorOp {}
 
-case class VectorAndTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1AndTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorAndTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1AndTensor(tensor, tensorB) with VectorOp {}
 
-case class VectorOrTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1OrTensor(tensor, tensorB) with VectorOp {
-  override def domain = tensor.domain;
-}
+case class VectorOrTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1OrTensor(tensor, tensorB) with VectorOp {}
 
 
 
@@ -1065,102 +1025,59 @@ case class VectorToRow(op : VectorOp) extends RowVectorOp {
   override def create[J](d : Domain[J]) = op.create(d);
 }
 
-case class RowVectorNegation(override val tensor : RowVectorOp) extends RowTensor1Negation[Int](tensor) with RowVectorOp {
-  override def domain = tensor.domain;
-  override def value = negated.asInstanceOf[Value];
+case class RowVectorNegation(override val tensor : RowVectorOp) extends RowTensor1Negation[Int](tensor) with RowVectorOp {}
+
+case class RowVectorPlusScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1PlusScalar(tensor, scalar) with RowVectorOp {
+  override def  + (s : Double) = RowVectorPlusScalar(tensor, scalar + s);
+  override def  - (s : Double) = RowVectorPlusScalar(tensor, scalar - s);
 }
 
-case class RowVectorPlusScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1PlusScalar(tensor, scalar) with RowVectorOp {};
-
 case class RowVectorMultScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1MultScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
   override def * (s : Double) = RowVectorMultScalar(tensor, scalar * s);
   override def / (s : Double) = RowVectorMultScalar(tensor, scalar / s);
 }
 
-case class RowVectorPowScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1PowScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorPowScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1PowScalar(tensor, scalar) with RowVectorOp {}
 
-case class RowVectorLTScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1LTScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorLTScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1LTScalar(tensor, scalar) with RowVectorOp {}
 
-case class RowVectorGTScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1GTScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorGTScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1GTScalar(tensor, scalar) with RowVectorOp {}
 
-case class RowVectorLTEScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1LTEScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorLTEScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1LTEScalar(tensor, scalar) with RowVectorOp {}
 
-case class RowVectorGTEScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1GTEScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorGTEScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1GTEScalar(tensor, scalar) with RowVectorOp {}
 
-case class RowVectorAndScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1AndScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorAndScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1AndScalar(tensor, scalar) with RowVectorOp {}
 
-case class RowVectorOrScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1OrScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorOrScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1OrScalar(tensor, scalar) with RowVectorOp {}
 
-case class RowVectorEqScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1EqScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
-};
+case class RowVectorEqScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1EqScalar(tensor, scalar) with RowVectorOp {};
 
-case class RowVectorNeScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1NeScalar(tensor, scalar) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorNeScalar(override val tensor : RowVectorOp, override val scalar : Double) extends RowTensor1NeScalar(tensor, scalar) with RowVectorOp {}
 
-case class RowVectorPlusTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1PlusTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorPlusTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1PlusTensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorMinusTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1MinusTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorMinusTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1MinusTensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorMultTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1MultTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorMultTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1MultTensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorDivTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1DivTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorDivTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1DivTensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorLTTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1LTTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorLTTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1LTTensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorGTTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1GTTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorGTTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1GTTensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorLTETensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1LTETensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorLTETensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1LTETensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorGTETensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1GTETensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorGTETensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1GTETensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorEqTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1EqTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorEqTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1EqTensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorNeTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1NeTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorNeTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1NeTensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorAndTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1AndTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorAndTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1AndTensor(tensor, tensorB) with RowVectorOp {}
 
-case class RowVectorOrTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1OrTensor(tensor, tensorB) with RowVectorOp {
-  override def domain = tensor.domain;
-}
+case class RowVectorOrTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1OrTensor(tensor, tensorB) with RowVectorOp {}
 
 
 
@@ -1368,6 +1285,8 @@ case class MatrixSolveVector[I,J](m : MatrixOp[I,J], v : Tensor1Op[I]) extends T
 
 case class MatrixPlusScalar[I,J](override val tensor : MatrixOp[I,J], override val scalar : Double) extends TensorPlusScalar(tensor, scalar) with MatrixOp[I,J] {
   override def domain = tensor.domain;
+  override def  + (s : Double) = MatrixPlusScalar(tensor, scalar + s);
+  override def  - (s : Double) = MatrixPlusScalar(tensor, scalar - s);
 };
 
 case class MatrixMultScalar[I,J](override val tensor : MatrixOp[I,J], override val scalar : Double) extends TensorMultScalar(tensor, scalar) with MatrixOp[I,J] {
