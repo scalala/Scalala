@@ -32,7 +32,7 @@ import scalala.tensor.dense.DenseVector;
  * at an index in the array is 1.0 and is 0.0 elsewhere.  This vector cannot
  * have its default value changed from 0.0.  Use SparseVector for a more general
  * (but more memory intensive) representation able to handle arbitrary values
- * associated with each key.
+ * associated with each key.  Note that this class is not threadsafe.
  * 
  * @author dramage
  */
