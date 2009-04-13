@@ -27,6 +27,42 @@ import OperatorImplicits._;
 
 import scalala.Scalala.Vector;
 
+/*
+package test {
+  trait TensorOp[I] {
+    type Op <: TensorOp[I]
+    
+    private val _pack = pack;
+    def pack : TensorOperatorPack;
+    
+    def + (s : Double) : Op = pack.mkTensorPlusScalar(this, s);
+  }
+  
+  trait TensorOperatorPack {
+    type Op[I] = TensorOp[I]
+    
+    case class TensorPlusScalar[I](tensor : TensorOp[I], scalar : Double) extends Op[I] {
+      override def pack = TensorOperatorPack.this;
+    }
+    
+    def mkTensorPlusScalar[I](tensor : TensorOp[I], scalar : Double) =
+      TensorPlusScalar(tensor,scalar);
+  }
+  
+  trait VectorOp extends TensorOp[Int] {
+    override type Op = VectorOp;
+  }
+  
+  trait VectorOperatorPack extends TensorOperatorPack {
+    case class VectorPlusScalar(override val tensor : VectorOp, override val scalar : Double) extends TensorPlusScalar(tensor, scalar) with VectorOp {
+      override def pack = VectorOperatorPack.this;
+    }
+    
+    def mkTensorPlusScalar(tensor : VectorOp, scalar : Double) : VectorOp;
+  }
+}
+*/
+                              
 /**
  * Test code for Operators.
  * 

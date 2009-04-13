@@ -70,6 +70,7 @@ object ScalalaTestSuite extends Scalala
   with scalala.collection.MergeableSetTest
   with scalala.tensor.operators.OperatorTest
   with scalala.tensor.sparse.SparseVectorTest
+  with scalala.tensor.sparse.SparseBinaryVectorTest
   with scalala.tensor.dense.DenseMatrixSolveTest
   with StatisticsTest
   with ScalalaTest.TestConsoleMain

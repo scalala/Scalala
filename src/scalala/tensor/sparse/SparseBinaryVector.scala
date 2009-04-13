@@ -27,22 +27,19 @@ import scalala.tensor.Tensor.CreateException;
 import scalala.tensor.dense.DenseVector;
 
 /**
- * A sparse vector implementation based on an array of indeces and
- * an array of values.  Inserting a new value takes on the order
- * of the number of non-zeros.  Getting a value takes on the order
- * of the log of the number of non-default values, with special
- * constant time shortcuts for getting the previously accessed
- * element or its successor.  Note that this class is not threadsafe.
+ * A SparseBinaryVector is a sparse vector data structure that holds a single
+ * sorted array of ints as its backing data structure -- the value of the vector
+ * at an index in the array is 1.0 and is 0.0 elsewhere.  This vector cannot
+ * have its default value changed from 0.0.  Use SparseVector for a more general
+ * (but more memory intensive) representation able to handle arbitrary values
+ * associated with each key.
  * 
  * @author dramage
  */
-class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
+class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   if (domainSize < 0)
     throw new IllegalArgumentException("Invalid domain size: "+domainSize);
-  
-  /** Data array will be reassigned as the sparse vector grows. */
-  var data : Array[Double] = new Array[Double](initialNonzeros);
-  
+
   /** Index will be reassigned as the sparse vector grows. */
   var index : Array[Int] = new Array[Int](initialNonzeros);
   
@@ -52,34 +49,42 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   /** The previous index and offset found by apply or update. */
   var lastOffset = -1;
   var lastIndex = -1;
-
+  
   /** Constructs a new SparseVector with initially 0 allocation. */
   def this(size : Int) =
     this(size, 0);
+  
+  /** Constructs a new SparseVector from the given array of Ints */
+  def this(size : Int, indices : Array[Int]) = {
+    this(size, 0);
+    use(indices, indices.length);
+  }
 
   /** Use the given index and data arrays, of which the first inUsed are valid. */
-  def use(inIndex : Array[Int], inData : Array[Double], inUsed : Int) = {
-    if (inIndex.size != inData.size)
-      throw new IllegalArgumentException("Index and data sizes do not match");
+  def use(inIndex : Array[Int], inUsed : Int) = {
     if (inIndex.contains((x:Int) => x < 0 || x > size))
       throw new IllegalArgumentException("Index array contains out-of-range index");
-    if (inIndex == null || inData == null)
-      throw new IllegalArgumentException("Index and data must be non-null");
+    if (inIndex == null)
+      throw new IllegalArgumentException("Index must be non-null");
     if (inIndex.size < inUsed)
       throw new IllegalArgumentException("Used is greater than provided array");
     for (i <- 1 until used; if (inIndex(i-1) > inIndex(i))) {
       throw new IllegalArgumentException("Input index is not sorted at "+i);
     }
-    for (i <- 0 until used; if (inIndex(i) < 0)) {
-      throw new IllegalArgumentException("Input index is less than 0 at "+i);
-    }
     
-    data = inData;
     index = inIndex;
     used = inUsed;
     lastOffset = -1;
     lastIndex = -1;
   }
+  
+  override def default_=(value : Double) = {
+    if (value != 0.0) {
+      throw new UnsupportedOperationException("SparseBinaryVector can only have default = 0.0.  Try SparseVector instead.");
+    }
+  }
+  
+  override def default = 0.0;
   
   override def size = domainSize;
   
@@ -93,7 +98,7 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
     var offset = 0;
     override def hasNext = offset < used;
     override def next = {
-      val rv = (index(offset),data(offset));
+      val rv = (index(offset),1.0);
       offset += 1;
       rv;
     }
@@ -101,13 +106,11 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   
   override def activeKeys = index.take(used).elements;
   
-  override def activeValues = data.take(used).elements;
+  override def activeValues = index.take(used).map(_ => 1.0).elements;
 
   /** Zeros this vector, return */
-  override def zero() = {
-    use(new Array[Int](initialNonzeros),
-        new Array[Double](initialNonzeros), 0);
-  }
+  override def zero() =
+    use(new Array[Int](initialNonzeros), 0);
   
   /** Records that the given index was found at this.index(offset). */
   protected final def found(index : Int, offset : Int) : Int = {
@@ -179,7 +182,7 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   
   override def apply(i : Int) : Double = {
     val offset = findOffset(i);
-    if (offset >= 0) data(offset) else default;
+    if (offset >= 0) 1.0 else 0.0;
   }
   
   /**
@@ -190,145 +193,119 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
    * of allocated memory at each allocation request up until
    * the sparse vector contains 1024 elements, at which point
    * the growth is additive: an additional n * 1024 spaces will
-   * be allocated for n in 1,2,4,8,16.  The largest amount of
-   * space added to this vector will be an additional 16*1024*(8+4) = 
-   * 196608 bytes, although more space is needed temporarily
-   * while moving to the new arrays.
+   * be allocated for n in 1,2,4,8,16.
    */
   override def update(i : Int, value : Double) = {
+    if (value != 1.0 && value != 0.0) {
+      throw new IllegalArgumentException("SparseBinaryVector can only set values of 1.0 or 0.0");
+    }
+    
     val offset = findOffset(i);
-    if (offset >= 0) {
-      // found at offset
-      data(offset) = value;
-    } else if (value != default) {
+    if (offset >= 0 && value == 0.0) {
+      // remove value
+      System.arraycopy(index, offset+1, index, offset, used - offset - 1);
+      found(-1,-1);
+      used -= 1;
+    } else if (value == 1.0) {
       // need to insert at position -(offset+1)
       val insertPos = -(offset+1);
       
       used += 1;
       
       var newIndex = index;
-      var newData = data;
       
-      if (used > data.length) {
+      if (used > index.length) {
         val newLength = {
-          if (data.length < 8) { 8 }
-          else if (data.length > 16*1024) { data.length + 16*1024 }
-          else if (data.length > 8*1024)  { data.length +  8*1024 }
-          else if (data.length > 4*1024)  { data.length +  4*1024 }
-          else if (data.length > 2*1024)  { data.length +  2*1024 }
-          else if (data.length > 1*1024)  { data.length +  1*1024 }
-          else { data.length * 2 }
+          if (index.length < 8) { 8 }
+          else if (index.length > 16*1024) { index.length + 16*1024 }
+          else if (index.length > 8*1024)  { index.length +  8*1024 }
+          else if (index.length > 4*1024)  { index.length +  4*1024 }
+          else if (index.length > 2*1024)  { index.length +  2*1024 }
+          else if (index.length > 1*1024)  { index.length +  1*1024 }
+          else { index.length * 2 }
         }
         
         // copy existing data into new arrays
         newIndex = new Array[Int](newLength);
-        newData  = new Array[Double](newLength);
         System.arraycopy(index, 0, newIndex, 0, insertPos);
-        System.arraycopy(data, 0, newData, 0, insertPos);
       }
     
       // make room for insertion
       System.arraycopy(index, insertPos, newIndex, insertPos + 1, used - insertPos - 1);
-      System.arraycopy(data,  insertPos, newData,  insertPos + 1, used - insertPos - 1);
       
       // assign new value
       newIndex(insertPos) = i;
-      newData(insertPos) = value;
       
       // record the insertion point
       found(i,insertPos);
       
       // update pointers
       index = newIndex;
-      data = newData;
     }
   }
   
   /** Compacts the vector by removing all stored default values. */
   def compact() {
-    val _default = default;
-      
-    val nz = { // number of non-zeros
-      var _nz = 0;
-      var i = 0;
-      while (i < used) {
-        if (data(i) != _default) {
-          _nz += 1;
-        }
-        i += 1;
-      }
-      _nz;
-    }
-    
-    val newData  = new Array[Double](nz);
-    val newIndex = new Array[Int](nz);
-    
-    var i = 0;
-    var o = 0;
-    while (i < used) {
-      if (data(i) != _default) {
-        newData(o) = data(i);
-        newIndex(o) = index(i);
-        o += 1;
-      }
-      i += 1;
-    }
-    
-    use(newIndex, newData, nz);
+    val newIndex = new Array[Int](used);
+    System.arraycopy(index, 0, newIndex, 0, used);
+    use(newIndex, used);
   }
   
   override def copy = {
-    val rv = new SparseVector(size, 0);
-    rv.use(index.toArray, data.toArray, used);
-    rv.default = this.default;
+    val rv = new SparseBinaryVector(size, 0);
+    rv.use(index.toArray, used);
     rv;
   }
   
   override def create[J](domain : Domain[J]) : Tensor[J] = domain match {
     case IntSpanDomain(0,len) => new SparseVector(size);
-    case _ => throw new CreateException("Cannot create sparse with domain "+domain);
+    case _ => throw new CreateException("Cannot create sparse binary with domain "+domain);
   }
   
   /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = other match {
+    case binary : SparseBinaryVector => dot(binary);
     case sparse : SparseVector => dot(sparse);
-    case binary : SparseBinaryVector => binary.dot(this);
     case dense  : DenseVector => dot(dense);
     case _ => super.dot(other);
+  }
+  
+  def dot(that : SparseBinaryVector) : Double = {
+    if (this.size != that.size) {
+      throw new DomainException("Vectors have different sizes");
+    }
+    
+    var o1 = 0;    // offset into this.index
+    var o2 = 0;    // offset into that.data, that.index
+    var sum = 0;   // the dot product
+    
+    while (o1 < this.used && o2 < that.used) {
+      val i1 = this.index(o1);
+      val i2 = that.index(o2);
+      if (i1 == i2) {
+        sum += 1;
+        o1 += 1;
+        o2 += 1;
+      } else if (i1 < i2) {
+        o1 += 1;
+      } else { // i2 > i1
+        o2 += 1;
+      }
+    }
+    
+    sum;
   }
   
   /** Optimized implementation for SpraseVector dot DenseVector. */
   def dot(that : DenseVector) : Double = {
     if (this.size != that.size) {
-      throw new DomainException();
+      throw new DomainException("Vectors have different sizes");
     }
-    val thisDefault = this.default;
     var sum = 0.0;
-    if (thisDefault == 0) {
-      var o = 0;
-      while (o < this.used) {
-        sum += (this.data(o) * that.data(this.index(o)));
-        o += 1;
-      }
-    } else {
-      var o1 = 0;
-      var i2 = 0;
-      while (o1 < this.used) {
-        val i1 = this.index(o1);
-        if (i1 == i2) {
-          sum += (this.data(o1) * that.data(i2));
-          o1 += 1;
-          i2 += 1;
-        } else { // i1 < i2
-          sum += (thisDefault * that.data(i2));
-          i2 += 1;
-        }
-      }
-      // consume remander of that
-      while (i2 < that.data.length) {
-        sum += (thisDefault * that.data(i2));
-        i2 += 1;
-      }
+    var o = 0;
+    while (o < this.used) {
+      sum += that.data(this.index(o));
+      o += 1;
     }
     return sum;
   }
@@ -338,19 +315,18 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
     if (this.size != that.size) {
       throw new DomainException("Vectors have different sizes");
     }
-    var o1 = 0;    // offset into this.data, this.index
+    var o1 = 0;    // offset into this.index
     var o2 = 0;    // offset into that.data, that.index
     var sum = 0.0; // the dot product
     
-    val thisDefault = this.default;
     val thatDefault = that.default;
     
-    if (thisDefault == 0 && thatDefault == 0) {
+    if (thatDefault == 0) {
       while (o1 < this.used && o2 < that.used) {
         val i1 = this.index(o1);
         val i2 = that.index(o2);
         if (i1 == i2) {
-          sum += (this.data(o1) * that.data(o2));
+          sum += that.data(o2);
           o1 += 1;
           o2 += 1;
         } else if (i1 < i2) {
@@ -359,138 +335,86 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
           o2 += 1;
         }
       }
-    } else if (thisDefault == 0) { // && thatDefault != 0
+    } else { // thatDefault != 0
       while (o1 < this.used && o2 < that.used) {
         val i1 = this.index(o1);
         val i2 = that.index(o2);
         if (i1 == i2) {
-          sum += (this.data(o1) * that.data(o2));
+          sum += that.data(o2);
           o1 += 1;
           o2 += 1;
         } else if (i1 < i2) {
-          sum += (thatDefault * this.data(o1));
+          sum += thatDefault;
           o1 += 1;
         } else { // i2 > i1
           o2 += 1;
         }
       }
       // consume remainder of this
-      while (o1 < this.used) {
-        sum += (thatDefault * this.data(o1));
-        o1 += 1;
-      }
-    } else if (thatDefault == 0) { // thisDefault != 0
-      while (o1 < this.used && o2 < that.used) {
-        val i1 = this.index(o1);
-        val i2 = that.index(o2);
-        if (i1 == i2) {
-          sum += (this.data(o1) * that.data(o2));
-          o1 += 1;
-          o2 += 1;
-        } else if (i1 < i2) {
-          o1 += 1;
-        } else { // i2 > i1
-          sum += (thisDefault * that.data(o2));
-          o2 += 1;
-        }
-      }
-      // consume remainder of that
-      while (o2 < that.used) {
-        sum += (thisDefault * that.data(o2));
-        o2 += 1;
-      }
-    } else { // thisDefault != 0 && thatDefault != 0
-      var counted = 0;
-      while (o1 < this.used && o2 < that.used) {
-        val i1 = this.index(o1);
-        val i2 = that.index(o2);
-        if (i1 == i2) {
-          sum += (this.data(o1) * that.data(o2));
-          o1 += 1;
-          o2 += 1;
-          counted += 1;
-        } else if (i1 < i2) {
-          sum += (thatDefault * this.data(o1));
-          o1 += 1;
-          counted += 1;
-        } else { // i2 > i1
-          sum += (thisDefault * that.data(o2));
-          o2 += 1;
-          counted += 1;
-        }
-      }
-      // consume remainder of this
-      while (o1 < this.used) {
-        sum += (thatDefault * this.data(o1));
-        o1 += 1;
-        counted += 1;
-      }
-      // consume remainder of that
-      while (o2 < that.used) {
-        sum += (thisDefault * that.data(o2));
-        o2 += 1;
-        counted += 1;
-      }
-      // add in missing product total
-      sum += ((size - counted) * (thisDefault * thatDefault));
+      sum += ((this.used - o1) * thatDefault);
     }
     
-    return sum;
+    sum;
+  }
+  
+  /** Returns a SparseVector representation of this vector. */
+  def toSparseVector() : SparseVector = {
+    val data = new Array[Double](index.length);
+    var i = 0;
+    while (i < used) {
+      data(i) = 1.0;
+      i += 1;
+    }
+    val rv = new SparseVector(size);
+    rv.use(index,data,used);
+    rv;
   }
 }
 
-trait SparseVectorTest {
+trait SparseBinaryVectorTest {
   import scalala.ScalalaTest._;
   import scalala.Scalala._;
   import scalala.tensor.dense.DenseVector;
   
-  def _sparse_test() {
-    val sparse = new SparseVector(10);
-    val dense  = new scalala.tensor.dense.DenseVector(10);
-    
-    val values = List((2,2),(4,4),(3,3),(0,-1),(5,5),(1,1),(9,9),(7,7),(8,8),(3,3));
-    
-    for ((index,value) <- values) {
-      sparse(index) = value;
-      dense(index) = value;
-      assertEquals(dense, sparse);
-    }
-  }
-  
-  def _sparse_dot_test() {
-    val x = new SparseVector(10);
-    val y = new SparseVector(10);
+  def _SparseBinaryVector_test() {
+    val x = new SparseBinaryVector(10);
+    val y = new SparseBinaryVector(10);
     val d = rand(10);
+    val e = new SparseVector(10);
+    e(2) = 3; e(4) = d(4); e(7) = d(7); e(9)=d(9);
     
     def densedot(a : Vector, b : Vector) =
-      new DenseVector(a.toArray) dot new DenseVector (b.toArray);
-
+      new DenseVector(a.toArray) dot new DenseVector(b.toArray);
+    
     def checks() = {
       assertEquals(densedot(x,y), x dot y);
       assertEquals(densedot(y,x), y dot x);
       assertEquals(densedot(x,d), x dot d);
+      assertEquals(densedot(x,e), x dot e);
       assertEquals(densedot(d,x), d dot x);
+      assertEquals(densedot(e,x), e dot x);
       assertEquals(densedot(y,d), y dot d);
+      assertEquals(densedot(y,e), y dot e);
       assertEquals(densedot(d,y), d dot y);
+      assertEquals(densedot(e,y), e dot y);
     }
     
-    x(2) = 3;
-    y(2) = 4;
     checks();
     
-    x(7) = 2;
-    y += 1;
+    x(2) = 1;
+    y(2) = 1;
     checks();
     
-    y -= 1;
-    y(7) = .5;
+    x(7) = 1;
     checks();
     
-    x += 1;
-    y(8) = 2;
+    y(7) = 1;
     checks();
     
-    y += 1;
+    y(2) = 0;
+    checks();
+    
+    x(2) = 0;
     checks();
   }
 }
