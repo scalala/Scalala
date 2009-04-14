@@ -36,7 +36,8 @@ import scalala.tensor.operators._;
 class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
   DoubleArrayData(data) with Matrix with MatrixMatrixSolver[Int,Int] with DenseTensor[(Int,Int)] {
   
-  if (nRows * nCols != data.length) throw new Predef.IllegalArgumentException;
+  if (nRows * nCols != data.length)
+    throw new IllegalArgumentException("data.length must equal nRows*nCols");
   
   def this(nRows : Int, nCols : Int) =
     this(nRows, nCols, new Array[Double](nRows * nCols));
