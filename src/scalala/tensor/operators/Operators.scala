@@ -221,6 +221,7 @@ trait TensorOp[I] {
   def :-  (op : TensorOp[I]) = TensorMinusTensor(this, op);
   def :*  (op : TensorOp[I]) = TensorMultTensor(this, op);
   def :/  (op : TensorOp[I]) = TensorDivTensor(this, op);
+  def :^  (op : TensorOp[I]) = TensorPowTensor(this, op);
   def :<  (op : TensorOp[I]) = TensorLTTensor(this, op);
   def :>  (op : TensorOp[I]) = TensorGTTensor(this, op);
   def :<= (op : TensorOp[I]) = TensorLTETensor(this, op);
@@ -349,7 +350,7 @@ case class ScalarDivTensor[I](scalar : Double, override val tensor : TensorOp[I]
 case class TensorPowScalar[I](override val tensor : TensorOp[I], scalar : Double) extends TensorReferenceOp(tensor) {
   override lazy val value : Value = {
     val rv = tensor.working;
-    rv ^= scalar;
+    rv :^= scalar;
     rv.asInstanceOf[Value];
   }
 }
@@ -417,7 +418,15 @@ case class TensorDivTensor[I](override val tensor : TensorOp[I], override val te
     rv.asInstanceOf[Value];
   }
 }
-  
+ 
+case class TensorPowTensor[I](override val tensor : TensorOp[I], override val tensorB : TensorOp[I]) extends TensorTensorOp(tensor,tensorB) {
+  override lazy val value : Value = {
+    val rv = tensor.working;
+    rv :^= tensorB;
+    rv.asInstanceOf[Value];
+  }
+}
+
 case class TensorLTTensor[I](t1 : TensorOp[I], t2 : TensorOp[I]) extends TensorTensorFunctionOp(t1,t2) {
   override def function(a : Double, b : Double) = if (a < b) 1.0 else 0.0;
 }
@@ -496,6 +505,7 @@ trait Tensor1Op[I] extends TensorOp[I] {
   override def :-  (op : TensorOp[I]) = Tensor1MinusTensor(this, op);
   override def :*  (op : TensorOp[I]) = Tensor1MultTensor(this, op);
   override def :/  (op : TensorOp[I]) = Tensor1DivTensor(this, op);
+  override def :^  (op : TensorOp[I]) = Tensor1PowTensor(this, op);
   override def :<  (op : TensorOp[I]) = Tensor1LTTensor(this, op);
   override def :>  (op : TensorOp[I]) = Tensor1GTTensor(this, op);
   override def :<= (op : TensorOp[I]) = Tensor1LTETensor(this, op);
@@ -605,6 +615,10 @@ case class Tensor1DivTensor[I](override val tensor : Tensor1Op[I], override val 
   override def domain = tensor.domain;
 }
 
+case class Tensor1PowTensor[I](override val tensor : Tensor1Op[I], override val tensorB : TensorOp[I]) extends TensorPowTensor(tensor, tensorB) with Tensor1Op[I] {
+  override def domain = tensor.domain;
+}
+
 case class Tensor1LTTensor[I](override val tensor : Tensor1Op[I], override val tensorB : TensorOp[I]) extends TensorLTTensor(tensor, tensorB) with Tensor1Op[I] {
   override def domain = tensor.domain;
 }
@@ -687,6 +701,7 @@ trait RowTensor1Op[I] extends TensorOp[I] {
   override def :-  (op : TensorOp[I]) = RowTensor1MinusTensor(this, op);
   override def :*  (op : TensorOp[I]) = RowTensor1MultTensor(this, op);
   override def :/  (op : TensorOp[I]) = RowTensor1DivTensor(this, op);
+  override def :^  (op : TensorOp[I]) = RowTensor1PowTensor(this, op);
   override def :<  (op : TensorOp[I]) = RowTensor1LTTensor(this, op);
   override def :>  (op : TensorOp[I]) = RowTensor1GTTensor(this, op);
   override def :<= (op : TensorOp[I]) = RowTensor1LTETensor(this, op);
@@ -791,6 +806,10 @@ case class RowTensor1DivTensor[I](override val tensor : RowTensor1Op[I], overrid
   override def domain = tensor.domain;
 }
 
+case class RowTensor1PowTensor[I](override val tensor : RowTensor1Op[I], override val tensorB : TensorOp[I]) extends TensorPowTensor(tensor, tensorB) with RowTensor1Op[I] {
+  override def domain = tensor.domain;
+}
+
 case class RowTensor1LTTensor[I](override val tensor : RowTensor1Op[I], override val tensorB : TensorOp[I]) extends TensorLTTensor(tensor, tensorB) with RowTensor1Op[I] {
   override def domain = tensor.domain;
 }
@@ -858,6 +877,7 @@ trait VectorOp extends Tensor1Op[Int] {
   override def :-  (op : TensorOp[Int]) = VectorMinusTensor(this, op);
   override def :*  (op : TensorOp[Int]) = VectorMultTensor(this, op);
   override def :/  (op : TensorOp[Int]) = VectorDivTensor(this, op);
+  override def :^  (op : TensorOp[Int]) = VectorPowTensor(this, op);
   override def :<  (op : TensorOp[Int]) = VectorLTTensor(this, op);
   override def :>  (op : TensorOp[Int]) = VectorGTTensor(this, op);
   override def :<= (op : TensorOp[Int]) = VectorLTETensor(this, op);
@@ -938,6 +958,8 @@ case class VectorMultTensor(override val tensor : VectorOp, override val tensorB
 
 case class VectorDivTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1DivTensor(tensor, tensorB) with VectorOp {}
 
+case class VectorPowTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1PowTensor(tensor, tensorB) with VectorOp {}
+
 case class VectorLTTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1LTTensor(tensor, tensorB) with VectorOp {}
 
 case class VectorGTTensor(override val tensor : VectorOp, override val tensorB : TensorOp[Int]) extends Tensor1GTTensor(tensor, tensorB) with VectorOp {}
@@ -1002,6 +1024,7 @@ trait RowVectorOp extends RowTensor1Op[Int] {
   override def :-  (op : TensorOp[Int]) = RowVectorMinusTensor(this, op);
   override def :*  (op : TensorOp[Int]) = RowVectorMultTensor(this, op);
   override def :/  (op : TensorOp[Int]) = RowVectorDivTensor(this, op);
+  override def :^  (op : TensorOp[Int]) = RowVectorPowTensor(this, op);
   override def :<  (op : TensorOp[Int]) = RowVectorLTTensor(this, op);
   override def :>  (op : TensorOp[Int]) = RowVectorGTTensor(this, op);
   override def :<= (op : TensorOp[Int]) = RowVectorLTETensor(this, op);
@@ -1074,6 +1097,8 @@ case class RowVectorMinusTensor(override val tensor : RowVectorOp, override val 
 case class RowVectorMultTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1MultTensor(tensor, tensorB) with RowVectorOp {}
 
 case class RowVectorDivTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1DivTensor(tensor, tensorB) with RowVectorOp {}
+
+case class RowVectorPowTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1PowTensor(tensor, tensorB) with RowVectorOp {}
 
 case class RowVectorLTTensor(override val tensor : RowVectorOp, override val tensorB : TensorOp[Int]) extends RowTensor1LTTensor(tensor, tensorB) with RowVectorOp {}
 
@@ -1148,6 +1173,7 @@ trait MatrixOp[I1,I2] extends TensorOp[(I1,I2)] {
   override def :-  (op : TensorOp[(I1,I2)]) = MatrixMinusTensor(this, op);
   override def :*  (op : TensorOp[(I1,I2)]) = MatrixMultTensor(this, op);
   override def :/  (op : TensorOp[(I1,I2)]) = MatrixDivTensor(this, op);
+  override def :^  (op : TensorOp[(I1,I2)]) = MatrixPowTensor(this, op);
   override def :<  (op : TensorOp[(I1,I2)]) = MatrixLTTensor(this, op);
   override def :>  (op : TensorOp[(I1,I2)]) = MatrixGTTensor(this, op);
   override def :<= (op : TensorOp[(I1,I2)]) = MatrixLTETensor(this, op);
@@ -1356,6 +1382,10 @@ case class MatrixMultTensor[I,J](override val tensor : MatrixOp[I,J], override v
 }
 
 case class MatrixDivTensor[I,J](override val tensor : MatrixOp[I,J], override val tensorB : TensorOp[(I,J)]) extends TensorDivTensor(tensor, tensorB) with MatrixOp[I,J] {
+  override def domain = tensor.domain;
+}
+
+case class MatrixPowTensor[I,J](override val tensor : MatrixOp[I,J], override val tensorB : TensorOp[(I,J)]) extends TensorPowTensor(tensor, tensorB) with MatrixOp[I,J] {
   override def domain = tensor.domain;
 }
 

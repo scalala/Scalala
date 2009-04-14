@@ -186,7 +186,7 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   }
   
   /** Raises each element to the the given power. */
-  def ^= (s : Double) = {
+  def :^= (s : Double) = {
     this.default = Math.pow(this.default, s);
     this(activeDomain) = ((x:Double) => Math.pow(x,s));
   }
@@ -366,6 +366,11 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
       }
       case op : TensorOp[_] => this :/= op.value;
     }
+  }
+
+  /** Raises each element in this map to the power (in the corresponding value) in the value returned by the given operation. */
+  def :^= (op : TensorOp[I]) : Unit = {
+    this :^= op.value;
   }
   
   /** += with a TensorOp is a fixed alias for :+= */
