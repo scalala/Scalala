@@ -33,8 +33,8 @@
     <mkdir dir="${build.dir}"/>
 
     <scalac srcdir="${src.dir}" destdir="${build.dir}"
-            classpathref="project.classpath" force="changed" 
-            addparams="-Yclosure-elim -optimise">
+            classpathref="project.classpath" force="changed">
+            <!-- addparams="-Yclosure-elim -optimise" -->
       <include name="**/*.scala"/>
     </scalac>
   </target>
