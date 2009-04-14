@@ -52,6 +52,26 @@ trait MergeableSet[I] extends Set[I] {
     IntersectionSet(this, that);
 }
 
+/** Default implementations based on wrapping scala objects. */
+object MergeableSet {
+  def apply[I](set : Set[I]) = new MergeableSet[I] {
+    override def size = set.size;
+    override def elements = set.elements;
+    override def contains(i : I) = set.contains(i);
+  }
+  
+  def apply[I](collection : Collection[I]) = new MergeableSet[I] {
+    override def size = collection.size;
+    override def elements = collection.elements;
+    override def contains(i:I) = !elements.forall(_ != i);
+  }
+  
+  def apply[I](iterable : Iterable[I]) = new MergeableSet[I] {
+    override def elements = iterable.elements;
+    override def contains(i:I) = !elements.forall(_ != i);
+  }
+}
+
 /**
  * An empty mergeable set.
  * @author dramage

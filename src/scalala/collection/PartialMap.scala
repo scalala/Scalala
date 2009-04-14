@@ -119,7 +119,17 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   def apply(keys : Iterator[A]) : Iterator[B] = keys.map(apply);
   
   /** Getter for a collection of keys. */
+  def apply(keys : Iterable[A]) : Iterable[B] = keys.map(apply);
+  
+  /** Getter for a collection of keys. */
   def apply(keys : Seq[A]) : Seq[B] = keys.map(apply);
+  
+  /** A set is both an Iterable and a (A=>Boolean), so it is special-cased. */
+  def apply(keys : scala.collection.Set[A]) : Iterable[B] = keys.map(apply);
+
+  /** Getter for all values for which the given key function returns true. */
+  def apply(f : (A => Boolean)) : Iterator[B] =
+    for ((k,v) <- elements; if f(k)) yield v;
   
   /** Returns the keys for which the value returns true. */
   def find(f : (B => Boolean)) : Iterator[A] = {
@@ -166,6 +176,29 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
  * @author dramage
  */
 object PartialMap {
+  /**
+   * Returns a default immutable PartialMap for the given domain and default
+   * value.  The actual elements of the given map are taken as the active elements.
+   */
+  def apply[K,V](inDomain : Domain[K], inDefault : V)(inMap : scala.collection.Map[K,V]) = {
+    new PartialMap[K,V] {
+      override def domain = inDomain;
+      override def default = inDefault;
+      override lazy val activeDomain = MergeableSet(inMap.keySet);
+      
+      override def activeElements = inMap.elements;
+      override def activeKeys = inMap.keys;
+      override def activeValues = inMap.values;
+      
+      override def apply(key : K) = {
+        inMap.get(key) match {
+          case Some(value) => value;
+          case None => default;
+        }
+      }
+    }
+  }
+  
   /** Projection of a map based on applying function to all values. */
   abstract class Projection[A,B,O](inner : PartialMap[A,B]) extends PartialMap[A,O] {
     def func(value : B) : O;
