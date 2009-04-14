@@ -1431,7 +1431,7 @@ package sparse {
     lazy val _value = vector.toSparseVector
     override def value : Value = _value;
     override def working : Value = vector.toSparseVector;
-    override def create[J](d : Domain[J]) = new SparseVector(0).create(d);
+    override def create[J](d : Domain[J]) = SparseVector.create(d);
     
     override def t = SparseBinaryRowVectorIdentity(vector);
   }
@@ -1442,12 +1442,37 @@ package sparse {
     lazy val _value = vector.toSparseVector;
     override def value : Value = _value;
     override def working : Value = vector.toSparseVector;
-    override def create[J](d : Domain[J]) = new SparseVector(0).create(d);
+    override def create[J](d : Domain[J]) = SparseVector.create(d);
     
     override def t = SparseBinaryVectorIdentity(vector);
     
     /** Vector-vector inner multiplication. */
-    def * (op : SparseBinaryVectorIdentity) = this.vector dot op.vector;
+    def * (op : VectorIdentity) = this.vector dot op.value;
+  }
+  
+  case class SingletonBinaryVectorIdentity(vector : SingletonBinaryVector) extends VectorOp {
+    type Value = SparseVector;
+    override def domain = vector.domain;
+    lazy val _value = vector.toSparseVector
+    override def value : Value = _value;
+    override def working : Value = vector.toSparseVector;
+    override def create[J](d : Domain[J]) = SparseVector.create(d);
+    
+    override def t = SingletonBinaryRowVectorIdentity(vector);
+  }
+  
+  case class SingletonBinaryRowVectorIdentity(vector : SingletonBinaryVector) extends RowVectorOp {
+    type Value = SparseVector;
+    override def domain = vector.domain;
+    lazy val _value = vector.toSparseVector;
+    override def value : Value = _value;
+    override def working : Value = vector.toSparseVector;
+    override def create[J](d : Domain[J]) = SparseVector.create(d);
+    
+    override def t = SingletonBinaryVectorIdentity(vector);
+    
+    /** Vector-vector inner multiplication. */
+    def * (op : VectorIdentity) = this.vector dot op.value;
   }
 }
 

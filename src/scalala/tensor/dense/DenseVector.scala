@@ -23,7 +23,7 @@ import scalala.collection.{MergeableSet, IntSpanSet};
 import scalala.collection.domain.{Domain, IntSpanDomain, DomainException};
 
 import scalala.tensor.Vector;
-import scalala.tensor.sparse.{SparseVector,SparseBinaryVector};
+import scalala.tensor.sparse.{SparseVector,SparseBinaryVector,SingletonBinaryVector};
 import scalala.tensor.operators._;
 
 import scalala.tensor.Tensor.CreateException;
@@ -48,6 +48,7 @@ class DenseVector(data : Array[Double]) extends
   override def copy = new DenseVector(data.toArray).asInstanceOf[DenseVector.this.type];
   
   override def dot(other : Tensor1[Int]) : Double = other match {
+    case singleton : SingletonBinaryVector => this.apply(singleton.singleIndex)
     case dense  : DenseVector  => dot(dense);
     case binary : SparseBinaryVector => binary.dot(this);
     case sparse : SparseVector => sparse.dot(this);

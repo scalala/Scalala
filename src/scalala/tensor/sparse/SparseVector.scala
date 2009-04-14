@@ -284,13 +284,11 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
     rv;
   }
   
-  override def create[J](domain : Domain[J]) : Tensor[J] = domain match {
-    case IntSpanDomain(0,len) => new SparseVector(size);
-    case _ => throw new CreateException("Cannot create sparse with domain "+domain);
-  }
+  override def create[J](domain : Domain[J]) : Tensor[J] = SparseVector.create(domain);
   
   /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = other match {
+    case singleton : SingletonBinaryVector => this.apply(singleton.singleIndex);
     case sparse : SparseVector => dot(sparse);
     case binary : SparseBinaryVector => binary.dot(this);
     case dense  : DenseVector => dot(dense);
@@ -492,5 +490,13 @@ trait SparseVectorTest {
     
     y += 1;
     checks();
+  }
+}
+
+object SparseVector {
+  /** Creates a general sparse tensor for the requested domain. */
+  def create[J](domain : Domain[J]) : Tensor[J] = domain match {
+    case IntSpanDomain(0,len) => new SparseVector(len);
+    case _ => throw new CreateException("Cannot create sparse with domain "+domain);
   }
 }
