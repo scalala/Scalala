@@ -58,8 +58,20 @@ trait OperatorImplicits {
   implicit def iMatrixOp(t : Matrix) : MatrixOp[Int,Int] =
     MatrixIdentity(t);
   
-  /** Implicitly promotes a TensorOp to its Tensor value. */
+  /** Implicitly converts a TensorOp to its Tensor value. */
   implicit def iTensor[I](op : TensorOp[I]) : Tensor[I] = op.value;
+  
+  /** Implicitly converts a Tensor1Op to its Tensor1 value. */
+  implicit def iTensor1[I](op : Tensor1Op[I]) : Tensor1[I] = op.value;
+  
+  /** Implicitly converts a RowTensor1Op to its Tensor1 value. */
+  implicit def iTensor1[I](op : RowTensor1Op[I]) : Tensor1[I] = op.value;
+  
+  /** Implicitly converts a VectorOp to its Vector value. */
+  implicit def iVector[I](op : VectorOp) : Vector = op.value;
+  
+  /** Implicitly converts a RowVectorOp to its Vector value. */
+  implicit def iVector[I](op : RowVectorOp) : Vector = op.value;
 }
 
 object OperatorImplicits extends OperatorImplicits { }
