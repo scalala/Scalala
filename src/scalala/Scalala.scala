@@ -73,6 +73,7 @@ object ScalalaTestSuite extends Scalala
   with scalala.tensor.sparse.SparseBinaryVectorTest
   with scalala.tensor.sparse.SingletonBinaryVectorTest
   with scalala.tensor.dense.DenseMatrixSolveTest
+  with VectorsTest
   with StatisticsTest
   with ScalalaTest.TestConsoleMain
 {

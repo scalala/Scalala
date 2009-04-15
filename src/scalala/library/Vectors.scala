@@ -124,7 +124,7 @@ trait Vectors extends Library with Operators {
     v.reduceLeft((tupA,tupB) => if (tupA._2 >= tupB._2) tupA else tupB)._1;
   def argmax[I](v : Iterator[Double]) : Int =
     argmax(v.zipWithIndex.map(tup => (tup._2,tup._1)));
-  def argmax[I](v : Collection[Double]) : Int =
+  def argmax[I](v : Seq[Double]) : Int =
     argmax(v.elements);
   def argmax[I](op : TensorOp[I]) : I =
     argmax(op.value);
@@ -157,7 +157,7 @@ trait Vectors extends Library with Operators {
     v.reduceLeft((tupA,tupB) => if (tupA._2 <= tupB._2) tupA else tupB)._1;
   def argmin[I](v : Iterator[Double]) : Int =
     argmin(v.zipWithIndex.map(tup => (tup._2,tup._1)));
-  def argmin[I](v : Collection[Double]) : Int =
+  def argmin[I](v : Seq[Double]) : Int =
     argmin(v.elements);
   def argmin[I](op : TensorOp[I]) : I =
     argmin(op.value);
@@ -247,5 +247,21 @@ trait VectorsTest extends Library with Vectors {
     assertEquals(norm(v,5), 1.7146, 1e-4);
     assertEquals(norm(v,6), 1.6940, 1e-4);
     assertEquals(norm(v,Double.PositiveInfinity), 1.6656, 1e-4);
+  }
+  
+  def _minmax_test() {
+    val v = SparseVector(10);
+    v(3) = 1;
+    assertEquals(1, max(v));
+    assertEquals(3, argmax(v));
+    assertEquals(0, min(v));
+    assertEquals(0, argmin(v));
+    
+    v += 2;
+    v(3) = 1;
+    assertEquals(2, max(v));
+    assertEquals(0, argmax(v));
+    assertEquals(1, min(v));
+    assertEquals(3, argmin(v));
   }
 }

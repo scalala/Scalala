@@ -43,7 +43,7 @@ abstract case class MergeableSet[I]() extends Set[I] {
    * By default, checks if .elements is non-empty (to avoid
    * the potentially expensive .size operation.
    */
-  override def isEmpty = elements.hasNext;
+  override def isEmpty = !elements.hasNext;
   
   /** Returns the Union of this set with another. */
   def ++(that : MergeableSet[I]) : MergeableSet[I] = {
