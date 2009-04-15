@@ -20,8 +20,7 @@
 package scalala.tensor.sparse
 
 import scalala.tensor.Vector;
-import scalala.collection.MergeableSet;
-import scalala.collection.domain.{Domain, IntSpanDomain, DomainException};
+import scalala.collection.{MergeableSet,IntSpanSet,DomainException};
 
 import scalala.tensor.Tensor.CreateException;
 import scalala.tensor.dense.DenseVector;
@@ -284,7 +283,7 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
     rv;
   }
   
-  override def create[J](domain : Domain[J]) : Tensor[J] = SparseVector.create(domain);
+  override def create[J](domain : MergeableSet[J]) : Tensor[J] = SparseVector.create(domain);
   
   /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = other match {
@@ -495,8 +494,8 @@ trait SparseVectorTest {
 
 object SparseVector {
   /** Creates a general sparse tensor for the requested domain. */
-  def create[J](domain : Domain[J]) : Tensor[J] = domain match {
-    case IntSpanDomain(0,len) => new SparseVector(len);
+  def create[J](domain : MergeableSet[J]) : Tensor[J] = domain match {
+    case IntSpanSet(0,len) => new SparseVector(len);
     case _ => throw new CreateException("Cannot create sparse with domain "+domain);
   }
 }

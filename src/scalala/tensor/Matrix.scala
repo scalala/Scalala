@@ -19,7 +19,7 @@
  */
 package scalala.tensor;
 
-import scalala.collection.domain.{Domain, Domain2, IntSpanDomain};
+import scalala.collection.{MergeableSet, IntSpanSet, ProductSet};
 
 /**
  * A standard numerical Tensor2 defined over (0,0) inclusive to 
@@ -44,7 +44,7 @@ trait Matrix extends Tensor2[Int,Int] {
   /** Returns (rows,cols). */
   @inline final def size = (rows, cols);
   
-  private val _domain = Domain2(IntSpanDomain(0, rows), IntSpanDomain(0, cols));
+  private val _domain = ProductSet(IntSpanSet(0, rows), IntSpanSet(0, cols));
   final override def domain = _domain;
   
   override def getRow(row : Int) = new Vector {
@@ -52,7 +52,7 @@ trait Matrix extends Tensor2[Int,Int] {
     override def apply(i : Int) = Matrix.this.apply(row,i);
     override def update(i : Int, value : Double) = Matrix.this.update(row,i,value);
     override def activeDomain = Matrix.this.activeDomainInRow(row);
-    override def create[J](domain : Domain[J]) = Matrix.this.create(domain);
+    override def create[J](domain : MergeableSet[J]) = Matrix.this.create(domain);
   }
   
   override def getCol(col : Int) = new Vector {
@@ -60,7 +60,7 @@ trait Matrix extends Tensor2[Int,Int] {
     override def apply(i : Int) = Matrix.this.apply(i,col);
     override def update(i : Int, value : Double) = Matrix.this.update(i,col,value);
     override def activeDomain = Matrix.this.activeDomainInCol(col);
-    override def create[J](domain : Domain[J]) = Matrix.this.create(domain);
+    override def create[J](domain : MergeableSet[J]) = Matrix.this.create(domain);
   }
   
   override def copy : Matrix = super.copy.asInstanceOf[Matrix];

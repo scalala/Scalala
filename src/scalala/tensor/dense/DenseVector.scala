@@ -19,8 +19,7 @@
  */
 package scalala.tensor.dense;
 
-import scalala.collection.{MergeableSet, IntSpanSet};
-import scalala.collection.domain.{Domain, IntSpanDomain, DomainException};
+import scalala.collection.{MergeableSet, IntSpanSet, DomainException};
 
 import scalala.tensor.Vector;
 import scalala.tensor.sparse.{SparseVector,SparseBinaryVector,SingletonBinaryVector};
@@ -42,8 +41,6 @@ class DenseVector(data : Array[Double]) extends
   
   override def apply(i : Int) = data(i);
   override def update(i : Int, value : Double) = data(i) = value;
-  
-  override def activeDomain : MergeableSet[Int] = IntSpanSet(0, size);
   
   override def copy = new DenseVector(data.toArray).asInstanceOf[DenseVector.this.type];
   

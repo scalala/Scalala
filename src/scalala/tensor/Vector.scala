@@ -19,8 +19,7 @@
  */
 package scalala.tensor;
 
-import scalala.collection.PartialMap;
-import scalala.collection.domain.{Domain, Domain1, IntSpanDomain};
+import scalala.collection.{IntSpanSet};
 
 import scalala.tensor.operators._;
 
@@ -33,8 +32,8 @@ import scalala.tensor.operators._;
 trait Vector extends Tensor1[Int] {
   def size : Int;
   
-  private val _domain = IntSpanDomain(0, size);
-  final override def domain : Domain1[Int] = _domain;
+  private val _domain = IntSpanSet(0, size);
+  final override def domain : IntSpanSet = _domain;
   
   /** Returns an array copy of this tensor. */
   def toArray = Array.fromFunction(i => this(i))(size);

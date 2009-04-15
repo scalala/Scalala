@@ -20,7 +20,6 @@
 package scalala.tensor
 
 import scalala.collection.MergeableSet;
-import scalala.collection.domain.Domain;
 
 /**
  * A view of the given vector as a matrix with diagonal entries
@@ -47,5 +46,5 @@ case class DiagonalMatrix(diagonal : Vector) extends Matrix {
     override def elements = diagonal.activeDomain.elements.map(i => (i,i));
   }
   override def copy = DiagonalMatrix(diagonal.copy.asInstanceOf[Vector]);
-  override def create[J](d : Domain[J]) = diagonal.create(d);
+  override def create[J](d : MergeableSet[J]) = diagonal.create(d);
 }

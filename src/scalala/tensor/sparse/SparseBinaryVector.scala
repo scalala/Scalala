@@ -20,8 +20,7 @@
 package scalala.tensor.sparse
 
 import scalala.tensor.Vector;
-import scalala.collection.MergeableSet;
-import scalala.collection.domain.{Domain, IntSpanDomain, DomainException};
+import scalala.collection.{MergeableSet,IntSpanSet,DomainException};
 
 import scalala.tensor.Tensor.CreateException;
 import scalala.tensor.dense.DenseVector;
@@ -262,7 +261,7 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   }
   
   /** Returns general sparse data structures with unconstrained update semantics. */
-  override def create[J](domain : Domain[J]) : Tensor[J] =
+  override def create[J](domain : MergeableSet[J]) : Tensor[J] =
     SparseVector.create(domain);
   
   /** Uses optimized implementations. */

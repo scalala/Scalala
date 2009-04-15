@@ -19,8 +19,6 @@
  */
 package scalala.collection;
 
-import scalala.collection.domain.Domain;
-
 /**
  * A PartialMap is an immutable map-like object (keys of type A,
  * values of type B) that decouples the domain of possible keys
@@ -31,10 +29,11 @@ import scalala.collection.domain.Domain;
  */
 trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   /**
-   * Returns the complete domain of the function.  This set may be open,
-   * so explicit iteration is not recommended.  Instead, see activeDomain.
+   * Returns the complete domain of the function.  For some types of
+   * maps (e.g. those converted from scala.collection.Map), domain may
+   * equal activeDomain.
    */
-  def domain : Domain[A];
+  def domain : MergeableSet[A];
   
   /**
    * Returns the default value for elements in the domain.  Undefined
@@ -180,7 +179,7 @@ object PartialMap {
    * Returns a default immutable PartialMap for the given domain and default
    * value.  The actual elements of the given map are taken as the active elements.
    */
-  def apply[K,V](inDomain : Domain[K], inDefault : V)(inMap : scala.collection.Map[K,V]) = {
+  def apply[K,V](inDomain : MergeableSet[K], inDefault : V)(inMap : scala.collection.Map[K,V]) = {
     new PartialMap[K,V] {
       override def domain = inDomain;
       override def default = inDefault;
@@ -222,4 +221,12 @@ object PartialMap {
   }
   
   class JoinException(msg : String) extends RuntimeException(msg);
+}
+
+/**
+ * An exception thrown when encountering an invalid domain.
+ * @author dramage
+ */
+class DomainException(msg : String) extends RuntimeException(msg) {
+  def this() = this("");
 }

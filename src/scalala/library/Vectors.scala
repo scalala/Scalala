@@ -65,20 +65,12 @@ trait Vectors extends Library with Operators {
    * map has an infinite domain, return -1 as count.
    */
   private def sumcount[I](v : PartialMap[I,Double]) : (Double,Int) = {
-    val domainsize =
-      if (v.domain.isFinite)
-        v.domain.asInstanceOf[scalala.collection.domain.FiniteDomain[_]].size
-      else -1;
-      
     if (v.default == 0.0) {
-      return (sum(v.activeValues),domainsize);
-    } else if (v.domain.isFinite) {
+      return (sum(v.activeValues), v.domain.size);
+    } else {
       // non-zero default but finite domain
       val (sum,count) = sumcount(v.activeValues);
-      return (sum + ((domainsize - count) * v.default), domainsize);
-    } else {
-      // infinite domain with non-zero default
-      return (Math.signum(v.default) * Double.PositiveInfinity, domainsize);
+      return (sum + ((v.domain.size - count) * v.default), v.domain.size);
     }
   }
   
@@ -102,23 +94,73 @@ trait Vectors extends Library with Operators {
   def log[I](v : PartialMap[I,Double]) = v.map(Math.log _);
   def log(v : Iterator[Double]) = v.map(Math.log);
   def log[S<:Collection[Double]](v : S) = v.map(Math.log);
-  def log[I](op : TensorOp[I]) : Double =
-    log(op.value);
+  def log[I](op : TensorOp[I]) : Double = log(op.value);
   
-  /** The maximum active value of the map (does not consider default). */
-  def max[I](v : PartialMap[I,Double]) : Double =
-    v.activeValues.reduceLeft(Math.max);
+  /** The maximum value of the map. */
+  def max[I](v : PartialMap[I,Double]) : Double = {
+    val maxActive = max(v.activeValues);
+    if (!(v.domain -- v.activeDomain).isEmpty) {
+      Math.max(v.default, maxActive)
+    } else {
+      maxActive;
+    }
+  }
+  
   def max(v : Iterator[Double]) : Double = v.reduceLeft(Math.max);
   def max(v : Collection[Double]) : Double = max(v.elements);
   def max[I](op : TensorOp[I]) : Double = max(op.value);
+
+  /** Returns a key i of the map such that v(i)=max(v). */
+  def argmax[I](v : PartialMap[I,Double]) : I = {
+    val nonActive = v.domain -- v.activeDomain;
+    if (nonActive.isEmpty) {
+      argmax(v.activeElements);
+    } else {
+      argmax(v.activeElements ++ Iterator.single((nonActive.elements.next, v.default)));
+    }
+  }
   
-  /** The minimum active value of the map (does not consider default). */
-  def min[I](v : PartialMap[I,Double]) : Double =
-    v.activeValues.reduceLeft(Math.min);
+  def argmax[I](v : Iterator[(I,Double)]) : I =
+    v.reduceLeft((tupA,tupB) => if (tupA._2 >= tupB._2) tupA else tupB)._1;
+  def argmax[I](v : Iterator[Double]) : Int =
+    argmax(v.zipWithIndex.map(tup => (tup._2,tup._1)));
+  def argmax[I](v : Collection[Double]) : Int =
+    argmax(v.elements);
+  def argmax[I](op : TensorOp[I]) : I =
+    argmax(op.value);
+  
+  /** The minimum value of the map. */
+  def min[I](v : PartialMap[I,Double]) : Double = {
+    val minActive = min(v.activeValues);
+    if (!(v.domain -- v.activeDomain).isEmpty) {
+      Math.min(v.default, minActive)
+    } else {
+      minActive;
+    }
+  }
 
   def min(v : Iterator[Double]) : Double = v.reduceLeft(Math.min);
   def min(v : Collection[Double]) : Double = min(v.elements);
   def min[I](op : TensorOp[I]) : Double = min(op.value);
+  
+  /** Returns a key i of the map such that v(i)=min(v). */
+  def argmin[I](v : PartialMap[I,Double]) : I = {
+    val nonActive = v.domain -- v.activeDomain;
+    if (nonActive.isEmpty) {
+      argmin(v.activeElements);
+    } else {
+      argmin(v.activeElements ++ Iterator.single((nonActive.elements.next, v.default)));
+    }
+  }
+  
+  def argmin[I](v : Iterator[(I,Double)]) : I =
+    v.reduceLeft((tupA,tupB) => if (tupA._2 <= tupB._2) tupA else tupB)._1;
+  def argmin[I](v : Iterator[Double]) : Int =
+    argmin(v.zipWithIndex.map(tup => (tup._2,tup._1)));
+  def argmin[I](v : Collection[Double]) : Int =
+    argmin(v.elements);
+  def argmin[I](op : TensorOp[I]) : I =
+    argmin(op.value);
   
   /**
    * Returns the sum of the squares of the elements of the vector.

@@ -26,7 +26,7 @@ import scala.collection.Set;
  * 
  * @author dramage
  */
-trait MergeableSet[I] extends Set[I] {
+abstract case class MergeableSet[I]() extends Set[I] {
   private lazy val _size = {
     var s = 0;
     for (e <- elements) { s += 1; }
@@ -39,17 +39,37 @@ trait MergeableSet[I] extends Set[I] {
    */
   override def size = _size;
   
+  /**
+   * By default, checks if .elements is non-empty (to avoid
+   * the potentially expensive .size operation.
+   */
+  override def isEmpty = elements.hasNext;
+  
   /** Returns the Union of this set with another. */
-  def ++(that : Set[I]) : MergeableSet[I] =
-    UnionSet(this, that);
+  def ++(that : MergeableSet[I]) : MergeableSet[I] = {
+    if (this.isEmpty) that
+    else if (that.isEmpty) this
+    else UnionSet(this, that);
+  }
   
   /** Returns this set except those elements in the other set. */
-  def --(that : Set[I]) : MergeableSet[I] =
-    SubtractionSet(this, that);
+  def --(that : MergeableSet[I]) : MergeableSet[I] = {
+    if (that.isEmpty) this
+    else if (this eq that) EmptySet[I]() 
+    else SubtractionSet(this, that);
+  }
   
   /** Returns the intersection of this set with that one. */
-  override def **(that : Set[I]) : MergeableSet[I] =
-    IntersectionSet(this, that);
+  def **(that : MergeableSet[I]) : MergeableSet[I] =
+    if (that.isEmpty || this.isEmpty) EmptySet[I]();
+    else if (this eq that) EmptySet[I]() 
+    else IntersectionSet(this, that);
+    
+  final override def **(that : Set[I]) : MergeableSet[I] = that match {
+    case mergeable : MergeableSet[_] => this.**(mergeable);
+    case _ => this.**(MergeableSet(that));
+  }
+    
 }
 
 /** Default implementations based on wrapping scala objects. */
@@ -74,6 +94,7 @@ object MergeableSet {
 
 /**
  * An empty mergeable set.
+ * 
  * @author dramage
  */
 case class EmptySet[I]() extends MergeableSet[I] {
@@ -84,13 +105,15 @@ case class EmptySet[I]() extends MergeableSet[I] {
     override def next = throw new IllegalAccessException;
   }
   
-  override def **(that : Set[I]) = this;
+  override def **(that : MergeableSet[I]) = this;
   
-  override def --(that : Set[I]) = this;
+  override def --(that : MergeableSet[I]) = this;
   
-  override def ++(that : Set[I]) = that match {
-    case other : MergeableSet[_] => other;
-    case _ => super.++(that);
+  override def ++(that : MergeableSet[I]) = that;
+  
+  override def equals(other : Any) = other match {
+    case set : Set[_] => set.isEmpty;
+    case _ => false;
   }
 }
 
@@ -111,9 +134,14 @@ case class UnionSet[I](sets : Set[I]*) extends MergeableSet[I] {
          if (sets.take(i).forall(!_.contains(e))))
       yield e;
     
-  override def ++(that : Set[I]) = that match {
+  override def ++(that : MergeableSet[I]) = that match {
     case UnionSet(those) => UnionSet((sets ++ those.asInstanceOf[Seq[Set[I]]]) : _*);
     case _ => UnionSet((sets ++ List(that)) :_*);
+  }
+  
+  override def equals(other : Any) = other match {
+    case UnionSet(otherSets) => (sets == otherSets) || super.equals(other);
+    case _ => super.equals(other);
   }
 }
 
@@ -136,9 +164,14 @@ case class IntersectionSet[I](sets : Set[I]*) extends MergeableSet[I] {
   override def elements =
     for (e <- smallest.elements; if contains(e)) yield e;
   
-  override def **(that : Set[I]) = that match {
+  override def **(that : MergeableSet[I]) = that match {
     case IntersectionSet(those) => IntersectionSet((sets ++ those.asInstanceOf[Seq[Set[I]]]) : _*);
     case _ => IntersectionSet((sets ++ List(that)) :_*);
+  }
+  
+  override def equals(other : Any) = other match {
+    case IntersectionSet(otherSets) => (sets == otherSets) || super.equals(other);
+    case _ => super.equals(other);
   }
 }
 
@@ -154,8 +187,13 @@ case class SubtractionSet[I](included : Set[I], excluded : Set[I]) extends Merge
   override def elements =
     for (e <- included.elements; if !excluded.contains(e)) yield e;
   
-  override def --(that : Set[I]) =
+  override def --(that : MergeableSet[I]) =
     SubtractionSet(included, UnionSet(excluded, that));
+  
+  override def equals(other : Any) = other match {
+    case SubtractionSet(i2, e2) => (included == i2 && excluded == e2) || super.equals(other);
+    case _ => super.equals(other);
+  }
 }
 
 /**
@@ -163,14 +201,28 @@ case class SubtractionSet[I](included : Set[I], excluded : Set[I]) extends Merge
  * 
  * @author dramage
  */
-case class ProductSet[I,J](_1 : Set[I], _2 : Set[J]) extends MergeableSet[(I,J)] {
-  override def size = _1.size * _2.size;
-  override def contains(e : (I,J)) = _1.contains(e._1) && _2.contains(e._2);
-  override def elements = for (e1 <- _1.elements; e2 <- _2.elements) yield (e1,e2);
+case class ProductSet[I,J](_1 : MergeableSet[I], _2 : MergeableSet[J]) extends MergeableSet[(I,J)] {
+  override def size =
+    _1.size * _2.size;
+  
+  override def contains(e : (I,J)) =
+    _1.contains(e._1) && _2.contains(e._2);
+  
+  override def elements =
+    for (e1 <- _1.elements; e2 <- _2.elements) yield (e1,e2);
+  
+  def transpose : ProductSet[J,I] =
+    ProductSet(_2, _1);
+  
+  override def equals(other : Any) = other match {
+    case ProductSet(o1, o2) => (_1 == o1 && _2 == o2) || super.equals(other);
+    case _ => super.equals(other);
+  }
 }
 
 /**
- * The set of made up of continuous integers within a span.
+ * The set of made up of continuous integers within a span from start
+ * (inclusive) to end (exclusive).
  * 
  * @author dramage
  */
@@ -179,18 +231,23 @@ case class IntSpanSet(start : Int, end : Int) extends MergeableSet[Int] {
   override def contains(i : Int) = i >= start && i < end;
   override def elements = (start until end).elements;
   
-  override def ++(other : Set[Int]) = other match {
+  override def ++(other : MergeableSet[Int]) = other match {
     case that : IntSpanSet if (that.start <= this.end || this.start <= that.end) =>
       IntSpanSet(Math.min(this.start, that.start), Math.max(this.end, that.end));
     case _ => super.++(other);
   }
   
-  override def **(other : Set[Int]) = other match {
+  override def **(other : MergeableSet[Int]) = other match {
     case that : IntSpanSet if (that.start <= this.end || this.start <= that.end) =>
       val newStart = Math.max(this.start, that.start);
       val newEnd = Math.min(this.end, that.end);
       if (newStart >= newEnd) EmptySet[Int]() else IntSpanSet(newStart, newEnd);
     case _ => super.**(other);
+  }
+  
+  override def equals(other : Any) = other match {
+    case IntSpanSet(s2,e2) => (start == s2 && end == e2) || super.equals(other);
+    case _ => super.equals(other);
   }
 }
 

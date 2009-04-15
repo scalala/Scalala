@@ -19,8 +19,8 @@
  */
 package scalala.tensor.dense
 
+import scalala.collection.{MergeableSet,IntSpanSet,ProductSet}
 import scalala.tensor.{Tensor,Matrix};
-import scalala.collection.domain.{Domain, Domain2, IntSpanDomain};
 
 import scalala.tensor.Tensor.CreateException;
 
@@ -35,10 +35,10 @@ trait DenseTensor[I] extends Tensor[I] {
   def data : Array[Double];
   
   /** Creates a new dense tensor. */
-  override def create[J](d : Domain[J]) : Tensor[J] = d match {
-    case Domain2(IntSpanDomain(0,rows),IntSpanDomain(0,cols)) =>
+  override def create[J](d : MergeableSet[J]) : Tensor[J] = d match {
+    case ProductSet(IntSpanSet(0,rows),IntSpanSet(0,cols)) =>
       new DenseMatrix(rows, cols);
-    case IntSpanDomain(0,len) =>
+    case IntSpanSet(0,len) =>
       new DenseVector(len).asInstanceOf[Tensor[J]];
     case _ =>
       throw new CreateException("Invalid domain for DenseMatrix construction: "+d);
@@ -53,4 +53,7 @@ trait DenseTensor[I] extends Tensor[I] {
   override def default_=(update : Double) = {};
   
   override def default = 0.0;
+  
+  /** The full domain is active for dense tensors. */
+  override final def activeDomain = domain;
 }

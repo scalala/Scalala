@@ -21,7 +21,6 @@ package scalala.tensor.dense;
 
 import scalala.tensor.{Tensor,Matrix};
 import scalala.collection.{MergeableSet, ProductSet, IntSpanSet};
-import scalala.collection.domain.{Domain, Domain2, IntSpanDomain};
 
 import scalala.tensor.Tensor.CreateException;
 
@@ -56,9 +55,6 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
   override def update(row : Int, col : Int, value : Double) =
     data(index(row,col)) = value;
 
-  private val _domain = ProductSet(IntSpanSet(0, rows), IntSpanSet(0, cols));
-  override final def activeDomain = _domain;
-  
   private val _rowDomain = IntSpanSet(0, cols);
   override final def activeDomainInRow(row : Int) = _rowDomain;
   

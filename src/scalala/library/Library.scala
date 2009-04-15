@@ -19,7 +19,6 @@
  */
 package scalala.library;
 
-import scalala.collection.domain.{Domain,Domain2};
 import scalala.tensor.{Tensor,Vector,Matrix,DiagonalMatrix};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
 import scalala.tensor.sparse.{SparseVector};
