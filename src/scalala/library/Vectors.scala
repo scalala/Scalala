@@ -79,7 +79,7 @@ trait Vectors extends Library with Operators {
     sumcount(v)._1;
   
   /** Returns the sum of the elements of collection. */
-  def sum(v : Collection[Double]) : Double =
+  def sum(v : Iterable[Double]) : Double =
     sum(v.elements);
   
   /** Returns the sum of the values of the map. */
@@ -107,7 +107,7 @@ trait Vectors extends Library with Operators {
   }
   
   def max(v : Iterator[Double]) : Double = v.reduceLeft(Math.max);
-  def max(v : Collection[Double]) : Double = max(v.elements);
+  def max(v : Iterable[Double]) : Double = max(v.elements);
   def max[I](op : TensorOp[I]) : Double = max(op.value);
 
   /** Returns a key i of the map such that v(i)=max(v). */
@@ -124,8 +124,14 @@ trait Vectors extends Library with Operators {
     v.reduceLeft((tupA,tupB) => if (tupA._2 >= tupB._2) tupA else tupB)._1;
   def argmax[I](v : Iterator[Double]) : Int =
     argmax(v.zipWithIndex.map(tup => (tup._2,tup._1)));
+  
+  /**
+   * Due to iteration ordering requirements, argmax is ill-defined on general Iterables,
+   * but perfectly valid on sequences.
+   */
   def argmax[I](v : Seq[Double]) : Int =
     argmax(v.elements);
+  
   def argmax[I](op : TensorOp[I]) : I =
     argmax(op.value);
   
@@ -140,7 +146,7 @@ trait Vectors extends Library with Operators {
   }
 
   def min(v : Iterator[Double]) : Double = v.reduceLeft(Math.min);
-  def min(v : Collection[Double]) : Double = min(v.elements);
+  def min(v : Iterable[Double]) : Double = min(v.elements);
   def min[I](op : TensorOp[I]) : Double = min(op.value);
   
   /** Returns a key i of the map such that v(i)=min(v). */
@@ -157,6 +163,11 @@ trait Vectors extends Library with Operators {
     v.reduceLeft((tupA,tupB) => if (tupA._2 <= tupB._2) tupA else tupB)._1;
   def argmin[I](v : Iterator[Double]) : Int =
     argmin(v.zipWithIndex.map(tup => (tup._2,tup._1)));
+  
+  /**
+   * Due to iteration ordering requirements, argmax is ill-defined on general Iterables,
+   * but perfectly valid on sequences.
+   */
   def argmin[I](v : Seq[Double]) : Int =
     argmin(v.elements);
   def argmin[I](op : TensorOp[I]) : I =
@@ -167,7 +178,7 @@ trait Vectors extends Library with Operators {
    */
   def sumsq[I](v : PartialMap[I,Double]) : Double = sum(v.map((x:Double) => x*x));
   def sumsq(v : Iterator[Double]) = sum(v.map(x => x*x));
-  def sumsq(v : Seq[Double]) = sum(v.map(x => x*x));
+  def sumsq(v : Iterable[Double]) = sum(v.map(x => x*x));
   def sumsq[I](op : TensorOp[I]) : Double = sumsq(op.value);
   
   /** Returns the mean of the vector: sum(v) / v.size. */
@@ -185,7 +196,7 @@ trait Vectors extends Library with Operators {
   }
   
   /** Returns the mean of the given elements. */
-  def mean(v : Seq[Double]) : Double = mean(v.elements);
+  def mean(v : Iterable[Double]) : Double = mean(v.elements);
   
   def mean[I](op : TensorOp[I]) : Double = mean(op.value);
   
