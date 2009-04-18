@@ -69,8 +69,11 @@ trait Vectors extends Library with Operators {
       return (sum(v.activeValues), v.domain.size);
     } else {
       // non-zero default but finite domain
-      val (sum,count) = sumcount(v.activeValues);
-      return (sum + ((v.domain.size - count) * v.default), v.domain.size);
+      var (sum,count) = sumcount(v.activeValues);
+      if (v.domain.size > count) {
+        sum += ((v.domain.size - count) * v.default);
+      }
+      return (sum, v.domain.size);
     }
   }
   
@@ -93,7 +96,8 @@ trait Vectors extends Library with Operators {
   /** Log each element of a vector or matrix */
   def log[I](v : PartialMap[I,Double]) = v.map(Math.log _);
   def log(v : Iterator[Double]) = v.map(Math.log);
-  def log[S<:Collection[Double]](v : S) = v.map(Math.log);
+  def log(v : Iterable[Double]) = v.map(Math.log);
+  def log(v : Seq[Double]) = v.map(Math.log);
   def log[I](op : TensorOp[I]) : Double = log(op.value);
   
   /** The maximum value of the map. */
@@ -180,19 +184,30 @@ trait Vectors extends Library with Operators {
   def sumsq(v : Iterator[Double]) = sum(v.map(x => x*x));
   def sumsq(v : Iterable[Double]) = sum(v.map(x => x*x));
   def sumsq[I](op : TensorOp[I]) : Double = sumsq(op.value);
-  
-  /** Returns the mean of the vector: sum(v) / v.size. */
-  def mean[I](v : PartialMap[I,Double]) : Double = {
-    val (sum,count) = sumcount(v);
-    if (count < 0)
-      throw new IllegalArgumentException("Cannot take mean of infinite domain");
-    sum / count;
+
+  /** Returns the mean of the given elements.  Based on a Knuth online algorithm. */
+  def mean(v : Iterator[Double]) : Double = {
+    var n = 0;
+    var mean = 0.0;
+    
+    for (x <- v) {
+      n += 1;
+      val delta = x - mean;
+      mean += delta / n;
+    }
+    
+    return mean;
   }
   
-  /** Returns the mean of the given elements. */
-  def mean(v : Iterator[Double]) : Double = {
-    val (sum,count) = sumcount(v);
-    sum / count;
+  /** Returns the mean value of the partial map. */
+  def mean[I](v : PartialMap[I,Double]) : Double = {
+    val activeMean = mean(v.activeValues);
+    val remaining = v.domain.size - v.activeDomain.size;
+    if (remaining > 0) {
+      (activeMean * v.activeDomain.size + v.default * remaining) / v.domain.size;
+    } else {
+      activeMean;
+    }
   }
   
   /** Returns the mean of the given elements. */
@@ -200,28 +215,57 @@ trait Vectors extends Library with Operators {
   
   def mean[I](op : TensorOp[I]) : Double = mean(op.value);
   
-  /** Returns the sum vector of a bunch of vectors. */
-  def sum(vectors : Seq[Vector]) : Vector = {
-    val sum = vectors(0).copy.asInstanceOf[Vector];
-    for (vector <- vectors.elements.drop(1)) {
-      sum += vector;
+  /**
+   * Online algorithm for variance computation from Knuth vol 2.
+   * See also http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance.
+   */
+  def variance(v : Iterator[Double]) : Double = {
+    var n = 0;
+    var mean = 0.0;
+    var m2 = 0.0;
+    
+    for (x <- v) {
+      n += 1;
+      val delta = x - mean;
+      mean += delta / n;
+      m2 += delta * (x - mean);
     }
-    sum;
+    
+    return m2 / (n - 1);
   }
   
-  /** Returns the mean vector of a bunch of vectors. */
-  def mean(vectors : Seq[Vector]) : Vector = {
-    val rv = sum(vectors);
-    rv /= vectors.size;
-    rv;
+  def variance(v : Iterable[Double]) : Double =
+    variance(v.elements);
+  
+  /**
+   * The variance of the values in the given map accounting for default values.
+   */
+  def variance[I](v : PartialMap[I,Double]) : Double = {
+    if (v.activeDomain.size == v.domain.size) {
+      variance(v.values);
+    } else {
+      val m = mean(v);
+      sumsq(v.map((x:Double) => x - m)) / (v.domain.size - 1);
+    }
   }
   
   /**
-   * Returns the standard deviation of the values in the vector:
-   * sqrt(sumsq (v - mean(v)) / (v.size - 1)).
+   * Returns the square root of the variance of the values.
    */
-  def std(v : Vector) : Double =
-    sqrt(sumsq(v - mean(v) value) / (v.size - 1));
+  def std(v : Iterator[Double]) : Double =
+    sqrt(variance(v));
+  
+  /**
+   * Returns the square root of the variance of the values.
+   */
+  def std(v : Iterable[Double]) : Double =
+    sqrt(variance(v));
+  
+  /**
+   * Returns the square root of the variance of the values.
+   */
+  def std[I](v : PartialMap[I,Double]) : Double =
+    sqrt(variance(v));
   
   /** Returns the n'th euclidean norm of the given vector. */
   def norm[I](v : PartialMap[I,Double], n : Double) : Double = {
@@ -239,6 +283,23 @@ trait Vectors extends Library with Operators {
       throw new UnsupportedOperationException();
     }
   }
+  
+  /** Returns the sum vector of a bunch of vectors. */
+  def sum(vectors : Seq[Vector]) : Vector = {
+    val sum = vectors(0).copy.asInstanceOf[Vector];
+    for (vector <- vectors.elements.drop(1)) {
+      sum += vector;
+    }
+    sum;
+  }
+  
+  /** Returns the mean vector of a bunch of vectors. */
+  def mean(vectors : Seq[Vector]) : Vector = {
+    val rv = sum(vectors);
+    rv /= vectors.size;
+    rv;
+  }
+  
 }
 
 /**
@@ -247,7 +308,26 @@ trait Vectors extends Library with Operators {
  * @author dramage
  */
 trait VectorsTest extends Library with Vectors {  
+  import scalala.Scalala._;
   import scalala.ScalalaTest._;
+  
+  def _moments_test() {
+    val v = SparseVector(1000);
+    v += 1;
+    v(0 until 100) = rand(100).values.collect;
+    assertEquals(mean(v.toArray), mean(v), 1e-10);
+    assertEquals(variance(v.toArray), variance(v), 1e-10);
+    assertEquals(std(v.toArray), std(v), 1e-10);
+    
+    assertEquals((1 + 3 + 22 + 17) / 4.0, mean(Vector(1,3,22,17)), 1e-10);
+    
+    assertEquals(0.08749136216928063,
+                 variance(Vector(0.29854716128994807,0.9984567314422015,0.3056949899038196,
+                                 0.8748240977963917,0.6866542395503176,0.48871321020847913,
+                                 0.23221169231853678,0.992966911646403,0.8839015907147733,
+                                 0.6435495508602755)),
+                 1e-10);
+  }
   
   def _norm_test() {
     val v = Vector(-0.4326,-1.6656,0.1253,0.2877,-1.1465);

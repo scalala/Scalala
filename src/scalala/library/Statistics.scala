@@ -26,7 +26,7 @@ import scalala.tensor.{Tensor,Vector,Matrix};
  * 
  * @author dramage
  */
-trait Statistics extends Library {
+trait Statistics extends Library with Vectors with Implicits {
   /**
    * Computes the Pearson correlation coefficient between the two vectors.
    * Code adapted excerpted from Wikipedia:
@@ -61,6 +61,29 @@ trait Statistics extends Library {
     val cov_x_y = sum_coproduct / N;
     return cov_x_y / (pop_sd_x * pop_sd_y);
   }
+  
+  /** Returns n choose k, how many ways to pick k objects from n. */
+  def nchoosek(n : Int, k : Int) : Long =
+    exp(sum(log(k+1 to n))-sum(log(2 to n-k))).round
+  
+  /** Returns n factorial, the number of orderings of n objects. */
+  def factorial(n : Int) : Long = {
+    var i = n;
+    var rv = 1;
+    while (i > 1) {
+      rv *= i;
+      i -= 1;
+    }
+    rv;
+  }
+  
+  /**
+   * Returns the cumulative distribution function of the binomial evaluated
+   * at x; i.e. returns the probability that at most x draws out of n draws
+   * of a binomial with paramater p come up heads.
+   */
+  def binomialCDF(n:Int,p:Double)(x:Double) =
+    sum(for (i <- 0 to x.toInt) yield nchoosek(n,i) * pow(p,i) * pow(1-p,n-i));
 }
 
 trait StatisticsTest extends Library with Statistics {

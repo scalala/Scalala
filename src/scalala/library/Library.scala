@@ -79,8 +79,14 @@ trait Library {
   // basic scala ops from Math.
   //
   
-  /** Log a numeric value */
+  /** Log a value. */
   final def log(v : Double) : Double = Math.log(v);
+  
+  /** Exponentiate a value. */
+  final def exp(v : Double) : Double = Math.exp(v);
+
+  final def pow(base : Double, exponent : Double) : Double =
+    Math.pow(base, exponent);
   
   /** Alias for Double.NaN */
   final val NaN = Double.NaN;
