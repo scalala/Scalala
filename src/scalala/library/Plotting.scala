@@ -130,7 +130,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
       val mid = (lower + upper) / 2;
       if (lower == upper) {
         return upper;
-      } else if (point < bins(mid)) {
+      } else if (point <= bins(mid)) {
         return bucket(point, lower, mid);
       } else {
         return bucket(point, mid+1, upper);
