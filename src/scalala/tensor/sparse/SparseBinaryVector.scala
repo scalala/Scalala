@@ -160,8 +160,9 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
         }
       }
 
-      assert(begin >= 0 && end >= begin,
-             "Invalid range: "+begin+" to "+end);
+      // this assert is for debug only
+      //assert(begin >= 0 && end >= begin,
+      //       "Invalid range: "+begin+" to "+end);
       
       var mid = (end + begin) >> 1;
       
