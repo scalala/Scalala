@@ -249,6 +249,9 @@ case class IntSpanSet(start : Int, end : Int) extends MergeableSet[Int] {
     case IntSpanSet(s2,e2) => (start == s2 && end == e2) || super.equals(other);
     case _ => super.equals(other);
   }
+  
+  override def toString =
+    "IntSpanSet("+start+","+end+")";
 }
 
 /**
