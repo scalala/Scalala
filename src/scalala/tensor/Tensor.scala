@@ -230,15 +230,27 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   /** Increments each value in this map by the corresponding value in the other map. */
   def :+= (t : PartialMap[I,Double]) {
     ensure(t);
-    this.default = this.default + t.default;
-    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x+t(i));
+    if (t.default == 0) {
+      for (i <- t.activeDomain) {
+        this(i) += t(i);
+      }
+    } else {
+      this.default += t.default;
+      this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x+t(i));
+    }
   }
   
   /** Decrements each value in this map by the corresponding value in the other map. */
   def :-= (t : PartialMap[I,Double]) {
     ensure(t);
-    this.default = this.default - t.default;
-    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x-t(i));
+    if (t.default == 0) {
+      for (i <- t.activeDomain) {
+        this(i) -= t(i);
+      }
+    } else {
+      this.default -= t.default;
+      this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x-t(i));
+    }
   }
 
   /** Raises each value in this map by the corresponding value in the other map. */
