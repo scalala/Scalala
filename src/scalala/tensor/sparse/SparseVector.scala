@@ -297,9 +297,8 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   
   /** Optimized implementation for SpraseVector dot DenseVector. */
   def dot(that : DenseVector) : Double = {
-    if (this.size != that.size) {
-      throw new DomainException();
-    }
+    ensure(that);
+    
     val thisDefault = this.default;
     var sum = 0.0;
     if (thisDefault == 0) {
@@ -333,9 +332,8 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   
   /** Optimized implementation for SpraseVector dot SparseVector. */
   def dot(that : SparseVector) : Double = {
-    if (this.size != that.size) {
-      throw new DomainException("Vectors have different sizes");
-    }
+    ensure(that);
+    
     var o1 = 0;    // offset into this.data, this.index
     var o2 = 0;    // offset into that.data, that.index
     var sum = 0.0; // the dot product

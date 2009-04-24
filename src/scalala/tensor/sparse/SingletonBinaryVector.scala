@@ -46,11 +46,7 @@ class SingletonBinaryVector(domainSize : Int, val singleIndex : Int) extends Vec
   
   override def size = domainSize;
   
-  override def activeDomain = new MergeableSet[Int] {
-    override def size = 1
-    override def contains(i : Int) = i == singleIndex
-    override def elements = Iterator.single(singleIndex)
-  }
+  override def activeDomain = new IntSpanSet(singleIndex,singleIndex+1);
 
   override def activeElements = Iterator.single(Tuple2(singleIndex,1.0))
   
@@ -77,7 +73,7 @@ class SingletonBinaryVector(domainSize : Int, val singleIndex : Int) extends Vec
   
   /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = {
-    //if (this.size != that.size) throw new DomainException("Vectors have different sizes");
+    // ensure(other);
     other(singleIndex)
   }
   

@@ -275,9 +275,7 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   }
   
   def dot(that : SparseBinaryVector) : Double = {
-    if (this.size != that.size) {
-      throw new DomainException("Vectors have different sizes");
-    }
+    ensure(that);
     
     var o1 = 0;    // offset into this.index
     var o2 = 0;    // offset into that.data, that.index
@@ -302,9 +300,8 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   
   /** Optimized implementation for SpraseVector dot DenseVector. */
   def dot(that : DenseVector) : Double = {
-    if (this.size != that.size) {
-      throw new DomainException("Vectors have different sizes");
-    }
+    ensure(that);
+    
     var sum = 0.0;
     var o = 0;
     while (o < this.used) {
@@ -316,9 +313,8 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   
   /** Optimized implementation for SpraseVector dot SparseVector. */
   def dot(that : SparseVector) : Double = {
-    if (this.size != that.size) {
-      throw new DomainException("Vectors have different sizes");
-    }
+    ensure(that);
+    
     var o1 = 0;    // offset into this.index
     var o2 = 0;    // offset into that.data, that.index
     var sum = 0.0; // the dot product

@@ -412,8 +412,7 @@ object Tensor {
 trait Tensor1[I] extends Tensor[I] {
   /** Returns the inner product of this tensor with another. */
   def dot(that : Tensor1[I]) : Double = {
-    if (that.domain != this.domain)
-      throw new DomainException("Domains do not match");
+    ensure(that);
     
     if (this.default == 0.0 || that.default == 0.0) {
       var sum = 0.0;
