@@ -371,12 +371,8 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   }
 }
 
-trait SparseBinaryVectorTest {
-  import scalala.ScalalaTest._;
-  import scalala.Scalala._;
-  import scalala.tensor.dense.DenseVector;
-  
-  def _SparseBinaryVector_test() {
+trait SparseBinaryVectorTest extends scalala.library.Library with scalala.library.Random with scalala.ScalalaTest {
+  test("SparseBinaryVector") {
     val x = new SparseBinaryVector(10);
     val y = new SparseBinaryVector(10);
     val d = rand(10);

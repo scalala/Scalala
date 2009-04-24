@@ -307,11 +307,9 @@ trait Vectors extends Library with Operators {
  * 
  * @author dramage
  */
-trait VectorsTest extends Library with Vectors {  
-  import scalala.Scalala._;
-  import scalala.ScalalaTest._;
+trait VectorsTest extends Library with Vectors with Implicits with Random with scalala.ScalalaTest {  
   
-  def _moments_test() {
+ test("Tensor:Moments") {
     val v = SparseVector(1000);
     v += 1;
     v(0 until 100) = rand(100).values.collect;
@@ -329,7 +327,7 @@ trait VectorsTest extends Library with Vectors {
                  1e-10);
   }
   
-  def _norm_test() {
+  test("Tensor:Norm") {
     val v = Vector(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
     assertEquals(norm(v,1), 3.6577, 1e-4);
     assertEquals(norm(v,2), 2.0915, 1e-4);
@@ -340,7 +338,7 @@ trait VectorsTest extends Library with Vectors {
     assertEquals(norm(v,Double.PositiveInfinity), 1.6656, 1e-4);
   }
   
-  def _minmax_test() {
+  test("Tensor:MinMax") {
     val v = SparseVector(10);
     v(3) = 1;
     assertEquals(1, max(v));

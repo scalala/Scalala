@@ -435,12 +435,8 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   }
 }
 
-trait SparseVectorTest {
-  import scalala.ScalalaTest._;
-  import scalala.Scalala._;
-  import scalala.tensor.dense.DenseVector;
-  
-  def _sparse_test() {
+trait SparseVectorTest extends scalala.library.Library with scalala.library.Random with scalala.ScalalaTest {
+  test("SparseVector:General") {
     val sparse = new SparseVector(10);
     val dense  = new scalala.tensor.dense.DenseVector(10);
     
@@ -453,7 +449,7 @@ trait SparseVectorTest {
     }
   }
   
-  def _sparse_dot_test() {
+  test("SparseVector:Dot") {
     val x = new SparseVector(10);
     val y = new SparseVector(10);
     val d = rand(10);

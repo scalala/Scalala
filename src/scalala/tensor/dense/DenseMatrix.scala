@@ -222,11 +222,8 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
   }
 }
 
-trait DenseMatrixSolveTest {
-  import scalala.ScalalaTest._;
-  import scalala.Scalala._;
-  
-  def _solve_test() {
+trait DenseMatrixSolveTest extends scalala.library.Library with scalala.tensor.operators.OperatorImplicits with scalala.ScalalaTest {
+  test("Matrix:Solve") {
     val _A = new DenseMatrix(2, 2, Array(1.0, 2.0, 3.0, 4.0));
     val _B = new DenseMatrix(2, 2, Array(2.0, 0.0, 3.0, 3.0));
     assertEquals(new DenseMatrix(2, 2, Array(-4.0, 2.0, -1.5, 1.5)), (_A \ _B) value);

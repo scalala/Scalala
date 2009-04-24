@@ -89,12 +89,8 @@ class SingletonBinaryVector(domainSize : Int, val singleIndex : Int) extends Vec
   }
 }
 
-trait SingletonBinaryVectorTest {
-  import scalala.ScalalaTest._;
-  import scalala.Scalala._;
-  import scalala.tensor.dense.DenseVector;
-  
-  def _SingletonBinaryVector_test() {
+trait SingletonBinaryVectorTest extends scalala.library.Library with scalala.library.Random with scalala.ScalalaTest {
+  test("SingletonBinaryVector") {
     val x = new SingletonBinaryVector(10,1);
     val y = new SingletonBinaryVector(10,2);
     val d = rand(10);

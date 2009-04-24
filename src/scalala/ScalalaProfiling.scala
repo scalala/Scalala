@@ -1,9 +1,33 @@
+/*
+ * Distributed as part of Scalala, a linear algebra library.
+ * 
+ * Copyright (C) 2008- Daniel Ramage
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
+ */
 package scalala
 
-object ScalalaProfiling {
-  import scalala.Scalala._;
-  import scalala.ScalalaTest._;
+import scalala.Scalala._;
+  
 
+/**
+ * Profiling extensions of ScalalaTest.
+ * 
+ * @author dramage
+ */
+trait ScalalaProfiling {
   /**
    * Runs the given code block 2*n times.  The last n
    * times are averaged to compute the average time
@@ -19,40 +43,7 @@ object ScalalaProfiling {
       }
     );
   }
-  
-  private var tests = List[(String, ()=>Unit)]();
-  protected def test(name : String)(func : => Unit) {
-    tests ::= (name, func _);
-  }
-  
-  test("SparseBinaryVectorMultAdd") {
-    import scalala.tensor.dense._;
-    import scalala.tensor.sparse._;
-    
-    val iter = 100;
-    val n = 50000;
-    
-    val direct = profile(iter) {
-      val dv = new DenseVector(n);
-      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
-      for(i <- sv.activeDomain) {
-        dv(i) += sv(i) * 1.0
-      }
-    }
-    
-    val operator = profile(iter) {
-      val dv = new DenseVector(n);
-      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
-      dv += sv * 1.0;
-    }
-    
-    printf("%g %g\n", direct, operator);
-  }
-  
-  def main(args : Array[String]) {
-    for ((name,func) <- tests) {
-      println(name);
-      func();
-    }
-  }
+}
+
+object ScalalaProfiling extends ScalalaProfiling {
 }

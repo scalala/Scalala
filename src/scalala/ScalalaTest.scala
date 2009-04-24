@@ -20,71 +20,71 @@
 package scalala
 
 /**
- * A simple, lightweight testing framework inspired by SUnit but with
- * less overhead.  Any Object that extends the inner TestConsoleMain class
- * will automatically have all methods whose name ends in ("_test") called.
- * Each of these methods may use any of the assertion methods in this object.
+ * A simple, lightweight testing framework inspired by ScalaCheck's
+ * FunSuite but with partial-map support.
  * 
  * @author dramage
  */
-object ScalalaTest {
-  
+trait ScalalaTest {
+  import ScalalaTest._;
   import scalala.collection.PartialMap;
+
+  /** List of test functions. */
+  protected var tests = List[(String, ()=>Unit)]();
   
-  val TOLERANCE = 1e-4;
-  
-  case class AssertionException(message : String) extends Exception;
+  /** Registers a test function. */
+  protected def test(name : String)(func : => Unit) =
+    tests ::= (name, func _);
   
   def assertEquals[V1,V2](v1 : =>V1, v2 : =>V2) : Unit =
-    if (v1 != v2) throw new AssertionException(v1 + "!=" + v2);
+    if (v1 != v2) throw new TestFailedException(v1 + "!=" + v2);
   
   def assertEquals(v1 : =>Double, v2 : =>Double, tolerance : Double) : Unit =
-    if (Math.abs(v1 - v2) > tolerance) throw new AssertionException(v1 + "!=" + v2);
+    if (Math.abs(v1 - v2) > tolerance) throw new TestFailedException(v1 + "!=" + v2);
   
   def assertEquals[I](v1 : PartialMap[I,Double], v2 : PartialMap[I,Double], tolerance : Double) : Unit =
     if ((v1 join v2)((a:Double,b:Double) => Math.abs(a - b) < tolerance).values.contains(false))
-      throw new AssertionException(v1 + "!=" + v2);
-  
-  /** Two-arg function application with expected exception. */
-  def assertThrows[V](f : =>V, exType : java.lang.Class[_ <: java.lang.Throwable]) : Unit = {
-    def die() = throw AssertionException("Evaluation did not throw "+exType+": "+f.toString);
+      throw new TestFailedException(v1 + "!=" + v2);
+
+  /** Expects the exception named in the type arg to be thrown. */
+  def assertThrows[T <: AnyRef](func : => Any)(implicit manifest : scala.reflect.Manifest[T]) : T = {
+    def die() = throw TestFailedException("Evaluation did not throw "+manifest+": "+func.toString);
     try {
-      val x = f.toString;
+      val x = func;
       // should have thrown but didn't
       die();
     } catch {
-      case thrown : Exception => {
-        if (thrown.getClass != exType) {
-          // threw something else
-          die();
-        }
-      }
+      case thrown : Throwable if (thrown.getClass == manifest.erasure) =>
+        return thrown.asInstanceOf[T];
+      case _ =>
+        die();
     }
     // threw the right thing.  return without issue.
   }
+}
+
+object ScalalaTest {
+  case class TestFailedException(message : String) extends Exception;
   
   /** Hook for doing tests in a class by reflection. @author dramage */
-  trait TestConsoleMain {
-    def main(argv : Array[String]) {
-      for (method <- getClass.getMethods if (method.getName().endsWith("_test"))) {
-        print(getClass.getName+"."+method.getName()+": ");
+  trait TestConsoleMain extends ScalalaTest {
+  
+    /** Main method for running all test functions. */ 
+    def main(args : Array[String]) {
+      for ((name,func) <- tests) {
+        print(name+": ");
         try {
-          method.invoke(this);
-          println("OK");
+          func();
+          println("PASSED");
         } catch {
-          case ite : java.lang.reflect.InvocationTargetException => {
-            ite.getCause match {
-              case ae : AssertionException => {
-                println("FAILED "+ae.message);
-                ae.printStackTrace();
-              }
-              case oe : Throwable => {
-                println("FAILED "+oe);
-                oe.printStackTrace();
-              }
-            }
+          case ae : TestFailedException => {
+            println("FAILED "+ae.message);
+            ae.printStackTrace();
           }
-          case oe : Exception => println("FRAMEWORK FAILURE "+oe);
+          case oe : Throwable => {
+            println("ERROR "+oe);
+            oe.printStackTrace();
+          }
         }
       }
     }

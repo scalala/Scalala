@@ -86,12 +86,10 @@ trait Statistics extends Library with Vectors with Implicits {
     sum(for (i <- 0 to x.toInt) yield nchoosek(n,i) * pow(p,i) * pow(1-p,n-i));
 }
 
-trait StatisticsTest extends Library with Statistics {
-  import scalala.ScalalaTest._;
-
-  def _corr_test() = {
+trait StatisticsTest extends Library with Statistics with scalala.ScalalaTest {
+  test("CorrTest") {
     assertEquals(corr(Vector(1,2,3), Vector(2,3,3.4)), 0.97072, 1e-5);
-    assertThrows(corr(Vector(1,2), Vector(2,3,3.4)), classOf[IllegalArgumentException]);
-    assertThrows(corr(Vector(), Vector()), classOf[IllegalArgumentException]);
+    assertThrows[IllegalArgumentException](corr(Vector(1,2), Vector(2,3,3.4)));
+    assertThrows[IllegalArgumentException](corr(Vector(), Vector()));
   }
 }

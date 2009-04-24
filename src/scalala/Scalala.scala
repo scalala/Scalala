@@ -79,3 +79,39 @@ object ScalalaTestSuite extends Scalala
 {
   // This object inherits all its method from the component mixins.
 }
+
+
+/**
+ * The global profiling suite.
+ * 
+ * @author dramage
+ */
+object ScalalaProfilingSuite extends Scalala
+  with ScalalaProfiling
+  with ScalalaTest.TestConsoleMain
+{
+    
+  test("SparseBinaryVectorMultAdd") {
+    import scalala.tensor.dense._;
+    import scalala.tensor.sparse._;
+    
+    val iter = 100;
+    val n = 50000;
+    
+    val direct = profile(iter) {
+      val dv = new DenseVector(n);
+      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
+      for(i <- sv.activeDomain) {
+        dv(i) += sv(i) * 1.0
+      }
+    }
+    
+    val operator = profile(iter) {
+      val dv = new DenseVector(n);
+      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
+      dv += sv * 1.0;
+    }
+    
+    printf("%g %g\n", direct, operator);
+  }
+}

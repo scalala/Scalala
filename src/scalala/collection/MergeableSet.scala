@@ -257,12 +257,10 @@ case class IntSpanSet(start : Int, end : Int) extends MergeableSet[Int] {
 /**
  * Tests of the MergeableSet architecture.
  * 
- * @uathor dramage
+ * @author dramage
  */
-trait MergeableSetTest {
-  import scalala.ScalalaTest._;
-
-  def _set_test() {
+trait MergeableSetTest extends scalala.ScalalaTest {
+  test("MergeableSet") {
     assertEquals(IntSpanSet(-1,9), IntSpanSet(-1,3) ++ IntSpanSet(4,9));
     assertEquals(IntSpanSet(4,7), IntSpanSet(2,7) ** IntSpanSet(4,14));
     assertEquals(IntersectionSet(IntSpanSet(2,5),IntSpanSet(6,14)),
