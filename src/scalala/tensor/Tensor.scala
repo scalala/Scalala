@@ -159,7 +159,7 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
       // do nothing
     } else {
       this.default = this.default * s;
-      this(activeDomain) = ((x:Double) => x * s);
+      for (i <- activeDomain) { this(i) *= s; }
     }
   }
   
@@ -295,10 +295,16 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   /** Increments each element in this map by the corresponding value as returned by the given operation. */
   def :+= (op : TensorOp[I]) : Unit = {
     op match {
-      case TensorMultScalar(m, s) => {
+      case TensorMultScalar(m, s) if (s != 0) => {
         val t = getPartialMap(m);
-        this.default += (t.default * s);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (t(i) * s));
+        if (t.default == 0) {
+          for (i <- t.activeDomain) {
+            this(i) += t(i) * s;
+          }
+        } else {
+          this.default += t.default * s;
+          this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (t(i) * s));
+        }
       }
       case ScalarDivTensor(s, m) => {
         val t = getPartialMap(m);
@@ -317,10 +323,16 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   /** Decrements each element in this map by the corresponding value as returned by the given operation. */
   def :-= (op : TensorOp[I]) : Unit = {
     op match {
-      case TensorMultScalar(m, s) => {
+      case TensorMultScalar(m, s) if (s != 0) => {
         val t = getPartialMap(m);
-        this.default -= (t.default * s);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (t(i) * s));
+        if (t.default == 0) {
+          for (i <- t.activeDomain) {
+            this(i) -= t(i) * s;
+          }
+        } else {
+          this.default -= t.default * s;
+          this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (t(i) * s));
+        }
       }
       case ScalarDivTensor(s, m) => {
         val t = getPartialMap(m);

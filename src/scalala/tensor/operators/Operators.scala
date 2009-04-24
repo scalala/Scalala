@@ -187,7 +187,8 @@ trait TensorOp[I] {
 
   /**
    * Returns the value of this operator in a vector than can safely
-   * be over-written.
+   * be over-written.  Defaults to this.value but is override in
+   * TensorIdentity and related operators.
    */
   def working : Value = value;
     
