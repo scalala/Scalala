@@ -114,4 +114,43 @@ object ScalalaProfilingSuite extends Scalala
     
     printf("%g %g\n", direct, operator);
   }
+  
+    test("SparseBinaryVectorActiveDomain") {
+    import scalala.tensor.sparse._;
+    import scalala.collection.MergeableSet;
+
+    val iter = 2000;
+    val n = 5000;
+
+    val direct = profile(iter) {
+      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
+      for(i<- 0 until iter)
+        for(idx <- sv.index)
+          0;
+    }
+
+    def activeDomain(sv:SparseBinaryVector) = new MergeableSet[Int] {
+      override def size = sv.used;
+      override def contains(i : Int) = sv.findOffset(i) >= 0;
+      override def elements =
+        if (sv.used==sv.index.length) sv.index.elements;
+          else sv.index.take(sv.used).elements;
+    }
+
+    val indirect = profile(iter) {
+      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
+      for(i<- 0 until iter)
+        for(idx <- activeDomain(sv))
+          0;
+    }
+
+    val default = profile(iter) {
+      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
+      for(i<- 0 until iter)
+        for(idx <- sv.activeDomain)
+          0;
+    }
+
+    printf("%g %g %g\n", direct, indirect, default);
+  }
 }
