@@ -85,7 +85,10 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   override def activeDomain = new MergeableSet[Int] {
     override def size = used;
     override def contains(i : Int) = findOffset(i) >= 0;
-    override def elements = index.take(used).elements;
+    override def elements = {
+      if (used == index.length) index.elements;
+      else index.elements.take(used);
+    }
   }
 
   override def activeElements = new Iterator[(Int,Double)] {
