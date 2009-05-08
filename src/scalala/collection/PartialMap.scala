@@ -150,7 +150,8 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
        (that canEqual this) &&
        (this.domain == that.domain) &&
        { val joint = (this join that.asInstanceOf[PartialMap[A,B]])(_ == _);
-         (joint.default == true && !joint.activeValues.contains(false));
+         ((joint.activeDomain.size == joint.domain.size || joint.default == true)
+          && !joint.activeValues.contains(false));
        }
       )
     case _ => false;
