@@ -70,6 +70,7 @@ object ScalalaTestSuite extends Scalala
   with scalala.collection.MergeableSetTest
   with scalala.tensor.operators.OperatorTest
   with scalala.tensor.sparse.SparseVectorTest
+  with scalala.tensor.sparse.SparseHashVectorTest
   with scalala.tensor.sparse.SparseBinaryVectorTest
   with scalala.tensor.sparse.SingletonBinaryVectorTest
   with scalala.tensor.dense.DenseMatrixSolveTest
@@ -115,7 +116,7 @@ object ScalalaProfilingSuite extends Scalala
     printf("%g %g\n", direct, operator);
   }
   
-    test("SparseBinaryVectorActiveDomain") {
+  test("SparseBinaryVectorActiveDomain") {
     import scalala.tensor.sparse._;
     import scalala.collection.MergeableSet;
 
@@ -152,5 +153,38 @@ object ScalalaProfilingSuite extends Scalala
     }
 
     printf("%g %g %g\n", direct, indirect, default);
+  }
+  
+  test("SparseVector vs SparseHashVector") {
+    import scalala.tensor.sparse._;
+    
+    val iter = 100;
+    val n = 50000;
+    
+    println();
+    
+    for (m <- 100 to 5000 by 500) {
+      val profileSparseVector = profile(iter) {
+        val rand = new java.util.Random(m);
+        val x = new SparseVector(n);
+        var i = 0;
+        while (i < m) {
+          x(rand.nextInt(n)) = rand.nextDouble;
+          i += 1;
+        }
+      }
+
+      val profileInt2DoubleCounter = profile(iter) {
+        val rand = new java.util.Random(m);
+        val x = new SparseHashVector(n);
+        var i = 0;
+        while (i < m) {
+          x(rand.nextInt(n)) = rand.nextDouble;
+          i += 1;
+        }
+      }
+      
+      printf("% 5d %01.6f %01.6f\n", m, profileSparseVector, profileInt2DoubleCounter);
+    }
   }
 }

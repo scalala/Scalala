@@ -22,7 +22,7 @@ package scalala.tensor.dense;
 import scalala.collection.{MergeableSet, IntSpanSet, DomainException};
 
 import scalala.tensor.Vector;
-import scalala.tensor.sparse.{SparseVector,SparseBinaryVector,SingletonBinaryVector};
+import scalala.tensor.sparse._;
 import scalala.tensor.operators._;
 
 import scalala.tensor.Tensor.CreateException;
@@ -49,6 +49,7 @@ class DenseVector(data : Array[Double]) extends
     case dense  : DenseVector  => dot(dense);
     case binary : SparseBinaryVector => binary.dot(this);
     case sparse : SparseVector => sparse.dot(this);
+    case hash   : SparseHashVector => hash.dot(this);
     case _ => super.dot(other);
   }
   

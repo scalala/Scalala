@@ -39,4 +39,10 @@ trait Vector extends Tensor1[Int] {
   def toArray = Array.fromFunction(i => this(i))(size);
   
   override def copy : Vector = super.copy.asInstanceOf[Vector];
+  
+  final protected def check(i : Int) {
+    if (i < 0 || i >= size) {
+      throw new IndexOutOfBoundsException("Index out of range: "+i+" not in [0,"+size+")");
+    }
+  }
 }
