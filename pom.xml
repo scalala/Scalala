@@ -20,6 +20,11 @@
       <name>ScalaNLP Maven2</name>
       <url>http://repo.scalanlp.org/repo/</url>
     </repository>
+    <repository>
+      <id>ondex_repro</id>
+      <name>ondex_repro</name>
+      <url>http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
