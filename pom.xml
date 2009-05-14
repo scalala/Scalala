@@ -94,6 +94,9 @@
           </execution>
         </executions>
         <configuration>
+          <jvmArgs>
+            <jvmArg>-Xmx2g</jvmArg>
+          </jvmArgs>
           <scalaVersion>${scala.version}</scalaVersion>
           <mainConsole>scalala.ScalalaConsole</mainConsole>
           <jvmArgs>
