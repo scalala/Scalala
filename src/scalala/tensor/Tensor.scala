@@ -278,22 +278,22 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   //
 
   /** Assigns each element in this map to the corresponding value as returned by the given operation. */
-  def :=  (op : TensorOp[I]) : Unit = {
+  def :=  (op : TensorOp[I,Tensor[I]]) : Unit = {
     op match {
-      case op : TensorOp[_] => this := op.value;
+      case op : TensorOp[_,_] => this := op.value;
     }
   }
   
   /** Returns the partial map representing this tensor op skipping negations. */
-  private def getPartialMap[I](op : TensorOp[I]) : PartialMap[I,Double] = {
+  private def getPartialMap[I](op : TensorOp[I,_]) : PartialMap[I,Double] = {
     op match {
       case TensorNegation(n) => n.value.map((x:Double) => -x);
-      case _ => op.value;
+      case _ => op.value.asInstanceOf[PartialMap[I,Double]];
     }
   }
   
   /** Increments each element in this map by the corresponding value as returned by the given operation. */
-  def :+= (op : TensorOp[I]) : Unit = {
+  def :+= (op : TensorOp[I,Tensor[I]]) : Unit = {
     op match {
       case TensorMultScalar(m, s) if (s != 0) => {
         val t = getPartialMap(m);
@@ -316,12 +316,12 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
         this.default += (t.default + s);
         this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (t(i) + s));
       }
-      case op : TensorOp[_] => this :+= op.value;
+      case op : TensorOp[_,_] => this :+= op.value;
     }
   }
   
   /** Decrements each element in this map by the corresponding value as returned by the given operation. */
-  def :-= (op : TensorOp[I]) : Unit = {
+  def :-= (op : TensorOp[I,Tensor[I]]) : Unit = {
     op match {
       case TensorMultScalar(m, s) if (s != 0) => {
         val t = getPartialMap(m);
@@ -344,12 +344,12 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
         this.default -= (t.default + s);
         this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (t(i) + s));
       }
-      case op : TensorOp[_] => this :-= op.value;
+      case op : TensorOp[_,_] => this :-= op.value;
     }
   }
   
   /** Multiplies each element in this map by the corresponding value as returned by the given operation. */
-  def :*= (op : TensorOp[I]) : Unit = {
+  def :*= (op : TensorOp[I,Tensor[I]]) : Unit = {
     op match {
       case TensorMultScalar(m, s) => {
         val t = getPartialMap(m);
@@ -366,12 +366,12 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
         this.default *= (t.default + s);
         this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (t(i) + s));
       }
-      case op : TensorOp[_] => this :*= op.value;
+      case op : TensorOp[_,_] => this :*= op.value;
     }
   }
   
   /** Divides each element in this map by the corresponding value as returned by the given operation. */
-  def :/= (op : TensorOp[I]) : Unit = {
+  def :/= (op : TensorOp[I,Tensor[I]]) : Unit = {
     op match {
       case TensorMultScalar(m, s) => {
         val t = getPartialMap(m);
@@ -388,24 +388,51 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
         this.default /= (t.default + s);
         this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (t(i) + s));
       }
-      case op : TensorOp[_] => this :/= op.value;
+      case op : TensorOp[_,_] => this :/= op.value;
     }
   }
 
   /** Raises each element in this map to the power (in the corresponding value) in the value returned by the given operation. */
-  def :^= (op : TensorOp[I]) : Unit = {
+  def :^= (op : TensorOp[I,Tensor[I]]) : Unit = {
     this :^= op.value;
   }
   
   /** += with a TensorOp is a fixed alias for :+= */
-  final def += (op : TensorOp[I]) : Unit = this.:+=(op);
+  final def += (op : TensorOp[I,Tensor[I]]) : Unit = this.:+=(op);
   
   /** -= with a TensorOp is a fixed alias for :-= */
-  final def -= (op : TensorOp[I]) : Unit = this.:-=(op);
+  final def -= (op : TensorOp[I,Tensor[I]]) : Unit = this.:-=(op);
+  
+  /** Approximate equality at a given tolerance level. */
+  def =~= (tolerance : Double)(that : Tensor[I]) : Boolean = {
+    (this eq that) ||
+    (
+     (that canEqual this) &&
+     (this.domain == that.domain) &&
+     { val joint = (this join that)((a,b) => Math.abs(a - b) < tolerance);
+       ((joint.default == true || joint.activeDomain.size == joint.domain.size)
+       && !joint.activeValues.contains(false));
+     }
+    );
+  }
+
+  /** Approximate equality using the default Tensor.TOLERANCE value. */
+  def =~= (that : Tensor[I]) : Boolean =
+    this.=~=(Tensor.TOLERANCE)(that);
+  
+  /** Returns !(this.=~=(tolerance)(that)) */
+  def !~= (tolerance : Double)(that : Tensor[I]) : Boolean =
+    ! this.=~=(tolerance)(that);
+  
+  /** Returns !(this.=~=(that)) */
+  def !~= (that : Tensor[I]) : Boolean =
+    ! this.=~=(that);
 }
 
 object Tensor {
   class CreateException(msg : String) extends RuntimeException(msg);
+  
+  val TOLERANCE = 1e-8;
 }
 
 /** A one-axis tensor is defined on single elements from a domain. */

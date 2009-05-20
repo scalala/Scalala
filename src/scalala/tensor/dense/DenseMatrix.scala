@@ -69,8 +69,8 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
     System.err.println("DenseMatrix: "+msg);
   
   /** Assigns each element in this map to the corresponding value as returned by the given operation. */
-  override def :=  (op : TensorOp[(Int,Int)]) : Unit = {
-    def isDense[QI,QJ](op : MatrixOp[QI,QJ]) : Boolean = op match {
+  override def :=  (op : TensorOp[(Int,Int),Tensor[(Int,Int)]]) : Unit = {
+    def isDense(op : MatrixOp[_,_,_]) : Boolean = op match {
       case MatrixTranspose(aT) => isDense(aT);
       case _ => op.value.isInstanceOf[DenseMatrix];
     }
