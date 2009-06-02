@@ -582,12 +582,11 @@ class JLAPACK_LAPACKkernel {
 
 class JLAPACK_BLASkernel() {
   import org.netlib.blas._;
-  
-  /*
-    public double dot(int N, double[] X, double[] Y) {
-        return Ddot.ddot(N, X, 0, 1, Y, 0, 1);
-    }
 
+  def dot(N : Int, X : Array[Double], Y : Array[Double]) =
+    Ddot.ddot(N, X, 0, 1, Y, 0, 1);
+
+  /*
     public double nrm2(int N, double[] X) {
         return Dnrm2.dnrm2(N, X, 0, 1);
     }
