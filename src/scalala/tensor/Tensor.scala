@@ -474,37 +474,10 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
   /** Fixed alias for update(i,j,value). */
   @inline final override def update(pos : (I1,I2), value : Double) : Unit = update(pos._1, pos._2, value);
   
-  def transpose : Tensor2[I2,I1] = {
-    val inner = this;
-    new Tensor2[I2,I1] {
-      override def domain =
-        inner.domain.transpose;
-    
-      override def apply(row : I2, col : I1) =
-        inner.apply(col, row);
-      
-      override def update(row : I2, col : I1, value : Double) =
-        inner.update(col, row, value);
-    
-      override def copy =
-        inner.copy.asInstanceOf[Tensor2[I1,I2]].transpose;
-    
-      override def create[J](domain : MergeableSet[J]) =
-        inner.create(domain);
-      
-      override def activeDomain : MergeableSet[(I2,I1)] = {
-        new MergeableSet[(I2,I1)] {
-          override def size = Tensor2.this.activeDomain.size;
-          override def elements = Tensor2.this.activeDomain.elements.map(tup => (tup._2,tup._1));
-          override def contains(i : (I2,I1)) = Tensor2.this.activeDomain.contains((i._2,i._1));
-        };
-      }
-      
-      override def getRow(row : I2) = inner.getCol(row);
-      
-      override def getCol(col : I1) = inner.getRow(col);
-    }
-  }
+  /** Returns a transposed view of this matrix. */
+  def transpose : Tensor2[I2,I1] = new {
+    val inner = Tensor2.this;
+  } with Tensor2.Transpose[I1,I2];
   
   /** Selects a row from this Tensor2 as a Tensor1. */
   def getRow(row : I1) : Tensor1[I2]
@@ -535,7 +508,9 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
  * @author dramage
  */
 object Tensor2 {
-  abstract class Projection[I1,I2](protected val inner : Tensor2[I1,I2]) extends Tensor2[I1,I2] {
+  trait Projection[I1,I2] extends Tensor2[I1,I2] {
+    val inner : Tensor2[I1,I2];
+    
     override def domain =
       inner.domain;
     
@@ -551,12 +526,60 @@ object Tensor2 {
     override def activeDomain : MergeableSet[(I1,I2)] =
       inner.activeDomain;
     
-    override def getRow(row : I1) = inner.getRow(row);
+    override def transpose =
+      inner.transpose
     
-    override def getCol(col : I2) = inner.getCol(col);
+    override def getRow(row : I1) =
+      inner.getRow(row);
     
-    override def activeDomainInRow(row : I1) = inner.activeDomainInRow(row);
+    override def getCol(col : I2) =
+      inner.getCol(col);
     
-    override def activeDomainInCol(col : I2) = inner.activeDomainInCol(col);
+    override def activeDomainInRow(row : I1) =
+      inner.activeDomainInRow(row);
+    
+    override def activeDomainInCol(col : I2) =
+      inner.activeDomainInCol(col);
+  }
+  
+  trait Transpose[I1,I2] extends Tensor2[I2,I1] {
+    val inner : Tensor2[I1,I2];
+    
+    override def domain =
+      inner.domain.transpose;
+    
+    override def apply(row : I2, col : I1) =
+      inner.apply(col, row);
+      
+    override def update(row : I2, col : I1, value : Double) =
+      inner.update(col, row, value);
+    
+    override def copy =
+      inner.copy.asInstanceOf[Tensor2[I1,I2]].transpose;
+    
+    override def create[J](domain : MergeableSet[J]) =
+      inner.create(domain);
+      
+    override def activeDomain : MergeableSet[(I2,I1)] = {
+      new MergeableSet[(I2,I1)] {
+        override def size = inner.activeDomain.size;
+        override def elements = inner.activeDomain.elements.map(tup => (tup._2,tup._1));
+        override def contains(i : (I2,I1)) = inner.activeDomain.contains((i._2,i._1));
+      };
+    }
+    
+    override def transpose = inner;
+    
+    override def getRow(col : I2) =
+      inner.getCol(col);
+    
+    override def getCol(row : I1) =
+      inner.getRow(row);
+    
+    override def activeDomainInRow(col : I2) =
+      inner.activeDomainInCol(col);
+    
+    override def activeDomainInCol(row : I1) =
+      inner.activeDomainInRow(row);
   }
 }
