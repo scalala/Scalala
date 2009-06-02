@@ -156,7 +156,12 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   }
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
-  def plot[I](y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def plot(y : Seq[Double])(implicit xyplot : Plotting.XYPlot) : Unit = {
+    plot(Vector(y))(xyplot);
+  }
+  
+  /** Plots the given y versus 1 to y.size as x with line drawn */
+  def plot(y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
     plot(Vector(Array.fromFunction(i => i+1.0)(y.size)), y)(xyplot);
   }
   
@@ -169,7 +174,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double], style : Char)(implicit xyplot : Plotting.XYPlot) : Unit = {
     lazy val shapeDot = new java.awt.geom.Ellipse2D.Double(0,0,2,2);
     lazy val shapePlus = {
-      val shape = new java.awt.geom.Path2D.Double();
+      val shape = new java.awt.geom.GeneralPath();
       shape.moveTo(-3,0);
       shape.lineTo(3,0);
       shape.moveTo(0,-3);
