@@ -65,6 +65,16 @@ package test {
  * @author dramage
  */
 trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
+  test("Operators:InlineOptimizations") {
+    val x = Vector(1,2,3);
+    assertEquals(x + 3, (x + 1) + 2);
+    assertEquals(x + 3, (x + 4) - 1);
+    assertEquals(x * 6, (x * 2) * 3);
+    assertEquals(x * 3, (x * 6) / 2);
+    assertEquals(3 / x, (6 / x) / 2);
+    assertEquals(6 / x, (3 / x) * 2);
+  }
+  
   test("Operators:Vector") {
     val x = Vector(1,2,3);
     

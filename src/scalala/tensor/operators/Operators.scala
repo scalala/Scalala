@@ -263,7 +263,7 @@ trait TensorOp[I,+Value<:Tensor[I]] {
   // case _ => super.equals(other);
   //}
 }
-  
+
 /** A reference to an underlying tensor. */
 case class TensorIdentity[I,+Value<:Tensor[I]](tensor : Value) extends TensorOp[I,Value] {
   override def domain = tensor.domain;
@@ -327,10 +327,10 @@ case class TensorNegation[I,+Value<:Tensor[I]](override val tensor : TensorOp[I,
     
   override def unary_- = tensor;
 }
-  
+
 case class TensorPlusScalar[I,+Value<:Tensor[I]](override val tensor : TensorOp[I,Value], scalar : Double) extends TensorReferenceOp(tensor) {
-  override def  + (s : Double) = (tensor + (scalar + s)); // TensorPlusScalar(tensor, scalar + s);
-  override def  - (s : Double) = (tensor + (scalar - s)); // TensorPlusScalar(tensor, scalar - s);
+  override def  + (s : Double) = (tensor + (scalar + s));
+  override def  - (s : Double) = (tensor + (scalar - s));
   lazy val _value : Value = {
     val rv = tensor.working;
     rv += scalar;
@@ -340,8 +340,8 @@ case class TensorPlusScalar[I,+Value<:Tensor[I]](override val tensor : TensorOp[
 }
   
 case class TensorMultScalar[I,+Value<:Tensor[I]](override val tensor : TensorOp[I,Value], scalar : Double) extends TensorReferenceOp(tensor) {
-  override def * (s : Double) = TensorMultScalar(tensor, scalar * s);
-  override def / (s : Double) = TensorMultScalar(tensor, scalar / s);
+  override def * (s : Double) = (tensor * (scalar * s));
+  override def / (s : Double) = (tensor * (scalar / s));
   override lazy val value : Value = {
     val rv = tensor.working;
     rv *= scalar;
@@ -559,13 +559,13 @@ case class Tensor1Negation[I,+Value<:Tensor1[I]](override val tensor : Tensor1Op
 }
 
 case class Tensor1PlusScalar[I,+Value<:Tensor1[I]](override val tensor : Tensor1Op[I,Value], override val scalar : Double) extends TensorPlusScalar(tensor, scalar) with Tensor1Op[I,Value] {
-  override def  + (s : Double) = Tensor1PlusScalar(tensor, scalar + s);
-  override def  - (s : Double) = Tensor1PlusScalar(tensor, scalar - s);
+  //override def  + (s : Double) = Tensor1PlusScalar(tensor, scalar + s);
+  //override def  - (s : Double) = Tensor1PlusScalar(tensor, scalar - s);
 }
 
 case class Tensor1MultScalar[I,+Value<:Tensor1[I]](override val tensor : Tensor1Op[I,Value], override val scalar : Double) extends TensorMultScalar(tensor, scalar) with Tensor1Op[I,Value] {
-  override def * (s : Double) = Tensor1MultScalar(tensor, scalar * s);
-  override def / (s : Double) = Tensor1MultScalar(tensor, scalar / s);
+  //override def * (s : Double) = Tensor1MultScalar(tensor, scalar * s);
+  //override def / (s : Double) = Tensor1MultScalar(tensor, scalar / s);
 }
 
 case class Tensor1PowScalar[I,+Value<:Tensor1[I]](override val tensor : Tensor1Op[I,Value], override val scalar : Double) extends TensorPowScalar(tensor, scalar) with Tensor1Op[I,Value] { }
@@ -699,13 +699,13 @@ case class RowTensor1Negation[I,+Value<:Tensor1[I]](override val tensor : RowTen
 }
 
 case class RowTensor1PlusScalar[I,+Value<:Tensor1[I]](override val tensor : RowTensor1Op[I,Value], override val scalar : Double) extends TensorPlusScalar(tensor, scalar) with RowTensor1Op[I,Value] {
-  override def  + (s : Double) = RowTensor1PlusScalar(tensor, scalar + s);
-  override def  - (s : Double) = RowTensor1PlusScalar(tensor, scalar - s);
+//  override def  + (s : Double) = RowTensor1PlusScalar(tensor, scalar + s);
+//  override def  - (s : Double) = RowTensor1PlusScalar(tensor, scalar - s);
 }
 
 case class RowTensor1MultScalar[I,+Value<:Tensor1[I]](override val tensor : RowTensor1Op[I,Value], override val scalar : Double) extends TensorMultScalar(tensor, scalar) with RowTensor1Op[I,Value] {
-  override def * (s : Double) = RowTensor1MultScalar(tensor, scalar * s);
-  override def / (s : Double) = RowTensor1MultScalar(tensor, scalar / s);
+//  override def * (s : Double) = RowTensor1MultScalar(tensor, scalar * s);
+//  override def / (s : Double) = RowTensor1MultScalar(tensor, scalar / s);
 }
 
 case class RowTensor1PowScalar[I,+Value<:Tensor1[I]](override val tensor : RowTensor1Op[I,Value], override val scalar : Double) extends TensorPowScalar(tensor, scalar) with RowTensor1Op[I,Value] { }
@@ -830,8 +830,10 @@ case class VectorNegation[+Value<:Vector](override val tensor : VectorOp[Value])
 }
 
 case class VectorPlusScalar[+Value<:Vector](override val tensor : VectorOp[Value], override val scalar : Double) extends Tensor1PlusScalar(tensor, scalar) with VectorOp[Value] {
-  override def  + (s : Double) = VectorPlusScalar(tensor, scalar + s);
-  override def  - (s : Double) = VectorPlusScalar(tensor, scalar - s);
+  override def  + (s : Double) = (tensor + (scalar + s));
+  override def  - (s : Double) = (tensor + (scalar - s));
+//  override def  + (s : Double) = VectorPlusScalar(tensor, scalar + s);
+//  override def  - (s : Double) = VectorPlusScalar(tensor, scalar - s);
 }
 
 case class VectorMultScalar[+Value<:Vector](override val tensor : VectorOp[Value], override val scalar : Double) extends Tensor1MultScalar(tensor, scalar) with VectorOp[Value] {
