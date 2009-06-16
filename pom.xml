@@ -91,6 +91,9 @@
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
           <mainConsole>scalala.ScalalaConsole</mainConsole>
+          <jvmArgs>
+            <jvmArg>-Xmx256m</jvmArg>
+          </jvmArgs>
         </configuration>
       </plugin>
       <plugin>
@@ -108,6 +111,32 @@
             <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
             <classpathContainer>ch.epfl.lamp.sdt.launching.SCALA_CONTAINER</classpathContainer>
           </classpathContainers>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.2</version>
+        <configuration>
+          <archive>
+            <!--
+            <index>true</true>
+            -->
+            <manifest>
+              <mainClass>scalala.ScalalaConsole</mainClass>
+              <packageName>scalala</packageName>
+              <!-- options
+              <addClasspath>true</addClasspath>
+              <addExtensions/>
+              <classpathPrefix/>
+              -->
+            </manifest>
+            <manifestEntries>
+              <mode>development</mode>
+              <url>${pom.url}</url>
+            </manifestEntries>
+            <!-- <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile> -->
+          </archive>
         </configuration>
       </plugin>
     </plugins>
