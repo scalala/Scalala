@@ -39,16 +39,16 @@ trait Vectors extends Library with Operators {
   /** n evenly spaced points between a and b */
   def linspace(a : Double, b : Double, n : Int) : DenseVector = {
     val delta = (b - a) / (n - 1.0);
-    DenseVector(Array.fromFunction(i => a + i*delta)(n));
+    new DenseVector(Array.fromFunction(i => a + i*delta)(n));
   }
   
   /** A vector of ones of the given size */
   def ones(n : Int) =
-    DenseVector(Array.fromFunction(i => 1.0)(n));
+    DenseVector(n)(1.0);
 
   /** A vector of zeros of the given size */
   def zeros(n : Int) : Vector =
-    DenseVector(new Array[Double](n));
+    DenseVector(n)(0.0);
   
   /** Returns the sum of the elements and how many there were. */
   private def sumcount(v : Iterator[Double]) : (Double,Int) = {

@@ -125,3 +125,16 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
     (List(prefix).elements ++ builder.elements).mkString("");
   }
 }
+
+object DenseMatrix {
+  /**
+   * Static constructor that creates a dense matrix of the given size
+   * initialized by elements from the given values list (looping if
+   * necessary).  The values are initialized column-major, i.e. values
+   * is read in order to populate the matrix, filling up column 0 before
+   * column 1, before column 2 ...
+   */
+  def apply(rows : Int, cols : Int)(values : Double*) = {
+    new DenseMatrix(rows, cols, Array.fromFunction(i => values(i % values.length))(rows * cols));
+  }
+}

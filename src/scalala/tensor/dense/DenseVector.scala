@@ -35,6 +35,7 @@ import scalala.tensor.Tensor.CreateException;
 class DenseVector(data : Array[Double]) extends
   DoubleArrayData(data) with Vector with DenseTensor[Int] {
   
+  /** Constructor for a vector of zeros of the given size. */
   def this(size : Int) = this(new Array[Double](size));
   
   override def size = data.size;
@@ -65,4 +66,14 @@ class DenseVector(data : Array[Double]) extends
   }
   
   override def toString() = new DenseMatrix(size, 1, data).toString();
+}
+
+object DenseVector {
+  /**
+   * Static constructor that creates a dense vector of the given size
+   * initialized by elements from the given values list (looping if
+   * necessary).
+   */
+  def apply(size : Int)(values : Double*) =
+    new DenseVector(Array.fromFunction(i => values(i % values.length))(size));
 }

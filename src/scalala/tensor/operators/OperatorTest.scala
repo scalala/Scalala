@@ -47,7 +47,7 @@ trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
   /** Tests basic tensor-scalar operators. */
   test("Operators:Tensor-Scalar") {
     def build(values : Double*) =
-      Vector(values).asInstanceOf[Tensor[Int]];
+      Vector(values :_*).asInstanceOf[Tensor[Int]];
     
     def x = build(0,1,2,3);
     
@@ -71,7 +71,7 @@ trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
   /** Tests Tensor-Tensor operations. */
   test("Operators:Tensor-Tensor") {
     def build(values : Double*) =
-      Vector(values).asInstanceOf[Tensor[Int]];
+      Vector(values :_*).asInstanceOf[Tensor[Int]];
     
     def x = build(0,1,2,3);
     def y = build(2,1,2,-1);
@@ -93,9 +93,9 @@ trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
 
   test("Operators:Tensor1-Tensor2") {
     def build1(values : Double*) =
-      Vector(values).asInstanceOf[Tensor1[Int]];
+      Vector(values :_*).asInstanceOf[Tensor1[Int]];
     def build2(rows : Int, cols : Int)(values : Double*) =
-      Matrix(rows,cols)(values :_*).asInstanceOf[Tensor2[Int,Int]];
+      DenseMatrix(rows,cols)(values :_*).asInstanceOf[Tensor2[Int,Int]];
     
     def x = build1(0,1,2,3);
     def y = build1(2,1,2,-1);
@@ -123,9 +123,9 @@ trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
    */
   test("Operators:Vector-Matrix") {
     def build1(values : Double*) =
-      Vector(values).asInstanceOf[Vector];
+      Vector(values :_*).asInstanceOf[Vector];
     def build2(rows : Int, cols : Int)(values : Double*) =
-      Matrix(rows,cols)(values :_*).asInstanceOf[Matrix];
+      DenseMatrix(rows,cols)(values :_*).asInstanceOf[Matrix];
     
     def x = build1(0,1,2,3);
     def y = build1(2,1,2,-1);
@@ -158,7 +158,7 @@ trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
     val _D = new DenseMatrix(2, 2, Array(2.0, 0.0, 3.0, 3.0));
     assertEquals(new DenseMatrix(3, 2, Array(0.0091743, 0.0825688, 0.3486239, 0.2935780, 0.6422018, 0.1559633)), (_C \ _D).value, 1e-7);
     
-    assertEquals(Vector(0.0091743, 0.0825688, 0.3486239), (_C \ DenseVector(2, 0)).value, 1e-7);
+    assertEquals(Vector(0.0091743, 0.0825688, 0.3486239), (_C \ Vector(2, 0)).value, 1e-7);
   }
   
   /** Tests that static types are correctly propogated through operators. */

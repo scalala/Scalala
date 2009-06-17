@@ -29,51 +29,12 @@ import scalala.tensor.sparse.{SparseVector};
  * @author dramage
  */
 trait Library {
-  def Vector(values : Array[Double]) : Vector =
-    new DenseVector(values);
-  
-  def Vector(values : Double*) : Vector =
-    Vector(values.asInstanceOf[Collection[Double]]);
-  
-  def Vector(values : Collection[Double]) : Vector = values match {
-    case array : Array[Double] => new DenseVector(array);
-    case _ => new DenseVector(values.toArray);
-  }
-  
-  def DenseVector(values : Array[Double]) : Vector =
-    new DenseVector(values);
-  
-  def DenseVector(values : Double*) : DenseVector =
-    new DenseVector(values.asInstanceOf[Collection[Double]].toArray);
-  
-  def DenseVector[T<:AnyVal](values : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : DenseVector = {
-    import scalala.tensor.TensorImplicits._;
-    val x = new DenseVector(values.size);
-    x := values;
-    x;
-  }
-  
-//  def SparseVector(size : Int) : Vector =
-//    new SparseVector(size);
-//  
-//  def SparseVector(size : Int, nonzeros : Int) : Vector =
-//    new SparseVector(size, nonzeros);
-  
-  def Matrix(rows : Int, cols : Int)(values : Double*) : Matrix =
-    new DenseMatrix(rows, cols, values.toArray);
-  
-  def DenseMatrix(rows : Int, cols : Int, values : Collection[Double]) : Matrix = {
-    values match {
-      case array : Array[Double] => new DenseMatrix(rows, cols, array);
-      case _ => new DenseMatrix(rows, cols, values.toArray);
-    }
-  }
-  
-//  def DenseMatrix(rows : Int, cols : Int) : Matrix =
-//    new DenseMatrix(rows,cols);
-  
-  def DiagonalMatrix(diagonal : Vector) : Matrix =
-    new DiagonalMatrix(diagonal);
+  /**
+   * DenseVector literal, equivalent to
+   * <pre>DenseVector(values.size)(values :_*)</pre>.
+   */
+  def Vector(values : Double*) =
+    DenseVector(values.size)(values :_*);
   
   //
   // basic scala ops from Math.

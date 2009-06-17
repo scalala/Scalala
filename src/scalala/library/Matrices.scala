@@ -19,7 +19,7 @@
  */
 package scalala.library
 
-import scalala.tensor.{Tensor,Vector,Matrix};
+import scalala.tensor.{Tensor,Vector,Matrix,DiagonalMatrix};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
 
 /**
@@ -30,7 +30,7 @@ import scalala.tensor.dense.{DenseVector,DenseMatrix};
 trait Matrices extends Library with Vectors {
   /** A matrix of size m by n with 1 everywhere */
   def ones(rows : Int, cols : Int) : Matrix = {
-    DenseMatrix(rows,cols,Array.fromFunction(i => 1.0)(rows*cols));
+    DenseMatrix(rows,cols)(1.0);
   }
   
   /** A matrix of size m by n with 0 everywhere */
@@ -76,7 +76,7 @@ trait Matrices extends Library with Vectors {
   //
   
   def vec(m : Matrix) : Vector = {
-    Vector(Array.fromFunction(i => m(i % m.rows, i / m.rows))(m.rows * m.cols));
+    new DenseVector(Array.fromFunction(i => m(i % m.rows, i / m.rows))(m.rows * m.cols));
   }
     
   /** Returns a square diagonal matrix of the given size */
@@ -96,7 +96,7 @@ trait Matrices extends Library with Vectors {
    * Copies the contents of the underlying matrix.
    */
   def diag(v : Vector) : Matrix =
-    DiagonalMatrix(v.copy);
+    new DiagonalMatrix(v.copy);
   
   /**
    * Turns the given matrices into a block diagonal matrix.

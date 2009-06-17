@@ -158,12 +158,12 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
   def plot(y : Seq[Double])(implicit xyplot : Plotting.XYPlot) : Unit = {
-    plot(Vector(y))(xyplot);
+    plot(Vector(y :_*))(xyplot);
   }
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
   def plot(y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
-    plot(Vector(Array.fromFunction(i => i+1.0)(y.size)), y)(xyplot);
+    plot(new DenseVector(Array.fromFunction(i => i+1.0)(y.size)), y)(xyplot);
   }
   
   /** Plots the given y versus the given x with line drawn */
