@@ -33,7 +33,7 @@ import scalala.tensor.operators._;
  * @author dramage
  */
 class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
-  DoubleArrayData(data) with Matrix with MatrixMatrixSolver[Int,Int] with DenseTensor[(Int,Int)] {
+  DoubleArrayData(data) with Matrix with DenseTensor[(Int,Int)] {
   
   if (nRows * nCols != data.length)
     throw new IllegalArgumentException("data.length must equal nRows*nCols");
@@ -67,102 +67,6 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
   
   private def log(msg : String) =
     System.err.println("DenseMatrix: "+msg);
-  
-  /** Assigns each element in this map to the corresponding value as returned by the given operation. */
-  override def :=  (op : TensorOp[(Int,Int),Tensor[(Int,Int)]]) : Unit = {
-    def isDense(op : MatrixOp[_,_,_]) : Boolean = op match {
-      case MatrixTranspose(aT) => isDense(aT);
-      case _ => op.value.isInstanceOf[DenseMatrix];
-    }
-    
-    op match {
-      case MatrixInnerMultMatrix(a, b) if isDense(a) && isDense(b) =>
-        if (this.domain._1 != a.domain._1 || this.domain._2 != b.domain._2 || a.domain._2 != b.domain._1)
-          throw new IllegalArgumentException("Domains do not match in matrix multiply");
-        
-        val (transA,_A) = a match {
-          case MatrixTranspose(aT) => (true, aT.value.asInstanceOf[DenseMatrix]);
-          case _ =>                   (false, a.value.asInstanceOf[DenseMatrix]);
-        }
-        
-        val (transB,_B) = b match {
-          case MatrixTranspose(bT) => (true, bT.value.asInstanceOf[DenseMatrix]);
-          case _ =>                   (false, b.value.asInstanceOf[DenseMatrix]);
-        }
-        
-        log("running gemm");
-        
-        this.zero;
-        Numerics.blas.gemm(transA, transB,
-                           this.rows, this.cols, _A.cols,
-                           1, _A.data, _A.rows, _B.data, _B.rows,
-                           1, this.data, this.rows);
-      
-      case MatrixSolveMatrix(a, b) =>
-        if (!isDense(a) || !isDense(b))
-          throw new UnsupportedOperationException("DenseMatrix solution requires both arguments to be dense");
-
-        if (a.domain._1 == a.domain._2) {
-          // LUSolve
-          val _A = a.working.asInstanceOf[DenseMatrix]; // will be overwritten
-          val _B = b.value.asInstanceOf[DenseMatrix];   // won't be overwritten
-          
-          if (_A.rows != _B.rows)
-            throw new IllegalArgumentException("Matrix arguments must have same number of rows");
-          if (this.rows != _A.cols)
-            throw new IllegalArgumentException("This matrix must have same number of rows as first argument has cols");
-          if (this.cols != _B.cols)
-            throw new IllegalArgumentException("This matrix must have same number of cols as second argument has rows");
-          
-          this := _B;
-          val piv = new Array[Int](_A.rows);
-          val info = Numerics.lapack.gesv(_A.rows, _B.cols, _A.data, piv, this.data);
-          if (info > 0)
-            throw new MatrixSingularException();
-          else if (info < 0)
-            throw new IllegalArgumentException();
-        } else {
-          // QRSolve
-          val (trans,_A) = a match {
-            case MatrixTranspose(aT) => (true,aT.working.asInstanceOf[DenseMatrix]);
-            case _ => (false, a.working.asInstanceOf[DenseMatrix]);
-          }
-          val _B = b.value.asInstanceOf[DenseMatrix];
-          
-          // allocate temporary solution matrix
-          val nrhs = _B.cols;
-          val _Xtmp = new DenseMatrix(Math.max(rows,cols),nrhs);
-          val M = if (!trans) _A.rows else _A.cols;
-          for (j <- 0 until nrhs; i <- 0 until M) { _Xtmp(i,j) = _B(i,j); }
-          
-          // query optimal workspace
-          val queryWork = new Array[Double](1);
-          val queryInfo = Numerics.lapack.gels(trans, _A.rows, _A.cols, nrhs, _A.data, _Xtmp.data, queryWork, -1);
-          
-          // allocate workspace
-          val work = {
-            val lwork = {
-              if (queryInfo != 0)
-                Math.max(1, Math.min(_A.rows, _A.cols) + Math.max(Math.min(_A.rows, _A.cols), nrhs));
-              else
-                Math.max(queryWork(0).asInstanceOf[Int], 1);
-            }
-            new Array[Double](lwork);
-          }
-          
-          // compute factorization
-          val info = Numerics.lapack.gels(trans, _A.rows, _A.cols, nrhs, _A.data, _Xtmp.data, work, work.length);
-          
-          if (info < 0)
-            throw new IllegalArgumentException;
-          
-          // extract solution
-          val N = if (!trans) _A.cols else _A.rows;
-          for (j <- 0 until nrhs; i <- 0 until N) this(i,j) = _Xtmp(i,j);
-        }
-      case _ => super.:=(op);
-    }
-  }
   
   override def toString() = {
     def formatInt(x : Double) : String = {
@@ -219,19 +123,5 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
     }
     
     (List(prefix).elements ++ builder.elements).mkString("");
-  }
-}
-
-trait DenseMatrixSolveTest extends scalala.library.Library with scalala.tensor.operators.OperatorImplicits with scalala.ScalalaTest {
-  test("Matrix:Solve") {
-    val _A = new DenseMatrix(2, 2, Array(1.0, 2.0, 3.0, 4.0));
-    val _B = new DenseMatrix(2, 2, Array(2.0, 0.0, 3.0, 3.0));
-    assertEquals(new DenseMatrix(2, 2, Array(-4.0, 2.0, -1.5, 1.5)), (_A \ _B) value);
-    
-    val _C = new DenseMatrix(2, 3, Array(1.0, 2.0, 3.0, 4.0, 5.0, -1.0));
-    val _D = new DenseMatrix(2, 2, Array(2.0, 0.0, 3.0, 3.0));
-    assertEquals(new DenseMatrix(3, 2, Array(0.0091743, 0.0825688, 0.3486239, 0.2935780, 0.6422018, 0.1559633)), (_C \ _D).value, 1e-7);
-    
-    assertEquals(Vector(0.0091743, 0.0825688, 0.3486239), (_C \ Vector(2, 0)).value, 1e-7);
   }
 }

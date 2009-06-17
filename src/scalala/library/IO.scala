@@ -20,6 +20,7 @@
 package scalala.library;
 
 import scalala.tensor.{Matrix};
+import scalala.tensor.dense.{DenseMatrix};
 
 /**
  * Input and output routines.
@@ -34,7 +35,7 @@ trait IO extends Library {
     val numCols = scala.io.Source.fromFile(file).getLines.next.trim.split("\\s+").length;
     val numRows = scala.io.Source.fromFile(file).getLines.map(_ => 1).reduceLeft(_+_);
     
-    val m = DenseMatrix(numRows, numCols);
+    val m = new DenseMatrix(numRows, numCols);
     
     var i = 0;
     for (line <- scala.io.Source.fromFile(file).getLines) {

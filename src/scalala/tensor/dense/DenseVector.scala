@@ -33,7 +33,7 @@ import scalala.tensor.Tensor.CreateException;
  * @author dramage
  */
 class DenseVector(data : Array[Double]) extends
-  DoubleArrayData(data) with Vector with DenseTensor[Int] with MatrixVectorSolver[Int] {
+  DoubleArrayData(data) with Vector with DenseTensor[Int] {
   
   def this(size : Int) = this(new Array[Double](size));
   
@@ -62,26 +62,6 @@ class DenseVector(data : Array[Double]) extends
       i += 1;
     }
     sum;
-  }
-  
-  /** Assigns each element in this map to the corresponding value as returned by the given operation. */
-  override def :=  (op : TensorOp[Int,Tensor[Int]]) : Unit = {
-    def isDense(op : TensorOp[_,_]) : Boolean = op match {
-      case MatrixTranspose(aT) => isDense(aT);
-      case _ => op.value.isInstanceOf[DenseTensor[_]];
-    }
-    
-    op match {
-      case MatrixSolveVector(a, b) if isDense(a) && isDense(b) =>
-        import scalala.Scalala._;
-        val _b = b.working.asInstanceOf[DenseVector];
-        val _B = new DenseMatrix(_b.size, 1, _b.data);
-        val _X = new DenseMatrix(this.size, 1, this.data);
-        _X := MatrixSolveMatrix[Int,Int,Int,Tensor2[Int,Int]](a.asInstanceOf[MatrixOp[Int,Int,Tensor2[Int,Int]]], _B);
-      case MatrixSolveVector(a, b) =>
-        throw new UnsupportedOperationException("DenseMatrix solution requires both arguments to be dense");
-      case _ => super.:=(op);
-    }
   }
   
   override def toString() = new DenseMatrix(size, 1, data).toString();

@@ -22,6 +22,7 @@ package scalala.library
 import scalala.collection.PartialMap;
 
 import scalala.tensor.{Tensor,Vector};
+import scalala.tensor.dense.{DenseVector};
 
 import scalala.tensor.operators.TensorOp;
 
@@ -32,22 +33,22 @@ import scalala.tensor.operators.TensorOp;
  */
 trait Vectors extends Library with Operators {
   /** 100 evenly spaced points between a and b */
-  def linspace(a : Double, b : Double) : Vector =
+  def linspace(a : Double, b : Double) : DenseVector =
     linspace(a,b,100);
   
   /** n evenly spaced points between a and b */
-  def linspace(a : Double, b : Double, n : Int) : Vector = {
+  def linspace(a : Double, b : Double, n : Int) : DenseVector = {
     val delta = (b - a) / (n - 1.0);
-    Vector(Array.fromFunction(i => a + i*delta)(n));
+    DenseVector(Array.fromFunction(i => a + i*delta)(n));
   }
   
   /** A vector of ones of the given size */
-  def ones(n : Int) : Vector = {
-    Vector(Array.fromFunction(i => 1.0)(n));
-  }
+  def ones(n : Int) =
+    DenseVector(Array.fromFunction(i => 1.0)(n));
 
   /** A vector of zeros of the given size */
-  def zeros(n : Int) : Vector = DenseVector(n);
+  def zeros(n : Int) : Vector =
+    DenseVector(new Array[Double](n));
   
   /** Returns the sum of the elements and how many there were. */
   private def sumcount(v : Iterator[Double]) : (Double,Int) = {
@@ -309,8 +310,10 @@ trait Vectors extends Library with Operators {
  */
 trait VectorsTest extends Library with Vectors with Implicits with Random with scalala.ScalalaTest {  
   
+  import scalala.tensor.sparse.SparseVector;
+  
  test("Tensor:Moments") {
-    val v = SparseVector(1000);
+    val v = new SparseVector(1000);
     v += 1;
     v(0 until 100) = rand(100).values.collect;
     assertEquals(mean(v.toArray), mean(v), 1e-10);
@@ -339,7 +342,7 @@ trait VectorsTest extends Library with Vectors with Implicits with Random with s
   }
   
   test("Tensor:MinMax") {
-    val v = SparseVector(10);
+    val v = new SparseVector(10);
     v(3) = 1;
     assertEquals(1, max(v));
     assertEquals(3, argmax(v));

@@ -20,6 +20,7 @@
 package scalala.library
 
 import scalala.tensor.{Tensor,Vector,Matrix};
+import scalala.tensor.dense.{DenseVector,DenseMatrix};
 
 /**
  * Basic matrix functions.
@@ -33,7 +34,7 @@ trait Matrices extends Library with Vectors {
   }
   
   /** A matrix of size m by n with 0 everywhere */
-  def zeros(rows : Int, cols : Int) : Matrix = DenseMatrix(rows,cols);
+  def zeros(rows : Int, cols : Int) : Matrix = new DenseMatrix(rows,cols);
   
   /** Sums the columns of the given matrix, returning a row vector */
   def sum(m : Matrix) : Matrix = sum(m, 1);
@@ -42,14 +43,14 @@ trait Matrices extends Library with Vectors {
   def sum(m : Matrix, dim : Int) : Matrix = {
     dim match {
       case 1 => {
-        val sum = DenseMatrix(1, m.cols);
+        val sum = new DenseMatrix(1, m.cols);
         for (entry <- m.elements) {
           sum(0, entry._1._2) += entry._2;
         }
         sum;
       }
       case 2 => {
-        val sum = DenseMatrix(m.rows, 1);
+        val sum = new DenseMatrix(m.rows, 1);
         for (entry <- m.elements) {
           sum(entry._1._1, 0) += entry._2;
         }
@@ -85,7 +86,7 @@ trait Matrices extends Library with Vectors {
   
   /** Returns a dense vector with ones on the diagonal. */
   def eye(n : Int) : Matrix = {
-    val rv = DenseMatrix(n,n);
+    val rv = new DenseMatrix(n,n);
     rv := diag(ones(n));
     rv;
   } 
@@ -95,7 +96,7 @@ trait Matrices extends Library with Vectors {
    * Copies the contents of the underlying matrix.
    */
   def diag(v : Vector) : Matrix =
-    DiagonalMatrix(v.copy.asInstanceOf[Vector]);
+    DiagonalMatrix(v.copy);
   
   /**
    * Turns the given matrices into a block diagonal matrix.

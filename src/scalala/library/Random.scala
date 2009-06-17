@@ -21,6 +21,8 @@ package scalala.library;
 
 import scalala.tensor.{Tensor,Vector,Matrix};
 
+import scalala.tensor.dense.{DenseVector,DenseMatrix};
+
 /**
  * Random number generation.
  * 
@@ -34,7 +36,7 @@ trait Random extends Library {
   
   /** Returns vector of size n, each element from 0 to 1 */
   def rand(n : Int)(implicit rand : java.util.Random) : Vector = {
-    val v = DenseVector(n);
+    val v = new DenseVector(n);
     for (i <- 0 until n) {
       v(i) = rand.nextDouble;
     }
@@ -43,7 +45,7 @@ trait Random extends Library {
   
   /** Returns a random matrix of the given size, each element drawn from 0 to 1 */
   def rand(rows : Int, cols : Int)(implicit rand : java.util.Random) : Matrix = {
-    val m = DenseMatrix(rows,cols);
+    val m = new DenseMatrix(rows,cols);
     for (i <- 0 until rows; j <- 0 until cols) {
       m(i,j) = rand.nextDouble;
     }
@@ -55,7 +57,7 @@ trait Random extends Library {
   
   /** Returns a vector of size n, each element from a gaussian*/
   def randn(n : Int)(implicit rand : java.util.Random) : Vector = {
-    val v = DenseVector(n);
+    val v = new DenseVector(n);
     for (i <- 0 until n) {
       v(i) = rand.nextGaussian;
     }
@@ -64,7 +66,7 @@ trait Random extends Library {
   
   /** Returns a random matrix of the given size, each element drawn from a gaussian */
   def randn(rows : Int, cols : Int)(implicit rand : java.util.Random) : Matrix = {
-    val m = DenseMatrix(rows,cols);
+    val m = new DenseMatrix(rows,cols);
     for (i <- 0 until rows; j <- 0 until cols) {
       m(i,j) = rand.nextGaussian;
     }

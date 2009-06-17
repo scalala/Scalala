@@ -21,6 +21,7 @@ package scalala.library;
 
 import scalala.collection.PartialMap;
 import scalala.tensor.{Tensor,Vector,Matrix};
+import scalala.tensor.dense.{DenseVector,DenseMatrix};
 
 /**
  * Matlab-like plotting routines.
@@ -137,7 +138,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
       }
     }
     
-    val counts = DenseVector(bins.size);
+    val counts = new DenseVector(bins.size);
     for (point <- data.values) {
       val bin = bucket(point, 0, bins.size-1);
       counts(bin) += 1;

@@ -55,9 +55,6 @@ trait TensorImplicits {
   
   implicit def iArrayToVector(x : Array[Double]) =
     new dense.DenseVector(x);
-
-  implicit def iArrayToVectorOp(x : Array[Double]) =
-    operators.VectorIdentity(iArrayToVector(x));
   
   implicit def iArrayToPartialMap(x : Array[Float]) = {
     new PartialMap[Int,Double] {
@@ -274,134 +271,135 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   final def -= (t : PartialMap[I,Double]) = this.:-=(t);
   
   //
-  // Assignments and updates from a NumericPartialMapOp
+  // Assignments and updates from an op
   //
 
-  /** Assigns each element in this map to the corresponding value as returned by the given operation. */
-  def :=  (op : TensorOp[I,Tensor[I]]) : Unit = {
-    op match {
-      case op : TensorOp[_,_] => this := op.value;
-    }
-  }
-  
-  /** Returns the partial map representing this tensor op skipping negations. */
-  private def getPartialMap[I](op : TensorOp[I,_]) : PartialMap[I,Double] = {
-    op match {
-      case TensorNegation(n) => n.value.map((x:Double) => -x);
-      case _ => op.value.asInstanceOf[PartialMap[I,Double]];
-    }
-  }
-  
-  /** Increments each element in this map by the corresponding value as returned by the given operation. */
-  def :+= (op : TensorOp[I,Tensor[I]]) : Unit = {
-    op match {
-      case TensorMultScalar(m, s) if (s != 0) => {
-        val t = getPartialMap(m);
-        if (t.default == 0) {
-          for (i <- t.activeDomain) {
-            this(i) += t(i) * s;
-          }
-        } else {
-          this.default += t.default * s;
-          this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (t(i) * s));
-        }
-      }
-      case ScalarDivTensor(s, m) => {
-        val t = getPartialMap(m);
-        this.default += (s / t.default);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (s / t(i)));
-      }
-      case TensorPlusScalar(m, s) => {
-        val t = getPartialMap(m);
-        this.default += (t.default + s);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (t(i) + s));
-      }
-      case op : TensorOp[_,_] => this :+= op.value;
-    }
-  }
-  
-  /** Decrements each element in this map by the corresponding value as returned by the given operation. */
-  def :-= (op : TensorOp[I,Tensor[I]]) : Unit = {
-    op match {
-      case TensorMultScalar(m, s) if (s != 0) => {
-        val t = getPartialMap(m);
-        if (t.default == 0) {
-          for (i <- t.activeDomain) {
-            this(i) -= t(i) * s;
-          }
-        } else {
-          this.default -= t.default * s;
-          this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (t(i) * s));
-        }
-      }
-      case ScalarDivTensor(s, m) => {
-        val t = getPartialMap(m);
-        this.default -= (s / t.default);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (s / t(i)));
-      }
-      case TensorPlusScalar(m, s) => {
-        val t = getPartialMap(m);
-        this.default -= (t.default + s);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (t(i) + s));
-      }
-      case op : TensorOp[_,_] => this :-= op.value;
-    }
-  }
-  
-  /** Multiplies each element in this map by the corresponding value as returned by the given operation. */
-  def :*= (op : TensorOp[I,Tensor[I]]) : Unit = {
-    op match {
-      case TensorMultScalar(m, s) => {
-        val t = getPartialMap(m);
-        this.default *= (t.default * s);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (t(i) * s));
-      }
-      case ScalarDivTensor(s, m) => {
-        val t = getPartialMap(m);
-        this.default *= (s / t.default);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (s / t(i)));
-      }
-      case TensorPlusScalar(m, s) => {
-        val t = getPartialMap(m);
-        this.default *= (t.default + s);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (t(i) + s));
-      }
-      case op : TensorOp[_,_] => this :*= op.value;
-    }
-  }
-  
-  /** Divides each element in this map by the corresponding value as returned by the given operation. */
-  def :/= (op : TensorOp[I,Tensor[I]]) : Unit = {
-    op match {
-      case TensorMultScalar(m, s) => {
-        val t = getPartialMap(m);
-        this.default /= (t.default * s);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (t(i) * s));
-      }
-      case ScalarDivTensor(s, m) => {
-        val t = getPartialMap(m);
-        this.default /= (s / t.default);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (s / t(i)));
-      }
-      case TensorPlusScalar(m, s) => {
-        val t = getPartialMap(m);
-        this.default /= (t.default + s);
-        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (t(i) + s));
-      }
-      case op : TensorOp[_,_] => this :/= op.value;
-    }
-  }
-
-  /** Raises each element in this map to the power (in the corresponding value) in the value returned by the given operation. */
-  def :^= (op : TensorOp[I,Tensor[I]]) : Unit = {
-    this :^= op.value;
-  }
-  
-  /** += with a TensorOp is a fixed alias for :+= */
-  final def += (op : TensorOp[I,Tensor[I]]) : Unit = this.:+=(op);
-  
-  /** -= with a TensorOp is a fixed alias for :-= */
-  final def -= (op : TensorOp[I,Tensor[I]]) : Unit = this.:-=(op);
+//  /** Assigns each element in this map to the corresponding value as returned by the given operation. */
+//  def := [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit = {
+//    op match {
+//      case op : TensorOp[_,_,_,_] => this := op.value;
+//    }
+//  }
+//  
+//  /** Returns the partial map representing this tensor op skipping negations. */
+//  private def getPartialMap[I,Bound<:Tensor[I],Value<:Bound](op : TensorOp[I,Bound,Value,Shape]) : PartialMap[I,Double] = {
+//    op match {
+//      case TensorNegation(n) => n.value.map((x:Double) => -x);
+//      case _ => op.value.asInstanceOf[PartialMap[I,Double]];
+//    }
+//  }
+//  
+//  /** Increments each element in this map by the corresponding value as returned by the given operation. */
+//  def :+= [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit = {
+//    op match {
+//      case TensorMultScalar(m, s) if (s != 0) => {
+//        val t = getPartialMap(m);
+//        if (t.default == 0) {
+//          for (i <- t.activeDomain) {
+//            this(i) += t(i) * s;
+//          }
+//        } else {
+//          this.default += t.default * s;
+//          this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (t(i) * s));
+//        }
+//      }
+//      case ScalarDivTensor(s, m) => {
+//        val t = getPartialMap(m);
+//        this.default += (s / t.default);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (s / t(i)));
+//      }
+//      case TensorPlusScalar(m, s) => {
+//        val t = getPartialMap(m);
+//        this.default += (t.default + s);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x + (t(i) + s));
+//      }
+//      case op : TensorOp[_,_,_,_] => this :+= op.value;
+//    }
+//  }
+//  
+//  /** Decrements each element in this map by the corresponding value as returned by the given operation. */
+//  def :-= [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit = {
+//    op match {
+//      case TensorMultScalar(m, s) if (s != 0) => {
+//        val t = getPartialMap(m);
+//        if (t.default == 0) {
+//          for (i <- t.activeDomain) {
+//            this(i) -= t(i) * s;
+//          }
+//        } else {
+//          this.default -= t.default * s;
+//          this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (t(i) * s));
+//        }
+//      }
+//      case ScalarDivTensor(s, m) => {
+//        val t = getPartialMap(m);
+//        this.default -= (s / t.default);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (s / t(i)));
+//      }
+//      case TensorPlusScalar(m, s) => {
+//        val t = getPartialMap(m);
+//        this.default -= (t.default + s);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x - (t(i) + s));
+//      }
+//      case op : TensorOp[_,_,_,_] => this :-= op.value;
+//    }
+//  }
+//  
+//  /** Multiplies each element in this map by the corresponding value as returned by the given operation. */
+//  def :*= [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit = {
+//    op match {
+//      case TensorMultScalar(m, s) => {
+//        val t = getPartialMap(m);
+//        this.default *= (t.default * s);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (t(i) * s));
+//      }
+//      case ScalarDivTensor(s, m) => {
+//        val t = getPartialMap(m);
+//        this.default *= (s / t.default);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (s / t(i)));
+//      }
+//      case TensorPlusScalar(m, s) => {
+//        val t = getPartialMap(m);
+//        this.default *= (t.default + s);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (t(i) + s));
+//      }
+//      case op : TensorOp[_,_,_,_] => this :*= op.value;
+//    }
+//  }
+//  
+//  /** Divides each element in this map by the corresponding value as returned by the given operation. */
+//  def :/= [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit = {
+//    op match {
+//      case TensorMultScalar(m, s) => {
+//        val t = getPartialMap(m);
+//        this.default /= (t.default * s);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (t(i) * s));
+//      }
+//      case ScalarDivTensor(s, m) => {
+//        val t = getPartialMap(m);
+//        this.default /= (s / t.default);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (s / t(i)));
+//      }
+//      case TensorPlusScalar(m, s) => {
+//        val t = getPartialMap(m);
+//        this.default /= (t.default + s);
+//        this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (t(i) + s));
+//      }
+//      case op : TensorOp[_,_,_,_] => this :/= op.value;
+//    }
+//  }
+//
+//  /** Raises each element in this map to the power (in the corresponding value) in the value returned by the given operation. */
+//  def :^= [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit =
+//    this :^= op.value;
+//  
+//  /** += with a TensorOp is a fixed alias for :+= */
+//  final def += [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit =
+//    this.:+=(op);
+//  
+//  /** -= with a TensorOp is a fixed alias for :-= */
+//  final def -= [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit =
+//    this.:-=(op);
   
   /** Approximate equality at a given tolerance level. */
   def =~= (tolerance : Double)(that : Tensor[I]) : Boolean = {

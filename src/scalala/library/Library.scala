@@ -40,24 +40,24 @@ trait Library {
     case _ => new DenseVector(values.toArray);
   }
   
-  def DenseVector(size : Int) : Vector =
-    new DenseVector(size);
+  def DenseVector(values : Array[Double]) : Vector =
+    new DenseVector(values);
   
-  def DenseVector(values : {def toArray : Array[Double]}) : Vector =
-    new DenseVector(values.toArray);
+  def DenseVector(values : Double*) : DenseVector =
+    new DenseVector(values.asInstanceOf[Collection[Double]].toArray);
   
-  def DenseVector[T<:AnyVal](values : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : Vector = {
+  def DenseVector[T<:AnyVal](values : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : DenseVector = {
     import scalala.tensor.TensorImplicits._;
     val x = new DenseVector(values.size);
     x := values;
     x;
   }
   
-  def SparseVector(size : Int) : Vector =
-    new SparseVector(size);
-  
-  def SparseVector(size : Int, nonzeros : Int) : Vector =
-    new SparseVector(size, nonzeros);
+//  def SparseVector(size : Int) : Vector =
+//    new SparseVector(size);
+//  
+//  def SparseVector(size : Int, nonzeros : Int) : Vector =
+//    new SparseVector(size, nonzeros);
   
   def Matrix(rows : Int, cols : Int)(values : Double*) : Matrix =
     new DenseMatrix(rows, cols, values.toArray);
@@ -69,8 +69,8 @@ trait Library {
     }
   }
   
-  def DenseMatrix(rows : Int, cols : Int) : Matrix =
-    new DenseMatrix(rows,cols);
+//  def DenseMatrix(rows : Int, cols : Int) : Matrix =
+//    new DenseMatrix(rows,cols);
   
   def DiagonalMatrix(diagonal : Vector) : Matrix =
     new DiagonalMatrix(diagonal);
