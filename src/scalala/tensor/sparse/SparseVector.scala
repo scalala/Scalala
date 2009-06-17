@@ -491,6 +491,12 @@ trait SparseVectorTest extends scalala.library.Library with scalala.library.Rand
 }
 
 object SparseVector {
+  def apply(size : Int)(default : Double) = {
+    val sv = new SparseVector(size, 0);
+    sv += default;
+    sv;
+  }
+  
   /** Creates a general sparse tensor for the requested domain. */
   def create[J](domain : MergeableSet[J]) : Tensor[J] = domain match {
     case IntSpanSet(0,len) => new SparseVector(len);

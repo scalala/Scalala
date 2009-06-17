@@ -104,7 +104,7 @@ extends RichTensorOp[(Int,Int),Matrix,M,(Int,Int)](base) {
     ops.mkMatrixMultColVector(base, op);
   
   /** Matrix-vector multiplication */
-  def * (v : Vector)(implicit vOps : ColVectorOpBuilder[V,M]) =
+  def *[V<:Vector] (v : V)(implicit vOps : ColVectorOpBuilder[V,M]) =
     ops.mkMatrixMultColVector(base, vOps.mkTensorIdentity(v));
 }
 

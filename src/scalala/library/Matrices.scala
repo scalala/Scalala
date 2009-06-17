@@ -29,12 +29,12 @@ import scalala.tensor.dense.{DenseVector,DenseMatrix};
  */
 trait Matrices extends Library with Vectors {
   /** A matrix of size m by n with 1 everywhere */
-  def ones(rows : Int, cols : Int) : Matrix = {
+  def ones(rows : Int, cols : Int) =
     DenseMatrix(rows,cols)(1.0);
-  }
   
   /** A matrix of size m by n with 0 everywhere */
-  def zeros(rows : Int, cols : Int) : Matrix = new DenseMatrix(rows,cols);
+  def zeros(rows : Int, cols : Int) =
+    DenseMatrix(rows,cols)(0.0);
   
   /** Sums the columns of the given matrix, returning a row vector */
   def sum(m : Matrix) : Matrix = sum(m, 1);
@@ -75,17 +75,15 @@ trait Matrices extends Library with Vectors {
   // Data formatters, mungers, etc
   //
   
-  def vec(m : Matrix) : Vector = {
+  def vec(m : Matrix) =
     new DenseVector(Array.fromFunction(i => m(i % m.rows, i / m.rows))(m.rows * m.cols));
-  }
     
   /** Returns a square diagonal matrix of the given size */
-  def diag(n : Int) : Matrix = {
+  def diag(n : Int) : DiagonalMatrix =
     return diag(ones(n));
-  }
   
   /** Returns a dense vector with ones on the diagonal. */
-  def eye(n : Int) : Matrix = {
+  def eye(n : Int) = {
     val rv = new DenseMatrix(n,n);
     rv := diag(ones(n));
     rv;
@@ -95,7 +93,7 @@ trait Matrices extends Library with Vectors {
    * Returns a diagonal matrix with the given vector on the diagonal.
    * Copies the contents of the underlying matrix.
    */
-  def diag(v : Vector) : Matrix =
+  def diag(v : Vector) : DiagonalMatrix =
     new DiagonalMatrix(v.copy);
   
   /**
