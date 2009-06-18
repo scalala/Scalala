@@ -129,6 +129,13 @@ class SparseHashVector(override val size : Int, protected val hashmap : Int2Doub
   }
 }
 
+object SparseHashVector {
+  def apply(size : Int)(default : Double) = {
+    val sv = new SparseHashVector(size);
+    sv += default;
+    sv;
+  }
+}
 
 trait SparseHashVectorTest extends scalala.library.Library with scalala.library.Random with scalala.ScalalaTest {
   test("SparseHashVector:General") {
