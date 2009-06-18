@@ -29,11 +29,11 @@ object VectorTypes {
   type ColVectorOp[V<:Vector] =
     ColTensor1Op[Int,Vector,V];
 
-  type ColVectorOpBuilder[V<:Vector,M<:Matrix] =
-    ColTensor1OpBuilder[Int,Vector,M];
+  type ColVectorOpBuilder[V<:Vector] =
+    ColTensor1OpBuilder[Int,Vector,Matrix];
 
-  type RichColVectorOp[V<:Vector,M] =
-      RichColTensor1Op[Int,Vector,V,Matrix];
+  type RichColVectorOp[V<:Vector] =
+    RichColTensor1Op[Int,Vector,V,Matrix];
 
   type RowVectorOp[V<:Vector] =
     RowTensor1Op[Int,Vector,V];
@@ -45,19 +45,19 @@ import MatrixTypes._;
 
 trait VectorOps {
   protected val colVectorOpBuilder =
-    new ColVectorOpBuilder[Vector,Matrix]();
+    new ColVectorOpBuilder[Vector]();
   
-  implicit def iColVectorOpBuilder[V<:Vector,M<:Matrix] =
-    colVectorOpBuilder.asInstanceOf[ColVectorOpBuilder[V,M]];
+  implicit def iColVectorOpBuilder[V<:Vector] =
+    colVectorOpBuilder.asInstanceOf[ColVectorOpBuilder[V]];
 
   implicit def iColVectorOpTopRichColVectorOp
   (op : ColVectorOp[Vector])
-  (implicit builder : ColVectorOpBuilder[Vector,Matrix]) =
+  (implicit builder : ColVectorOpBuilder[Vector]) =
     new RichColVectorOp(op)(builder);
 
   implicit def iVectorToRichColVectorOp(x : Vector)
-  (implicit builder : ColVectorOpBuilder[Vector,Matrix]) =
-    new RichColVectorOp[Vector,Matrix](builder.mkTensorIdentity(x))(builder);
+  (implicit builder : ColVectorOpBuilder[Vector]) =
+    new RichColVectorOp[Vector](builder.mkTensorIdentity(x))(builder);
 
   protected val rowVectorOpBuilder =
     new RowVectorOpBuilder();
@@ -105,8 +105,8 @@ extends RichTensorOp[Int,Vector,V,Tensor1Op.Row](base) {
     ops.mkVectorDotVector(base, op);
   
   /** Inner multiplication. */
-  def * [V2<:Vector,M<:Matrix]
-  (v : V2)(implicit colOps : ColVectorOpBuilder[V2,M]) =
+  def * [V2<:Vector]
+  (v : V2)(implicit colOps : ColVectorOpBuilder[V2]) =
     ops.mkVectorDotVector(base, colOps.mkTensorIdentity(v));
   
   /** Vector-matrix multiplication */

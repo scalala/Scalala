@@ -374,6 +374,17 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   }
 }
 
+object SparseBinaryVector {
+  import scalala.tensor.operators.TensorIdentity;
+  import scalala.tensor.operators.Tensor1Op;
+  
+  implicit def iSparseBinaryVectorToTensorIdentity(v : SparseBinaryVector)
+  : TensorIdentity[Int,Vector,SparseBinaryVector,Tensor1Op.Col] = {
+    println("Called method");
+    null;
+  }
+}
+
 trait SparseBinaryVectorTest extends scalala.library.Library with scalala.library.Random with scalala.ScalalaTest {
   test("SparseBinaryVector") {
     val x = new SparseBinaryVector(10);

@@ -115,7 +115,6 @@ trait TensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape] {
  * @author dramage
  */
 class TensorOpBuilder[I,Bound<:Tensor[I],Shape] {
-  
   def mkTensorIdentity[Value<:Bound](tensor : Value) =
     TensorIdentity[I,Bound,Value,Shape](tensor);
   

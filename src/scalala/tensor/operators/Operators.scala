@@ -62,7 +62,7 @@ private object Scratch {
   val a = iScalarToRichScalarTensorOp(2) + w;
   val b = w.t;
 
-  val qq : DenseMatrix = scalala.Scalala.ones(3,3).asInstanceOf[DenseMatrix];
+  val qq : DenseMatrix = scalala.Scalala.ones(3,3);
   val qq1 = qq + 1;
   val qq2 = qq + 1 - qq;
   val qq3 = qq1.t;

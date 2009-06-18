@@ -52,8 +52,8 @@ trait Tensor1Ops {
   protected val colTensor1OpBuilder =
     new ColTensor1OpBuilder[Any,Tensor1[Any],Tensor2[Any,Any]]();
 
-  implicit def iColTensor1OpBuilder[I,V<:Tensor1[I],OuterMult<:Tensor2[I,I]] =
-    colTensor1OpBuilder.asInstanceOf[ColTensor1OpBuilder[I,Tensor1[I],OuterMult]];
+  implicit def iColTensor1OpBuilder[I,Bound1<:Tensor1[I],Bound2<:Tensor2[I,I]] =
+    colTensor1OpBuilder.asInstanceOf[ColTensor1OpBuilder[I,Tensor1[I],Bound2]];
 
   implicit def iColTensor1OpToRichColTensor1Op[I,V<:Tensor1[I]]
   (op : TensorOp[I,Tensor1[I],V,Tensor1Op.Col])
@@ -85,15 +85,15 @@ object Tensor1Ops extends Tensor1Ops;
 
 
 /** Operators for column tensors. */
-class ColTensor1OpBuilder[I,Bound<:Tensor1[I],OuterMult<:Tensor2[I,I]]
-extends TensorOpBuilder[I,Bound,Tensor1Op.Col] {
-  def mkTensor1ColToRow[Value<:Bound](op : ColTensor1Op[I,Bound,Value]) =
+class ColTensor1OpBuilder[I,Bound1<:Tensor1[I],Bound2<:Tensor2[I,I]]
+extends TensorOpBuilder[I,Bound1,Tensor1Op.Col] {
+  def mkTensor1ColToRow[Value<:Bound1](op : ColTensor1Op[I,Bound1,Value]) =
     Tensor1ColToRow(op);
   
-  def mkTensor1OuterMultTensor1[V1<:Bound,V2<:Bound](
-    a : TensorOp[I,Bound,V1,Tensor1Op.Col],
-    b : TensorOp[I,Bound,V2,Tensor1Op.Row]) =
-    Tensor1OuterMultTensor1[I,Bound,V1,V2,OuterMult](a,b);
+  def mkTensor1OuterMultTensor1[V1<:Bound1,V2<:Bound1](
+    a : TensorOp[I,Bound1,V1,Tensor1Op.Col],
+    b : TensorOp[I,Bound1,V2,Tensor1Op.Row]) =
+    Tensor1OuterMultTensor1[I,Bound1,V1,V2,Bound2](a,b);
 }
 
 /** Operators for column tensors. */

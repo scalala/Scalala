@@ -213,16 +213,19 @@ trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
     assertEquals(A * B value, C value, 1e-5);
   }
   
-  test("Operators:Implicits") {
+  test("Operators:ArrayMath") {
     import TensorImplicits._;
     
-    val x = Array(1.0,2.0,3.0);
+    val x = Array(1.,2.,3.);
     x *= 2.0;
     assertEquals(x.toList, List(2.0,4.0,6.0));
     
-    val y = Array(3,2,1);
-    // y *= 2;      // correct compile error: doesn't promote to mutable
-    x :*= y;
+    val y = Array(3.,2.,1.);
+
+    assertEquals(x :* y value, Vector(6,8,6));
+    
+    // y *= 2;      // correct compile error: Array[Int] doesn't promote to mutable
+    x :*= Array(3,2,1);
     assertEquals(x.toList, List(6.0, 8.0, 6.0));
   }
   

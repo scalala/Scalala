@@ -46,7 +46,7 @@ trait MatrixOps {
   
   implicit def iMatrixOpToRichMatrixOp[M<:Matrix,V<:Vector]
   (op : MatrixOp[M])
-  (implicit builder : MatrixOpBuilder, vops : ColVectorOpBuilder[V,M]) =
+  (implicit builder : MatrixOpBuilder, vops : ColVectorOpBuilder[V]) =
     new RichMatrixOp(op)(builder);
   
   implicit def iMatrixToRichMatrixOp
@@ -104,7 +104,7 @@ extends RichTensorOp[(Int,Int),Matrix,M,(Int,Int)](base) {
     ops.mkMatrixMultColVector(base, op);
   
   /** Matrix-vector multiplication */
-  def *[V<:Vector] (v : V)(implicit vOps : ColVectorOpBuilder[V,M]) =
+  def *[V<:Vector] (v : V)(implicit vOps : ColVectorOpBuilder[V]) =
     ops.mkMatrixMultColVector(base, vOps.mkTensorIdentity(v));
 }
 
