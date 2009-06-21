@@ -24,7 +24,7 @@ package scalala.tensor.operators;
  * DenseVectorOps, Tensor2Ops, MatrixOps, and DenseMatrixOps.
  */
 trait OperatorImplicits extends TensorOps 
-with Tensor1Ops with VectorOps with DenseVectorOps
+with Tensor1Ops with VectorOps with DenseVectorOps with SparseBinaryVectorOps
 with Tensor2Ops with MatrixOps with DenseMatrixOps;
 
 /**
