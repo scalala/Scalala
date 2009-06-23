@@ -137,4 +137,7 @@ object DenseMatrix {
   def apply(rows : Int, cols : Int)(values : Double*) = {
     new DenseMatrix(rows, cols, Array.fromFunction(i => values(i % values.length))(rows * cols));
   }
+  
+  implicit def iDenseMatrixOp[M<:DenseMatrix](m : M) =
+    Matrix.iMatrixOp(m);
 }

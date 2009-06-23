@@ -37,21 +37,21 @@ import VectorTypes._;
 
 /** Implicits supporting Matrix operations. */
 trait MatrixOps {
-  implicit val sharedMatrixOpBuilder =
-    new MatrixOpBuilder();
+  implicit val sharedMatrixOpBuilderImpl =
+    new MatrixOpBuilderImpl();
   
   implicit def iMatrixToMatrixOp(x : Matrix)
-  (implicit builder : MatrixOpBuilder) =
+  (implicit builder : MatrixOpBuilderImpl) =
     builder.mkTensorIdentity(x);
   
   implicit def iMatrixOpToRichMatrixOp[M<:Matrix,V<:Vector]
   (op : MatrixOp[M])
-  (implicit builder : MatrixOpBuilder, vops : ColVectorOpBuilder[V]) =
+  (implicit builder : MatrixOpBuilderImpl, vops : ColVectorOpBuilderImpl[V]) =
     new RichMatrixOp(op)(builder);
   
   implicit def iMatrixToRichMatrixOp
   (x : Matrix)
-  (implicit builder : MatrixOpBuilder) =
+  (implicit builder : MatrixOpBuilderImpl) =
     new RichMatrixOp(builder.mkTensorIdentity(x))(builder);
 }
 
@@ -63,7 +63,7 @@ object MatrixOps extends MatrixOps;
  * clean way to inherit from Tensor2Op*, so there is some code duplication
  * here.
  */
-class MatrixOpBuilder
+trait MatrixOpBuilder
 extends TensorOpBuilder[(Int,Int),Matrix,(Int,Int)] {
   
   def mkMatrixTranspose[M<:Matrix]
@@ -78,6 +78,8 @@ extends TensorOpBuilder[(Int,Int),Matrix,(Int,Int)] {
   (a : MatrixOp[M], b : ColVectorOp[V]) =
     new MatrixMultColVector(a, b);
 }
+
+class MatrixOpBuilderImpl extends MatrixOpBuilder;
 
 /**
  * Matrix methods. Because Matrix isn't parameterized, there is no
@@ -95,17 +97,9 @@ extends RichTensorOp[(Int,Int),Matrix,M,(Int,Int)](base) {
   def *[M2<:Matrix] (op : MatrixOp[M2]) =
     ops.mkMatrixMultMatrix(base,op);
   
-  /** Matrix-matrix multiplication */
-  def * (m : Matrix) =
-    ops.mkMatrixMultMatrix(base, ops.mkTensorIdentity(m));
-  
   /** Matrix-vector multiplication */
   def *[V<:Vector] (op : ColVectorOp[V]) =
     ops.mkMatrixMultColVector(base, op);
-  
-  /** Matrix-vector multiplication */
-  def *[V<:Vector] (v : V)(implicit vOps : ColVectorOpBuilder[V]) =
-    ops.mkMatrixMultColVector(base, vOps.mkTensorIdentity(v));
 }
 
 /**

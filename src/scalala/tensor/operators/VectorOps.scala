@@ -42,32 +42,37 @@ object VectorTypes {
 import VectorTypes._;
 import MatrixTypes._;
 
+class ColVectorOpBuilderImpl[V<:Vector]
+extends ColVectorOpBuilder[V];
+
+class RowVectorOpBuilderImpl[V<:Vector]
+extends RowVectorOpBuilder[V];
 
 trait VectorOps {
-  protected val colVectorOpBuilder =
-    new ColVectorOpBuilder[Vector]();
+  protected val colVectorOpBuilderImpl =
+    new ColVectorOpBuilderImpl[Vector]();
   
-  implicit def iColVectorOpBuilder[V<:Vector] =
-    colVectorOpBuilder.asInstanceOf[ColVectorOpBuilder[V]];
+  implicit def iColVectorOpBuilderImpl[V<:Vector] =
+    colVectorOpBuilderImpl.asInstanceOf[ColVectorOpBuilderImpl[V]];
 
   implicit def iColVectorOpTopRichColVectorOp
   (op : ColVectorOp[Vector])
-  (implicit builder : ColVectorOpBuilder[Vector]) =
+  (implicit builder : ColVectorOpBuilderImpl[Vector]) =
     new RichColVectorOp(op)(builder);
 
   implicit def iVectorToRichColVectorOp(x : Vector)
-  (implicit builder : ColVectorOpBuilder[Vector]) =
+  (implicit builder : ColVectorOpBuilderImpl[Vector]) =
     new RichColVectorOp[Vector](builder.mkTensorIdentity(x))(builder);
 
-  protected val rowVectorOpBuilder =
+  protected val rowVectorOpBuilderImpl =
     new RowVectorOpBuilder();
   
-  implicit def iRowVectorOpBuilder[V<:Vector] =
-    rowVectorOpBuilder.asInstanceOf[RowVectorOpBuilder[V]];
+  implicit def iRowVectorOpBuilderImpl[V<:Vector] =
+    rowVectorOpBuilderImpl.asInstanceOf[RowVectorOpBuilderImpl[V]];
 
   implicit def iRowVectorOpToRichRowVectorOp[V<:Vector]
   (op : RowVectorOp[V])
-  (implicit builder : RowVectorOpBuilder[V]) =
+  (implicit builder : RowVectorOpBuilderImpl[V]) =
     new RichRowVectorOp[V](op)(builder);
   
 //  implicit def iColVectorOpToVector[V<:Vector]
@@ -104,20 +109,10 @@ extends RichTensorOp[Int,Vector,V,Tensor1Op.Row](base) {
   def * [V2<:Vector] (op : ColVectorOp[V2]) =
     ops.mkVectorDotVector(base, op);
   
-  /** Inner multiplication. */
-  def * [V2<:Vector]
-  (v : V2)(implicit colOps : ColVectorOpBuilder[V2]) =
-    ops.mkVectorDotVector(base, colOps.mkTensorIdentity(v));
-  
   /** Vector-matrix multiplication */
   def * [M<:Matrix]
   (op : MatrixOp[M]) =
     ops.mkRowVectorMultMatrix[V,M](base, op);
-  
-  /** Vector-matrix multiplication */
-  def * [M<:Matrix]
-  (m : M)(implicit mOps : MatrixOpBuilder) =
-    ops.mkRowVectorMultMatrix[V,M](base, mOps.mkTensorIdentity(m));
 }
 
 case class VectorMultMatrix[VO<:Vector,VI<:Vector,M<:Matrix]

@@ -33,24 +33,24 @@ import Tensor1Types._;
 
 /** Implicits for working with Tensor2 instances. */
 trait Tensor2Ops {
-  protected val sharedTensor2OpBuilder =
-    new Tensor2OpBuilder[Any,Any,Tensor2,Tensor1]();
+  protected val sharedTensor2OpBuilderImpl =
+    new Tensor2OpBuilderImpl[Any,Any,Tensor2,Tensor1]();
   
-  implicit def iTensor2OpBuilder[I,J] =
-    new Tensor2OpBuilder[I,J,Tensor2,Tensor1]();
+  implicit def iTensor2OpBuilderImpl[I,J] =
+    new Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]();
   
   implicit def iTensor2ToTensor2Op[I,J](x : Tensor2[I,J])
-  (implicit builder : Tensor2OpBuilder[I,J,Tensor2,Tensor1]) =
+  (implicit builder : Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]) =
     builder.mkTensorIdentity(x);
   
   implicit def iTensor2OpToRichTensor2Op[I,J]
   (op : Tensor2Op[I,J,Tensor2[I,J],Tensor2[I,J]])
-  (implicit builder : Tensor2OpBuilder[I,J,Tensor2,Tensor1]) =
+  (implicit builder : Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]) =
     new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](op)(builder);
   
   implicit def iTensor2ToRichTensor2Op[I,J]
   (x : Tensor2[I,J])
-  (implicit builder : Tensor2OpBuilder[I,J,Tensor2,Tensor1]) =
+  (implicit builder : Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]) =
     new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](x)(builder);
   
 //  implicit def iTensor2OpToTensor2[I,J]
@@ -62,7 +62,7 @@ trait Tensor2Ops {
 object Tensor2Ops extends Tensor2Ops;
 
 /** Builder for Tensor2 operators. */
-class Tensor2OpBuilder[I,J,Bound2[X,Y]<:Tensor2[X,Y],Bound1[X]<:Tensor1[X]]
+trait Tensor2OpBuilder[I,J,Bound2[X,Y]<:Tensor2[X,Y],Bound1[X]<:Tensor1[X]]
 extends TensorOpBuilder[(I,J),Bound2[I,J],(I,J)] {
   
   def mkTensor2Transpose[Value[X,Y]<:Bound2[X,Y]]
@@ -77,6 +77,9 @@ extends TensorOpBuilder[(I,J),Bound2[I,J],(I,J)] {
   (a : Tensor2Op[I,J,Bound2[I,J],MV], b : ColTensor1Op[J,Bound1[J],VV[J]]) =
     Tensor2MultColTensor1[I,J,Bound1,VV,Bound2,MV,Value](a,b);
 }
+
+class Tensor2OpBuilderImpl[I,J,Bound2[X,Y]<:Tensor2[X,Y],Bound1[X]<:Tensor1[X]]
+extends Tensor2OpBuilder[I,J,Bound2,Bound1];
 
 /** Operators on Tensor2 instances. */
 class RichTensor2Op[I,J,Bound2[X,Y]<:Tensor2[X,Y],Value2[X,Y]<:Bound2[X,Y],Bound1[X]<:Tensor1[X]]

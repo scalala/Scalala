@@ -431,6 +431,9 @@ object Tensor {
   class CreateException(msg : String) extends RuntimeException(msg);
   
   val TOLERANCE = 1e-8;
+  
+  implicit def iTensorOp[I](tensor : Tensor[I]) =
+    operators.TensorIdentity[I,Tensor[I],Tensor[I],Any](tensor);
 }
 
 /** A one-axis tensor is defined on single elements from a domain. */

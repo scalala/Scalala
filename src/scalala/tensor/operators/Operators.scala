@@ -46,7 +46,7 @@ private object Scratch {
 
   val x = vector + 3;
   val y = x + 2;
-  val lkdfjkf = iScalarToRichScalarTensorOp(2) * x;
+//  val lkdfjkf = iScalarToRichScalarTensorOp(2) * x;
   val z = y.t;
   val zz = z.t;
   val w = (z + 1).t;
@@ -59,7 +59,7 @@ private object Scratch {
   val ww = (c.t > 2) + 1;
 
   val bb = x + x;
-  val a = iScalarToRichScalarTensorOp(2) + w;
+//  val a = iScalarToRichScalarTensorOp(2) + w;
   val b = w.t;
 
   val qq : DenseMatrix = scalala.Scalala.ones(3,3);

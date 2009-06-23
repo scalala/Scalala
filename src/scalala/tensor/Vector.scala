@@ -46,3 +46,9 @@ trait Vector extends Tensor1[Int] {
     }
   }
 }
+
+object Vector {
+  import scalala.tensor.operators._;
+  implicit def iVectorOp[V <: Vector](vector : V) =
+    new TensorIdentity[Int,Vector,V,Tensor1Op.Col](vector);
+}

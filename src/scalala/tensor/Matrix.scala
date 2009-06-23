@@ -126,4 +126,8 @@ object Matrix {
     override def activeDomainInCol(row : I1) =
       inner.activeDomainInRow(row);
   }
+  
+  import scalala.tensor.operators._;
+  implicit def iMatrixOp[M<:Matrix](m : M) =
+    new TensorIdentity[(Int,Int),Matrix,M,(Int,Int)](m);
 }
