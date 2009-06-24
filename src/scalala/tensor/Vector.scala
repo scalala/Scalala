@@ -19,9 +19,7 @@
  */
 package scalala.tensor;
 
-import scalala.collection.{IntSpanSet};
-
-import scalala.tensor.operators._;
+import scalala.collection.IntSpanSet;
 
 /**
  * A standard numerical Tensor1 defined over 0 inclusive to
@@ -48,7 +46,14 @@ trait Vector extends Tensor1[Int] {
 }
 
 object Vector {
+  /**
+   * DenseVector literal, equivalent to
+   * <pre>DenseVector(values.size)(values :_*)</pre>.
+   */
+  def apply(values : Double*) =
+    dense.DenseVector(values.size)(values :_*);
+  
   import scalala.tensor.operators._;
   implicit def iVectorOp[V <: Vector](vector : V) =
-    new TensorIdentity[Int,Vector,V,Tensor1Op.Col](vector);
+    new operators.TensorIdentity[Int,Vector,V,Tensor1Op.Col](vector);
 }

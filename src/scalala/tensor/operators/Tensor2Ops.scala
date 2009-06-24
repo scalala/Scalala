@@ -39,10 +39,6 @@ trait Tensor2Ops {
   implicit def iTensor2OpBuilderImpl[I,J] =
     new Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]();
   
-  implicit def iTensor2ToTensor2Op[I,J](x : Tensor2[I,J])
-  (implicit builder : Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]) =
-    builder.mkTensorIdentity(x);
-  
   implicit def iTensor2OpToRichTensor2Op[I,J]
   (op : Tensor2Op[I,J,Tensor2[I,J],Tensor2[I,J]])
   (implicit builder : Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]) =
@@ -52,10 +48,6 @@ trait Tensor2Ops {
   (x : Tensor2[I,J])
   (implicit builder : Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]) =
     new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](x)(builder);
-  
-//  implicit def iTensor2OpToTensor2[I,J]
-//  (op : Tensor2Op[I,J,Tensor2[I,J],Tensor2[I,J]]) =
-//    op.value;
 }
 
 /** Singleton instsance of Tensor2Ops trait. */
@@ -99,17 +91,9 @@ extends RichTensorOp[(I,J),Bound2[I,J],Value2[I,J],(I,J)](base) {
   def *[K,V2<:Bound2[J,K]] (op : Tensor2Op[J,K,Bound2[J,K],V2]) =
     ops.mkTensor2MultTensor2[I,J,K,Value2[I,K],Value2[I,J],V2](base,op);
   
-  /** Matrix-matrix multiplication */
-  def *[K,V2<:Bound2[J,K]] (v : V2)(implicit vOps : Tensor2OpBuilder[J,K,Bound2,Bound1]) =
-    ops.mkTensor2MultTensor2[I,J,K,Value2[I,K],Value2[I,J],V2](base, vOps.mkTensorIdentity(v));
-  
   /** Matrix-tensor multiplication */
   def * (op : ColTensor1Op[J,Bound1[J],Bound1[J]]) =
     ops.mkTensor2MultColTensor1[I,J,Bound1,Value2[I,J],Bound1[I]](base, op);
-  
-  /** Matrix-tensor multplication */
-  def * (v : Bound1[J])(implicit tOps : ColTensor1OpBuilder[J,Bound1[J],Value2[J,J]]) =
-   ops.mkTensor2MultColTensor1[I,J,Bound1,Value2[I,J],Bound1[I]](base, tOps.mkTensorIdentity(v));
 }
 
 /** Type-safe transposes of a Tensor2. */

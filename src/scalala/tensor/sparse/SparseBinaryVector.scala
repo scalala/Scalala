@@ -378,10 +378,16 @@ object SparseBinaryVector {
   import scalala.tensor.operators.TensorIdentity;
   import scalala.tensor.operators.Tensor1Op;
   
-  implicit def iSparseBinaryVectorToTensorIdentity(v : SparseBinaryVector)
-  : TensorIdentity[Int,Vector,SparseBinaryVector,Tensor1Op.Col] = {
-    println("Called method");
-    null;
+  implicit def iSparseBinaryVectorToTensorIdentity(v : SparseBinaryVector) = {
+    println("!!!");
+    SparseColBinaryTensorIdentity(v);
+  }
+  
+  case class SparseColBinaryTensorIdentity[Value<:SparseBinaryVector]
+  (override val tensor : Value)
+  extends TensorIdentity[Int,Vector,Value,Tensor1Op.Col](tensor) {
+    override def create[J](d : MergeableSet[J]) =
+      SparseVector.create(d);
   }
 }
 

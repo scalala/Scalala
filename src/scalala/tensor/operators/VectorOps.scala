@@ -62,7 +62,7 @@ trait VectorOps {
 
   implicit def iVectorToRichColVectorOp(x : Vector)
   (implicit builder : ColVectorOpBuilderImpl[Vector]) =
-    new RichColVectorOp[Vector](builder.mkTensorIdentity(x))(builder);
+    new RichColVectorOp[Vector](x)(builder);
 
   protected val rowVectorOpBuilderImpl =
     new RowVectorOpBuilderImpl();
@@ -74,10 +74,6 @@ trait VectorOps {
   (op : RowVectorOp[V])
   (implicit builder : RowVectorOpBuilderImpl[V]) =
     new RichRowVectorOp[V](op)(builder);
-  
-//  implicit def iColVectorOpToVector[V<:Vector]
-//  (op : ColVectorOp[V]) =
-//    op.value;
 }
 
 object VectorOps extends VectorOps;
@@ -103,6 +99,7 @@ class RichRowVectorOp[V<:Vector]
 (implicit ops : RowVectorOpBuilder[V])
 extends RichTensorOp[Int,Vector,V,Tensor1Op.Row](base) {
   
+  /** Transpose to column vector. */
   def t = ops.mkVectorRowToCol(base);
   
   /** Inner multiplication. */
@@ -110,8 +107,7 @@ extends RichTensorOp[Int,Vector,V,Tensor1Op.Row](base) {
     ops.mkVectorDotVector(base, op);
   
   /** Vector-matrix multiplication */
-  def * [M<:Matrix]
-  (op : MatrixOp[M]) =
+  def * [M<:Matrix] (op : MatrixOp[M]) =
     ops.mkRowVectorMultMatrix[V,M](base, op);
 }
 

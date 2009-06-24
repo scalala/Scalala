@@ -62,7 +62,7 @@ trait Tensor1Ops {
 
   implicit def iTensor1ToRichColTensor1Op[I](x : Tensor1[I])
   (implicit builder : ColTensor1OpBuilderImpl[I,Tensor1[I],Tensor2[I,I]]) =
-    iColTensor1OpToRichColTensor1Op(builder.mkTensorIdentity(x))(builder);
+    iColTensor1OpToRichColTensor1Op(Tensor1.iTensor1Op(x))(builder);
 
   protected val rowTensor1OpBuilder =
     new RowTensor1OpBuilderImpl[Any,Tensor1,Tensor2]();
@@ -140,7 +140,7 @@ extends RowTensor1OpBuilder[I,Bound1,Bound2];
 /** Operators for row tensors. */
 class RichRowTensor1Op[I,BoundV[X]<:Tensor1[X],BoundM[X,Y]<:Tensor2[X,Y],Value<:BoundV[I]]
 (base : RowTensor1Op[I,BoundV[I],Value])
-(implicit ops : RowTensor1OpBuilder[I,BoundV,BoundM], colOps : ColTensor1OpBuilder[I,BoundV[I],BoundM[I,I]])
+(implicit ops : RowTensor1OpBuilder[I,BoundV,BoundM])
 extends RichTensorOp[I,BoundV[I],Value,Tensor1Op.Row](base) {
   
   def t = ops.mkTensor1RowToCol(base);
@@ -149,9 +149,9 @@ extends RichTensorOp[I,BoundV[I],Value,Tensor1Op.Row](base) {
   def * [V<:BoundV[I]] (op : ColTensor1Op[I,BoundV[I],V]) =
     ops.mkTensor1DotTensor1(base, op);
   
-  /** Inner multiplication. */
-  def * [V<:BoundV[I]] (v : V) =
-    ops.mkTensor1DotTensor1(base, colOps.mkTensorIdentity(v));
+//  /** Inner multiplication. */
+//  def * [V<:BoundV[I]] (v : V) =
+//    ops.mkTensor1DotTensor1(base, colOps.mkTensorIdentity(v));
   
   /** Vector-matrix multiplication */
   def * [J,V<:BoundM[I,J]]

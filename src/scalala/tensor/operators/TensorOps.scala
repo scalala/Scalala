@@ -38,10 +38,10 @@ trait TensorOps {
 
   implicit def iTensorToRichTensorOp[I](x : Tensor[I])
   (implicit builder : TensorOpBuilderImpl[I,Tensor[I],Any]) =
-    new RichTensorOp[I,Tensor[I],Tensor[I],Any](builder.mkTensorIdentity(x))(builder);
+    new RichTensorOp[I,Tensor[I],Tensor[I],Any](x)(builder);
   
-  implicit def iScalarToRichScalarTensorOp(s : Double) =
-    new RichScalarTensorOp(s);
+//  implicit def iScalarToRichScalarTensorOp(s : Double) =
+//    new RichScalarTensorOp(s);
   
   implicit def iTensorOpToTensor[I,Base<:Tensor[I],V<:Base]
   (x : TensorOp[I,Base,V,_]) : Tensor[I] =
@@ -115,8 +115,8 @@ trait TensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape] {
  * @author dramage
  */
 trait TensorOpBuilder[I,Bound<:Tensor[I],Shape] {
-  def mkTensorIdentity[Value<:Bound](tensor : Value) =
-    TensorIdentity[I,Bound,Value,Shape](tensor);
+//  def mkTensorIdentity[Value<:Bound](tensor : Value) =
+//    TensorIdentity[I,Bound,Value,Shape](tensor);
   
   def mkTensorNegation[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape]) =
     TensorNegation[I,Bound,Value,Shape](tensor);
@@ -247,260 +247,218 @@ class RichTensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape]
     
   def :+ [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorPlusTensor(base, op);
-  def :+ [V<:Bound] (v  : V) =
-    ops.mkTensorPlusTensor(base, ops.mkTensorIdentity(v));
   
   def :- [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorMinusTensor(base, op);
-  def :- [V<:Bound] (v : V) =
-    ops.mkTensorMinusTensor(base, ops.mkTensorIdentity(v));
   
   def :*  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorMultTensor(base, op);
-  def :* [V<:Bound] (v : V) =
-    ops.mkTensorMultTensor(base, ops.mkTensorIdentity(v));
   
   def :/  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorDivTensor(base, op);
-  def :/ [V<:Bound] (v : V) =
-    ops.mkTensorDivTensor(base, ops.mkTensorIdentity(v));
   
   def :^  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorPowTensor(base, op);
-  def :^ [V<:Bound] (v : V) =
-    ops.mkTensorPowTensor(base, ops.mkTensorIdentity(v));
   
   def :<  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorLTTensor(base, op);
-  def :< [V<:Bound] (v : V) =
-    ops.mkTensorLTTensor(base, ops.mkTensorIdentity(v));
   
   def :>  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorGTTensor(base, op);
-  def :> [V<:Bound] (v : V) =
-    ops.mkTensorGTTensor(base, ops.mkTensorIdentity(v));
   
   def :<= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorLTETensor(base, op);
-  def :<= [V<:Bound] (v : V) =
-    ops.mkTensorLTETensor(base, ops.mkTensorIdentity(v));
   
   def :>= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorGTETensor(base, op);
-  def :>= [V<:Bound] (v : V) =
-    ops.mkTensorGTETensor(base, ops.mkTensorIdentity(v));
   
   def :== [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorEqTensor(base, op);
-  def :== [V<:Bound] (v : V) =
-    ops.mkTensorEqTensor(base, ops.mkTensorIdentity(v));
   
   def :!= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorNeTensor(base, op);
-  def :!= [V<:Bound] (v : V) =
-    ops.mkTensorNeTensor(base, ops.mkTensorIdentity(v));
   
   def :&& [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorAndTensor(base, op);
-  def :&& [V<:Bound] (v : V) =
-    ops.mkTensorAndTensor(base, ops.mkTensorIdentity(v));
   
   def :|| [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     ops.mkTensorOrTensor(base, op);
-  def :|| [V<:Bound] (v : V) =
-    ops.mkTensorOrTensor(base, ops.mkTensorIdentity(v));
   
   /** Fixed alias for :+ */
   final def + [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :+ op;
-  /** Fixed alias for :+ */
-  final def + [V<:Bound] (v : V) = this :+ v;
   
   /** Fixed alias for :- */
   final def - [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :- op;
-  /** Fixed alias for :- */
-  final def - [V<:Bound] (v : V) = this :- v;
   
   /** Fixed alias for :< */
   final def < [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :< op;
-  /** Fixed alias for :< */
-  final def < [V<:Bound] (v : V) = this :< v;
   
   /** Fixed alias for :> */
   final def > [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :> op;
-  /** Fixed alias for :> */
-  final def > [V<:Bound] (v : V) = this :> v;
   
   /** Fixed alias for :<= */
   final def <= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :<= op;
-  /** Fixed alias for :<= */
-  final def <= [V<:Bound] (v : V) = this :<= v;
   
   /** Fixed alias for :>= */
   final def >= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :>= op;
-  /** Fixed alias for :>= */
-  final def >= [V<:Bound] (v : V) = this :>= v;
   
   /** Fixed alias for :&& */
   final def && [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :&& op;
-  /** Fixed alias for :&& */
-  final def && [V<:Bound] (v : V) = this :&& v;
   
   /** Fixed alias for :|| */
   final def || [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :|| op;
-  /** Fixed alias for :|| */
-  final def || [V<:Bound] (v : V) = this :|| v;
 }
 
-/**
- * A rich scalar extension with support for tensor operators.
- */
-class RichScalarTensorOp(s : Double) {
-  
-  def  + [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorPlusScalar(base, s);
-  
-  final def  + [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorPlusScalar(base, s);
-  }
-  
-  def  - [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorPlusScalar(ops.mkTensorNegation(base), s);
-  
-  final def  - [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorPlusScalar(ops.mkTensorNegation(base), s);
-  }
-  
-  def  * [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorMultScalar(base, s);
-  
-  final def  * [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorMultScalar(base, s);
-  }
-  
-  def  / [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkScalarDivTensor(s, base);
-  
-  final def  / [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkScalarDivTensor(s, base);
-  }
-  
-  def :^ [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkScalarPowTensor(s, base);
-  
-  final def :^ [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkScalarPowTensor(s, base);
-  }
-  
-  def  < [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorGTScalar(base, s);
-  
-  final def  < [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorGTScalar(base, s);
-  }
-  
-  def  > [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorLTScalar(base, s);
-  
-  final def  > [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorLTScalar(base, s);
-  }
-  
-  def <= [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorGTEScalar(base, s);
-  
-  final def  <= [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorGTEScalar(base, s);
-  }
-  
-  def >= [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorLTEScalar(base, s);
-  
-  final def  >= [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorLTEScalar(base, s);
-  }
-  
-  def && [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorAndScalar(base, s);
-  
-  final def  && [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorAndScalar(base, s);
-  }
-  
-  def || [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorOrScalar(base, s);
-  
-  final def  || [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorOrScalar(base, s);
-  }
-  
-  /** Colon prefix is required to avoid conflation with .equals */
-  def :== [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorEqScalar(base, s);
-  
-  final def :== [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorEqScalar(base, s);
-  }
-  
-  /** Colon prefix is required to avoid conflation with .equals */
-  def :!= [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (base : TensorOp[I,Bound,Value,Shape])
-  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
-    ops.mkTensorNeScalar(base, s);
-  
-  final def :!= [I,Bound<:Tensor[I],Value<:Bound,Shape]
-  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
-    val base = ops.mkTensorIdentity(t);
-    ops.mkTensorNeScalar(base, s);
-  }
-}
+///**
+// * A rich scalar extension with support for tensor operators.
+// */
+//class RichScalarTensorOp(s : Double) {
+//  
+//  def  + [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorPlusScalar(base, s);
+//  
+//  final def  + [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorPlusScalar(base, s);
+//  }
+//  
+//  def  - [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorPlusScalar(ops.mkTensorNegation(base), s);
+//  
+//  final def  - [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorPlusScalar(ops.mkTensorNegation(base), s);
+//  }
+//  
+//  def  * [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorMultScalar(base, s);
+//  
+//  final def  * [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorMultScalar(base, s);
+//  }
+//  
+//  def  / [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkScalarDivTensor(s, base);
+//  
+//  final def  / [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkScalarDivTensor(s, base);
+//  }
+//  
+//  def :^ [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkScalarPowTensor(s, base);
+//  
+//  final def :^ [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkScalarPowTensor(s, base);
+//  }
+//  
+//  def  < [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorGTScalar(base, s);
+//  
+//  final def  < [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorGTScalar(base, s);
+//  }
+//  
+//  def  > [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorLTScalar(base, s);
+//  
+//  final def  > [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorLTScalar(base, s);
+//  }
+//  
+//  def <= [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorGTEScalar(base, s);
+//  
+//  final def  <= [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorGTEScalar(base, s);
+//  }
+//  
+//  def >= [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorLTEScalar(base, s);
+//  
+//  final def  >= [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorLTEScalar(base, s);
+//  }
+//  
+//  def && [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorAndScalar(base, s);
+//  
+//  final def  && [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorAndScalar(base, s);
+//  }
+//  
+//  def || [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorOrScalar(base, s);
+//  
+//  final def  || [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorOrScalar(base, s);
+//  }
+//  
+//  /** Colon prefix is required to avoid conflation with .equals */
+//  def :== [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorEqScalar(base, s);
+//  
+//  final def :== [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorEqScalar(base, s);
+//  }
+//  
+//  /** Colon prefix is required to avoid conflation with .equals */
+//  def :!= [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (base : TensorOp[I,Bound,Value,Shape])
+//  (implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) =
+//    ops.mkTensorNeScalar(base, s);
+//  
+//  final def :!= [I,Bound<:Tensor[I],Value<:Bound,Shape]
+//  (t : Value)(implicit ops : TensorOpBuilderImpl[I,Bound,Shape]) = {
+//    val base = ops.mkTensorIdentity(t);
+//    ops.mkTensorNeScalar(base, s);
+//  }
+//}
 
 /** A reference to an underlying tensor. */
 case class TensorIdentity[I,Bound<:Tensor[I],Value<:Bound,Shape]

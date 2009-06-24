@@ -36,6 +36,7 @@ object OperatorImplicits extends OperatorImplicits;
 private object Scratch {
   import scalala.tensor._;
   import scalala.tensor.dense._;
+  import scalala.tensor.sparse._;
   
   import OperatorImplicits._;
   
@@ -75,4 +76,9 @@ private object Scratch {
   val yy2 = qq * qq;
   val yy3 = qq.t * qq;
   val yy4 = qq * x;
+  
+  val sparse = new SparseBinaryVector(10);
+  sparse(2) = 1;
+  sparse(7) = 1;
+  sparse.t * (sparse + 1);
 }

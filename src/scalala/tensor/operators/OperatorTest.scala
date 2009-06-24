@@ -21,7 +21,6 @@ package scalala.tensor.operators;
 
 import scalala.tensor._;
 import scalala.tensor.dense._;
-import OperatorImplicits._;
 
 import scalala.Scalala.Vector;
 
@@ -30,7 +29,7 @@ import scalala.Scalala.Vector;
  * 
  * @author dramage
  */
-trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
+trait OperatorTest extends scalala.library.Library with OperatorImplicits with scalala.ScalalaTest {
   private def typeOf[A](x : A)(implicit m : scala.reflect.Manifest[A]) =
     m.toString;
   
@@ -48,6 +47,30 @@ trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
   test("Operators:Tensor-Scalar") {
     def build(values : Double*) =
       Vector(values :_*).asInstanceOf[Tensor[Int]];
+    
+    def x = build(0,1,2,3);
+    
+    assertEquals(-x      value, build(0,-1,-2,-3));
+    assertEquals(x   + 1 value, build(1,2,3,4));
+    assertEquals(x   - 1 value, build(-1,0,1,2));
+    assertEquals(x   * 2 value, build(0,2,4,6));
+    assertEquals(x   / 2 value, build(0,.5,1,1.5));
+    assertEquals(x  :^ 2 value, build(0,1,4,9));
+    assertEquals(x   < 2 value, build(1,1,0,0));
+    assertEquals(x   > 2 value, build(0,0,0,1));
+    assertEquals(x  <= 2 value, build(1,1,1,0));
+    assertEquals(x  >= 2 value, build(0,0,1,1));
+    assertEquals(x  && 1 value, build(0,1,1,1));
+    assertEquals(x  && 1 value, build(0,1,1,1));
+    assertEquals(x  || 1 value, build(1,1,1,1));
+    assertEquals(x :== 2 value, build(0,0,1,0));
+    assertEquals(x :!= 2 value, build(1,1,0,1));
+  }
+  
+  /** Tests basic tensor-scalar operators. */
+  test("Operators:Vector-Scalar") {
+    def build(values : Double*) =
+      Vector(values :_*).asInstanceOf[Vector];
     
     def x = build(0,1,2,3);
     
@@ -90,32 +113,55 @@ trait OperatorTest extends scalala.library.Library with scalala.ScalalaTest {
     assertEquals(x :&& y value, build(0,1,1,1));
     assertEquals(x :|| y value, build(1,1,1,1));
   }
-
-  test("Operators:Tensor1-Tensor2") {
-    def build1(values : Double*) =
-      Vector(values :_*).asInstanceOf[Tensor1[Int]];
-    def build2(rows : Int, cols : Int)(values : Double*) =
-      DenseMatrix(rows,cols)(values :_*).asInstanceOf[Tensor2[Int,Int]];
+  
+  /** Tests Tensor-Tensor operations. */
+  test("Operators:Vector-Vector") {
+    def build(values : Double*) =
+      Vector(values :_*).asInstanceOf[Vector];
     
-    def x = build1(0,1,2,3);
-    def y = build1(2,1,2,-1);
-    def A = build2(4,4)(7,3,6,-2,4,2,6,8,1,0,0,1,3,-1,-1,-1);
-    def B = build2(4,4)(3,2,1,2,7,8,-1,9,-2,-3,-2,1,5,0,0,0);
+    def x = build(0,1,2,3);
+    def y = build(2,1,2,-1);
     
-    // many other permutations (orderings, transposes) should
-    // result in compile time errors
-    
-    assertEquals(x.t * y, 0*2 + 1*1 + 2*2 - 3*1);
-    assertEquals(x * y.t value, build2(4,4)(0,2,4,6,0,1,2,3,0,2,4,6,0,-1,-2,-3));
-    assertEquals(A * x value, build1(15,-1,3,7));
-    assertEquals(A * y value, build1(17,9,19,7));
-    assertEquals(x.t * A   value, build1(9,38,3,-6));
-    assertEquals(x.t * A.t value, build1(15,-1,3,7));
-    assertEquals(y.t * A   value, build1(31,14,1,4));
-    assertEquals(y.t * A.t value, build1(17,9,19,7));
-    assertEquals(A * B   value, build2(4,4)(36,11,28,9,107,28,81,40,-25,-13,-31,-23,35,15,30,-10));
-    assertEquals(A * B.t value, build2(4,4)(62,18,55,43,43,22,60,57,1,1,0,-12,51,24,66,69));
+    assertEquals(x   + y value, build(2,2,4,2));
+    assertEquals(x   - y value, build(-2,0,0,4));
+    assertEquals(x  :* y value, build(0,1,4,-3));
+    assertEquals(x  :/ y value, build(0,1,1,-3));
+    assertEquals(x  :^ y value, build(0,1,4,1.0/3.0));
+    assertEquals(x  :< y value, build(1,0,0,0));
+    assertEquals(x  :> y value, build(0,0,0,1));
+    assertEquals(x :<= y value, build(1,1,1,0));
+    assertEquals(x :>= y value, build(0,1,1,1));
+    assertEquals(x :== y value, build(0,1,1,0));
+    assertEquals(x :!= y value, build(1,0,0,1));
+    assertEquals(x :&& y value, build(0,1,1,1));
+    assertEquals(x :|| y value, build(1,1,1,1));
   }
+
+//  test("Operators:Tensor1-Tensor2") {
+//    def build1(values : Double*) =
+//      Vector(values :_*).asInstanceOf[Tensor1[Int]];
+//    def build2(rows : Int, cols : Int)(values : Double*) =
+//      DenseMatrix(rows,cols)(values :_*).asInstanceOf[Tensor2[Int,Int]];
+//    
+//    def x = build1(0,1,2,3);
+//    def y = build1(2,1,2,-1);
+//    def A = build2(4,4)(7,3,6,-2,4,2,6,8,1,0,0,1,3,-1,-1,-1);
+//    def B = build2(4,4)(3,2,1,2,7,8,-1,9,-2,-3,-2,1,5,0,0,0);
+//    
+//    // many other permutations (orderings, transposes) should
+//    // result in compile time errors
+//    
+//    assertEquals(x.t * y, 0*2 + 1*1 + 2*2 - 3*1);
+//    assertEquals(x * y.t value, build2(4,4)(0,2,4,6,0,1,2,3,0,2,4,6,0,-1,-2,-3));
+//    assertEquals(A * x value, build1(15,-1,3,7));
+//    assertEquals(A * y value, build1(17,9,19,7));
+//    assertEquals(x.t * A   value, build1(9,38,3,-6));
+//    assertEquals(x.t * A.t value, build1(15,-1,3,7));
+//    assertEquals(y.t * A   value, build1(31,14,1,4));
+//    assertEquals(y.t * A.t value, build1(17,9,19,7));
+//    assertEquals(A * B   value, build2(4,4)(36,11,28,9,107,28,81,40,-25,-13,-31,-23,35,15,30,-10));
+//    assertEquals(A * B.t value, build2(4,4)(62,18,55,43,43,22,60,57,1,1,0,-12,51,24,66,69));
+//  }
   
   /**
    * Same as Tensor1-Tensor2 except using alternate Vector-Matrix

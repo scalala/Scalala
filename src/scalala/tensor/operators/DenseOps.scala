@@ -81,7 +81,7 @@ trait DenseVectorOps {
 
   implicit def iDenseVectorToRichColVectorOp[V<:DenseVector](x : V)
   (implicit builder : ColDenseVectorOpBuilderImpl[V]) =
-    new RichColDenseVectorOp[V](builder.mkTensorIdentity(x))(builder);
+    new RichColDenseVectorOp[V](x)(builder);
 
   protected val rowDenseVectorOpBuilderImpl =
     new RowDenseVectorOpBuilderImpl[DenseVector]();
@@ -94,15 +94,13 @@ trait DenseVectorOps {
   (implicit builder : RowDenseVectorOpBuilderImpl[V]) =
     new RichRowDenseVectorOp[V](op)(builder);
   
-  implicit def iArrayToColDenseVectorOp
-  (array : Array[Double])
-  (implicit builder : ColDenseVectorOpBuilderImpl[DenseVector]) =
-    builder.mkTensorIdentity(new DenseVector(array));
+  implicit def iArrayToColDenseVectorOp(array : Array[Double])
+  : ColDenseVectorOp[DenseVector] =
+    new DenseVector(array);
   
-  implicit def iArrayToRichColVectorOp
-  (array : Array[Double])
+  implicit def iArrayToRichColVectorOp(array : Array[Double])
   (implicit builder : ColDenseVectorOpBuilderImpl[DenseVector]) =
-    new RichColDenseVectorOp(builder.mkTensorIdentity(new DenseVector(array)))(builder);
+    new RichColDenseVectorOp(new DenseVector(array))(builder);
 }
 
 /** Singleton instance of DenseVectorOps trait. */
@@ -115,10 +113,6 @@ trait DenseMatrixOps {
   implicit val sharedDenseMatrixOpBuilderImpl =
     new DenseMatrixOpBuilderImpl();
   
-  implicit def iDenseMatrixToDenseMatrixOp(x : DenseMatrix)
-  (implicit builder : DenseMatrixOpBuilderImpl) =
-    builder.mkTensorIdentity(x);
-  
   implicit def iDenseMatrixOpToRichDenseMatrixOp[M<:DenseMatrix,V<:DenseVector]
   (op : DenseMatrixOp[M])
   (implicit matrixBuilder : DenseMatrixOpBuilderImpl, vectorBuilder : ColDenseVectorOpBuilder[V]) =
@@ -127,7 +121,7 @@ trait DenseMatrixOps {
   implicit def iDenseMatrixToRichDenseMatrixOp
   (x : DenseMatrix)
   (implicit matrixBuilder : DenseMatrixOpBuilderImpl, vectorBuilder : ColDenseVectorOpBuilder[DenseVector]) =
-    new RichDenseMatrixOp(matrixBuilder.mkTensorIdentity(x))(matrixBuilder, vectorBuilder);
+    new RichDenseMatrixOp(x)(matrixBuilder, vectorBuilder);
 }
 
 /** Singleton instance of DenseMatrixOps trait. */
@@ -170,7 +164,7 @@ extends ColDenseVectorOp[DenseVector] {
   override lazy val value = {
     val _b = v.working;
     val _B = new DenseMatrix(_b.size, 1, _b.data);
-    val _X = DenseMatrixSolveDenseMatrix[M,DenseMatrix](m, ops.mkTensorIdentity(_B)).value;
+    val _X = DenseMatrixSolveDenseMatrix[M,DenseMatrix](m, _B).value;
     
     new DenseVector(_X.data);
   }

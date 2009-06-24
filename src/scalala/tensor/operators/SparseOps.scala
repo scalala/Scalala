@@ -33,12 +33,6 @@ object SparseBinaryVectorTypes {
   
   type RowSparseBinaryVectorOp[V<:SparseBinaryVector] =
     RowVectorOp[V];
-  
-  type ColSparseBinaryVectorOpBuilder[V<:SparseBinaryVector] =
-    ColVectorOpBuilder[V];
-  
-  type RowSparseBinaryVectorOpBuilder[V<:SparseBinaryVector] =
-    RowVectorOpBuilder[V];
  }
 
 import SparseBinaryVectorTypes._;
@@ -55,7 +49,7 @@ trait SparseBinaryVectorOps {
 
   implicit def iSparseBinaryVectorToRichColVectorOp[V<:SparseBinaryVector](x : V)
   (implicit builder : ColSparseBinaryVectorOpBuilderImpl[V]) =
-    new RichColVectorOp(builder.mkTensorIdentity(x))(builder);
+    new RichColVectorOp(x)(builder);
 
   protected val rowSparseBinaryVectorOpBuilderImpl =
     new RowSparseBinaryVectorOpBuilderImpl[SparseBinaryVector]();
@@ -71,23 +65,15 @@ trait SparseBinaryVectorOps {
 
 /** Singleton instance of DenseVectorOps trait. */
 object SparseBinaryVectorOps extends SparseBinaryVectorOps;
-
+  
 trait ColSparseBinaryVectorOpBuilder[V<:SparseBinaryVector]
-extends ColVectorOpBuilder[V] {
-  override def mkTensorIdentity[VV<:Vector](tensor : VV)
-  : TensorIdentity[Int,Vector,VV,Tensor1Op.Col] =
-    SparseColBinaryTensorIdentity(tensor.asInstanceOf[SparseBinaryVector]).asInstanceOf[TensorIdentity[Int,Vector,VV,Tensor1Op.Col]];
-}
+extends ColVectorOpBuilder[V];
+
+trait RowSparseBinaryVectorOpBuilder[V<:SparseBinaryVector]
+extends RowVectorOpBuilder[V];
 
 class ColSparseBinaryVectorOpBuilderImpl[V<:SparseBinaryVector]
 extends ColSparseBinaryVectorOpBuilder[V];
 
 class RowSparseBinaryVectorOpBuilderImpl[V<:SparseBinaryVector]
 extends RowSparseBinaryVectorOpBuilder[V];
-
-case class SparseColBinaryTensorIdentity[Value<:SparseBinaryVector]
-(override val tensor : Value)
-extends TensorIdentity[Int,Vector,Value,Tensor1Op.Col](tensor) {
-  override def create[J](d : MergeableSet[J]) =
-    SparseVector.create(d);
-}

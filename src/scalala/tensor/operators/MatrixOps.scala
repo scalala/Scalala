@@ -40,19 +40,14 @@ trait MatrixOps {
   implicit val sharedMatrixOpBuilderImpl =
     new MatrixOpBuilderImpl();
   
-  implicit def iMatrixToMatrixOp(x : Matrix)
-  (implicit builder : MatrixOpBuilderImpl) =
-    builder.mkTensorIdentity(x);
-  
   implicit def iMatrixOpToRichMatrixOp[M<:Matrix,V<:Vector]
   (op : MatrixOp[M])
   (implicit builder : MatrixOpBuilderImpl, vops : ColVectorOpBuilderImpl[V]) =
     new RichMatrixOp(op)(builder);
   
-  implicit def iMatrixToRichMatrixOp
-  (x : Matrix)
+  implicit def iMatrixToRichMatrixOp(x : Matrix)
   (implicit builder : MatrixOpBuilderImpl) =
-    new RichMatrixOp(builder.mkTensorIdentity(x))(builder);
+    new RichMatrixOp(x)(builder);
 }
 
 /** Singleton instance of MatrixOps trait. */

@@ -458,6 +458,11 @@ trait Tensor1[I] extends Tensor[I] {
   }
 }
 
+object Tensor1 {
+  implicit def iTensor1Op[I](tensor : Tensor1[I]) =
+    operators.TensorIdentity[I,Tensor1[I],Tensor1[I],operators.Tensor1Op.Col](tensor);
+}
+
 /** A two-axes tensor is defined on pairs of elements from two domains. */
 trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
   /** Gets the value indexed by (i,j). */
@@ -509,6 +514,9 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
  * @author dramage
  */
 object Tensor2 {
+  implicit def iTensor2Op[I,J](tensor : Tensor2[I,J]) =
+    operators.TensorIdentity[(I,J),Tensor2[I,J],Tensor2[I,J],(I,J)](tensor);
+  
   trait Projection[I1,I2] extends Tensor2[I1,I2] {
     val inner : Tensor2[I1,I2];
     
