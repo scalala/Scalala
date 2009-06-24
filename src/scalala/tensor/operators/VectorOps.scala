@@ -65,7 +65,7 @@ trait VectorOps {
     new RichColVectorOp[Vector](builder.mkTensorIdentity(x))(builder);
 
   protected val rowVectorOpBuilderImpl =
-    new RowVectorOpBuilder();
+    new RowVectorOpBuilderImpl();
   
   implicit def iRowVectorOpBuilderImpl[V<:Vector] =
     rowVectorOpBuilderImpl.asInstanceOf[RowVectorOpBuilderImpl[V]];
@@ -83,7 +83,7 @@ trait VectorOps {
 object VectorOps extends VectorOps;
 
 
-class RowVectorOpBuilder[V<:Vector]
+trait RowVectorOpBuilder[V<:Vector]
 extends TensorOpBuilder[Int,Vector,Tensor1Op.Row] {
   def mkVectorRowToCol[V<:Vector]
   (op : RowTensor1Op[Int,Vector,V]) =

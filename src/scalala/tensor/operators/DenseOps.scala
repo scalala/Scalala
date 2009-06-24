@@ -151,12 +151,12 @@ extends RichMatrixOp[M,V](base) {
   def \ [V<:DenseVector] (op : ColDenseVectorOp[V]) =
     matrixOps.mkDenseMatrixSolveDenseVector(base, op);
   def \ (v : DenseVector) =
-    matrixOps.mkDenseMatrixSolveDenseVector(base, v.asInstanceOf[ColDenseVectorOp[DenseVector]]);
+    matrixOps.mkDenseMatrixSolveDenseVector(base, v);
   
   def \ [M2<:DenseMatrix] (op : DenseMatrixOp[M2]) =
     matrixOps.mkDenseMatrixSolveDenseMatrix(base, op);
   def \ (m : DenseMatrix) =
-    matrixOps.mkDenseMatrixSolveDenseMatrix(base, m.asInstanceOf[DenseMatrixOp[DenseMatrix]]);
+    matrixOps.mkDenseMatrixSolveDenseMatrix(base, m);
 }
 
 /** Matrix solve vector, like matlab's "\", uses DenseMatrixSolveDenseMatrix. */
