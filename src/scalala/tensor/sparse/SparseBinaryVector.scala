@@ -379,7 +379,6 @@ object SparseBinaryVector {
   import scalala.tensor.operators.Tensor1Op;
   
   implicit def iSparseBinaryVectorToTensorIdentity(v : SparseBinaryVector) = {
-    println("!!!");
     SparseColBinaryTensorIdentity(v);
   }
   
