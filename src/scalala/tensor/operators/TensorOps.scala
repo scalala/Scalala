@@ -45,7 +45,7 @@ trait TensorOps {
   
   implicit def iTensorOpToTensor[I,Base<:Tensor[I],V<:Base]
   (x : TensorOp[I,Base,V,_]) : Tensor[I] =
-    x.value.asInstanceOf[V];
+    x.value;
 }
 
 /** Singleton instance of TensorOps trait. */
