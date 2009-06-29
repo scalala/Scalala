@@ -74,6 +74,9 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
     } else if (filename.toLowerCase.endsWith(".png")) {
       figure.writePNG(fos,dpi);
       fos.close();
+    } else if (filename.toLowerCase.endsWith(".pdf")) {
+      figure.writePDF(fos);
+      fos.close();
     } else {
       throw new IOException("Unrecognized file extension: should be eps or png");
     }
@@ -673,6 +676,56 @@ object Plotting {
       //org.jfree.chart.ChartUtilities.writeChartAsPNG(
       //  out, plot.chart, frame.getSize.width, frame.getSize.height);
     }
+
+    /** Contributed by Robby McKilliam */
+    def writePDF(out : java.io.OutputStream) {
+      import com.lowagie.text.Document;
+      import com.lowagie.text.DocumentException;
+      import com.lowagie.text.Paragraph;
+      import com.lowagie.text.Rectangle;
+      import com.lowagie.text.pdf.PdfContentByte;
+      import com.lowagie.text.pdf.PdfImportedPage;
+      import com.lowagie.text.pdf.PdfReader;
+      import com.lowagie.text.pdf.PdfTemplate;
+      import com.lowagie.text.pdf.PdfWriter;
+
+      val width  = (frame.getContentPane.getSize.width).asInstanceOf[Int];
+      val height = (frame.getContentPane.getSize.height).asInstanceOf[Int];
+
+      // step 1: creation of a document-object
+      val document = new Document();
+
+      try {
+        document.setPageSize(new Rectangle(width, height));
+
+        // step 2: creation of the writer
+        val writer = PdfWriter.getInstance(document, out);
+        // step 3: we open the document
+        document.open();
+
+        val cb = writer.getDirectContent();
+
+        val tp = cb.createTemplate(width, height);
+        val g2d = tp.createGraphics(width, height);
+
+        val plotwidth = width/cols;
+        val plotheight = height/rows;
+        var px = 0; var py = 0;
+        for(plot <- plots) {
+          if (plot != null) {
+            plot.chart.draw(g2d, new java.awt.Rectangle(px*plotwidth, py*plotheight, plotwidth, plotheight));
+          }
+          px = (px +1)%cols;
+          if(px == 0) py = (py + 1)%rows;
+        }
+        //frame.getContentPane.paintAll(g2d)
+        g2d.dispose;
+
+        cb.addTemplate(tp, 1, 0, 0, 1, 0, 0);
+      }
+
+      document.close();
+    }    
   }
   
   object XYPlot {
