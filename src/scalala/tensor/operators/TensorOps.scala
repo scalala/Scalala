@@ -25,17 +25,21 @@ import scalala.tensor.{Tensor, Tensor1, Tensor2, Vector, Matrix};
 
 /** Implicits for TensorOp support. */
 trait TensorOps {
-  implicit def iTensorToTensorOp[I](tensor : Tensor[I]) =
-    TensorIdentity[I,Tensor[I],Tensor[I],Any](tensor);
-
-  implicit def iTensorToRichTensorOp[I](x : Tensor[I]) =
-    new RichTensorOp[I,Tensor[I],Tensor[I],Any](x);
+////  implicit def iTensorToTensorOp[I,V<:Tensor[I]](tensor : V) =
+////    TensorIdentity[I,Tensor[I],V,Any](tensor);
+//  implicit def iTensorToTensorOp[I](tensor : Tensor[I]) =
+//    TensorIdentity[I,Tensor[I],Tensor[I],Any](tensor);
+//
+////  implicit def iTensorToRichTensorOp[I,V<:Tensor[I]](tensor : V) =
+////    new RichTensorOp[I,Tensor[I],V,Any](tensor);
+//  implicit def iTensorToRichTensorOp[I](tensor : Tensor[I]) =
+//    new RichTensorOp[I,Tensor[I],Tensor[I],Any](tensor);
   
 //  implicit def iScalarToRichScalarTensorOp(s : Double) =
 //    new RichScalarTensorOp(s);
   
   implicit def iTensorOpToTensor[I,Base<:Tensor[I],V<:Base]
-   (x : TensorOp[I,Base,V,_]) : Tensor[I] =
+   (x : TensorOp[I,Base,V,_]) : V =
     x.value;
   
 }

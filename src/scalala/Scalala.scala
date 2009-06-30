@@ -91,29 +91,29 @@ object ScalalaProfilingSuite extends Scalala
   with ScalalaTest.TestConsoleMain
 {
     
-  test("SparseBinaryVectorMultAdd") {
-    import scalala.tensor.dense._;
-    import scalala.tensor.sparse._;
-    
-    val iter = 100;
-    val n = 50000;
-    
-    val direct = profile(iter) {
-      val dv = new DenseVector(n);
-      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
-      for(i <- sv.activeDomain) {
-        dv(i) += sv(i) * 1.0
-      }
-    }
-    
-    val operator = profile(iter) {
-      val dv = new DenseVector(n);
-      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
-      dv += sv * 1.0;
-    }
-    
-    printf("%g %g\n", direct, operator);
-  }
+//  test("SparseBinaryVectorMultAdd") {
+//    import scalala.tensor.dense._;
+//    import scalala.tensor.sparse._;
+//    
+//    val iter = 100;
+//    val n = 50000;
+//    
+//    val direct = profile(iter) {
+//      val dv = new DenseVector(n);
+//      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
+//      for(i <- sv.activeDomain) {
+//        dv(i) += sv(i) * 1.0
+//      }
+//    }
+//    
+//    val operator = profile(iter) {
+//      val dv = new DenseVector(n);
+//      val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
+//      dv += sv * 1.0;
+//    }
+//    
+//    printf("%g %g\n", direct, operator);
+//  }
   
   test("SparseBinaryVectorActiveDomain") {
     import scalala.tensor.sparse._;

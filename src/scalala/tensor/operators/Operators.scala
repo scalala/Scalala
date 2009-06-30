@@ -32,54 +32,62 @@ with Tensor2Ops with MatrixOps with DenseMatrixOps;
  */
 object OperatorImplicits extends OperatorImplicits;
 
-/** Some scratch space for making sure the right things compile. */
-private object Scratch {
-  import scalala.tensor._;
-  import scalala.tensor.dense._;
-  import scalala.tensor.sparse._;
-  
-  import OperatorImplicits._;
-  
-  val dense : DenseVector = scalala.Scalala.Vector(1,2,3).asInstanceOf[DenseVector]
-  val vector = scalala.Scalala.Vector(1,2,3).asInstanceOf[scalala.tensor.Vector];
-
-  val mixed = vector + dense;
-
-  val x = vector + 3;
-  val y = x + 2;
-//  val lkdfjkf = iScalarToRichScalarTensorOp(2) * x;
-  val z = y.t;
-  val zz = z.t;
-  val w = (z + 1).t;
-  val kdjf = x.t * x;
-  val kqke = x * x.t;
-
-  //z + z.t
-  val c = -x;
-  c.t;
-  val ww = (c.t > 2) + 1;
-
-  val bb = x + x;
-//  val a = iScalarToRichScalarTensorOp(2) + w;
-  val b = w.t;
-
-  val qq : DenseMatrix = scalala.Scalala.ones(3,3);
-  val qq1 = qq + 1;
-  val qq2 = qq + 1 - qq;
-  val qq3 = qq1.t;
-  val qq4 = qq2 \ dense;
-  val qq5 = qq :* qq1;
-  qq5 > qq3;
-
-  val yy = x.t * qq;
-  val yy1 = (x+1).t * qq;
-  val yy2 = qq * qq;
-  val yy3 = qq.t * qq;
-  val yy4 = qq * x;
-  
-  val sparse = new SparseBinaryVector(10);
-  sparse(2) = 1;
-  sparse(7) = 1;
-  sparse.t * sparse;
-//  sparse.t * (sparse + 1);
-}
+///** Some scratch space for making sure the right things compile. */
+//private object Scratch {
+//  import scalala.tensor._;
+//  import scalala.tensor.dense._;
+//  import scalala.tensor.sparse._;
+//  
+//  import Vector._;
+//  import DenseVector._;
+//  import Matrix._;
+//  import DenseMatrix._;
+//  import Tensor._;
+//  import Tensor1._;
+//  import Tensor2._;
+//  
+//  import OperatorImplicits._;
+//  
+//  val dense : DenseVector = scalala.Scalala.Vector(1,2,3).asInstanceOf[DenseVector]
+//  val vector = scalala.Scalala.Vector(1,2,3).asInstanceOf[scalala.tensor.Vector];
+//
+//  val mixed = vector + dense;
+//
+//  val x = vector + 3;
+//  val y = x + 2;
+////  val lkdfjkf = iScalarToRichScalarTensorOp(2) * x;
+//  val z = y.t;
+//  val zz = z.t;
+//  val w = (z + 1).t;
+//  val kdjf = x.t * x;
+//  val kqke = x * x.t;
+//
+//  //z + z.t
+//  val c = -x;
+//  c.t;
+//  val ww = (c.t > 2) + 1;
+//
+//  val bb = x + x;
+////  val a = iScalarToRichScalarTensorOp(2) + w;
+//  val b = w.t;
+//
+//  val qq : DenseMatrix = scalala.Scalala.ones(3,3);
+//  val qq1 = qq + 1;
+//  val qq2 = qq + 1 - qq;
+//  val qq3 = qq1.t;
+//  val qq4 = qq2 \ dense;
+//  val qq5 = qq :* qq1;
+//  qq5 > qq3;
+//
+//  val yy = x.t * qq;
+//  val yy1 = (x+1).t * qq;
+//  val yy2 = qq * qq;
+//  val yy3 = qq.t * qq;
+//  val yy4 = qq * x;
+//  
+//  val sparse = new SparseBinaryVector(10);
+//  sparse(2) = 1;
+//  sparse(7) = 1;
+//  sparse.t * sparse;
+////  sparse.t * (sparse + 1);
+//}

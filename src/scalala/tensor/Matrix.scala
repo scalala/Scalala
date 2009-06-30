@@ -128,6 +128,11 @@ object Matrix {
   }
   
   import scalala.tensor.operators._;
-  implicit def iMatrixOp[M<:Matrix](m : M) =
+  
+  implicit def iMatrixToMatrixOp[M<:Matrix](m : M) =
     new TensorIdentity[(Int,Int),Matrix,M,(Int,Int)](m);
+  
+  implicit def iMatrixToRichMatrixOp[M<:Matrix](m : M) =
+    new RichMatrixOp(m);
+  
 }

@@ -56,16 +56,13 @@ import DenseMatrixTypes._;
 
 /** Implicits supporting DenseVector operations. */
 trait DenseVectorOps {
-  implicit def iColDenseVectorOpTopRichColVectorOp[V<:DenseVector]
-  (op : ColDenseVectorOp[V]) =
-    new RichColDenseVectorOp(op);
-
-  implicit def iDenseVectorToRichColVectorOp[V<:DenseVector](x : V) =
-    new RichColDenseVectorOp[V](x);
-
-  implicit def iRowDenseVectorOpToRichRowDenseVectorOp[V<:DenseVector]
-  (op : RowDenseVectorOp[V]) =
-    new RichRowDenseVectorOp[V](op);
+//  implicit def iColDenseVectorOpTopRichColVectorOp[V<:DenseVector]
+//  (op : ColDenseVectorOp[V]) =
+//    new RichColDenseVectorOp(op);
+//
+//  implicit def iRowDenseVectorOpToRichRowDenseVectorOp[V<:DenseVector]
+//  (op : RowDenseVectorOp[V]) =
+//    new RichRowDenseVectorOp(op);
   
   implicit def iArrayToColDenseVectorOp(array : Array[Double])
   : ColDenseVectorOp[DenseVector] =
@@ -85,10 +82,6 @@ trait DenseMatrixOps {
   implicit def iDenseMatrixOpToRichDenseMatrixOp[M<:DenseMatrix,V<:DenseVector]
   (op : DenseMatrixOp[M]) =
     new RichDenseMatrixOp(op);
-  
-  implicit def iDenseMatrixToRichDenseMatrixOp
-  (x : DenseMatrix) =
-    new RichDenseMatrixOp(x);
 }
 
 /** Singleton instance of DenseMatrixOps trait. */

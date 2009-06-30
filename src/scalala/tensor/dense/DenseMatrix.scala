@@ -138,6 +138,9 @@ object DenseMatrix {
     new DenseMatrix(rows, cols, Array.fromFunction(i => values(i % values.length))(rows * cols));
   }
   
-  implicit def iDenseMatrixOp[M<:DenseMatrix](m : M) =
-    Matrix.iMatrixOp(m);
+  implicit def iDenseMatrixToDenseMatrixOp[M<:DenseMatrix](m : M) =
+    Matrix.iMatrixToMatrixOp(m);
+  
+  implicit def iDenseMatrixToRichDenseMatrixOp[M<:DenseMatrix](m : M) =
+    new RichDenseMatrixOp(m);
 }

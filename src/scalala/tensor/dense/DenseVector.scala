@@ -76,4 +76,13 @@ object DenseVector {
    */
   def apply(size : Int)(values : Double*) =
     new DenseVector(Array.fromFunction(i => values(i % values.length))(size));
+  
+  import scalala.tensor.operators._;
+  import DenseVectorTypes._;
+  
+  implicit def iDenseVectorToColDenseVectorOp[V <: DenseVector](vector : V) =
+    new TensorIdentity[Int,Vector,V,Tensor1Op.Col](vector);
+  
+  implicit def iDenseVectorToRichColVectorOp[V<:DenseVector](vector : V) =
+    new RichColDenseVectorOp[V](vector);
 }

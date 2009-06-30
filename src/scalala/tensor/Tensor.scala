@@ -431,6 +431,16 @@ object Tensor {
   class CreateException(msg : String) extends RuntimeException(msg);
   
   val TOLERANCE = 1e-8;
+  
+  implicit def iTensorToTensorOp[I,V<:Tensor[I]](tensor : V) =
+    TensorIdentity[I,Tensor[I],V,Any](tensor);
+//  implicit def iTensorToTensorOp[I](tensor : Tensor[I]) =
+//    TensorIdentity[I,Tensor[I],Tensor[I],Any](tensor);
+
+  implicit def iTensorToRichTensorOp[I,V<:Tensor[I]](tensor : V) =
+    new RichTensorOp[I,Tensor[I],V,Any](tensor);
+//  implicit def iTensorToRichTensorOp[I](tensor : Tensor[I]) =
+//    new RichTensorOp[I,Tensor[I],Tensor[I],Any](tensor);
 }
 
 /** A one-axis tensor is defined on single elements from a domain. */
@@ -456,8 +466,13 @@ trait Tensor1[I] extends Tensor[I] {
 }
 
 object Tensor1 {
-  implicit def iTensor1Op[I](tensor : Tensor1[I]) =
-    operators.TensorIdentity[I,Tensor1[I],Tensor1[I],operators.Tensor1Op.Col](tensor);
+  import scalala.tensor.operators._;
+  
+  implicit def iTensor1ToColTensor1Op[I,V<:Tensor1[I]](tensor : V) =
+    TensorIdentity[I,Tensor1[I],V,operators.Tensor1Op.Col](tensor);
+
+  implicit def iTensor1ToRichColTensor1Op[I,V<:Tensor1[I]](x : V) =
+    new RichColTensor1Op[I,Tensor1[I],V,Tensor2[I,I]](x);
 }
 
 /** A two-axes tensor is defined on pairs of elements from two domains. */
@@ -511,8 +526,12 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
  * @author dramage
  */
 object Tensor2 {
-  implicit def iTensor2Op[I,J](tensor : Tensor2[I,J]) =
-    operators.TensorIdentity[(I,J),Tensor2[I,J],Tensor2[I,J],(I,J)](tensor);
+  implicit def iTensor2ToTensor2Op[I,J,V<:Tensor2[I,J]](tensor : V) =
+    operators.TensorIdentity[(I,J),Tensor2[I,J],V,(I,J)](tensor);
+  
+  implicit def iTensor2ToRichTensor2Op[I,J,V<:Tensor2[I,J]](x : V) =
+    new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](x);
+  
   
   trait Projection[I1,I2] extends Tensor2[I1,I2] {
     val inner : Tensor2[I1,I2];

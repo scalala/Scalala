@@ -53,16 +53,9 @@ trait Tensor1Ops extends TensorOps {
   (op : TensorOp[I,Tensor1[I],V,Tensor1Op.Col]) =
     new RichColTensor1Op[I,Tensor1[I],V,Tensor2[I,I]](op);
 
-  implicit def iTensor1ToRichColTensor1Op[I](x : Tensor1[I]) =
-    iColTensor1OpToRichColTensor1Op(Tensor1.iTensor1Op(x));
-
   implicit def iRowTensor1OpToRichRowTensor1Op[I]
   (op : RowTensor1Op[I,Tensor1[I],Tensor1[I]]) =
     new RichRowTensor1Op[I,Tensor1,Tensor2,Tensor1[I]](op);
-  
-//  implicit def iColTensor1OpToTensor[I,V<:Tensor1[I]]
-//  (x : TensorOp[I,Tensor[I],V,Tensor1Op.Col]) =
-//    x.value;
 }
 
 /** Singleton instance of Tensor1Ops trait. */

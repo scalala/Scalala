@@ -40,16 +40,13 @@ import VectorTypes._;
 import MatrixTypes._;
 
 trait VectorOps extends TensorOps {
-  implicit def iColVectorOpTopRichColVectorOp
-  (op : ColVectorOp[Vector]) =
+  implicit def iColVectorOpTopRichColVectorOp[V<:Vector]
+  (op : ColVectorOp[V]) =
     new RichColVectorOp(op);
-
-  implicit def iVectorToRichColVectorOp(x : Vector) =
-    new RichColVectorOp[Vector](x);
 
   implicit def iRowVectorOpToRichRowVectorOp[V<:Vector]
   (op : RowVectorOp[V]) =
-    new RichRowVectorOp[V](op);
+    new RichRowVectorOp(op);
 }
 
 object VectorOps extends VectorOps;

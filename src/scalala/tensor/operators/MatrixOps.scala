@@ -40,9 +40,6 @@ trait MatrixOps {
   implicit def iMatrixOpToRichMatrixOp[M<:Matrix,V<:Vector]
   (op : MatrixOp[M]) =
     new RichMatrixOp(op);
-  
-  implicit def iMatrixToRichMatrixOp(x : Matrix) =
-    new RichMatrixOp(x);
 }
 
 /** Singleton instance of MatrixOps trait. */

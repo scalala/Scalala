@@ -36,10 +36,6 @@ trait Tensor2Ops {
   implicit def iTensor2OpToRichTensor2Op[I,J]
   (op : Tensor2Op[I,J,Tensor2[I,J],Tensor2[I,J]]) =
     new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](op);
-  
-  implicit def iTensor2ToRichTensor2Op[I,J]
-  (x : Tensor2[I,J]) =
-    new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](x);
 }
 
 /** Singleton instsance of Tensor2Ops trait. */
