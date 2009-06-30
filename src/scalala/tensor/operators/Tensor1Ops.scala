@@ -48,7 +48,10 @@ import Tensor2Types._;
 /**
  * Implicits for row and column Tensor1's.
  */
-trait Tensor1Ops {
+trait Tensor1Ops extends TensorOps {
+  implicit def iTensorOpBuilderForVector[I,S] =
+    innerTensorOpBuilder.asInstanceOf[TensorOpBuilderImpl[I,Tensor1[I],S]];
+  
   protected val colTensor1OpBuilderImpl =
     new ColTensor1OpBuilderImpl[Any,Tensor1[Any],Tensor2[Any,Any]]();
 
@@ -57,12 +60,14 @@ trait Tensor1Ops {
 
   implicit def iColTensor1OpToRichColTensor1Op[I,V<:Tensor1[I]]
   (op : TensorOp[I,Tensor1[I],V,Tensor1Op.Col])
-  (implicit builder : ColTensor1OpBuilderImpl[I,Tensor1[I],Tensor2[I,I]]) =
-    new RichColTensor1Op[I,Tensor1[I],V,Tensor2[I,I]](op)(builder);
+  (implicit ctops : ColTensor1OpBuilderImpl[I,Tensor1[I],Tensor2[I,I]],
+   ops : TensorOpBuilderImpl[I,Tensor1[I],Tensor1Op.Col]) =
+    new RichColTensor1Op[I,Tensor1[I],V,Tensor2[I,I]](op);
 
   implicit def iTensor1ToRichColTensor1Op[I](x : Tensor1[I])
-  (implicit builder : ColTensor1OpBuilderImpl[I,Tensor1[I],Tensor2[I,I]]) =
-    iColTensor1OpToRichColTensor1Op(Tensor1.iTensor1Op(x))(builder);
+  (implicit ctops : ColTensor1OpBuilderImpl[I,Tensor1[I],Tensor2[I,I]],
+   ops : TensorOpBuilderImpl[I,Tensor1[I],Tensor1Op.Col]) =
+    iColTensor1OpToRichColTensor1Op(Tensor1.iTensor1Op(x));
 
   protected val rowTensor1OpBuilder =
     new RowTensor1OpBuilderImpl[Any,Tensor1,Tensor2]();
@@ -72,7 +77,8 @@ trait Tensor1Ops {
 
   implicit def iRowTensor1OpToRichRowTensor1Op[I]
   (op : RowTensor1Op[I,Tensor1[I],Tensor1[I]])
-  (implicit builder : RowTensor1OpBuilderImpl[I,Tensor1,Tensor2]) =
+  (implicit rtops : RowTensor1OpBuilderImpl[I,Tensor1,Tensor2],
+   opt : TensorOpBuilderImpl[I,Tensor1[I],Tensor1Op.Row]) =
     new RichRowTensor1Op[I,Tensor1,Tensor2,Tensor1[I]](op);
   
 //  implicit def iColTensor1OpToTensor[I,V<:Tensor1[I]]
@@ -85,8 +91,7 @@ object Tensor1Ops extends Tensor1Ops;
 
 
 /** Operators for column tensors. */
-trait ColTensor1OpBuilder[I,Bound1<:Tensor1[I],Bound2<:Tensor2[I,I]]
-extends TensorOpBuilder[I,Bound1,Tensor1Op.Col] {
+trait ColTensor1OpBuilder[I,Bound1<:Tensor1[I],Bound2<:Tensor2[I,I]] {
   def mkTensor1ColToRow[Value<:Bound1](op : ColTensor1Op[I,Bound1,Value]) =
     Tensor1ColToRow(op);
   
@@ -103,7 +108,7 @@ extends ColTensor1OpBuilder[I,Bound1,Bound2];
 /** Operators for column tensors. */
 class RichColTensor1Op[I,Bound<:Tensor1[I],Value<:Bound,OuterMult<:Tensor2[I,I]]
 (base : ColTensor1Op[I,Bound,Value])
-(implicit ops : ColTensor1OpBuilder[I,Bound,OuterMult])
+(implicit ops : ColTensor1OpBuilder[I,Bound,OuterMult], tOps : TensorOpBuilder[I,Bound,Tensor1Op.Col])
 extends RichTensorOp[I,Bound,Value,Tensor1Op.Col](base) {
   /** Transposes this tensor to a row tensor. */
   def t = ops.mkTensor1ColToRow(base);
@@ -118,8 +123,7 @@ extends RichTensorOp[I,Bound,Value,Tensor1Op.Col](base) {
 }
 
 /** Operators for row tensors. */
-trait RowTensor1OpBuilder[I,Bound1[X]<:Tensor1[X],Bound2[X,Y]<:Tensor2[X,Y]]
-extends TensorOpBuilder[I,Bound1[I],Tensor1Op.Row] {
+trait RowTensor1OpBuilder[I,Bound1[X]<:Tensor1[X],Bound2[X,Y]<:Tensor2[X,Y]] {
   def mkTensor1RowToCol[V<:Bound1[I]]
   (op : RowTensor1Op[I,Bound1[I],V]) =
     Tensor1RowToCol(op);
@@ -140,7 +144,7 @@ extends RowTensor1OpBuilder[I,Bound1,Bound2];
 /** Operators for row tensors. */
 class RichRowTensor1Op[I,BoundV[X]<:Tensor1[X],BoundM[X,Y]<:Tensor2[X,Y],Value<:BoundV[I]]
 (base : RowTensor1Op[I,BoundV[I],Value])
-(implicit ops : RowTensor1OpBuilder[I,BoundV,BoundM])
+(implicit ops : RowTensor1OpBuilder[I,BoundV,BoundM], tOps : TensorOpBuilder[I,BoundV[I],Tensor1Op.Row])
 extends RichTensorOp[I,BoundV[I],Value,Tensor1Op.Row](base) {
   
   def t = ops.mkTensor1RowToCol(base);

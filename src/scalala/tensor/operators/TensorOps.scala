@@ -28,8 +28,8 @@ trait TensorOps {
   protected val innerTensorOpBuilder =
     new TensorOpBuilderImpl[Any,Tensor[Any],Any]();
   
-  implicit def iTensorOpBuilder[I] =
-    innerTensorOpBuilder.asInstanceOf[TensorOpBuilderImpl[I,Tensor[I],Any]];
+  implicit def iTensorOpBuilder[I,S] =
+    innerTensorOpBuilder.asInstanceOf[TensorOpBuilderImpl[I,Tensor[I],S]];
 
   implicit def iTensorOpToRichTensorOp[I]
   (op : TensorOp[I,Tensor[I],Tensor[I],Any])
@@ -44,7 +44,7 @@ trait TensorOps {
 //    new RichScalarTensorOp(s);
   
   implicit def iTensorOpToTensor[I,Base<:Tensor[I],V<:Base]
-  (x : TensorOp[I,Base,V,_]) : Tensor[I] =
+   (x : TensorOp[I,Base,V,_]) : Tensor[I] =
     x.value;
 }
 

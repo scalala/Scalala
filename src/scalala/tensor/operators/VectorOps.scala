@@ -48,21 +48,29 @@ extends ColVectorOpBuilder[V];
 class RowVectorOpBuilderImpl[V<:Vector]
 extends RowVectorOpBuilder[V];
 
-trait VectorOps {
+trait VectorOps extends TensorOps {
+  implicit val iTensorOpBuilderForColVector =
+    innerTensorOpBuilder.asInstanceOf[TensorOpBuilderImpl[Int,Vector,Tensor1Op.Col]];
+  
+  implicit val iTensorOpBuilderForRowVector =
+    innerTensorOpBuilder.asInstanceOf[TensorOpBuilderImpl[Int,Vector,Tensor1Op.Row]];
+  
   protected val colVectorOpBuilderImpl =
     new ColVectorOpBuilderImpl[Vector]();
   
   implicit def iColVectorOpBuilderImpl[V<:Vector] =
     colVectorOpBuilderImpl.asInstanceOf[ColVectorOpBuilderImpl[V]];
-
+  
   implicit def iColVectorOpTopRichColVectorOp
   (op : ColVectorOp[Vector])
-  (implicit builder : ColVectorOpBuilderImpl[Vector]) =
-    new RichColVectorOp(op)(builder);
+  (implicit cvops : ColVectorOpBuilderImpl[Vector],
+   ops : TensorOpBuilderImpl[Int,Vector,Tensor1Op.Col]) =
+    new RichColVectorOp(op)(cvops,ops);
 
   implicit def iVectorToRichColVectorOp(x : Vector)
-  (implicit builder : ColVectorOpBuilderImpl[Vector]) =
-    new RichColVectorOp[Vector](x)(builder);
+  (implicit cvops : ColVectorOpBuilderImpl[Vector],
+   ops : TensorOpBuilderImpl[Int,Vector,Tensor1Op.Col]) =
+    new RichColVectorOp[Vector](x)(cvops,ops);
 
   protected val rowVectorOpBuilderImpl =
     new RowVectorOpBuilderImpl();
@@ -72,8 +80,9 @@ trait VectorOps {
 
   implicit def iRowVectorOpToRichRowVectorOp[V<:Vector]
   (op : RowVectorOp[V])
-  (implicit builder : RowVectorOpBuilderImpl[V]) =
-    new RichRowVectorOp[V](op)(builder);
+  (implicit cvops : RowVectorOpBuilderImpl[V],
+   ops : TensorOpBuilderImpl[Int,Tensor[Int],Tensor1Op.Row]) =
+    new RichRowVectorOp[V](op);
 }
 
 object VectorOps extends VectorOps;

@@ -375,16 +375,28 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
 }
 
 object SparseBinaryVector {
-  import scalala.tensor.operators.TensorIdentity;
-  import scalala.tensor.operators.Tensor1Op;
+  import scalala.tensor.operators._;
   
   implicit def iSparseBinaryVectorToTensorIdentity(v : SparseBinaryVector) = {
-    SparseColBinaryTensorIdentity(v);
+    new TensorIdentity[Int,Vector,SparseBinaryVector,Tensor1Op.Col](v);
   }
   
-  case class SparseColBinaryTensorIdentity[Value<:SparseBinaryVector]
-  (override val tensor : Value)
-  extends TensorIdentity[Int,Vector,Value,Tensor1Op.Col](tensor) {
+  implicit def iSparseBinaryVectorToRichTensorOp(v : SparseBinaryVector)
+  (implicit ops : TensorOpBuilderImpl[Int,Vector,Tensor1Op.Col]) = {
+    new RichTensorOp(ColSparseBinaryVectorAsSparseVectorIdentity(v))(ops);
+  }
+  
+  implicit def iSparseBinaryVectorToRichColVectorOp(v : SparseBinaryVector)
+  (implicit cvops : ColVectorOpBuilderImpl[SparseBinaryVector],
+   ops : TensorOpBuilderImpl[Int,Vector,Tensor1Op.Col]) = {
+    new VectorTypes.RichColVectorOp(v)(cvops,ops);
+  }
+  
+  case class ColSparseBinaryVectorAsSparseVectorIdentity(val tensor : SparseBinaryVector)
+  extends TensorOp[Int,Vector,SparseVector,Tensor1Op.Col] {
+    override def domain = tensor.domain;
+    override lazy val value = tensor.toSparseVector;
+    override lazy val working = value.copy;
     override def create[J](d : MergeableSet[J]) =
       SparseVector.create(d);
   }
