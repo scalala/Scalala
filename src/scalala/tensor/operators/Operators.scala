@@ -24,7 +24,7 @@ package scalala.tensor.operators;
  * DenseVectorOps, Tensor2Ops, MatrixOps, and DenseMatrixOps.
  */
 trait OperatorImplicits extends TensorOps 
-with Tensor1Ops with VectorOps with DenseVectorOps // with SparseBinaryVectorOps
+with Tensor1Ops with VectorOps with DenseVectorOps with SparseBinaryVectorOps
 with Tensor2Ops with MatrixOps with DenseMatrixOps;
 
 /**
@@ -80,5 +80,6 @@ private object Scratch {
   val sparse = new SparseBinaryVector(10);
   sparse(2) = 1;
   sparse(7) = 1;
-  sparse.t * (sparse + 1);
+  sparse.t * sparse;
+//  sparse.t * (sparse + 1);
 }

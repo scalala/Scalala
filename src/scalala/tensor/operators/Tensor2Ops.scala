@@ -33,50 +33,21 @@ import Tensor1Types._;
 
 /** Implicits for working with Tensor2 instances. */
 trait Tensor2Ops {
-  protected val sharedTensor2OpBuilderImpl =
-    new Tensor2OpBuilderImpl[Any,Any,Tensor2,Tensor1]();
-  
-  implicit def iTensor2OpBuilderImpl[I,J] =
-    new Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]();
-  
   implicit def iTensor2OpToRichTensor2Op[I,J]
-  (op : Tensor2Op[I,J,Tensor2[I,J],Tensor2[I,J]])
-  (implicit builder : Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]) =
-    new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](op)(builder);
+  (op : Tensor2Op[I,J,Tensor2[I,J],Tensor2[I,J]]) =
+    new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](op);
   
   implicit def iTensor2ToRichTensor2Op[I,J]
-  (x : Tensor2[I,J])
-  (implicit builder : Tensor2OpBuilderImpl[I,J,Tensor2,Tensor1]) =
-    new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](x)(builder);
+  (x : Tensor2[I,J]) =
+    new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](x);
 }
 
 /** Singleton instsance of Tensor2Ops trait. */
 object Tensor2Ops extends Tensor2Ops;
 
-/** Builder for Tensor2 operators. */
-trait Tensor2OpBuilder[I,J,Bound2[X,Y]<:Tensor2[X,Y],Bound1[X]<:Tensor1[X]]
-extends TensorOpBuilder[(I,J),Bound2[I,J],(I,J)] {
-  
-  def mkTensor2Transpose[Value[X,Y]<:Bound2[X,Y]]
-  (op : TensorOp[(I,J),Bound2[I,J],Value[I,J],(I,J)]) =
-    Tensor2Transpose[I,J,Bound2[I,J],Value[I,J],Bound2[J,I],Value[J,I]](op);
-  
-  def mkTensor2MultTensor2[I,INNER,J,Value<:Bound2[I,J],V1<:Bound2[I,INNER],V2<:Bound2[INNER,J]]
-  (a : Tensor2Op[I,INNER,Bound2[I,INNER],V1], b : Tensor2Op[INNER,J,Bound2[INNER,J],V2]) =
-    Tensor2MultTensor2[I,INNER,J,Bound2,Value,V1,V2](a,b);
-  
-  def mkTensor2MultColTensor1[I,J,VV[J]<:Bound1[J],MV<:Bound2[I,J],Value<:VV[I]]
-  (a : Tensor2Op[I,J,Bound2[I,J],MV], b : ColTensor1Op[J,Bound1[J],VV[J]]) =
-    Tensor2MultColTensor1[I,J,Bound1,VV,Bound2,MV,Value](a,b);
-}
-
-class Tensor2OpBuilderImpl[I,J,Bound2[X,Y]<:Tensor2[X,Y],Bound1[X]<:Tensor1[X]]
-extends Tensor2OpBuilder[I,J,Bound2,Bound1];
-
 /** Operators on Tensor2 instances. */
 class RichTensor2Op[I,J,Bound2[X,Y]<:Tensor2[X,Y],Value2[X,Y]<:Bound2[X,Y],Bound1[X]<:Tensor1[X]]
 (base : TensorOp[(I,J),Bound2[I,J],Value2[I,J],(I,J)])
-(implicit ops : Tensor2OpBuilder[I,J,Bound2,Bound1])
 extends RichTensorOp[(I,J),Bound2[I,J],Value2[I,J],(I,J)](base) {
   
   if (!base.domain.isInstanceOf[ProductSet[_,_]]) {
@@ -85,15 +56,15 @@ extends RichTensorOp[(I,J),Bound2[I,J],Value2[I,J],(I,J)](base) {
   
   def domain2 = base.domain.asInstanceOf[ProductSet[I,J]];
   
-  def t = ops.mkTensor2Transpose[Value2](base);
+  def t = Tensor2Transpose[I,J,Bound2[I,J],Value2[I,J],Bound2[J,I],Value2[J,I]](base);
   
   /** Matrix-matrix multiplication */
   def *[K,V2<:Bound2[J,K]] (op : Tensor2Op[J,K,Bound2[J,K],V2]) =
-    ops.mkTensor2MultTensor2[I,J,K,Value2[I,K],Value2[I,J],V2](base,op);
+    Tensor2MultTensor2[I,J,K,Bound2,Value2[I,K],Value2[I,J],V2](base,op);
   
   /** Matrix-tensor multiplication */
-  def * (op : ColTensor1Op[J,Bound1[J],Bound1[J]]) =
-    ops.mkTensor2MultColTensor1[I,J,Bound1,Value2[I,J],Bound1[I]](base, op);
+  def *[V<:Bound1[J]] (op : ColTensor1Op[J,Bound1[J],Bound1[J]]) =
+    Tensor2MultColTensor1[I,J,Bound1,Bound1,Bound2,Value2[I,J],Bound1[I]](base, op);
 }
 
 /** Type-safe transposes of a Tensor2. */

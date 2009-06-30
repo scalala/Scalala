@@ -25,20 +25,11 @@ import scalala.tensor.{Tensor, Tensor1, Tensor2, Vector, Matrix};
 
 /** Implicits for TensorOp support. */
 trait TensorOps {
-  protected val innerTensorOpBuilder =
-    new TensorOpBuilderImpl[Any,Tensor[Any],Any]();
-  
-  implicit def iTensorOpBuilder[I,S] =
-    innerTensorOpBuilder.asInstanceOf[TensorOpBuilderImpl[I,Tensor[I],S]];
+  implicit def iTensorToTensorOp[I](tensor : Tensor[I]) =
+    TensorIdentity[I,Tensor[I],Tensor[I],Any](tensor);
 
-  implicit def iTensorOpToRichTensorOp[I]
-  (op : TensorOp[I,Tensor[I],Tensor[I],Any])
-  (implicit builder : TensorOpBuilderImpl[I,Tensor[I],Any]) =
-    new RichTensorOp[I,Tensor[I],Tensor[I],Any](op)(builder);
-
-  implicit def iTensorToRichTensorOp[I](x : Tensor[I])
-  (implicit builder : TensorOpBuilderImpl[I,Tensor[I],Any]) =
-    new RichTensorOp[I,Tensor[I],Tensor[I],Any](x)(builder);
+  implicit def iTensorToRichTensorOp[I](x : Tensor[I]) =
+    new RichTensorOp[I,Tensor[I],Tensor[I],Any](x);
   
 //  implicit def iScalarToRichScalarTensorOp(s : Double) =
 //    new RichScalarTensorOp(s);
@@ -46,6 +37,7 @@ trait TensorOps {
   implicit def iTensorOpToTensor[I,Base<:Tensor[I],V<:Base]
    (x : TensorOp[I,Base,V,_]) : Tensor[I] =
     x.value;
+  
 }
 
 /** Singleton instance of TensorOps trait. */
@@ -105,104 +97,11 @@ trait TensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape] {
   def create[J](d : MergeableSet[J]) : Tensor[J];
 }
 
-/**
- * A builder for making new operators.  This builder is
- * used instead of constructing case classes directly
- * because it allows for straightforward additions of
- * extra optimizations, etc., by building in cleverer
- * builders.
- * 
- * @author dramage
- */
-trait TensorOpBuilder[I,Bound<:Tensor[I],Shape] {
-//  def mkTensorIdentity[Value<:Bound](tensor : Value) =
-//    TensorIdentity[I,Bound,Value,Shape](tensor);
-  
-  def mkTensorNegation[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape]) =
-    TensorNegation[I,Bound,Value,Shape](tensor);
-  
-  def mkTensorPlusScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorPlusScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkTensorMultScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorMultScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkScalarDivTensor[Value<:Bound](scalar : Double, tensor : TensorOp[I,Bound,Value,Shape]) =
-    ScalarDivTensor[I,Bound,Value,Shape](scalar, tensor);
-  
-  def mkTensorPowScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorPowScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkScalarPowTensor[Value<:Bound](scalar : Double, tensor : TensorOp[I,Bound,Value,Shape]) =
-    ScalarPowTensor[I,Bound,Value,Shape](scalar, tensor);
-  
-  def mkTensorLTScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorLTScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkTensorGTScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorGTScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkTensorLTEScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorLTEScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkTensorGTEScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorGTEScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkTensorAndScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorAndScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkTensorOrScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorOrScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkTensorEqScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorEqScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkTensorNeScalar[Value<:Bound](tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) =
-    TensorNeScalar[I,Bound,Value,Shape](tensor, scalar);
-  
-  def mkTensorPlusTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorPlusTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorMinusTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorMinusTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-  
-  def mkTensorMultTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorMultTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorDivTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorDivTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorPowTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorPowTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorLTTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorLTTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorGTTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorGTTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorLTETensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorLTETensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorGTETensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorGTETensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorEqTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorEqTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorNeTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorNeTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorAndTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorAndTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
-
-  def mkTensorOrTensor[V1<:Bound,V2<:Bound](tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape]) =
-    TensorOrTensor[I,Bound,V1,V2,Shape](tensorA, tensorB);
+object TensorOp {
+  implicit def iTensorOpToRichTensorOp[I]
+  (op : TensorOp[I,Tensor[I],Tensor[I],Any]) =
+    new RichTensorOp[I,Tensor[I],Tensor[I],Any](op);
 }
-
-/** An implementation of TensorOp. */
-class TensorOpBuilderImpl[I,Bound<:Tensor[I],Shape]
-extends TensorOpBuilder[I,Bound,Shape];
 
 /**
  * Operations applicable to any TensorOp via tensor-scalar and
@@ -213,76 +112,75 @@ extends TensorOpBuilder[I,Bound,Shape];
  * @author dramage
  */
 class RichTensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape]
-(base : TensorOp[I,Bound,Value,Shape])
-(implicit ops : TensorOpBuilder[I,Bound,Shape]) {
+(base : TensorOp[I,Bound,Value,Shape]) {
   
   /** Unary minus returns a tensor negation. */
-  def unary_- = ops.mkTensorNegation(base);
+  def unary_- = TensorNegation(base);
   
   //
   // scalar operators
   //
   
-  def  + (s : Double) = ops.mkTensorPlusScalar(base, s);
-  def  - (s : Double) = ops.mkTensorPlusScalar(base, -s);
-  def  * (s : Double) = ops.mkTensorMultScalar(base, s);
-  def  / (s : Double) = ops.mkTensorMultScalar(base, 1.0 / s);
-  def :^ (s : Double) = ops.mkTensorPowScalar(base, s);
-  def  < (s : Double) = ops.mkTensorLTScalar(base, s);
-  def  > (s : Double) = ops.mkTensorGTScalar(base, s);
-  def <= (s : Double) = ops.mkTensorLTEScalar(base, s);
-  def >= (s : Double) = ops.mkTensorGTEScalar(base, s);
-  def && (s : Double) = ops.mkTensorAndScalar(base, s);
-  def || (s : Double) = ops.mkTensorOrScalar(base, s);
+  def  + (s : Double) = TensorPlusScalar(base, s);
+  def  - (s : Double) = TensorPlusScalar(base, -s);
+  def  * (s : Double) = TensorMultScalar(base, s);
+  def  / (s : Double) = TensorMultScalar(base, 1.0 / s);
+  def :^ (s : Double) = TensorPowScalar(base, s);
+  def  < (s : Double) = TensorLTScalar(base, s);
+  def  > (s : Double) = TensorGTScalar(base, s);
+  def <= (s : Double) = TensorLTEScalar(base, s);
+  def >= (s : Double) = TensorGTEScalar(base, s);
+  def && (s : Double) = TensorAndScalar(base, s);
+  def || (s : Double) = TensorOrScalar(base, s);
   
   /** Colon prefix is required to avoid conflation with .equals */
-  def :== (s : Double) = ops.mkTensorEqScalar(base, s);
+  def :== (s : Double) = TensorEqScalar(base, s);
   
   /** Colon prefix is required to avoid conflation with .equals */
-  def :!= (s : Double) = ops.mkTensorNeScalar(base, s);
+  def :!= (s : Double) = TensorNeScalar(base, s);
   
   //
   // tensor operators
   //
     
   def :+ [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorPlusTensor(base, op);
+    TensorPlusTensor(base, op);
   
   def :- [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorMinusTensor(base, op);
+    TensorMinusTensor(base, op);
   
   def :*  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorMultTensor(base, op);
+    TensorMultTensor(base, op);
   
   def :/  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorDivTensor(base, op);
+    TensorDivTensor(base, op);
   
   def :^  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorPowTensor(base, op);
+    TensorPowTensor(base, op);
   
   def :<  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorLTTensor(base, op);
+    TensorLTTensor(base, op);
   
   def :>  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorGTTensor(base, op);
+    TensorGTTensor(base, op);
   
   def :<= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorLTETensor(base, op);
+    TensorLTETensor(base, op);
   
   def :>= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorGTETensor(base, op);
+    TensorGTETensor(base, op);
   
   def :== [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorEqTensor(base, op);
+    TensorEqTensor(base, op);
   
   def :!= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorNeTensor(base, op);
+    TensorNeTensor(base, op);
   
   def :&& [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorAndTensor(base, op);
+    TensorAndTensor(base, op);
   
   def :|| [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
-    ops.mkTensorOrTensor(base, op);
+    TensorOrTensor(base, op);
   
   /** Fixed alias for :+ */
   final def + [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :+ op;

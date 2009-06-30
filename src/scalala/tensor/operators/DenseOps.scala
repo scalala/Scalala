@@ -43,18 +43,6 @@ object DenseVectorTypes {
 
 import DenseVectorTypes._;
 
-trait ColDenseVectorOpBuilder[V<:DenseVector]
-extends ColVectorOpBuilder[V];
-  
-trait RowDenseVectorOpBuilder[V<:DenseVector]
-extends RowVectorOpBuilder[V];
-
-class ColDenseVectorOpBuilderImpl[V<:DenseVector]
-extends ColDenseVectorOpBuilder[V];
-
-class RowDenseVectorOpBuilderImpl[V<:DenseVector]
-extends RowDenseVectorOpBuilder[V]();
-
 /** Type aliases supporting DenseMatrix operators. */
 object DenseMatrixTypes {
   type DenseMatrixOp[M<:DenseMatrix] =
@@ -68,42 +56,22 @@ import DenseMatrixTypes._;
 
 /** Implicits supporting DenseVector operations. */
 trait DenseVectorOps {
-  protected val colDenseVectorOpBuilderImpl =
-    new ColDenseVectorOpBuilderImpl[DenseVector]();
-  
-  implicit def iColDenseVectorOpBuilderImpl[V<:DenseVector] =
-    colDenseVectorOpBuilderImpl.asInstanceOf[ColDenseVectorOpBuilderImpl[V]];
-
   implicit def iColDenseVectorOpTopRichColVectorOp[V<:DenseVector]
-  (op : ColDenseVectorOp[V])
-  (implicit cdvops : ColDenseVectorOpBuilderImpl[V],
-   ops : TensorOpBuilderImpl[Int,Vector,Tensor1Op.Col]) =
+  (op : ColDenseVectorOp[V]) =
     new RichColDenseVectorOp(op);
 
-  implicit def iDenseVectorToRichColVectorOp[V<:DenseVector](x : V)
-  (implicit cdvops : ColDenseVectorOpBuilderImpl[V],
-   ops : TensorOpBuilderImpl[Int,Vector,Tensor1Op.Col]) =
+  implicit def iDenseVectorToRichColVectorOp[V<:DenseVector](x : V) =
     new RichColDenseVectorOp[V](x);
 
-  protected val rowDenseVectorOpBuilderImpl =
-    new RowDenseVectorOpBuilderImpl[DenseVector]();
-  
-  implicit def iRowDenseVectorOpBuilderImpl[V<:DenseVector] =
-    rowDenseVectorOpBuilderImpl.asInstanceOf[RowDenseVectorOpBuilderImpl[V]];
-
   implicit def iRowDenseVectorOpToRichRowDenseVectorOp[V<:DenseVector]
-  (op : RowDenseVectorOp[V])
-  (implicit rdvops : RowDenseVectorOpBuilderImpl[V],
-   ops : TensorOpBuilderImpl[Int,Vector,Tensor1Op.Row]) =
+  (op : RowDenseVectorOp[V]) =
     new RichRowDenseVectorOp[V](op);
   
   implicit def iArrayToColDenseVectorOp(array : Array[Double])
   : ColDenseVectorOp[DenseVector] =
     new DenseVector(array);
   
-  implicit def iArrayToRichColVectorOp(array : Array[Double])
-  (implicit cdvops : ColDenseVectorOpBuilderImpl[DenseVector],
-   ops : TensorOpBuilderImpl[Int,Vector,Tensor1Op.Col]) =
+  implicit def iArrayToRichColVectorOp(array : Array[Double]) =
     new RichColDenseVectorOp(new DenseVector(array));
 }
 
@@ -114,53 +82,31 @@ object DenseVectorOps extends DenseVectorOps;
 trait DenseMatrixOps {
   import DenseVectorOps._;
   
-  implicit val sharedDenseMatrixOpBuilderImpl =
-    new DenseMatrixOpBuilderImpl();
-  
   implicit def iDenseMatrixOpToRichDenseMatrixOp[M<:DenseMatrix,V<:DenseVector]
-  (op : DenseMatrixOp[M])
-  (implicit matrixBuilder : DenseMatrixOpBuilderImpl, vectorBuilder : ColDenseVectorOpBuilder[V]) =
-    new RichDenseMatrixOp(op)(matrixBuilder, vectorBuilder);
+  (op : DenseMatrixOp[M]) =
+    new RichDenseMatrixOp(op);
   
   implicit def iDenseMatrixToRichDenseMatrixOp
-  (x : DenseMatrix)
-  (implicit matrixBuilder : DenseMatrixOpBuilderImpl, vectorBuilder : ColDenseVectorOpBuilder[DenseVector]) =
-    new RichDenseMatrixOp(x)(matrixBuilder, vectorBuilder);
+  (x : DenseMatrix) =
+    new RichDenseMatrixOp(x);
 }
 
 /** Singleton instance of DenseMatrixOps trait. */
 object DenseMatrixOps extends DenseMatrixOps;
 
-/** Builder for special Densematrix operations. */
-trait DenseMatrixOpBuilder extends MatrixOpBuilder {
-  def mkDenseMatrixSolveDenseVector[V<:DenseVector,M<:DenseMatrix](m : DenseMatrixOp[M], v : ColDenseVectorOp[V]) =
-    DenseMatrixSolveDenseVector(m,v)(this);
-  
-  def mkDenseMatrixSolveDenseMatrix[M1<:DenseMatrix,M2<:DenseMatrix](a : DenseMatrixOp[M1], b : DenseMatrixOp[M2]) =
-    DenseMatrixSolveDenseMatrix(a,b);
-}
-
-class DenseMatrixOpBuilderImpl extends DenseMatrixOpBuilder;
-
 /** Extra operators for DenseMatrices. */
 class RichDenseMatrixOp[M<:DenseMatrix,V<:DenseVector](base : DenseMatrixOp[M])
-(implicit matrixOps : DenseMatrixOpBuilder, vectorOps : ColDenseVectorOpBuilder[V])
 extends RichMatrixOp[M,V](base) {
   def \ [V<:DenseVector] (op : ColDenseVectorOp[V]) =
-    matrixOps.mkDenseMatrixSolveDenseVector(base, op);
-  def \ (v : DenseVector) =
-    matrixOps.mkDenseMatrixSolveDenseVector(base, v);
+    DenseMatrixSolveDenseVector(base, op);
   
   def \ [M2<:DenseMatrix] (op : DenseMatrixOp[M2]) =
-    matrixOps.mkDenseMatrixSolveDenseMatrix(base, op);
-  def \ (m : DenseMatrix) =
-    matrixOps.mkDenseMatrixSolveDenseMatrix(base, m);
+    DenseMatrixSolveDenseMatrix(base, op);
 }
 
 /** Matrix solve vector, like matlab's "\", uses DenseMatrixSolveDenseMatrix. */
 case class DenseMatrixSolveDenseVector[M<:DenseMatrix,V<:DenseVector]
 (m : DenseMatrixOp[M], v : ColDenseVectorOp[V])
-(implicit ops : DenseMatrixOpBuilder)
 extends ColDenseVectorOp[DenseVector] {
   override def domain = v.domain;
   

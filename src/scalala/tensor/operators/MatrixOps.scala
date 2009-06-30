@@ -37,64 +37,34 @@ import VectorTypes._;
 
 /** Implicits supporting Matrix operations. */
 trait MatrixOps {
-  implicit val sharedMatrixOpBuilderImpl =
-    new MatrixOpBuilderImpl();
-  
   implicit def iMatrixOpToRichMatrixOp[M<:Matrix,V<:Vector]
-  (op : MatrixOp[M])
-  (implicit builder : MatrixOpBuilderImpl, vops : ColVectorOpBuilderImpl[V]) =
-    new RichMatrixOp(op)(builder);
+  (op : MatrixOp[M]) =
+    new RichMatrixOp(op);
   
-  implicit def iMatrixToRichMatrixOp(x : Matrix)
-  (implicit builder : MatrixOpBuilderImpl) =
-    new RichMatrixOp(x)(builder);
+  implicit def iMatrixToRichMatrixOp(x : Matrix) =
+    new RichMatrixOp(x);
 }
 
 /** Singleton instance of MatrixOps trait. */
 object MatrixOps extends MatrixOps;
 
 /**
- * Matrix operators. Because Matrix isn't parameterized, there is no
- * clean way to inherit from Tensor2Op*, so there is some code duplication
- * here.
- */
-trait MatrixOpBuilder
-extends TensorOpBuilder[(Int,Int),Matrix,(Int,Int)] {
-  
-  def mkMatrixTranspose[M<:Matrix]
-  (op : MatrixOp[M]) =
-    new MatrixTranspose[M,Matrix](op);
-  
-  def mkMatrixMultMatrix[M1<:Matrix,M2<:Matrix]
-  (a : MatrixOp[M1], b : MatrixOp[M2]) =
-    new MatrixMultMatrix(a, b);
-  
-  def mkMatrixMultColVector[M<:Matrix,V<:Vector]
-  (a : MatrixOp[M], b : ColVectorOp[V]) =
-    new MatrixMultColVector(a, b);
-}
-
-class MatrixOpBuilderImpl extends MatrixOpBuilder;
-
-/**
  * Matrix methods. Because Matrix isn't parameterized, there is no
  * clean way to inherit from Tensor2Op*, so there is some code duplication
  * here.
  */
-class RichMatrixOp[M<:Matrix,V<:Vector]
-(base : MatrixOp[M])
-(implicit ops : MatrixOpBuilder)
+class RichMatrixOp[M<:Matrix,V<:Vector](base : MatrixOp[M])
 extends RichTensorOp[(Int,Int),Matrix,M,(Int,Int)](base) {
   
-  def t = ops.mkMatrixTranspose(base);
+  def t = new MatrixTranspose[M,Matrix](base);
   
   /** Matrix-matrix multiplication */
   def *[M2<:Matrix] (op : MatrixOp[M2]) =
-    ops.mkMatrixMultMatrix(base,op);
+    MatrixMultMatrix(base,op);
   
   /** Matrix-vector multiplication */
   def *[V<:Vector] (op : ColVectorOp[V]) =
-    ops.mkMatrixMultColVector(base, op);
+    MatrixMultColVector(base, op);
 }
 
 /**
