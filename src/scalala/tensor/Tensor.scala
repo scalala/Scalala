@@ -273,13 +273,6 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   //
   // Assignments and updates from an op
   //
-
-//  /** Assigns each element in this map to the corresponding value as returned by the given operation. */
-//  def := [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit = {
-//    op match {
-//      case op : TensorOp[_,_,_,_] => this := op.value;
-//    }
-//  }
   
   /** Returns the partial map representing this tensor op skipping negations. */
   private def getPartialMap[S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) : PartialMap[I,Double] = {
@@ -287,6 +280,11 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
       case TensorNegation(n) => n.value.map((x:Double) => -x);
       case _ => op.value.asInstanceOf[PartialMap[I,Double]];
     }
+  }
+
+  /** Assigns each element in this map to the corresponding value as returned by the given operation. */
+  def := [S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) : Unit = {
+    this := op.value.asInstanceOf[PartialMap[I,Double]];
   }
   
   /** Increments each element in this map by the corresponding value as returned by the given operation. */
