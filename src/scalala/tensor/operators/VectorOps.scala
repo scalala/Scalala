@@ -28,10 +28,7 @@ import Tensor1Types._;
 object VectorTypes {
   type ColVectorOp[V<:Vector] =
     ColTensor1Op[Int,Vector,V];
-
-  type RichColVectorOp[V<:Vector] =
-    RichColTensor1Op[Int,Vector,V,Matrix];
-
+  
   type RowVectorOp[V<:Vector] =
     RowTensor1Op[Int,Vector,V];
 }
@@ -40,20 +37,15 @@ import VectorTypes._;
 import MatrixTypes._;
 
 trait VectorOps extends TensorOps {
-  implicit def iColVectorOpTopRichColVectorOp[V<:Vector]
-  (op : ColVectorOp[V]) =
-    new RichColVectorOp(op);
-
-  implicit def iRowVectorOpToRichRowVectorOp[V<:Vector]
-  (op : RowVectorOp[V]) =
-    new RichRowVectorOp(op);
 }
 
 object VectorOps extends VectorOps;
 
 
-class RichRowVectorOp[V<:Vector]
-(base : RowVectorOp[V])
+class RichColVectorOp[V<:Vector](base : ColVectorOp[V])
+extends RichColTensor1Op[Int,Vector,V,Matrix](base);
+
+class RichRowVectorOp[V<:Vector](base : RowVectorOp[V])
 extends RichTensorOp[Int,Vector,V,Tensor1Op.Row](base) {
   
   /** Transpose to column vector. */

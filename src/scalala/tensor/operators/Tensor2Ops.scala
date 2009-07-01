@@ -22,10 +22,12 @@ package scalala.tensor.operators;
 import scalala.collection.{MergeableSet, IntSpanSet, ProductSet, DomainException};
 import scalala.tensor.{Tensor, Tensor1, Tensor2, Vector, Matrix};
 
+import TensorShapes._;
+
 /** Type aliases for Tensor2 support. */
 object Tensor2Types {
   type Tensor2Op[I,J,Bound<:Tensor2[I,J],Value<:Bound] =
-    TensorOp[(I,J),Bound,Value,(I,J)];
+    TensorOp[(I,J),Bound,Value,Shape2[I,J]];
 }
 
 import Tensor2Types._;
@@ -33,18 +35,15 @@ import Tensor1Types._;
 
 /** Implicits for working with Tensor2 instances. */
 trait Tensor2Ops {
-  implicit def iTensor2OpToRichTensor2Op[I,J]
-  (op : Tensor2Op[I,J,Tensor2[I,J],Tensor2[I,J]]) =
-    new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor1](op);
 }
 
 /** Singleton instsance of Tensor2Ops trait. */
 object Tensor2Ops extends Tensor2Ops;
 
 /** Operators on Tensor2 instances. */
-class RichTensor2Op[I,J,Bound2[X,Y]<:Tensor2[X,Y],Value2[X,Y]<:Bound2[X,Y],Bound1[X]<:Tensor1[X]]
-(base : TensorOp[(I,J),Bound2[I,J],Value2[I,J],(I,J)])
-extends RichTensorOp[(I,J),Bound2[I,J],Value2[I,J],(I,J)](base) {
+class RichTensor2Op[I,J,Bound2[X,Y]<:Tensor2[X,Y],Value2[X,Y]<:Bound2[X,Y],MV<:Value2[I,J],Bound1[X]<:Tensor1[X]]
+(base : Tensor2Op[I,J,Bound2[I,J],MV])
+extends RichTensorOp[(I,J),Bound2[I,J],MV,Shape2[I,J]](base) {
   
   if (!base.domain.isInstanceOf[ProductSet[_,_]]) {
     throw new IllegalArgumentException("Tensor2 instance must have its domain as a ProductSet");
@@ -52,21 +51,21 @@ extends RichTensorOp[(I,J),Bound2[I,J],Value2[I,J],(I,J)](base) {
   
   def domain2 = base.domain.asInstanceOf[ProductSet[I,J]];
   
-  def t = Tensor2Transpose[I,J,Bound2[I,J],Value2[I,J],Bound2[J,I],Value2[J,I]](base);
+  def t = Tensor2Transpose[I,J,Bound2[I,J],MV,Bound2[J,I],Value2[J,I]](base);
   
   /** Matrix-matrix multiplication */
   def *[K,V2<:Bound2[J,K]] (op : Tensor2Op[J,K,Bound2[J,K],V2]) =
-    Tensor2MultTensor2[I,J,K,Bound2,Value2[I,K],Value2[I,J],V2](base,op);
+    Tensor2MultTensor2[I,J,K,Bound2,Value2[I,K],MV,V2](base,op);
   
   /** Matrix-tensor multiplication */
   def *[V<:Bound1[J]] (op : ColTensor1Op[J,Bound1[J],Bound1[J]]) =
-    Tensor2MultColTensor1[I,J,Bound1,Bound1,Bound2,Value2[I,J],Bound1[I]](base, op);
+    Tensor2MultColTensor1[I,J,Bound1,Bound1,Bound2,MV,Bound1[I]](base, op);
 }
 
 /** Type-safe transposes of a Tensor2. */
 case class Tensor2Transpose[I,J,Bound<:Tensor2[I,J],Value<:Bound,BoundTranspose<:Tensor2[J,I],ValueTranspose<:BoundTranspose]
-(op : TensorOp[(I,J),Bound,Value,(I,J)])
-extends TensorOp[(J,I),BoundTranspose,ValueTranspose,(J,I)] {
+(op : Tensor2Op[I,J,Bound,Value])
+extends Tensor2Op[J,I,BoundTranspose,ValueTranspose] {
   override def domain = op.domain.asInstanceOf[ProductSet[I,J]].transpose;
   override def value = op.value.transpose.asInstanceOf[ValueTranspose];
   override def working = op.working.asInstanceOf[ValueTranspose];

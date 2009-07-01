@@ -33,12 +33,6 @@ object DenseVectorTypes {
   
   type RowDenseVectorOp[V<:DenseVector] =
     RowVectorOp[V];
-
-  type RichColDenseVectorOp[V<:DenseVector] =
-    RichColVectorOp[V];
-
-  type RichRowDenseVectorOp[V<:DenseVector] =
-    RichRowVectorOp[V];
 }
 
 import DenseVectorTypes._;
@@ -64,24 +58,31 @@ trait DenseVectorOps {
 //  (op : RowDenseVectorOp[V]) =
 //    new RichRowDenseVectorOp(op);
   
-  implicit def iArrayToColDenseVectorOp(array : Array[Double])
-  : ColDenseVectorOp[DenseVector] =
-    new DenseVector(array);
-  
-  implicit def iArrayToRichColVectorOp(array : Array[Double]) =
-    new RichColDenseVectorOp(new DenseVector(array));
+//  implicit def iArrayToColDenseVectorOp(array : Array[Double])
+//  : ColDenseVectorOp[DenseVector] =
+//    new DenseVector(array);
+//  
+//  implicit def iArrayToRichColVectorOp(array : Array[Double]) =
+//    new RichColDenseVectorOp(new DenseVector(array));
 }
 
 /** Singleton instance of DenseVectorOps trait. */
 object DenseVectorOps extends DenseVectorOps;
 
+class RichColDenseVectorOp[V<:DenseVector](base : ColDenseVectorOp[V])
+extends RichColVectorOp[V](base);
+
+class RichRowDenseVectorOp[V<:DenseVector](base : RowDenseVectorOp[V])
+extends RichRowVectorOp[V](base);
+
+
 /** Implicits supporting DenseMatrix operations. */
 trait DenseMatrixOps {
-  import DenseVectorOps._;
-  
-  implicit def iDenseMatrixOpToRichDenseMatrixOp[M<:DenseMatrix,V<:DenseVector]
-  (op : DenseMatrixOp[M]) =
-    new RichDenseMatrixOp(op);
+//  import DenseVectorOps._;
+//  
+//  implicit def iDenseMatrixOpToRichDenseMatrixOp[M<:DenseMatrix]
+//  (op : DenseMatrixOp[M]) =
+//    new RichDenseMatrixOp(op);
 }
 
 /** Singleton instance of DenseMatrixOps trait. */
@@ -102,6 +103,8 @@ case class DenseMatrixSolveDenseVector[M<:DenseMatrix,V<:DenseVector]
 (m : DenseMatrixOp[M], v : ColDenseVectorOp[V])
 extends ColDenseVectorOp[DenseVector] {
   override def domain = v.domain;
+  
+  import OperatorImplicits._;
   
   /** Solves via repurposing the DenseMatrixSolveDenseMatrix code. */
   override lazy val value = {

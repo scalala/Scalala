@@ -23,10 +23,12 @@ import scalala.collection.{MergeableSet, IntSpanSet, ProductSet, DomainException
                              
 import scalala.tensor.{Vector,Matrix};
 
+import TensorShapes._;
+
 /** Type aliases supporting Matrix operations. */
 object MatrixTypes {
   type MatrixOp[M<:Matrix] =
-    TensorOp[(Int,Int),Matrix,M,(Int,Int)];
+    TensorOp[(Int,Int),Matrix,M,Shape2[Int,Int]];
 
   type MatrixTranspose[M<:Matrix,T<:Matrix] =
     Tensor2Transpose[Int,Int,Matrix,M,Matrix,T];
@@ -37,9 +39,6 @@ import VectorTypes._;
 
 /** Implicits supporting Matrix operations. */
 trait MatrixOps {
-  implicit def iMatrixOpToRichMatrixOp[M<:Matrix,V<:Vector]
-  (op : MatrixOp[M]) =
-    new RichMatrixOp(op);
 }
 
 /** Singleton instance of MatrixOps trait. */
@@ -51,7 +50,7 @@ object MatrixOps extends MatrixOps;
  * here.
  */
 class RichMatrixOp[M<:Matrix,V<:Vector](base : MatrixOp[M])
-extends RichTensorOp[(Int,Int),Matrix,M,(Int,Int)](base) {
+extends RichTensorOp[(Int,Int),Matrix,M,Shape2[Int,Int]](base) {
   
   def t = new MatrixTranspose[M,Matrix](base);
   

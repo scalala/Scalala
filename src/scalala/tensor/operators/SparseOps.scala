@@ -43,7 +43,7 @@ trait SparseBinaryVectorOps {
     new TensorIdentity[Int,Vector,SparseBinaryVector,Tensor1Op.Col](v);
   
   implicit def iSparseBinaryVectorToRichColVectorOp(v : SparseBinaryVector) =
-    new VectorTypes.RichColVectorOp(ColSparseBinaryVectorAsSparseVectorIdentity(v));
+    new RichColVectorOp(ColSparseBinaryVectorAsSparseVectorIdentity(v));
   
   case class ColSparseBinaryVectorAsSparseVectorIdentity(val tensor : SparseBinaryVector)
   extends TensorOp[Int,Vector,SparseVector,Tensor1Op.Col] {

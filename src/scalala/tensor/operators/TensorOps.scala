@@ -38,24 +38,40 @@ trait TensorOps {
 //  implicit def iScalarToRichScalarTensorOp(s : Double) =
 //    new RichScalarTensorOp(s);
   
-  implicit def iTensorOpToTensor[I,Base<:Tensor[I],V<:Base]
-   (x : TensorOp[I,Base,V,_]) : V =
-    x.value;
+//  implicit def iTensorOpToTensor[I,Base<:Tensor[I],V<:Base]
+//   (x : TensorOp[I,Base,V,_]) : V =
+//    x.value;
   
 }
 
 /** Singleton instance of TensorOps trait. */
 object TensorOps extends TensorOps;
 
-//
-// TODO: change Shape stuff to use these shapes for better iTensorOpToTensor
-//
-//object TensorOp {
-//  abstract sealed class Shape;
-//  abstract sealed class AssignableShape;
-//  abstract sealed class IntermediateShape;
-//  abstract final class AnyShape;
-//}
+
+object TensorShapes {
+  /** The shape of a tensor. */
+  abstract sealed class TensorShape;
+  
+  /** A shape that is assignable. */
+  abstract sealed class PublicShape extends TensorShape;
+  
+  /** A shape that is unassignable, like row. */
+  abstract sealed class PrivateShape extends TensorShape;
+  
+  /** Singly indexed shape. */
+  final abstract class AnyShape extends PublicShape;
+  
+  /** Matrix shape */
+  final abstract class Shape2[I,J] extends PublicShape;
+  
+  /** Column vector shape. */
+  final abstract class Shape1Col extends PublicShape;
+  
+  /** Row vector shape. */
+  final abstract class Shape1Row extends PrivateShape;
+}
+
+import TensorShapes._;
 
 /**
  * A TensorOp represents a possibly not-yet-computed tensor
@@ -68,7 +84,7 @@ object TensorOps extends TensorOps;
  * 
  * @author dramage
  */
-trait TensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape] {
+trait TensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape] {
   /** Returns the domain of the output of this Tensor. */
   def domain : MergeableSet[I];
   
@@ -101,12 +117,6 @@ trait TensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape] {
   def create[J](d : MergeableSet[J]) : Tensor[J];
 }
 
-object TensorOp {
-  implicit def iTensorOpToRichTensorOp[I]
-  (op : TensorOp[I,Tensor[I],Tensor[I],Any]) =
-    new RichTensorOp[I,Tensor[I],Tensor[I],Any](op);
-}
-
 /**
  * Operations applicable to any TensorOp via tensor-scalar and
  * tensor-tensor arithmetic.  Types are left-associative -- the
@@ -115,7 +125,7 @@ object TensorOp {
  * 
  * @author dramage
  */
-class RichTensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape]
+class RichTensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (base : TensorOp[I,Bound,Value,Shape]) {
   
   /** Unary minus returns a tensor negation. */
@@ -363,7 +373,7 @@ class RichTensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape]
 //}
 
 /** A reference to an underlying tensor. */
-case class TensorIdentity[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorIdentity[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (tensor : Value) extends TensorOp[I,Bound,Value,Shape] {  
   override def domain = tensor.domain;
   override def value = tensor;
@@ -372,7 +382,7 @@ case class TensorIdentity[I,Bound<:Tensor[I],Value<:Bound,Shape]
 }
 
 /** A reference to an underlying TensorOp. */
-abstract case class TensorReferenceOp[I,Bound<:Tensor[I],Value<:Bound,Shape]
+abstract case class TensorReferenceOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (tensor : TensorOp[I,Bound,Value,Shape])
 extends TensorOp[I,Bound,Value,Shape] {
   override def domain = tensor.domain;
@@ -380,7 +390,7 @@ extends TensorOp[I,Bound,Value,Shape] {
 }
   
 /** An operation applied to a tensor's values. */
-abstract case class TensorFunctionOp[I,Bound<:Tensor[I],Value<:Bound,Shape]
+abstract case class TensorFunctionOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape])
 extends TensorReferenceOp[I,Bound,Value,Shape](tensor) {
   /** Function to apply to elements to compute new value. */
@@ -395,14 +405,14 @@ extends TensorReferenceOp[I,Bound,Value,Shape](tensor) {
 }
   
 /** An operator between two tensors defined on the same domain. */
-abstract class TensorTensorOp[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+abstract class TensorTensorOp[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,V1,Shape], val tensorB : TensorOp[I,Bound,V2,Shape])
 extends TensorReferenceOp[I,Bound,V1,Shape](tensor) {
   if (tensor.domain != tensorB.domain) throw new DomainException("Tensors have incompatible domain");
 }
 
 /** An abstract operator between two tensors and a function of their values. */
-abstract class TensorTensorFunctionOp[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+abstract class TensorTensorFunctionOp[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (tensorA : TensorOp[I,Bound,V1,Shape], tensorB : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorOp(tensorA, tensorB) {
   /** Function of paired elements to compute new value. */
@@ -420,7 +430,7 @@ extends TensorTensorOp(tensorA, tensorB) {
 }
 
 /** The negation of a tensor. */
-case class TensorNegation[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorNegation[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape])
 extends TensorReferenceOp[I,Bound,Value,Shape](tensor) {
   override def value = {
@@ -437,7 +447,9 @@ extends TensorReferenceOp[I,Bound,Value,Shape](tensor) {
 //}
 
 /** Adds together to tensors. */
-case class TensorPlusScalar[I,Bound<:Tensor[I],Value<:Bound,Shape](override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double) extends TensorReferenceOp(tensor) {
+case class TensorPlusScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
+(override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
+extends TensorReferenceOp(tensor) {
   override lazy val value : Value = {
     val rv = tensor.working;
     rv += scalar;
@@ -453,7 +465,7 @@ case class TensorPlusScalar[I,Bound<:Tensor[I],Value<:Bound,Shape](override val 
 //}
 
 /** Scales a tensor by a scalar: 2 * x. */
-case class TensorMultScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorMultScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorReferenceOp(tensor) {
   override lazy val value : Value = {
@@ -471,7 +483,7 @@ extends TensorReferenceOp(tensor) {
 //}
 
 /** Inverts a tensor and scales: 2 / x. */
-case class ScalarDivTensor[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class ScalarDivTensor[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (scalar : Double, override val tensor : TensorOp[I,Bound,Value,Shape])
 extends TensorReferenceOp(tensor) {
 //  override def * (s : Double) = ScalarDivTensor(scalar * s, tensor);
@@ -485,7 +497,7 @@ extends TensorReferenceOp(tensor) {
 }
 
 /** Raises a tensor to a power, element wise: x :^ 2 */
-case class TensorPowScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorPowScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorReferenceOp(tensor) {
   override lazy val value : Value = {
@@ -499,7 +511,7 @@ extends TensorReferenceOp(tensor) {
  * Raises each element of a tensor as the exponent with scalar as
  * the base: 2 :^ x.
  */
-case class ScalarPowTensor[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class ScalarPowTensor[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (scalar : Double, override val tensor : TensorOp[I,Bound,Value,Shape])
 extends TensorReferenceOp(tensor) {
   override lazy val value : Value = {
@@ -511,63 +523,63 @@ extends TensorReferenceOp(tensor) {
 }
 
 /** Tensor less than a scalar: x < 2. */
-case class TensorLTScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorLTScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorFunctionOp(tensor) {
   override def function(x : Double) = if (x < scalar) 1.0 else 0.0;
 }
 
 /** Tensor greater than a scalar: x > 2. */
-case class TensorGTScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorGTScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorFunctionOp(tensor) {
   override def function(x : Double) = if (x > scalar) 1.0 else 0.0;
 }
 
 /** Tensor less than or equal to a scalar: x <= 2. */
-case class TensorLTEScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorLTEScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorFunctionOp(tensor) {
   override def function(x : Double) = if (x <= scalar) 1.0 else 0.0;
 }
 
 /** Tensor greater than or equal to a scalar: x >= 2. */
-case class TensorGTEScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorGTEScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorFunctionOp(tensor) {
   override def function(x : Double) = if (x >= scalar) 1.0 else 0.0;
 }
 
 /** Tensor equal to a scalar in each element: x :== 2. */
-case class TensorEqScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorEqScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorFunctionOp(tensor) {
   override def function(x : Double) = if (x == scalar) 1.0 else 0.0;
 }
 
 /** Tensor not equal to a scalar in each element: x :!= 2. */
-case class TensorNeScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorNeScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorFunctionOp(tensor) {
   override def function(x : Double) = if (x != scalar) 1.0 else 0.0;
 }
 
 /** Either tensor or scalar is non-zero in each position: x :|| 0. */
-case class TensorOrScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorOrScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorFunctionOp(tensor) {
   override def function(x : Double) = if (x != 0.0 || scalar != 0) 1.0 else 0.0;
 }
 
 /** Both tensor and scalar are non-zero in each position: x :&& 1. */
-case class TensorAndScalar[I,Bound<:Tensor[I],Value<:Bound,Shape]
+case class TensorAndScalar[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,Value,Shape], scalar : Double)
 extends TensorFunctionOp(tensor) {
   override def function(x : Double) = if (x != 0.0 && scalar != 0) 1.0 else 0.0;
 }
 
 /** Tensor addition: x + y. */
-case class TensorPlusTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorPlusTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,V1,Shape], override val tensorB : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorOp(tensor,tensorB) {
   override lazy val value : V1 = {
@@ -578,7 +590,7 @@ extends TensorTensorOp(tensor,tensorB) {
 }
 
 /** Tensor subtraction: x - y. */
-case class TensorMinusTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorMinusTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,V1,Shape], override val tensorB : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorOp(tensor,tensorB) {
   override lazy val value : V1 = {
@@ -589,7 +601,7 @@ extends TensorTensorOp(tensor,tensorB) {
 }
 
 /** Tensor element-wise multiplication: x :* y. */
-case class TensorMultTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorMultTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,V1,Shape], override val tensorB : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorOp(tensor,tensorB) {
   override lazy val value : V1 = {
@@ -600,7 +612,7 @@ extends TensorTensorOp(tensor,tensorB) {
 }
 
 /** Tensor element-wise division: x :/ y. */
-case class TensorDivTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorDivTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,V1,Shape], override val tensorB : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorOp(tensor,tensorB) {
   override lazy val value : V1 = {
@@ -611,7 +623,7 @@ extends TensorTensorOp(tensor,tensorB) {
 }
 
 /** Tensor element-wise exponentiatoin: x :^ y. */
-case class TensorPowTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorPowTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (override val tensor : TensorOp[I,Bound,V1,Shape], override val tensorB : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorOp(tensor,tensorB) {
   override lazy val value : V1 = {
@@ -622,56 +634,56 @@ extends TensorTensorOp(tensor,tensorB) {
 }
 
 /** Tensor element-wise less than: x :< y. */
-case class TensorLTTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorLTTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (t1 : TensorOp[I,Bound,V1,Shape], t2 : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorFunctionOp(t1,t2) {
   override def function(a : Double, b : Double) = if (a < b) 1.0 else 0.0;
 }
 
 /** Tensor element-wise greater than: x :> y. */
-case class TensorGTTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorGTTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (t1 : TensorOp[I,Bound,V1,Shape], t2 : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorFunctionOp(t1,t2) {
   override def function(a : Double, b : Double) = if (a > b) 1.0 else 0.0;
 }
 
 /** Tensor element-wise less than or equal to: x :<= y. */
-case class TensorLTETensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorLTETensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (t1 : TensorOp[I,Bound,V1,Shape], t2 : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorFunctionOp(t1,t2) {
   override def function(a : Double, b : Double) = if (a <= b) 1.0 else 0.0;
 }
 
 /** Tensor element-wise greater than or equal to: x :>= y. */
-case class TensorGTETensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorGTETensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (t1 : TensorOp[I,Bound,V1,Shape], t2 : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorFunctionOp(t1,t2) {
   override def function(a : Double, b : Double) = if (a >= b) 1.0 else 0.0;
 }
 
 /** Tensor element-wise (strict) equality: x :== y. */
-case class TensorEqTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorEqTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (t1 : TensorOp[I,Bound,V1,Shape], t2 : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorFunctionOp(t1,t2) {
   override def function(a : Double, b : Double) = if (a == b) 1.0 else 0.0;
 }
 
 /** Tensor element-wise (strict) non-equality: x :!= y. */
-case class TensorNeTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorNeTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (t1 : TensorOp[I,Bound,V1,Shape], t2 : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorFunctionOp(t1,t2) {
   override def function(a : Double, b : Double) = if (a != b) 1.0 else 0.0;
 }
 
 /** Tensor element-wise test for both non-zero: x :&& y. */
-case class TensorAndTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorAndTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (t1 : TensorOp[I,Bound,V1,Shape], t2 : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorFunctionOp(t1,t2) {
   override def function(a : Double, b : Double) = if (a != 0 && b != 0) 1.0 else 0.0;
 }
 
 /** Tensor element-wise test for either non-zero: x :|| y. */
-case class TensorOrTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape]
+case class TensorOrTensor[I,Bound<:Tensor[I],V1<:Bound,V2<:Bound,Shape<:TensorShape]
 (t1 : TensorOp[I,Bound,V1,Shape], t2 : TensorOp[I,Bound,V2,Shape])
 extends TensorTensorFunctionOp(t1,t2) {
   override def function(a : Double, b : Double) = if (a != 0 || b != 0) 1.0 else 0.0;

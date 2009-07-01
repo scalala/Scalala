@@ -22,12 +22,14 @@ package scalala.tensor.operators;
 import scalala.collection.{MergeableSet, IntSpanSet, ProductSet, DomainException};
 import scalala.tensor.{Tensor, Tensor1, Tensor2, Vector, Matrix};
 
+import TensorShapes._;
+
 /**
  * Shape parameters for Tensor1Ops.
  */
 object Tensor1Op {
-  final abstract class Col;
-  final abstract class Row;
+  type Col = TensorShapes.Shape1Col;
+  type Row = TensorShapes.Shape1Row;
 }
 
 /**
@@ -49,13 +51,6 @@ import Tensor2Types._;
  * Implicits for row and column Tensor1's.
  */
 trait Tensor1Ops extends TensorOps {
-  implicit def iColTensor1OpToRichColTensor1Op[I,V<:Tensor1[I]]
-  (op : TensorOp[I,Tensor1[I],V,Tensor1Op.Col]) =
-    new RichColTensor1Op[I,Tensor1[I],V,Tensor2[I,I]](op);
-
-  implicit def iRowTensor1OpToRichRowTensor1Op[I]
-  (op : RowTensor1Op[I,Tensor1[I],Tensor1[I]]) =
-    new RichRowTensor1Op[I,Tensor1,Tensor2,Tensor1[I]](op);
 }
 
 /** Singleton instance of Tensor1Ops trait. */
@@ -79,21 +74,21 @@ extends RichTensorOp[I,Bound,Value,Tensor1Op.Col](base) {
 }
 
 /** Operators for row tensors. */
-class RichRowTensor1Op[I,BoundV[X]<:Tensor1[X],BoundM[X,Y]<:Tensor2[X,Y],Value<:BoundV[I]]
-(base : RowTensor1Op[I,BoundV[I],Value])
-extends RichTensorOp[I,BoundV[I],Value,Tensor1Op.Row](base) {
+class RichRowTensor1Op[I,Bound<:Tensor1[I],Value<:Bound]
+(base : RowTensor1Op[I,Bound,Value])
+extends RichTensorOp[I,Bound,Value,Tensor1Op.Row](base) {
   
   def t = Tensor1RowToCol(base);
   
   /** Inner multiplication. */
-  def * [V<:BoundV[I]] (op : ColTensor1Op[I,BoundV[I],V]) =
+  def * [V<:Tensor1[I]] (op : ColTensor1Op[I,Tensor1[I],V]) =
     base.value dot op.value;
   
   /** Vector-matrix multiplication */
   // TODO: tighten this bound
-  def * [J,V<:BoundM[I,J]]
-  (op : Tensor2Op[I,J,BoundM[I,J],V]) =
-    RowTensor1MultTensor2[I,J,BoundV[J],BoundV[J],BoundV[I],Value,BoundM[I,J],V](base, op);
+  def * [J,M<:Tensor2[I,J]]
+  (op : Tensor2Op[I,J,Tensor2[I,J],M]) =
+    RowTensor1MultTensor2[I,J,Tensor1[J],Tensor1[J],Bound,Value,Tensor2[I,J],M](base, op);
 }
 
 /** Transposes a column to a row. */
@@ -119,7 +114,7 @@ extends TensorOp[I,Bound,Value,Tensor1Op.Col] {
 /** Outer multiplication to create a Tensor2. */
 case class Tensor1OuterMultTensor1[I,Bound<:Tensor1[I],V1<:Bound,V2<:Bound,OuterMult<:Tensor2[I,I]]
 (a : TensorOp[I,Bound,V1,Tensor1Op.Col], b : TensorOp[I,Bound,V2,Tensor1Op.Row])
-extends TensorOp[(I,I),Tensor2[I,I],OuterMult,(I,I)] {
+extends TensorOp[(I,I),Tensor2[I,I],OuterMult,Shape2[I,I]] {
   override def domain = ProductSet(a.domain,b.domain);
   override lazy val value = {
     val av = a.value;
