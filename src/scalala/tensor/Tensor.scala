@@ -112,15 +112,17 @@ object TensorImplicits extends TensorImplicits { }
  * @author dramage
  */
 trait Tensor[I] extends MutablePartialMap[I,Double] {
-  /** Returns a new map of the same type for the given domain. */
-  def create[J](domain : MergeableSet[J]) : Tensor[J];
+  /**
+  * Creates a tensor "like" this one, but with zeros everywhere.
+  */
+  def like: Tensor[I];
   
   /**
    * Returns a deep copy of this data structure.  The default implementation
-   * uses this.create(this.domain) and assigns its value to this.
+   * calls like and assigns its value to this.
    */
   def copy : Tensor[I] = {
-    val rv = create(domain);
+    val rv = like;
     rv := this;
     rv;
   }
@@ -433,6 +435,11 @@ object Tensor {
 
 /** A one-axis tensor is defined on single elements from a domain. */
 trait Tensor1[I] extends Tensor[I] {
+  /**
+  * Creates a tensor "like" this one, but with zeros everywhere.
+  */
+  def like: Tensor1[I];
+
   /** Returns the inner product of this tensor with another. */
   def dot(that : Tensor1[I]) : Double = {
     ensure(that);
@@ -459,6 +466,11 @@ object Tensor1 {
 
 /** A two-axes tensor is defined on pairs of elements from two domains. */
 trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
+  /**
+  * Creates a tensor "like" this one, but with zeros everywhere.
+  */
+  def like: Tensor2[I1,I2];
+
   /** Gets the value indexed by (i,j). */
   def apply(i : I1, j : I2) : Double;
   
@@ -477,7 +489,9 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
   /** Returns a transposed view of this matrix. */
   def transpose : Tensor2[I2,I1] = new {
     val inner = Tensor2.this;
-  } with Tensor2.Transpose[I1,I2];
+  } with Tensor2.Transpose[I1,I2] {
+    def like : Tensor2[I2,I1] = inner.like.transpose;
+  }
   
   /** Selects a row from this Tensor2 as a Tensor1. */
   def getRow(row : I1) : Tensor1[I2]
@@ -520,9 +534,6 @@ object Tensor2 {
     override def update(row : I1, col : I2, value : Double) =
       inner.update(row,col,value);
     
-    override def create[J](domain : MergeableSet[J]) : Tensor[J] =
-      inner.create(domain);
-    
     override def activeDomain : MergeableSet[(I1,I2)] =
       inner.activeDomain;
     
@@ -557,9 +568,6 @@ object Tensor2 {
     override def copy =
       inner.copy.asInstanceOf[Tensor2[I1,I2]].transpose;
     
-    override def create[J](domain : MergeableSet[J]) =
-      inner.create(domain);
-      
     override def activeDomain : MergeableSet[(I2,I1)] = {
       new MergeableSet[(I2,I1)] {
         override def size = inner.activeDomain.size;

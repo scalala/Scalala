@@ -45,6 +45,21 @@ case class DiagonalMatrix(diagonal : Vector) extends Matrix {
     override def contains(i : (Int,Int)) = (i._1 == i._2) && diagonal.activeDomain.contains(i._1);
     override def elements = diagonal.activeDomain.elements.map(i => (i,i));
   }
-  override def copy = DiagonalMatrix(diagonal.copy.asInstanceOf[Vector]);
-  override def create[J](d : MergeableSet[J]) = diagonal.create(d);
+
+  /**
+  * Creates a tensor "like" this one, but with zeros everywhere.
+  */
+  def like = new DiagonalMatrix(diagonal.like);
+
+  /**
+  * Creates a vector "like" this one, but with zeros everywhere.
+  */
+  def matrixLike(rows:Int,cols:Int) = new DiagonalMatrix(diagonal.vectorLike(rows));
+
+  /**
+  * Creates a vector "like" this one, but with zeros everywhere.
+  */
+  def vectorLike(size:Int) = diagonal.vectorLike(rows);
+
+  override def copy = DiagonalMatrix(diagonal.copy);
 }

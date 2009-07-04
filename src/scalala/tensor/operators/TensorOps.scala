@@ -23,8 +23,32 @@ import scalala.collection.{MergeableSet, IntSpanSet, ProductSet, DomainException
 import scalala.tensor.{Tensor, Tensor1, Tensor2, Vector, Matrix};
 
 
+trait TensorBuilder[Value<:Tensor[_]] {
+  /**
+  * Creates a tensor "like" the provided tensor
+  */
+  def like(t: Value): Value;
+  def ones(t: Value) = {
+    val r = like(t);
+    r += 1;
+    r;
+  }
+}
+
+/**
+* Creates a tensor that can be used as the result of multiplying
+* these two tensors together.
+*/
+trait TensorProductBuilder[-V1,-V2,+R] {
+  def create(v1: V1, v2: V2): R;
+}
+
+trait SimpleProductBuilder[V1,-V2] extends TensorProductBuilder[V1,V2,V1];
+
 /** Implicits for TensorOp support. */
 trait TensorOps {
+
+
 ////  implicit def iTensorToTensorOp[I,V<:Tensor[I]](tensor : V) =
 ////    TensorIdentity[I,Tensor[I],V,Any](tensor);
 //  implicit def iTensorToTensorOp[I](tensor : Tensor[I]) =
@@ -94,7 +118,7 @@ trait TensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape] {
    * should not be mutated.
    */
   def value : Value;
-  
+
   protected var workingUsed = false;
   /**
    * Returns the value of this operator in a vector than can safely
@@ -113,8 +137,6 @@ trait TensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape] {
     value;
   }
     
-  /** Creates a new tensor for the requested domain type. */
-  def create[J](d : MergeableSet[J]) : Tensor[J];
 }
 
 /**
@@ -126,7 +148,8 @@ trait TensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape] {
  * @author dramage
  */
 class RichTensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
-(base : TensorOp[I,Bound,Value,Shape]) {
+(base : TensorOp[I,Bound,Value,Shape])
+/*(implicit builder: TensorBuilder[Value])*/ {
   
   /** Unary minus returns a tensor negation. */
   def unary_- = TensorNegation(base);
@@ -163,16 +186,16 @@ class RichTensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
   def :- [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     TensorMinusTensor(base, op);
   
-  def :*  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
+  def :* [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     TensorMultTensor(base, op);
   
-  def :/  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
+  def :/ [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     TensorDivTensor(base, op);
   
-  def :^  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
+  def :^ [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     TensorPowTensor(base, op);
   
-  def :<  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
+  def :< [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     TensorLTTensor(base, op);
   
   def :>  [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
@@ -193,32 +216,32 @@ class RichTensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
   def :&& [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
     TensorAndTensor(base, op);
   
-  def :|| [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) =
+  def :||[V<:Bound]  (op : TensorOp[I,Bound,V,Shape]) =
     TensorOrTensor(base, op);
   
   /** Fixed alias for :+ */
-  final def + [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :+ op;
+  final def + [V<:Bound](op : TensorOp[I,Bound,V,Shape]) = this :+ op;
   
   /** Fixed alias for :- */
-  final def - [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :- op;
+  final def - [V<:Bound](op : TensorOp[I,Bound,V,Shape]) = this :- op;
   
   /** Fixed alias for :< */
-  final def < [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :< op;
+  final def < [V<:Bound](op : TensorOp[I,Bound,V,Shape]) = this :< op;
   
   /** Fixed alias for :> */
-  final def > [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :> op;
+  final def > [V<:Bound](op : TensorOp[I,Bound,V,Shape]) = this :> op;
   
   /** Fixed alias for :<= */
-  final def <= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :<= op;
+  final def <= [V<:Bound](op : TensorOp[I,Bound,V,Shape]) = this :<= op;
   
   /** Fixed alias for :>= */
-  final def >= [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :>= op;
+  final def >= [V<:Bound](op : TensorOp[I,Bound,V,Shape]) = this :>= op;
   
   /** Fixed alias for :&& */
-  final def && [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :&& op;
+  final def && [V<:Bound](op : TensorOp[I,Bound,V,Shape]) = this :&& op;
   
   /** Fixed alias for :|| */
-  final def || [V<:Bound] (op : TensorOp[I,Bound,V,Shape]) = this :|| op;
+  final def || [V<:Bound](op : TensorOp[I,Bound,V,Shape]) = this :|| op;
 }
 
 ///**
@@ -374,11 +397,10 @@ class RichTensorOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
 
 /** A reference to an underlying tensor. */
 case class TensorIdentity[I,Bound<:Tensor[I],Value<:Bound,Shape<:TensorShape]
-(tensor : Value) extends TensorOp[I,Bound,Value,Shape] {  
+(tensor : Value)(implicit b: TensorBuilder[Value]) extends TensorOp[I,Bound,Value,Shape] {  
   override def domain = tensor.domain;
   override def value = tensor;
-  override def working = tensor.copy.asInstanceOf[Value];
-  override def create[J](d : MergeableSet[J]) = tensor.create(d);
+  override def working = b.like(tensor);
 }
 
 /** A reference to an underlying TensorOp. */
@@ -386,7 +408,6 @@ abstract case class TensorReferenceOp[I,Bound<:Tensor[I],Value<:Bound,Shape<:Ten
 (tensor : TensorOp[I,Bound,Value,Shape])
 extends TensorOp[I,Bound,Value,Shape] {
   override def domain = tensor.domain;
-  override def create[J](d : MergeableSet[J]) = tensor.create(d);
 }
   
 /** An operation applied to a tensor's values. */

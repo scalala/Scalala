@@ -28,6 +28,10 @@ import scalala.collection.IntSpanSet;
  * @author dramage
  */
 trait Vector extends Tensor1[Int] {
+  /**
+  * Creates a vector "like" this one, but with zeros everywhere.
+  */
+  override def like: Vector;
   def size : Int;
   
   private val _domain = IntSpanSet(0, size);
@@ -43,6 +47,21 @@ trait Vector extends Tensor1[Int] {
       throw new IndexOutOfBoundsException("Index out of range: "+i+" not in [0,"+size+")");
     }
   }
+
+  /**
+  * Creates a vector "like" this vector, with the dimensionality of the provided vector
+  */
+  def vectorLike(v: Vector): Vector = vectorLike(v.size);
+
+  /**
+  * Creates a vector "like" this vector, with the dimensionality provided 
+  */
+  def vectorLike(sz: Int): Vector;
+
+  /**
+  * Creates a matrix "like" this vector, with the dimensionality provided
+  */
+  def matrixLike(rows: Int, cols: Int): Matrix;
 }
 
 object Vector {

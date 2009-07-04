@@ -28,6 +28,12 @@ import scalala.collection.{MergeableSet, IntSpanSet, ProductSet};
  * @author dramage
  */
 trait Matrix extends Tensor2[Int,Int] {
+
+  /**
+  * Creates a matrix "like" this one, but with zeros everywhere.
+  */
+  def like: Matrix;
+
   /** The number of rows in this matrix. */
   def rows : Int;
   
@@ -56,7 +62,9 @@ trait Matrix extends Tensor2[Int,Int] {
     override def apply(i : Int) = Matrix.this.apply(row,i);
     override def update(i : Int, value : Double) = Matrix.this.update(row,i,value);
     override def activeDomain = Matrix.this.activeDomainInRow(row);
-    override def create[J](domain : MergeableSet[J]) = Matrix.this.create(domain);
+    def like = Matrix.this.vectorLike(this);
+    def vectorLike(size:Int) = Matrix.this.vectorLike(size);
+    def matrixLike(rows:Int,cols:Int) = Matrix.this.matrixLike(rows,cols);
   }
   
   override def getCol(col : Int) = new Vector {
@@ -64,8 +72,25 @@ trait Matrix extends Tensor2[Int,Int] {
     override def apply(i : Int) = Matrix.this.apply(i,col);
     override def update(i : Int, value : Double) = Matrix.this.update(i,col,value);
     override def activeDomain = Matrix.this.activeDomainInCol(col);
-    override def create[J](domain : MergeableSet[J]) = Matrix.this.create(domain);
+    def like = Matrix.this.vectorLike(this);
+    def vectorLike(size:Int) = Matrix.this.vectorLike(size);
+    def matrixLike(rows:Int,cols:Int) = Matrix.this.matrixLike(rows,cols);
   }
+
+  /**
+  * Creates a vector "like" this matrix, with the dimensionality of the provided vector
+  */
+  def vectorLike(v: Vector): Vector = vectorLike(v.size);
+
+  /**
+  * Creates a vector "like" this matrix, with the dimensionality provided 
+  */
+  def vectorLike(sz: Int): Vector;
+
+  /**
+  * Creates a matrix "like" this matrix, with the dimensionality provided
+  */
+  def matrixLike(rows: Int, cols: Int): Matrix;
   
   override def copy : Matrix = super.copy.asInstanceOf[Matrix];
   
@@ -100,10 +125,11 @@ object Matrix {
     
     override def copy =
       inner.copy.asInstanceOf[Matrix].transpose;
+
+    def like = inner.like.transpose;
+    def matrixLike(rows: Int, cols: Int) = inner.matrixLike(rows,cols);
+    def vectorLike(size: Int) = inner.vectorLike(size);
     
-    override def create[J](domain : MergeableSet[J]) =
-      inner.create(domain);
-      
     override def activeDomain : MergeableSet[(I2,I1)] = {
       new MergeableSet[(I2,I1)] {
         override def size = inner.activeDomain.size;

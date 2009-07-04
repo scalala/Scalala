@@ -90,13 +90,24 @@ class SparseHashVector(override val size : Int, protected val hashmap : Int2Doub
     hashmap.clear();
   }
   
+
+  /**
+  * Creates a vector "like" this one, but with zeros everywhere.
+  */
+  def like = new SparseHashVector(size);
+
+  /**
+  * Creates a vector "like" this one, but with zeros everywhere.
+  */
+  def vectorLike(size:Int) = new SparseHashVector(size);
+
+  /**
+  * Creates a matrix "like" this one, but with zeros everywhere.
+  */
+  def matrixLike(rows:Int, cols: Int) = new SparseHashMatrix(rows,cols)
+
   override def copy : SparseHashVector =
     new SparseHashVector(size, hashmap.clone.asInstanceOf[Int2DoubleOpenHashMap]);
-  
-  override def create[J](domain : MergeableSet[J]) : Tensor[J] = domain match {
-    case IntSpanSet(0,len) => new SparseHashVector(size);
-    case _ => throw new CreateException("Cannot create sparse with domain "+domain);
-  }
   
   //
   // specialized dot product implementations
@@ -132,7 +143,7 @@ class SparseHashVector(override val size : Int, protected val hashmap : Int2Doub
 object SparseHashVector {
   def apply(size : Int)(default : Double) = {
     val sv = new SparseHashVector(size);
-    sv += default;
+    sv.default = default;
     sv;
   }
 }

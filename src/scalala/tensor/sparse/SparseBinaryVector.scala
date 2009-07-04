@@ -263,11 +263,22 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
     rv.use(index.toArray, used);
     rv;
   }
-  
-  /** Returns general sparse data structures with unconstrained update semantics. */
-  override def create[J](domain : MergeableSet[J]) : Tensor[J] =
-    SparseVector.create(domain);
-  
+
+  /**
+  * Creates a vector "like" this one, but with zeros everywhere.
+  */
+  def like = new SparseBinaryVector(size);
+
+  /**
+  * Creates a vector "like" this one, but with zeros everywhere.
+  */
+  def vectorLike(size:Int) = new SparseBinaryVector(size);
+
+  /**
+  * Creates a vector "like" this one, but with zeros everywhere.
+  */
+  def matrixLike(rows:Int, cols: Int) = throw new UnsupportedOperationException("Soon we will have SparseBinaryMatrix");
+
   /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = other match {
     case singleton : SingletonBinaryVector => this.apply(singleton.singleIndex);

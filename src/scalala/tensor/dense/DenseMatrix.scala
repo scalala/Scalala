@@ -62,6 +62,8 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
   override def activeDomainInCol(col : Int) = _colDomain;
   
   override def copy = new DenseMatrix(rows, cols, data.toArray).asInstanceOf[this.type];
+
+  override def like = new DenseMatrix(rows, cols);
   
   override def zero = java.util.Arrays.fill(data, 0.0);
   
@@ -79,7 +81,7 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
       else
         x.asInstanceOf[Int].toString;
     }
-    
+
     def formatDouble(x : Double) : String = {
       if (x == 0)
         "      0"

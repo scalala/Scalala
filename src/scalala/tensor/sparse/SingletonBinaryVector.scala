@@ -66,10 +66,21 @@ class SingletonBinaryVector(domainSize : Int, val singleIndex : Int) extends Vec
     throw new UnsupportedOperationException("SingletonBinaryVector is immutable.  Try SparseVector instead.")
   
   override def copy = new SingletonBinaryVector(size, singleIndex);
-  
-  /** Returns general sparse data structures with unconstrained update semantics. */
-  override def create[J](domain : MergeableSet[J]) : Tensor[J] = 
-    SparseVector.create(domain);
+
+  /**
+  * Actually the same as copy here. However, this method should probably never be called.
+  */
+  override def like = new SingletonBinaryVector(size, singleIndex);
+
+  /**
+   Returns a SparseHashMatrix with the requested types.
+  */
+  override def matrixLike(rows:Int, cols:Int) = new SparseHashMatrix(rows,cols); // Seems like a reasonable default;
+
+  /**
+   Returns a SparseHashVector with the requested types.
+  */
+  override def vectorLike(size:Int) = new SparseHashVector(size);
   
   /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = {

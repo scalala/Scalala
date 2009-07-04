@@ -39,6 +39,10 @@ import SparseBinaryVectorTypes._;
 
 /** Implicits supporting DenseVector operations. */
 trait SparseBinaryVectorOps {
+
+   implicit val sparseBVBuilder = new TensorBuilder[SparseBinaryVector] {
+     def like(t: SparseBinaryVector): SparseBinaryVector = new SparseBinaryVector(t.size);
+   }
   implicit def iSparseBinaryVectorToTensorIdentity(v : SparseBinaryVector) =
     new TensorIdentity[Int,Vector,SparseBinaryVector,Tensor1Op.Col](v);
   
@@ -50,8 +54,6 @@ trait SparseBinaryVectorOps {
     override def domain = tensor.domain;
     override lazy val value = tensor.toSparseVector;
     override lazy val working = value.copy;
-    override def create[J](d : MergeableSet[J]) =
-      SparseVector.create(d);
   }
 }
 

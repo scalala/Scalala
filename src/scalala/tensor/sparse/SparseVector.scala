@@ -100,6 +100,7 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
       rv;
     }
   }
+
   
   override def activeKeys = index.take(used).elements;
   
@@ -286,8 +287,20 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
     rv.default = this.default;
     rv;
   }
-  
-  override def create[J](domain : MergeableSet[J]) : Tensor[J] = SparseVector.create(domain);
+
+  def like = new SparseVector(size,initialNonzeros);
+
+  /**
+  * Creates a vector "like" this one, but with zeros everywhere.
+  */
+  def vectorLike(size:Int) = new SparseBinaryVector(size);
+
+  /**
+  * Creates a SparseHashVector. May change if we get a new kind of sparse matrix.
+  */
+  def matrixLike(rows:Int, cols:Int) = new SparseHashMatrix(rows,cols);
+
+
   
   /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = other match {
@@ -497,9 +510,4 @@ object SparseVector {
     sv;
   }
   
-  /** Creates a general sparse tensor for the requested domain. */
-  def create[J](domain : MergeableSet[J]) : Tensor[J] = domain match {
-    case IntSpanSet(0,len) => new SparseVector(len);
-    case _ => throw new CreateException("Cannot create sparse with domain "+domain);
-  }
 }

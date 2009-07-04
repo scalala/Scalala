@@ -97,6 +97,9 @@
           <jvmArgs>
             <jvmArg>-Xmx2g</jvmArg>
           </jvmArgs>
+          <args>
+            <!-- <arg>-Xlog-implicits</arg> -->
+          </args>
           <scalaVersion>${scala.version}</scalaVersion>
           <mainConsole>scalala.ScalalaConsole</mainConsole>
           <jvmArgs>

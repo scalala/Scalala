@@ -34,16 +34,6 @@ trait DenseTensor[I] extends Tensor[I] {
   /** Returns the data backing this tensor. */
   def data : Array[Double];
   
-  /** Creates a new dense tensor. */
-  override def create[J](d : MergeableSet[J]) : Tensor[J] = d match {
-    case ProductSet(IntSpanSet(0,rows),IntSpanSet(0,cols)) =>
-      new DenseMatrix(rows, cols);
-    case IntSpanSet(0,len) =>
-      new DenseVector(len).asInstanceOf[Tensor[J]];
-    case _ =>
-      throw new CreateException("Invalid domain for DenseMatrix construction: "+d);
-  }
-  
   override def zero() = {
     this.default = 0;
     java.util.Arrays.fill(data, 0.0);
@@ -56,4 +46,14 @@ trait DenseTensor[I] extends Tensor[I] {
   
   /** The full domain is active for dense tensors. */
   override final def activeDomain = domain;
+
+  /**
+  * Creates a vector "like" this matrix, with the dimensionality provided 
+  */
+  def vectorLike(size:Int) = new DenseVector(size);
+
+  /**
+  * Creates a matrix "like" this matrix, with the dimensionality provided
+  */
+  def matrixLike(rows: Int, cols: Int) = new DenseMatrix(rows,cols);
 }

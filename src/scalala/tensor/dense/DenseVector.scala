@@ -42,7 +42,12 @@ class DenseVector(data : Array[Double]) extends
   
   override def apply(i : Int) = data(i);
   override def update(i : Int, value : Double) = data(i) = value;
-  
+
+ /** 
+  * Creates a tensor "like" this one, but with zeros everywhere.
+  */
+  def like = new DenseVector(size);
+
   override def copy = new DenseVector(data.toArray).asInstanceOf[DenseVector.this.type];
   
   override def dot(other : Tensor1[Int]) : Double = other match {

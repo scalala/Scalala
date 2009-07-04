@@ -32,6 +32,7 @@ object Tensor1Op {
   type Row = TensorShapes.Shape1Row;
 }
 
+
 /**
  * Type aliases for Tensor1 support.
  */
@@ -69,7 +70,8 @@ extends RichTensorOp[I,Bound,Value,Tensor1Op.Col](base) {
    * for accepting raw values because raw values cannot be
    * RowTensors without an explicit transpose.
    */
-  def * [V<:Bound] (op : RowTensor1Op[I,Bound,V]) =
+  def * [V<:Bound] (op : RowTensor1Op[I,Bound,V])
+  (implicit tpB: TensorProductBuilder[Value,V,OuterMult]) =
     Tensor1OuterMultTensor1[I,Bound,Value,V,OuterMult](base,op);
 }
 
@@ -87,7 +89,8 @@ extends RichTensorOp[I,Bound,Value,Tensor1Op.Row](base) {
   /** Vector-matrix multiplication */
   // TODO: tighten this bound
   def * [J,M<:Tensor2[I,J]]
-  (op : Tensor2Op[I,J,Tensor2[I,J],M]) =
+  (op : Tensor2Op[I,J,Tensor2[I,J],M])
+  (implicit tpB: TensorProductBuilder[Value,M,Tensor1[J]]) =
     RowTensor1MultTensor2[I,J,Tensor1[J],Tensor1[J],Bound,Value,Tensor2[I,J],M](base, op);
 }
 
@@ -98,7 +101,6 @@ extends TensorOp[I,Bound,Value,Tensor1Op.Row] {
   override def domain = op.domain;
   override def value = op.value;
   override def working = op.working;
-  override def create[J](d : MergeableSet[J]) = op.create(d);
 }
 
 /** Transposes a row to a column. */
@@ -108,39 +110,38 @@ extends TensorOp[I,Bound,Value,Tensor1Op.Col] {
   override def domain = op.domain;
   override def value = op.value;
   override def working = op.working;
-  override def create[J](d : MergeableSet[J]) = op.create(d);
 }
 
 /** Outer multiplication to create a Tensor2. */
 case class Tensor1OuterMultTensor1[I,Bound<:Tensor1[I],V1<:Bound,V2<:Bound,OuterMult<:Tensor2[I,I]]
 (a : TensorOp[I,Bound,V1,Tensor1Op.Col], b : TensorOp[I,Bound,V2,Tensor1Op.Row])
+(implicit tpB: TensorProductBuilder[V1,V2,OuterMult])
 extends TensorOp[(I,I),Tensor2[I,I],OuterMult,Shape2[I,I]] {
   override def domain = ProductSet(a.domain,b.domain);
   override lazy val value = {
     val av = a.value;
     val bv = b.value;
-    val rv = av.create(domain).asInstanceOf[OuterMult];
+    val rv = tpB.create(av,bv);
     for (i <- a.domain; j <- b.domain) {
       rv(i,j) = av(i) * bv(j);
     }
     rv;
   }
-  override def create[J](d : MergeableSet[J]) = a.create(d);
 }
 
 /** Row tensor to Tensor2 multiplication. */
 case class RowTensor1MultTensor2[I,J,Bound<:Tensor1[J],Value<:Bound,Bound1<:Tensor1[I],Value1<:Bound1,Bound2<:Tensor2[I,J],Value2<:Bound2]
 (a : RowTensor1Op[I,Bound1,Value1], b : Tensor2Op[I,J,Bound2,Value2])
+(implicit tpB: TensorProductBuilder[Value1,Value2,Value])
 extends RowTensor1Op[J,Bound,Value] {
   override def domain = b.domain.asInstanceOf[ProductSet[I,J]]._2;
   override lazy val value = {
     val vv = a.value;
     val mv = b.value;
-    val rv = vv.create(domain).asInstanceOf[Value];
+    val rv = tpB.create(vv,mv);
     for (j <- domain) {
       rv(j) = vv dot mv.getCol(j);
     }
     rv;
   }
-  override def create[J](d : MergeableSet[J]) = b.create(d);
 }

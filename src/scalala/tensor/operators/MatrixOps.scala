@@ -49,18 +49,20 @@ object MatrixOps extends MatrixOps;
  * clean way to inherit from Tensor2Op*, so there is some code duplication
  * here.
  */
-class RichMatrixOp[M<:Matrix,V<:Vector](base : MatrixOp[M])
+class RichMatrixOp[M<:Matrix](base : MatrixOp[M])
 extends RichTensorOp[(Int,Int),Matrix,M,Shape2[Int,Int]](base) {
   
   def t = new MatrixTranspose[M,Matrix](base);
   
   /** Matrix-matrix multiplication */
-  def *[M2<:Matrix] (op : MatrixOp[M2]) =
+  def *[M2<:Matrix] (op : MatrixOp[M2])
+    (implicit tpB: TensorProductBuilder[M,M2,M]) =
     MatrixMultMatrix(base,op);
   
   /** Matrix-vector multiplication */
-  def *[V<:Vector] (op : ColVectorOp[V]) =
-    MatrixMultColVector(base, op);
+  def *[V2<:Vector] (op : ColVectorOp[V2])
+    (implicit tpB: TensorProductBuilder[M,V2,Vector]) =
+    MatrixMultColVector[M,V2,Vector](base, op);
 }
 
 /**
@@ -68,6 +70,7 @@ extends RichTensorOp[(Int,Int),Matrix,M,Shape2[Int,Int]](base) {
  */
 case class MatrixMultMatrix[M1<:Matrix,M2<:Matrix]
 (a : MatrixOp[M1], b : MatrixOp[M2])
+(implicit tpB: TensorProductBuilder[M1,M2,M1])
 extends MatrixOp[M1] {
   if (a.domain.asInstanceOf[ProductSet[Int,Int]]._2 != b.domain.asInstanceOf[ProductSet[Int,Int]]._1)
     throw new DomainException;
@@ -79,22 +82,21 @@ extends MatrixOp[M1] {
     val innerDomain = a.domain.asInstanceOf[ProductSet[Int,Int]]._2;
     val av = a.value;
     val bv = b.value;
-    val rv = create(domain).asInstanceOf[M1];
+    val rv = tpB.create(av,bv);
     for (i <- domain._1; j <- domain._2) {
       rv(i,j) = av.getRow(i) dot bv.getCol(j);
     }
     rv;
   }
-  
-  override def create[J](d : MergeableSet[J]) = a.create(d);
 }
 
 /**
  * Matrix-vector multiplication.
  */
-case class MatrixMultColVector[M<:Matrix,V<:Vector]
+case class MatrixMultColVector[M<:Matrix,V<:Vector,V2<:Vector]
 (a : MatrixOp[M], b : ColVectorOp[V])
-extends RowVectorOp[V] {
+(implicit tpB: TensorProductBuilder[M,V,V2])
+extends RowVectorOp[V2] {
   if (a.domain.asInstanceOf[ProductSet[Int,Int]]._2 != b.domain)
     throw new DomainException;
     
@@ -103,12 +105,11 @@ extends RowVectorOp[V] {
   override def value = {
     val mv = a.value;
     val vv = b.value;
-    val rv = create(domain).asInstanceOf[V];
+    val rv = tpB.create(mv,vv);
     for (i <- domain) {
       rv(i) = mv.getRow(i) dot vv;
     }
     rv;
   }
   
-  override def create[J](d : MergeableSet[J]) = b.create(d);
 }

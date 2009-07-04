@@ -42,8 +42,8 @@ trait VectorOps extends TensorOps {
 object VectorOps extends VectorOps;
 
 
-class RichColVectorOp[V<:Vector](base : ColVectorOp[V])
-extends RichColTensor1Op[Int,Vector,V,Matrix](base);
+class RichColVectorOp[V<:Vector,M<:Matrix](base : ColVectorOp[V])
+extends RichColTensor1Op[Int,Vector,V,M](base);
 
 class RichRowVectorOp[V<:Vector](base : RowVectorOp[V])
 extends RichTensorOp[Int,Vector,V,Tensor1Op.Row](base) {
@@ -56,22 +56,23 @@ extends RichTensorOp[Int,Vector,V,Tensor1Op.Row](base) {
     base.value dot op.value;
   
   /** Vector-matrix multiplication */
-  def * [M<:Matrix] (op : MatrixOp[M]) =
+  def * [M<:Matrix] (op : MatrixOp[M])
+    (implicit tpB: TensorProductBuilder[V,M,V]) =
     RowVectorMultMatrix[V,V,M](base, op);
 }
 
 case class RowVectorMultMatrix[VO<:Vector,VI<:Vector,M<:Matrix]
 (a : RowVectorOp[VI], b : MatrixOp[M])
+(implicit tpB: TensorProductBuilder[VI,M,VO])
 extends RowTensor1Op[Int,Vector,VO] {
   override def domain = b.domain.asInstanceOf[ProductSet[Int,Int]]._2;
   override lazy val value = {
     val vv = a.value;
     val mv = b.value;
-    val rv = vv.create(domain).asInstanceOf[VO];
+    val rv = tpB.create(vv,mv);
     for (j <- domain) {
       rv(j) = vv dot mv.getCol(j);
     }
     rv;
   }
-  override def create[J](d : MergeableSet[J]) = b.create(d);
 }

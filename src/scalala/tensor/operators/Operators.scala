@@ -31,12 +31,88 @@ with Tensor2Ops with MatrixOps with DenseMatrixOps {
   
   implicit def iTensorOpToTensor[I,Base<:Tensor[I],V<:Base,S<:PublicShape]
    (x : TensorOp[I,Base,V,S]) : V = x.value;
-  
+
+   implicit def tensorBuilder[I] = new TensorBuilder[Tensor[I]] {
+     def like(t: Tensor[I]) = t.like;
+   }
+
+   implicit def tensor1Builder[I] = new TensorBuilder[Tensor1[I]] {
+     def like(t: Tensor1[I]) = t.like;
+   }
+
+   import dense._;
+   import sparse._;
+
+   implicit val vectorBuilder = new TensorBuilder[Vector] {
+     def like(t: Vector): Vector =  t.like;
+   }
+
+   implicit val vectorPBuilder = new TensorProductBuilder[Vector,Vector,Matrix] {
+     def create(t: Vector,t2: Vector) = t.matrixLike(t.size,t2.size);
+   }
+
+   implicit val vectorMPBuilder = new TensorProductBuilder[Vector,Matrix,Vector] {
+     def create(t: Vector,t2: Matrix) = t.vectorLike(t2.cols);
+   }
+
+   implicit val sparseHashVBuilder = new TensorBuilder[SparseHashVector] {
+     def like(t: SparseHashVector): SparseHashVector = t.like;
+   }
+
+   implicit val sparseVBuilder : TensorBuilder[SparseVector] = new TensorBuilder[SparseVector] {
+     def like(t: SparseVector): SparseVector = t.like;
+   }
+
+   implicit val denseVectorBuilder = new TensorBuilder[DenseVector] {
+     def like(t: DenseVector) = t.like;
+   }
+
+   implicit val denseVectorPBuilder = new TensorProductBuilder[DenseVector,Vector,DenseMatrix] {
+     def create(t: DenseVector, t2: Vector) = new DenseMatrix(t.size,t2.size);
+   }
+
+   class DenseVectorMPBuilder extends TensorProductBuilder[DenseVector,Matrix,DenseVector] {
+     def create(t: DenseVector,t2: Matrix) = t.vectorLike(t2.cols);
+   }
+   
+   implicit val denseVectorMPBuilder = new DenseVectorMPBuilder;
+
+   implicit val matrixBuilder = new TensorBuilder[Matrix] {
+     def like(t: Matrix) = t.like;
+   }
+
+   implicit val matrixVPBuilder = new TensorProductBuilder[Matrix,Vector,Vector] {
+     def create(t: Matrix, t2: Vector):Vector = t.vectorLike(t.rows);
+   }
+
+   implicit val matrixPBuilder = new TensorProductBuilder[Matrix,Matrix,Matrix] {
+     def create(t: Matrix, t2: Matrix):Matrix = t.matrixLike(t.rows,t2.cols);
+   }
+
+   implicit val denseMatrixPBuilder = new TensorProductBuilder[DenseMatrix,Matrix,DenseMatrix] {
+     def create(t: DenseMatrix, t2: Matrix) = new DenseMatrix(t.rows,t2.cols);
+   }
+
+   implicit val denseMatrixBuilder = new TensorBuilder[DenseMatrix] {
+     def like(t: DenseMatrix) = new DenseMatrix(t.rows,t.cols);
+   }
+
+/* in 2.8 we can turn this one on.
+   implicit val denseMatrixVPBuilder = new TensorProductBuilder[DenseMatrix,Vector,DenseVector] {
+     def create(t: DenseMatrix, t2: Vector) = new DenseVector(t.rows);
+   }
+
+   */
+
+   class MatrixAffinity[M<:Matrix,V<:Vector];
+   implicit val ma = new MatrixAffinity[Matrix,Vector];
+   implicit val dma = new MatrixAffinity[DenseMatrix,DenseVector];
  
 //  implicit def iTensorToTensorOp[I,V<:Tensor[I]](tensor : V) =
 //    TensorIdentity[I,Tensor[I],V,AnyShape](tensor);
-  implicit def iTensorToTensorOp[I](tensor : Tensor[I]) =
-    TensorIdentity[I,Tensor[I],Tensor[I],AnyShape](tensor);
+  implicit def iTensorToTensorOp[I,V<:Tensor[I]](tensor : V)
+    (implicit b: TensorBuilder[V])= 
+    TensorIdentity[I,Tensor[I],V,AnyShape](tensor);
 
 //  implicit def iTensorToRichTensorOp[I,V<:Tensor[I]](tensor : V) =
 //    new RichTensorOp[I,Tensor[I],V,AnyShape](tensor);
@@ -52,13 +128,15 @@ with Tensor2Ops with MatrixOps with DenseMatrixOps {
   
 //  implicit def iTensor1ToColTensor1Op[I,V<:Tensor1[I]](tensor : V) =
 //    TensorIdentity[I,Tensor1[I],V,Tensor1Op.Col](tensor);
-  implicit def iTensor1ToColTensor1Op[I](tensor : Tensor1[I]) =
+  implicit def iTensor1ToColTensor1Op[I,V<:Tensor1[I]](tensor : V)
+    (implicit b: TensorBuilder[V])=
     TensorIdentity[I,Tensor1[I],Tensor1[I],Tensor1Op.Col](tensor);
 
 //  implicit def iTensor1ToRichColTensor1Op[I,V<:Tensor1[I]](tensor : V) =
 //    new RichColTensor1Op[I,Tensor1[I],V,Tensor2[I,I]](tensor);
-  implicit def iTensor1ToRichColTensor1Op[I](tensor : Tensor1[I]) =
-    new RichColTensor1Op[I,Tensor1[I],Tensor1[I],Tensor2[I,I]](tensor);
+  implicit def iTensor1ToRichColTensor1Op[I,V<:Tensor1[I]](tensor : V)
+    (implicit b: TensorBuilder[V]) =
+    new RichColTensor1Op[I,Tensor1[I],V,Tensor2[I,I]]( TensorIdentity[I,Tensor1[I],V,Tensor1Op.Col](tensor));
   
 //  implicit def iColTensor1OpToRichColTensor1Op[I,V<:Tensor1[I]]
 //  (op : TensorOp[I,Tensor1[I],V,Tensor1Op.Col]) =
@@ -78,13 +156,15 @@ with Tensor2Ops with MatrixOps with DenseMatrixOps {
   
 //  implicit def iTensor2ToTensor2Op[I,J,V<:Tensor2[I,J]](tensor : V) =
 //    TensorIdentity[(I,J),Tensor2[I,J],V,Shape2[I,J]](tensor);
-  implicit def iTensor2ToTensor2Op[I,J](tensor : Tensor2[I,J]) =
-    TensorIdentity[(I,J),Tensor2[I,J],Tensor2[I,J],Shape2[I,J]](tensor);
+implicit def iTensor2ToTensor2Op[I,J,V<:Tensor2[I,J]](tensor : V) 
+    (implicit b: TensorBuilder[V]) =
+    TensorIdentity[(I,J),Tensor2[I,J],V,Shape2[I,J]](tensor);
   
 //  implicit def iTensor2ToRichTensor2Op[I,J,V<:Tensor2[I,J]](x : V) =
 //    new RichTensor2Op[I,J,Tensor2,Tensor2,V,Tensor1](x);
-  implicit def iTensor2ToRichTensor2Op[I,J](x : Tensor2[I,J]) =
-    new RichTensor2Op[I,J,Tensor2,Tensor2,Tensor2[I,J],Tensor1](x);
+  implicit def iTensor2ToRichTensor2Op[I,J,V<:Tensor2[I,J]](x : V)
+    (implicit b: TensorBuilder[V]) =
+    new RichTensor2Op[I,J,Tensor2,Tensor2,V,Tensor1](x);
   
 //  implicit def iTensor2OpToRichTensor2Op[I,J,V<:Tensor2[I,J]]
 //  (op : Tensor2Op[I,J,Tensor2[I,J],V]) =
@@ -98,35 +178,41 @@ with Tensor2Ops with MatrixOps with DenseMatrixOps {
   import scalala.tensor.dense._;
   
   implicit def iColVectorOpTopRichColVectorOp[V<:Vector](op : ColVectorOp[V]) =
-    new RichColVectorOp(op);
+    new RichColVectorOp[V,Matrix](op);
 
   implicit def iRowVectorOpToRichRowVectorOp[V<:Vector](op : RowVectorOp[V]) =
     new RichRowVectorOp(op);
   
-  implicit def iVectorToColVectorOp[V <: Vector](vector : V) =
+  implicit def iVectorToColVectorOp[V <: Vector](vector : V)
+    (implicit b: TensorBuilder[V])=
     new TensorIdentity[Int,Vector,V,Tensor1Op.Col](vector);
  
-  implicit def iVectorToRichColVectorOp[V <: Vector](vector : V) =
-    new RichColVectorOp[V](new TensorIdentity[Int,Vector,V,Tensor1Op.Col](vector));
+  implicit def iVectorToRichColVectorOp[V <: Vector](vector : V)
+    (implicit b: TensorBuilder[V])=
+    new RichColVectorOp[V,Matrix](new TensorIdentity[Int,Vector,V,Tensor1Op.Col](vector));
   
   import MatrixTypes._;
   
-  implicit def iMatrixToMatrixOp[M<:Matrix](m : M) =
+  implicit def iMatrixToMatrixOp[M<:Matrix](m : M)
+    (implicit b: TensorBuilder[M]) =
     new TensorIdentity[(Int,Int),Matrix,M,Shape2[Int,Int]](m);
   
-  implicit def iMatrixToRichMatrixOp[M<:Matrix](m : M) =
-    new RichMatrixOp(m);
+  implicit def iMatrixToRichMatrixOp[M<:Matrix](m : M)
+    (implicit mb: TensorBuilder[M]) =
+    new RichMatrixOp[M](m);
   
-  implicit def iMatrixOpToRichMatrixOp[M<:Matrix,V<:Vector]
+  implicit def iMatrixOpToRichMatrixOp[M<:Matrix]
   (op : MatrixOp[M]) =
-    new RichMatrixOp(op);
+    new RichMatrixOp[M](op);
   
   import DenseVectorTypes._;
   
-  implicit def iDenseVectorToColDenseVectorOp[V<:DenseVector](vector : V) =
+  implicit def iDenseVectorToColDenseVectorOp[V<:DenseVector](vector : V)
+    (implicit b: TensorBuilder[V])=
     new TensorIdentity[Int,Vector,V,Tensor1Op.Col](vector);
   
-  implicit def iDenseVectorToRichColDenseVectorOp[V<:DenseVector](vector : V) =
+  implicit def iDenseVectorToRichColDenseVectorOp[V<:DenseVector](vector : V)
+    (implicit b: TensorBuilder[V])=
     new RichColDenseVectorOp[V](vector);
   
   implicit def iColDenseVectorOpTopRichColVectorOp[V<:DenseVector](op : ColDenseVectorOp[V]) =
@@ -144,13 +230,13 @@ with Tensor2Ops with MatrixOps with DenseMatrixOps {
   
   import DenseMatrixTypes._;
   
-  implicit def iDenseMatrixToDenseMatrixOp[M<:DenseMatrix](m : M) =
+  implicit def iDenseMatrixToDenseMatrixOp(m : DenseMatrix) =
     iMatrixToMatrixOp(m);
-  
-  implicit def iDenseMatrixToRichDenseMatrixOp[M<:DenseMatrix](m : M) =
+
+  implicit def iDenseMatrixToRichDenseMatrixOp(m : DenseMatrix) =
     new RichDenseMatrixOp(m);
   
-  implicit def iDenseMatrixOpToRichDenseMatrixOp[M<:DenseMatrix](op : DenseMatrixOp[M]) =
+  implicit def iDenseMatrixOpToRichDenseMatrixOp(op : DenseMatrixOp[DenseMatrix]) =
     new RichDenseMatrixOp(op);
   
 }
@@ -195,7 +281,7 @@ private object Scratch {
   val qq1 = qq + 1;
   val qq2 = qq + 1 - qq;
   val qq3 = qq1.t;
-  val qq4 = qq2 \ dense;
+  val qq4 = iTensorOpToTensor(qq2) \ dense;
   val qq5 = qq :* qq1;
   qq5 > qq3;
 
@@ -203,7 +289,7 @@ private object Scratch {
   val yy1 = (x+1).t * qq;
   val yy2 = qq * qq;
   val yy3 = qq.t * qq;
-  val yy4 = qq * x;
+ // val yy4 : DenseVector = (qq: RichMatrixOp[DenseMatrix]).*(x);
   
 //  val sparse = new SparseBinaryVector(10);
 //  sparse(2) = 1;

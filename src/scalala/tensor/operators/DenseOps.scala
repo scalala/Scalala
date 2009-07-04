@@ -70,7 +70,7 @@ trait DenseVectorOps {
 object DenseVectorOps extends DenseVectorOps;
 
 class RichColDenseVectorOp[V<:DenseVector](base : ColDenseVectorOp[V])
-extends RichColVectorOp[V](base);
+extends RichColVectorOp[V,DenseMatrix](base);
 
 class RichRowDenseVectorOp[V<:DenseVector](base : RowDenseVectorOp[V])
 extends RichRowVectorOp[V](base);
@@ -89,8 +89,7 @@ trait DenseMatrixOps {
 object DenseMatrixOps extends DenseMatrixOps;
 
 /** Extra operators for DenseMatrices. */
-class RichDenseMatrixOp[M<:DenseMatrix,V<:DenseVector](base : DenseMatrixOp[M])
-extends RichMatrixOp[M,V](base) {
+class RichDenseMatrixOp[M<:DenseMatrix,V<:DenseVector](base : DenseMatrixOp[M]) {
   def \ [V<:DenseVector] (op : ColDenseVectorOp[V]) =
     DenseMatrixSolveDenseVector(base, op);
   
@@ -115,7 +114,6 @@ extends ColDenseVectorOp[DenseVector] {
     new DenseVector(_X.data);
   }
   
-  override def create[J](d : MergeableSet[J]) = v.create(d);
 }
 
 class MatrixSingularException extends RuntimeException;
@@ -135,13 +133,13 @@ extends TensorReferenceOp(a) {
     val rows = domain._1.size;
     val cols = domain._2.size;
     
-    val rv = a.create(domain).asInstanceOf[M1];
     
     // from MTJ 0.9.9
     if (a.domain.asInstanceOf[ProductSet[Int,Int]]._1 == a.domain.asInstanceOf[ProductSet[Int,Int]]._2) {
       // LUSolve
-      val _A = a.working.asInstanceOf[DenseMatrix]; // will be overwritten
-      val _B = b.value.asInstanceOf[DenseMatrix];   // won't be overwritten
+      val _A : DenseMatrix = a.working//.asInstanceOf[DenseMatrix]; // will be overwritten
+      val _B : DenseMatrix = b.value//.asInstanceOf[DenseMatrix];   // won't be overwritten
+      val rv = _A.matrixLike(rows,cols);
 
       if (_A.rows != _B.rows)
         throw new IllegalArgumentException("Matrix arguments must have same number of rows");
@@ -157,6 +155,7 @@ extends TensorReferenceOp(a) {
         throw new MatrixSingularException();
       else if (info < 0)
         throw new IllegalArgumentException();
+      rv.asInstanceOf[M1];
     } else {
       // QRSolve
       val (trans,_A) = a match {
@@ -164,6 +163,7 @@ extends TensorReferenceOp(a) {
         case _ => (false, a.working.asInstanceOf[M1]);
       }
       val _B = b.value;
+      val rv = _A.matrixLike(rows,cols);
           
       // allocate temporary solution matrix
       val nrhs = _B.cols;
@@ -195,9 +195,9 @@ extends TensorReferenceOp(a) {
       // extract solution
       val N = if (!trans) _A.cols else _A.rows;
       for (j <- 0 until nrhs; i <- 0 until N) rv(i,j) = _Xtmp(i,j);
+      rv.asInstanceOf[M1];
     }
     
-    rv;
   }
 }
 
