@@ -37,13 +37,13 @@ case class DiagonalMatrix(diagonal : Vector) extends Matrix {
     if (row == col) {
       diagonal(row) = value;
     } else {
-      throw new IndexOutOfBoundsException("Cannot set off-diagonal elements of diagonal matrix");
+      throw new IndexOutOfBoundsException("Cannot set off-diagonal iterator of diagonal matrix");
     }
   }
   override def activeDomain = new MergeableSet[(Int,Int)] {
     override def size = diagonal.activeDomain.size;
     override def contains(i : (Int,Int)) = (i._1 == i._2) && diagonal.activeDomain.contains(i._1);
-    override def elements = diagonal.activeDomain.elements.map(i => (i,i));
+    override def iterator = diagonal.activeDomain.iterator.map(i => (i,i));
   }
 
   /**

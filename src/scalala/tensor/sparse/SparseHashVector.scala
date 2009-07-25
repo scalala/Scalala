@@ -61,7 +61,7 @@ class SparseHashVector(override val size : Int, protected val hashmap : Int2Doub
   override def activeDomain = new MergeableSet[Int] {
     override def size = hashmap.size;
     override def contains(key : Int) = hashmap.containsKey(key);
-    override def elements = activeKeys;
+    override def iterator = activeKeys;
   }
   
   override def activeElements = new Iterator[(Int,Double)] {

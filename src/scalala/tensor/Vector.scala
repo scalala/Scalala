@@ -38,7 +38,7 @@ trait Vector extends Tensor1[Int] {
   final override def domain : IntSpanSet = _domain;
   
   /** Returns an array copy of this tensor. */
-  def toArray = Array.fromFunction(i => this(i))(size);
+  def toArray = Array.tabulate(size)(i => this(i));
   
   override def copy : Vector = super.copy.asInstanceOf[Vector];
   

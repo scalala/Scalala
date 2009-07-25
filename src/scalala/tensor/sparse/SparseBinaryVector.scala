@@ -42,7 +42,7 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   /** Index will be reassigned as the sparse vector grows. */
   var index : Array[Int] = new Array[Int](initialNonzeros);
   
-  /** How many elements of data,index are used. */
+  /** How many iterator of data,index are used. */
   var used : Int = 0;
   
   /** The previous index and offset found by apply or update. */
@@ -94,9 +94,9 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   override def activeDomain = new MergeableSet[Int] {
     override def size = used;
     override def contains(i : Int) = findOffset(i) >= 0;
-    override def elements = {
-      if (used == index.length) index.elements;
-      else index.elements.take(used);
+    override def iterator = {
+      if (used == index.length) index.iterator;
+      else index.iterator.take(used);
     }
   }
 
@@ -110,9 +110,9 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
     }
   }
   
-  override def activeKeys = index.take(used).elements;
+  override def activeKeys = index.take(used).iterator;
   
-  override def activeValues = index.take(used).map(_ => 1.0).elements;
+  override def activeValues = index.take(used).map(_ => 1.0).iterator;
 
   /** Zeros this vector, return */
   override def zero() =
@@ -198,7 +198,7 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
    * index arrays will be grown to support the insertion if
    * necessary.  The growth schedule doubles the amount
    * of allocated memory at each allocation request up until
-   * the sparse vector contains 1024 elements, at which point
+   * the sparse vector contains 1024 iterator, at which point
    * the growth is additive: an additional n * 1024 spaces will
    * be allocated for n in 1,2,4,8,16.
    */

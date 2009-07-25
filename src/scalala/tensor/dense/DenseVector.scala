@@ -80,5 +80,5 @@ object DenseVector {
    * necessary).
    */
   def apply(size : Int)(values : Double*) =
-    new DenseVector(Array.fromFunction(i => values(i % values.length))(size));
+    new DenseVector(Array.tabulate(size)(i => values(i % values.length)));
 }

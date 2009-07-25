@@ -69,7 +69,7 @@ class SparseHashMatrix(override val rows : Int, override val cols: Int, protecte
     override def size = hashmap.size;
     override def contains(key : (Int,Int)) =
       hashmap.containsKey(index(key._1,key._2));
-    override def elements = activeKeys;
+    override def iterator = activeKeys;
   }
   
   override def activeElements = new Iterator[((Int,Int),Double)] {

@@ -19,6 +19,8 @@
  */
 package scalala.library;
 
+import scala.collection.mutable.ListBuffer;
+
 import scalala.collection.PartialMap;
 import scalala.tensor.{Tensor,Vector,Matrix};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
@@ -142,13 +144,13 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
     }
     
     val counts = new DenseVector(bins.size);
-    for (point <- data.values) {
+    for (point <- data.valuesIterator) {
       val bin = bucket(point, 0, bins.size-1);
       counts(bin) += 1;
     }
     
     // smallest gap between bins
-    val width = { bins.values zip (bins.values drop 1) map
+    val width = { bins.valuesIterator zip (bins.valuesIterator drop 1) map
       (pair => Math.abs(pair._2 - pair._1)) reduceLeft Math.min };
     
     val dataset = new org.jfree.data.xy.XYBarDataset(
@@ -166,7 +168,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
   def plot(y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
-    plot(new DenseVector(Array.fromFunction(i => i+1.0)(y.size)), y)(xyplot);
+    plot(new DenseVector(Array.tabulate(y.size)(i => i+1.0)), y)(xyplot);
   }
   
   /** Plots the given y versus the given x with line drawn */
@@ -302,7 +304,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   
   /** An XY stacked area chart with default names. */
   def stacked(x : Vector, y : Seq[Vector])(implicit xyplot : Plotting.XYPlot) {
-    stacked(x, y, y.elements.zipWithIndex.map(_._2.toString).collect)(xyplot);
+    stacked(x, y, y.iterator.zipWithIndex.map(_._2.toString).toSequence)(xyplot);
   }
   
   /**
@@ -432,7 +434,7 @@ object Plotting {
     }
   }
   
-  /** Returns a JFreeChart XYZDataset for plotting all elements of the matrix */
+  /** Returns a JFreeChart XYZDataset for plotting all iterator of the matrix */
   def Dataset(m : Matrix) : XYZDataset = {
     Dataset(m, (0., 0.+m.cols), (0., 0.+m.rows));
   }
@@ -534,7 +536,7 @@ object Plotting {
   
   /** Class that holds a collection of Figure instances */
   class Figures {
-    private val figures = new scala.collection.jcl.LinkedList[Figure];
+    private val figures = ListBuffer[Figure]();
     
     /** Returns the number of the given figure */
     def number(figure : Figure) : Int = figures.indexOf(figure);
@@ -544,7 +546,7 @@ object Plotting {
     def figure : Figure = figures(figure_);
     def figure_=(number : Int) : Unit = {
       while (figures.length <= number) {
-        figures.add(null);
+        figures += null;
       }
       if (figures(number) == null) {
         figures(number) = new Figure(this);
@@ -562,11 +564,11 @@ object Plotting {
   /** A Figure holds a collection of XYPlot instances */
   class Figure(figures : Figures) {
     /** List of plots in the figure */
-    private val plots = new scala.collection.jcl.LinkedList[XYPlot];
+    private val plots = ListBuffer[XYPlot]();
 
     /** Clears the current plot */
     def clear() {
-      plots.clear;
+      plots.clear();
       plot = 0;
       rows = 1;
       cols = 1;
@@ -604,7 +606,7 @@ object Plotting {
     def plot_=(number : Int) : Unit = {
       assert(number >= 0);
       while (plots.length <= number) {
-        plots.add(null);
+        plots += null;
       }
       if (plots(number) == null) {
         plots(number) = new XYPlot(this);

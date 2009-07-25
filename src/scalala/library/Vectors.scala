@@ -39,7 +39,7 @@ trait Vectors extends Library with Operators {
   /** n evenly spaced points between a and b */
   def linspace(a : Double, b : Double, n : Int) : DenseVector = {
     val delta = (b - a) / (n - 1.0);
-    new DenseVector(Array.fromFunction(i => a + i*delta)(n));
+    new DenseVector(Array.tabulate(n)(i => a + i*delta));
   }
   
   /** A vector of ones of the given size */
@@ -50,7 +50,7 @@ trait Vectors extends Library with Operators {
   def zeros(n : Int) : Vector =
     DenseVector(n)(0.0);
   
-  /** Returns the sum of the elements and how many there were. */
+  /** Returns the sum of the iterator and how many there were. */
   private def sumcount(v : Iterator[Double]) : (Double,Int) = {
     var sum = 0.0;
     var count = 0;
@@ -62,7 +62,7 @@ trait Vectors extends Library with Operators {
   }
   
   /**
-   * Returns the sum of the elements in the map and how many there were.  If the
+   * Returns the sum of the iterator in the map and how many there were.  If the
    * map has an infinite domain, return -1 as count.
    */
   private def sumcount[I](v : PartialMap[I,Double]) : (Double,Int) = {
@@ -78,13 +78,13 @@ trait Vectors extends Library with Operators {
     }
   }
   
-  /** Returns the sum of the elements of iterator. */
+  /** Returns the sum of the iterator of iterator. */
   def sum(v : Iterator[Double]) : Double =
     sumcount(v)._1;
   
-  /** Returns the sum of the elements of collection. */
+  /** Returns the sum of the iterator of collection. */
   def sum(v : Iterable[Double]) : Double =
-    sum(v.elements);
+    sum(v.iterator);
   
   /** Returns the sum of the values of the map. */
   def sum[I](v : PartialMap[I,Double]) : Double =
@@ -112,7 +112,7 @@ trait Vectors extends Library with Operators {
   }
   
   def max(v : Iterator[Double]) : Double = v.reduceLeft(Math.max);
-  def max(v : Iterable[Double]) : Double = max(v.elements);
+  def max(v : Iterable[Double]) : Double = max(v.iterator);
 //  def max[I](op : TensorOp[I]) : Double = max(op.value);
 
   /** Returns a key i of the map such that v(i)=max(v). */
@@ -121,7 +121,7 @@ trait Vectors extends Library with Operators {
     if (nonActive.isEmpty) {
       argmax(v.activeElements);
     } else {
-      argmax(v.activeElements ++ Iterator.single((nonActive.elements.next, v.default)));
+      argmax(v.activeElements ++ Iterator.single((nonActive.iterator.next, v.default)));
     }
   }
   
@@ -135,7 +135,7 @@ trait Vectors extends Library with Operators {
    * but perfectly valid on sequences.
    */
   def argmax[I](v : Seq[Double]) : Int =
-    argmax(v.elements);
+    argmax(v.iterator);
   
 //  def argmax[I](op : TensorOp[I]) : I =
 //    argmax(op.value);
@@ -151,7 +151,7 @@ trait Vectors extends Library with Operators {
   }
 
   def min(v : Iterator[Double]) : Double = v.reduceLeft(Math.min);
-  def min(v : Iterable[Double]) : Double = min(v.elements);
+  def min(v : Iterable[Double]) : Double = min(v.iterator);
 //  def min[I](op : TensorOp[I]) : Double = min(op.value);
   
   /** Returns a key i of the map such that v(i)=min(v). */
@@ -160,7 +160,7 @@ trait Vectors extends Library with Operators {
     if (nonActive.isEmpty) {
       argmin(v.activeElements);
     } else {
-      argmin(v.activeElements ++ Iterator.single((nonActive.elements.next, v.default)));
+      argmin(v.activeElements ++ Iterator.single((nonActive.iterator.next, v.default)));
     }
   }
   
@@ -174,19 +174,19 @@ trait Vectors extends Library with Operators {
    * but perfectly valid on sequences.
    */
   def argmin[I](v : Seq[Double]) : Int =
-    argmin(v.elements);
+    argmin(v.iterator);
 //  def argmin[I](op : TensorOp[I]) : I =
 //    argmin(op.value);
   
   /**
-   * Returns the sum of the squares of the elements of the vector.
+   * Returns the sum of the squares of the iterator of the vector.
    */
   def sumsq[I](v : PartialMap[I,Double]) : Double = sum(v.map((x:Double) => x*x));
   def sumsq(v : Iterator[Double]) = sum(v.map(x => x*x));
   def sumsq(v : Iterable[Double]) = sum(v.map(x => x*x));
 //  def sumsq[I](op : TensorOp[I]) : Double = sumsq(op.value);
 
-  /** Returns the mean of the given elements.  Based on a Knuth online algorithm. */
+  /** Returns the mean of the given iterator.  Based on a Knuth online algorithm. */
   def mean(v : Iterator[Double]) : Double = {
     var n = 0;
     var mean = 0.0;
@@ -211,8 +211,8 @@ trait Vectors extends Library with Operators {
     }
   }
   
-  /** Returns the mean of the given elements. */
-  def mean(v : Iterable[Double]) : Double = mean(v.elements);
+  /** Returns the mean of the given iterator. */
+  def mean(v : Iterable[Double]) : Double = mean(v.iterator);
   
 //  def mean[I](op : TensorOp[I]) : Double = mean(op.value);
   
@@ -236,14 +236,14 @@ trait Vectors extends Library with Operators {
   }
   
   def variance(v : Iterable[Double]) : Double =
-    variance(v.elements);
+    variance(v.iterator);
   
   /**
    * The variance of the values in the given map accounting for default values.
    */
   def variance[I](v : PartialMap[I,Double]) : Double = {
     if (v.activeDomain.size == v.domain.size) {
-      variance(v.values);
+      variance(v.valuesIterator);
     } else {
       val m = mean(v);
       sumsq(v.map((x:Double) => x - m)) / (v.domain.size - 1);
@@ -288,7 +288,7 @@ trait Vectors extends Library with Operators {
   /** Returns the sum vector of a bunch of vectors. */
   def sum(vectors : Seq[Vector]) : Vector = {
     val sum = vectors(0).copy.asInstanceOf[Vector];
-    for (vector <- vectors.elements.drop(1)) {
+    for (vector <- vectors.iterator.drop(1)) {
       sum += vector;
     }
     sum;
@@ -315,7 +315,7 @@ trait VectorsTest extends Library with Vectors with Implicits with Random with s
  test("Tensor:Moments") {
     val v = new SparseVector(1000);
     v += 1;
-    v(0 until 100) = rand(100).values.collect;
+    v(0 until 100) = rand(100).valuesIterator.toSequence;
     assertEquals(mean(v.toArray), mean(v), 1e-10);
     assertEquals(variance(v.toArray), variance(v), 1e-10);
     assertEquals(std(v.toArray), std(v), 1e-10);

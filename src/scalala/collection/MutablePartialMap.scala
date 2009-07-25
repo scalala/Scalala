@@ -36,14 +36,14 @@ trait MutablePartialMap[A,B] extends PartialMap[A,B] {
   
   /** Batch update of keys and values. */
   def update(keys : Seq[A], values : Seq[B]) : Unit =
-    update(keys.elements, values.elements);
+    update(keys.iterator, values.iterator);
   
   /** Batch update of keys and values. */
   def update(keys : Iterator[A], values : Iterator[B]) : Unit = {
     for ((key,value) <- (keys zip values)) update(key,value);
     if (keys.hasNext || values.hasNext) {
       throw new MutablePartialMap.UpdateException(
-        "Keys and values had different numbers of elements");
+        "Keys and values had different numbers of iterator");
     }
   }
   
@@ -53,31 +53,31 @@ trait MutablePartialMap[A,B] extends PartialMap[A,B] {
   
   /** Batch update of keys with single value. */
   def update(keys : Iterable[A], value : B) : Unit =
-    update(keys.elements, value);
+    update(keys.iterator, value);
   
   /** A set is both an Iterable and a (A=>Boolean), so it is special-cased. */
   def update(keys : scala.collection.Set[A], value : B) : Unit =
-    update(keys.elements, value);
+    update(keys.iterator, value);
   
   /** Batch update of keys for which f returns true. */
   def update(s : Function1[A,Boolean], value : B) : Unit =
-    for (key <- this.keys) if (s(key)) update(key,value);
+    for (key <- this.keysIterator) if (s(key)) update(key,value);
   
   /** Batch update of keys based on a function applied to the value. */
   def update(keys : Iterator[A], f : Function1[B,B]) : Unit =
-    for (key <- keys) update(key,f(apply(key)));
+    for (key <- keysIterator) update(key,f(apply(key)));
   
   /** Batch update of keys based on a function applied to the value. */
   def update(keys : Iterable[A], f : Function1[B,B]) : Unit =
-    update(keys.elements, f);
+    update(keys.iterator, f);
   
   /** A set is both an Iterable and a (A=>Boolean), so it is special-cased. */
   def update(keys : scala.collection.Set[A], f : Function1[B,B]) : Unit =
-    update(keys.elements, f);
+    update(keys.iterator, f);
   
   /** Batch update of keys for which f returns true. */
   def update(s : Function1[A,Boolean], f : Function1[B,B]) : Unit =
-    for ((key,value) <- elements) if (s(key)) update(key,f(value));
+    for ((key,value) <- iterator) if (s(key)) update(key,f(value));
   
   /** Batch update of keys based on a function applied to the key and value. */
   def update(keys : Iterator[A], f : Function2[A,B,B]) : Unit =
@@ -85,15 +85,15 @@ trait MutablePartialMap[A,B] extends PartialMap[A,B] {
   
   /** Batch update of keys based on a function applied to the key and value. */
   def update(keys : Iterable[A], f : Function2[A,B,B]) : Unit =
-    update(keys.elements, f);
+    update(keys.iterator, f);
   
   /** A set is both an Iterable and a (A=>Boolean), so it is special-cased. */
   def update(keys : scala.collection.Set[A], f : Function2[A,B,B]) : Unit =
-    update(keys.elements, f);
+    update(keys.iterator, f);
     
   /** Batch update of keys for which f returns true. */
   def update(s : Function1[A,Boolean], f : Function2[A,B,B]) : Unit =
-    for ((key,value) <- elements) if (s(key)) update(key,f(key,value));
+    for ((key,value) <- iterator) if (s(key)) update(key,f(key,value));
 }
 
 object MutablePartialMap {

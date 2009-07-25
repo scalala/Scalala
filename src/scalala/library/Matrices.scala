@@ -44,14 +44,14 @@ trait Matrices extends Library with Vectors {
     dim match {
       case 1 => {
         val sum = new DenseMatrix(1, m.cols);
-        for (entry <- m.elements) {
+        for (entry <- m.iterator) {
           sum(0, entry._1._2) += entry._2;
         }
         sum;
       }
       case 2 => {
         val sum = new DenseMatrix(m.rows, 1);
-        for (entry <- m.elements) {
+        for (entry <- m.iterator) {
           sum(entry._1._1, 0) += entry._2;
         }
         sum;
@@ -76,7 +76,7 @@ trait Matrices extends Library with Vectors {
   //
   
   def vec(m : Matrix) =
-    new DenseVector(Array.fromFunction(i => m(i % m.rows, i / m.rows))(m.rows * m.cols));
+    new DenseVector(Array.tabulate(m.rows * m.cols)(i => m(i % m.rows, i / m.rows)));
     
   /** Returns a square diagonal matrix of the given size */
   def diag(n : Int) : DiagonalMatrix =

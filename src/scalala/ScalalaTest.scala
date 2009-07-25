@@ -43,7 +43,7 @@ trait ScalalaTest {
     if (Math.abs(v1 - v2) > tolerance) throw new TestFailedException(v1 + "!=" + v2);
   
   def assertEquals[I](v1 : PartialMap[I,Double], v2 : PartialMap[I,Double], tolerance : Double) : Unit =
-    if ((v1 join v2)((a:Double,b:Double) => Math.abs(a - b) < tolerance).values.contains(false))
+    if ((v1 join v2)((a:Double,b:Double) => Math.abs(a - b) < tolerance).valuesIterator.contains(false))
       throw new TestFailedException(v1 + "!=" + v2);
 
   /** Expects the exception named in the type arg to be thrown. */

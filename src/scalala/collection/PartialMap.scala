@@ -36,8 +36,8 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   def domain : MergeableSet[A];
   
   /**
-   * Returns the default value for elements in the domain.  Undefined
-   * behavior for elements outside of the domain.
+   * Returns the default value for iterator in the domain.  Undefined
+   * behavior for iterator outside of the domain.
    */
   def default : B;
   
@@ -53,7 +53,7 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   
   /** Iterates (key,value) pairs, possibly skipping tuples with default values. */
   def activeElements : Iterator[(A,B)] = new Iterator[(A,B)] {
-    val iter = activeDomain.elements;
+    val iter = activeDomain.iterator;
     override def hasNext = iter.hasNext;
     override def next = { val k = iter.next;  (k, PartialMap.this(k)); }
   }
@@ -73,25 +73,25 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   }
   
   /**
-   * Iterates over all elements in the domain, whether or not the function
+   * Iterates over all iterator in the domain, whether or not the function
    * overrides the default value at that position.
    */
-  override def elements : Iterator[(A,B)] = new Iterator[(A,B)] {
-    val iter = domain.elements;
+  override def iterator : Iterator[(A,B)] = new Iterator[(A,B)] {
+    val iter = domain.iterator;
     override def hasNext = iter.hasNext;
     override def next = { val k = iter.next; (k, PartialMap.this(k)); }
   }
 
   /** @return the keys for which all possibly non-default values are defined. */
-  def keys : Iterator[A] = new Iterator[A] {
-    val iter = elements;
+  def keysIterator : Iterator[A] = new Iterator[A] {
+    val iter = iterator;
     override def hasNext = iter.hasNext;
     override def next = iter.next._1;
   }
   
   /** @return the values*/
-  def values : Iterator[B] = new Iterator[B] {
-    val iter = elements;
+  def valuesIterator : Iterator[B] = new Iterator[B] {
+    val iter = iterator;
     override def hasNext = iter.hasNext;
     override def next = iter.next._2;
   }
@@ -128,12 +128,12 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
 
   /** Getter for all values for which the given key function returns true. */
   def apply(f : (A => Boolean)) : Iterator[B] =
-    for ((k,v) <- elements; if f(k)) yield v;
+    for ((k,v) <- iterator; if f(k)) yield v;
   
   /** Returns the keys for which the value returns true. */
   def find(f : (B => Boolean)) : Iterator[A] = {
     if (f(default)) {
-      for ((k,v) <- elements if f(v)) yield k;
+      for ((k,v) <- iterator if f(v)) yield k;
     } else {
       for ((k,v) <- activeElements if f(v)) yield k;
     }
@@ -164,7 +164,7 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   }
   
   override def hashCode() =
-    elements.foldLeft(1)((hash,kv) => 41 * hash + kv.hashCode);
+    iterator.foldLeft(1)((hash,kv) => 41 * hash + kv.hashCode);
   
   override def toString = 
     getClass.getName+"[domain="+domain+" active="+activeDomain.size+" default="+default+"]\n ("+activeElements.mkString("\n  ")+")";
@@ -178,7 +178,7 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
 object PartialMap {
   /**
    * Returns a default immutable PartialMap for the given domain and default
-   * value.  The actual elements of the given map are taken as the active elements.
+   * value.  The actual iterator of the given map are taken as the active iterator.
    */
   def apply[K,V](inDomain : MergeableSet[K], inDefault : V)(inMap : scala.collection.Map[K,V]) = {
     new PartialMap[K,V] {
@@ -186,9 +186,9 @@ object PartialMap {
       override def default = inDefault;
       override lazy val activeDomain = MergeableSet(inMap.keySet);
       
-      override def activeElements = inMap.elements;
-      override def activeKeys = inMap.keys;
-      override def activeValues = inMap.values;
+      override def activeElements = inMap.iterator;
+      override def activeKeys = inMap.keysIterator;
+      override def activeValues = inMap.valuesIterator;
       
       override def apply(key : K) = {
         inMap.get(key) match {

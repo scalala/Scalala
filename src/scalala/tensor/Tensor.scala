@@ -210,7 +210,7 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   /** Multiplies each value in this map by the corresponding value in the other map. */
   def :*= (t : PartialMap[I,Double]) {
     ensure(t);
-    // if our default is 0 then we can skip active elements in the other domain
+    // if our default is 0 then we can skip active iterator in the other domain
     val domain = {
       if (this.default == 0.0) (this.activeDomain)
       else                     (this.activeDomain ++ t.activeDomain)
@@ -433,7 +433,7 @@ object Tensor {
   val TOLERANCE = 1e-8;
 }
 
-/** A one-axis tensor is defined on single elements from a domain. */
+/** A one-axis tensor is defined on single iterator from a domain. */
 trait Tensor1[I] extends Tensor[I] {
   /**
   * Creates a tensor "like" this one, but with zeros everywhere.
@@ -452,7 +452,7 @@ trait Tensor1[I] extends Tensor[I] {
       return sum;
     } else {
       var sum = 0.0;
-      for (value <- this.join(that)(_ * _).values) {
+      for (value <- this.join(that)(_ * _).valuesIterator) {
         sum += value;
       }
       return sum;
@@ -464,7 +464,7 @@ object Tensor1 {
   import scalala.tensor.operators._;
 }
 
-/** A two-axes tensor is defined on pairs of elements from two domains. */
+/** A two-axes tensor is defined on pairs of iterator from two domains. */
 trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
   /**
   * Creates a tensor "like" this one, but with zeros everywhere.
@@ -502,7 +502,7 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
   /** Gets the active domain in the given row. */
   def activeDomainInRow(row : I1) : MergeableSet[I2] = {
     new MergeableSet[I2] {
-      override def elements = Tensor2.this.activeDomain.elements.filter(_._1 == row).map(_._2);
+      override def iterator = Tensor2.this.activeDomain.iterator.filter(_._1 == row).map(_._2);
       override def contains(col : I2) = Tensor2.this.activeDomain.contains((row,col));
     };
   }
@@ -510,7 +510,7 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
   /** Gets the active domain in the given column. */
   def activeDomainInCol(col : I2) : MergeableSet[I1] = {
     new MergeableSet[I1] {
-      override def elements = Tensor2.this.activeDomain.elements.filter(_._2 == col).map(_._1);
+      override def iterator = Tensor2.this.activeDomain.iterator.filter(_._2 == col).map(_._1);
       override def contains(row : I1) = Tensor2.this.activeDomain.contains((row,col));
     };
   }
@@ -571,7 +571,7 @@ object Tensor2 {
     override def activeDomain : MergeableSet[(I2,I1)] = {
       new MergeableSet[(I2,I1)] {
         override def size = inner.activeDomain.size;
-        override def elements = inner.activeDomain.elements.map(tup => (tup._2,tup._1));
+        override def iterator = inner.activeDomain.iterator.map(tup => (tup._2,tup._1));
         override def contains(i : (I2,I1)) = inner.activeDomain.contains((i._2,i._1));
       };
     }

@@ -83,16 +83,16 @@ object TensorShapes {
   abstract sealed class PrivateShape extends TensorShape;
   
   /** Singly indexed shape. */
-  final abstract class AnyShape extends PublicShape;
+  sealed abstract class AnyShape extends PublicShape;
   
   /** Matrix shape */
-  final abstract class Shape2[I,J] extends PublicShape;
+  sealed abstract class Shape2[I,J] extends PublicShape;
   
   /** Column vector shape. */
-  final abstract class Shape1Col extends PublicShape;
+  sealed abstract class Shape1Col extends PublicShape;
   
   /** Row vector shape. */
-  final abstract class Shape1Row extends PrivateShape;
+  sealed abstract class Shape1Row extends PrivateShape;
 }
 
 import TensorShapes._;

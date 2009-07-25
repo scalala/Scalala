@@ -29,21 +29,21 @@ import scala.collection.Set;
 abstract case class MergeableSet[I]() extends Set[I] {
   private lazy val _size = {
     var s = 0;
-    for (e <- elements) { s += 1; }
+    for (e <- iterator) { s += 1; }
     s;
   }
   
   /**
    * The default implementation lazily evaluates the size 
-   * by counting the number of elements in the set.
+   * by counting the number of iterator in the set.
    */
   override def size = _size;
   
   /**
-   * By default, checks if .elements is non-empty (to avoid
+   * By default, checks if .iterator is non-empty (to avoid
    * the potentially expensive .size operation.
    */
-  override def isEmpty = !elements.hasNext;
+  override def isEmpty = !iterator.hasNext;
   
   /** Returns the Union of this set with another. */
   def ++(that : MergeableSet[I]) : MergeableSet[I] = {
@@ -51,8 +51,19 @@ abstract case class MergeableSet[I]() extends Set[I] {
     else if (that.isEmpty) this
     else UnionSet(this, that);
   }
+
+  def -(elem: I) : MergeableSet[I] = {
+    if (!contains(elem)) this
+    else SubtractionSet(this,SingletonSet(elem));
+  }
+
+  def +(elem: I) : MergeableSet[I] = {
+    if (contains(elem)) this
+    else UnionSet(this,SingletonSet(elem));
+  }
   
-  /** Returns this set except those elements in the other set. */
+  
+  /** Returns this set except those iterator in the other set. */
   def --(that : MergeableSet[I]) : MergeableSet[I] = {
     if (that.isEmpty) this
     else if (this eq that) EmptySet[I]() 
@@ -76,19 +87,13 @@ abstract case class MergeableSet[I]() extends Set[I] {
 object MergeableSet {
   def apply[I](set : Set[I]) = new MergeableSet[I] {
     override def size = set.size;
-    override def elements = set.elements;
+    override def iterator = set.iterator;
     override def contains(i : I) = set.contains(i);
   }
   
-  def apply[I](collection : Collection[I]) = new MergeableSet[I] {
-    override def size = collection.size;
-    override def elements = collection.elements;
-    override def contains(i:I) = !elements.forall(_ != i);
-  }
-  
   def apply[I](iterable : Iterable[I]) = new MergeableSet[I] {
-    override def elements = iterable.elements;
-    override def contains(i:I) = !elements.forall(_ != i);
+    override def iterator = iterable.iterator;
+    override def contains(i:I) = !iterator.forall(_ != i);
   }
 }
 
@@ -100,7 +105,7 @@ object MergeableSet {
 case class EmptySet[I]() extends MergeableSet[I] {
   override def contains(e : I) = false;
   
-  override def elements = new Iterator[I] {
+  override def iterator = new Iterator[I] {
     override def hasNext = false;
     override def next = throw new IllegalAccessException;
   }
@@ -118,19 +123,32 @@ case class EmptySet[I]() extends MergeableSet[I] {
 }
 
 /**
- * The union of elements in the given sets.  The provided
- * elements iterator is careful not repeat items contained
+ * A singleton mergeable set.
+ * 
+ * @author dramage
+ */
+case class SingletonSet[I](theElem: I) extends MergeableSet[I] {
+  override def contains(e : I) = theElem == e;
+
+  override def size = 1;
+  
+  override def iterator = Iterator.single(theElem);
+}
+
+/**
+ * The union of iterator in the given sets.  The provided
+ * iterator iterator is careful not repeat items contained
  * in more than one set.
  * 
  * @author dramage
  */
 case class UnionSet[I](sets : Set[I]*) extends MergeableSet[I] {
   override def contains(x : I) : Boolean =
-    sets.elements.map(_.contains(x)).contains(true);
+    sets.iterator.map(_.contains(x)).contains(true);
   
-  override def elements =
-    for (i <- (0 until sets.size).elements;
-         e <- sets(i).elements;
+  override def iterator =
+    for (i <- (0 until sets.size).iterator;
+         e <- sets(i).iterator;
          if (sets.take(i).forall(!_.contains(e))))
       yield e;
     
@@ -146,8 +164,8 @@ case class UnionSet[I](sets : Set[I]*) extends MergeableSet[I] {
 }
 
 /**
- * The intersection of elements in the given sets.  The provided
- * elements iterator iterates the shortest set, discarding elements
+ * The intersection of iterator in the given sets.  The provided
+ * iterator iterator iterates the shortest set, discarding iterator
  * not found in the others.
  * 
  * @author dramage
@@ -159,10 +177,10 @@ case class IntersectionSet[I](sets : Set[I]*) extends MergeableSet[I] {
     sets.reduceLeft[Set[I]]((a : Set[I], b : Set[I]) => if (a.size < b.size) a else b);
   
   override def contains(x : I) : Boolean =
-    sets.elements.forall(_.contains(x));
+    sets.iterator.forall(_.contains(x));
   
-  override def elements =
-    for (e <- smallest.elements; if contains(e)) yield e;
+  override def iterator =
+    for (e <- smallest.iterator; if contains(e)) yield e;
   
   override def **(that : MergeableSet[I]) = that match {
     case IntersectionSet(those) => IntersectionSet((sets ++ those.asInstanceOf[Seq[Set[I]]]) : _*);
@@ -176,7 +194,7 @@ case class IntersectionSet[I](sets : Set[I]*) extends MergeableSet[I] {
 }
 
 /**
- * The elements of included except not the elements of excluded.
+ * The iterator of included except not the iterator of excluded.
  * 
  * @author dramage
  */
@@ -184,8 +202,8 @@ case class SubtractionSet[I](included : Set[I], excluded : Set[I]) extends Merge
   override def contains(x : I) : Boolean =
     included.contains(x) && !excluded.contains(x);
   
-  override def elements =
-    for (e <- included.elements; if !excluded.contains(e)) yield e;
+  override def iterator =
+    for (e <- included.iterator; if !excluded.contains(e)) yield e;
   
   override def --(that : MergeableSet[I]) =
     SubtractionSet(included, UnionSet(excluded, that));
@@ -208,8 +226,8 @@ case class ProductSet[I,J](_1 : MergeableSet[I], _2 : MergeableSet[J]) extends M
   override def contains(e : (I,J)) =
     _1.contains(e._1) && _2.contains(e._2);
   
-  override def elements =
-    for (e1 <- _1.elements; e2 <- _2.elements) yield (e1,e2);
+  override def iterator =
+    for (e1 <- _1.iterator; e2 <- _2.iterator) yield (e1,e2);
   
   def transpose : ProductSet[J,I] =
     ProductSet(_2, _1);
@@ -229,7 +247,7 @@ case class ProductSet[I,J](_1 : MergeableSet[I], _2 : MergeableSet[J]) extends M
 case class IntSpanSet(start : Int, end : Int) extends MergeableSet[Int] {
   override def size = end - start;
   override def contains(i : Int) = i >= start && i < end;
-  override def elements = (start until end).elements;
+  override def iterator = (start until end).iterator;
   
   override def ++(other : MergeableSet[Int]) = other match {
     case that : IntSpanSet if (that.start <= this.end || this.start <= that.end) =>
@@ -266,7 +284,7 @@ trait MergeableSetTest extends scalala.ScalalaTest {
     assertEquals(IntersectionSet(IntSpanSet(2,5),IntSpanSet(6,14)),
                  IntSpanSet(2,5) ** IntSpanSet(6,14));
 
-    // check that we don't repeat elements in UnionSet's iterator
-    assertEquals(List(0,1,2,3), UnionSet(IntSpanSet(0,3),IntSpanSet(2,4)).elements.toList);
+    // check that we don't repeat iterator in UnionSet's iterator
+    assertEquals(List(0,1,2,3), UnionSet(IntSpanSet(0,3),IntSpanSet(2,4)).iterator.toList);
   }
 }

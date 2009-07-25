@@ -132,9 +132,9 @@ object ScalalaProfilingSuite extends Scalala
     def activeDomain(sv:SparseBinaryVector) = new MergeableSet[Int] {
       override def size = sv.used;
       override def contains(i : Int) = sv.findOffset(i) >= 0;
-      override def elements =
-        if (sv.used==sv.index.length) sv.index.elements;
-          else sv.index.take(sv.used).elements;
+      override def iterator =
+        if (sv.used==sv.index.length) sv.index.iterator;
+          else sv.index.take(sv.used).iterator;
     }
 
     val indirect = profile(iter) {

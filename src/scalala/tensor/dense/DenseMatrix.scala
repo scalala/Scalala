@@ -96,7 +96,7 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
     }
     
     val (prefix,format) = {
-      if (data.elements.forall(x => x.isNaN || x.isInfinite || x == x.floor)) {
+      if (data.iterator.forall(x => x.isNaN || x.isInfinite || x == x.floor)) {
         // special case for ints
         ("", formatInt _);
       } else {
@@ -124,19 +124,19 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
       "  " + (" " * (columnWidths(col)-element.length)) + element + (if (col == cols-1) "\n" else "");
     }
     
-    (List(prefix).elements ++ builder.elements).mkString("");
+    (List(prefix).iterator ++ builder.iterator).mkString("");
   }
 }
 
 object DenseMatrix {
   /**
    * Static constructor that creates a dense matrix of the given size
-   * initialized by elements from the given values list (looping if
+   * initialized by iterator from the given values list (looping if
    * necessary).  The values are initialized column-major, i.e. values
    * is read in order to populate the matrix, filling up column 0 before
    * column 1, before column 2 ...
    */
   def apply(rows : Int, cols : Int)(values : Double*) = {
-    new DenseMatrix(rows, cols, Array.fromFunction(i => values(i % values.length))(rows * cols));
+    new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => values(i % values.length)));
   }
 }

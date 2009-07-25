@@ -48,8 +48,11 @@ trait Matrix extends Tensor2[Int,Int] {
   }
   
   /** Returns (rows,cols). */
-  @inline final def size = (rows, cols);
+  @inline final def dimensions = (rows, cols);
   
+  /** Returns the number of entries */
+  @inline final override def size = domain.size;
+
   private val _domain = ProductSet(IntSpanSet(0, rows), IntSpanSet(0, cols));
   final override def domain = _domain;
   
@@ -133,7 +136,7 @@ object Matrix {
     override def activeDomain : MergeableSet[(I2,I1)] = {
       new MergeableSet[(I2,I1)] {
         override def size = inner.activeDomain.size;
-        override def elements = inner.activeDomain.elements.map(tup => (tup._2,tup._1));
+        override def iterator = inner.activeDomain.iterator.map(tup => (tup._2,tup._1));
         override def contains(i : (I2,I1)) = inner.activeDomain.contains((i._2,i._1));
       };
     }

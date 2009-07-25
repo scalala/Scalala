@@ -60,7 +60,7 @@ class MutatingEntryIterator[A,B](entry : MutatingEntry[A,B]) extends Iterator[Mu
 }
 
 /**
- * Provides support for iterating the active elements of a MutablePartialMap.
+ * Provides support for iterating the active iterator of a MutablePartialMap.
  * 
  * @author dramage
  */
