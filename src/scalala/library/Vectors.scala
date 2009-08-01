@@ -289,7 +289,7 @@ trait Vectors extends Library with Operators {
   def sum(vectors : Seq[Vector]) : Vector = {
     val sum = vectors(0).copy.asInstanceOf[Vector];
     for (vector <- vectors.iterator.drop(1)) {
-      sum += vector;
+      sum += (vector:PartialMap[Int,Double]);
     }
     sum;
   }

@@ -21,12 +21,14 @@ package scalala.tensor.sparse
 
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 
-import scalala.tensor.Vector;
+import scalala.tensor.{Matrix,Vector};
 import scalala.collection.{MergeableSet,IntSpanSet,DomainException};
 
 import scalala.tensor.Tensor.CreateException;
 import scalala.collection.DomainException;
 import scalala.tensor.dense.DenseVector;
+import scalala.tensor.operators.TensorShapes._;
+import scalala.tensor.operators.TensorSelfOp;
 
 /**
  * Sparse matrix backed by an open address hash table with expected
@@ -35,7 +37,9 @@ import scalala.tensor.dense.DenseVector;
  */
 @serializable
 @SerialVersionUID(1)
-class SparseHashMatrix(override val rows : Int, override val cols: Int, protected val hashmap : Int2DoubleOpenHashMap) extends Matrix {
+class SparseHashMatrix(override val rows: Int,
+  override val cols: Int, protected val hashmap : Int2DoubleOpenHashMap)
+  extends Matrix with TensorSelfOp[(Int,Int),SparseHashMatrix,Shape2] {
   
   /** Primary constructor, based only on size of the map with a new backing. */
   def this(rows : Int, cols: Int) =

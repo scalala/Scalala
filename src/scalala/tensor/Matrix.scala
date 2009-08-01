@@ -20,6 +20,8 @@
 package scalala.tensor;
 
 import scalala.collection.{MergeableSet, IntSpanSet, ProductSet};
+import scalala.tensor.operators.TensorShapes._;
+import scalala.tensor.operators.TensorSelfOp;
 
 /**
  * A standard numerical Tensor2 defined over (0,0) inclusive to 
@@ -27,7 +29,7 @@ import scalala.collection.{MergeableSet, IntSpanSet, ProductSet};
  * 
  * @author dramage
  */
-trait Matrix extends Tensor2[Int,Int] {
+trait Matrix extends Tensor2[Int,Int] with TensorSelfOp[(Int,Int),Matrix,Shape2] {
 
   /**
   * Creates a matrix "like" this one, but with zeros everywhere.

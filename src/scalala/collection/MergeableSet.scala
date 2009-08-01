@@ -153,12 +153,12 @@ case class UnionSet[I](sets : Set[I]*) extends MergeableSet[I] {
       yield e;
     
   override def ++(that : MergeableSet[I]) = that match {
-    case UnionSet(those) => UnionSet((sets ++ those.asInstanceOf[Seq[Set[I]]]) : _*);
+    case UnionSet(those @ _*) => UnionSet((sets ++ those) : _*);
     case _ => UnionSet((sets ++ List(that)) :_*);
   }
   
   override def equals(other : Any) = other match {
-    case UnionSet(otherSets) => (sets == otherSets) || super.equals(other);
+    case UnionSet(otherSets @ _*) => (sets == otherSets) || super.equals(other);
     case _ => super.equals(other);
   }
 }
@@ -248,6 +248,14 @@ case class IntSpanSet(start : Int, end : Int) extends MergeableSet[Int] {
   override def size = end - start;
   override def contains(i : Int) = i >= start && i < end;
   override def iterator = (start until end).iterator;
+
+  override def foreach[U](f: Int=>U) = {
+    var i = start;
+    while(i < end) {
+      f(i);
+      i += 1;
+    }
+  }
   
   override def ++(other : MergeableSet[Int]) = other match {
     case that : IntSpanSet if (that.start <= this.end || this.start <= that.end) =>

@@ -65,7 +65,7 @@ trait MutablePartialMap[A,B] extends PartialMap[A,B] {
   
   /** Batch update of keys based on a function applied to the value. */
   def update(keys : Iterator[A], f : Function1[B,B]) : Unit =
-    for (key <- keysIterator) update(key,f(apply(key)));
+    for (key <- keys) update(key,f(apply(key)));
   
   /** Batch update of keys based on a function applied to the value. */
   def update(keys : Iterable[A], f : Function1[B,B]) : Unit =
@@ -94,6 +94,10 @@ trait MutablePartialMap[A,B] extends PartialMap[A,B] {
   /** Batch update of keys for which f returns true. */
   def update(s : Function1[A,Boolean], f : Function2[A,B,B]) : Unit =
     for ((key,value) <- iterator) if (s(key)) update(key,f(key,value));
+
+  def transform(f : B=>B) {
+    update(activeDomain,f);
+  }
 }
 
 object MutablePartialMap {

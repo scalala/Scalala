@@ -23,6 +23,7 @@ import scalala.collection.{DomainException, PartialMap, MutablePartialMap}
 import scalala.collection.{MergeableSet, IntSpanSet, ProductSet};
 
 import scalala.tensor.operators._;
+import TensorShapes._;
 
 /**
  * Implicit type promotions from arrays and sequences.
@@ -32,20 +33,8 @@ import scalala.tensor.operators._;
 trait TensorImplicits {
   import dense.DenseVector;
   
-  implicit def iSeqToDoublePartialMap[T<:AnyVal](seq : Seq[T])(implicit manifest : scala.reflect.Manifest[T]) : PartialMap[Int,Double] = {
-    val convert : (T=>Double) =
-        (if      (manifest.erasure == classOf[Byte])    ((x:Byte)    => x.asInstanceOf[Double]);
-         else if (manifest.erasure == classOf[Short])   ((x:Short)   => x.asInstanceOf[Double]);
-         else if (manifest.erasure == classOf[Int])     ((x:Int)     => x.asInstanceOf[Double]);
-         else if (manifest.erasure == classOf[Long])    ((x:Long)    => x.asInstanceOf[Double]);
-         else if (manifest.erasure == classOf[Float])   ((x:Float)   => x.asInstanceOf[Double]);
-         else if (manifest.erasure == classOf[Double])  ((x:Double)  => x.asInstanceOf[Double]);
-         else if (manifest.erasure == classOf[Boolean]) ((x:Boolean) => x.asInstanceOf[Double]);
-         else if (manifest.erasure == classOf[Char])    ((x:Char)    => x.asInstanceOf[Double]);
-         else throw new IllegalArgumentException("Unexpected value type")
-       ).asInstanceOf[T=>Double];
-    
-    return new PartialMap[Int,Double] {
+  implicit def iSeqToDoublePartialMap[T](seq : Seq[T])(implicit convert : T=>Double) = {
+    new PartialMap[Int,Double] {
       override def default = 0.0;
       override lazy val domain : MergeableSet[Int] = IntSpanSet(0, seq.length);
       override def activeDomain = domain;
@@ -111,22 +100,8 @@ object TensorImplicits extends TensorImplicits { }
  * 
  * @author dramage
  */
-trait Tensor[I] extends MutablePartialMap[I,Double] {
-  /**
-  * Creates a tensor "like" this one, but with zeros everywhere.
-  */
-  def like: Tensor[I];
-  
-  /**
-   * Returns a deep copy of this data structure.  The default implementation
-   * calls like and assigns its value to this.
-   */
-  def copy : Tensor[I] = {
-    val rv = like;
-    rv := this;
-    rv;
-  }
-  
+trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I],AnyShape] {
+
   private var _default = 0.0;
   
   /** Returns the default value for this tensor. */
@@ -284,15 +259,15 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
 //  }
   
   /** Returns the partial map representing this tensor op skipping negations. */
-  private def getPartialMap[S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) : PartialMap[I,Double] = {
+  private def getPartialMap[V<:Tensor[I],S<:TensorShape] (op : TensorOp[V,S]) : PartialMap[I,Double] = {
     op match {
-      case TensorNegation(n) => n.value.map((x:Double) => -x);
+      case TensorNegation(n) => n.value.map( (x:Double) => -x);
       case _ => op.value.asInstanceOf[PartialMap[I,Double]];
     }
   }
   
   /** Increments each element in this map by the corresponding value as returned by the given operation. */
-  def :+= [S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) : Unit = {
+  def :+= [V<:Tensor[I]] (op : TensorOp[V,_]) : Unit = {
     op match {
       case TensorMultScalar(m, s) if (s != 0) => {
         val t = getPartialMap(m);
@@ -319,11 +294,17 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
     }
   }
   
-  /** += is a fixed alias for :+= */
-  final def += [S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) = this.:+=(op);
-  
+  /** += is a fixed alias for :+=  */
+  final def += [V<:Tensor[I]]  (op : TensorOp[V,_]) = this.:+=(op);
+
+  /** Make Scala happy about inheritance */
+  final def :+= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:+=(op:PartialMap[I,Double]); }
+
+  /** Make Scala happy about inheritance */
+  final def += [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:+=(op:PartialMap[I,Double]); }
+
   /** Decrements each element in this map by the corresponding value as returned by the given operation. */
-  def :-= [S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) : Unit = {
+  def :-= [V<:Tensor[I]] (op : TensorOp[V,_]) : Unit = {
     op match {
       case TensorMultScalar(m, s) if (s != 0) => {
         val t = getPartialMap(m);
@@ -351,10 +332,18 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
   }
   
   /** -= is a fixed alias for :-= */
-  final def -= [S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) = this.:-=(op);
+  final def -= [V<:Tensor[I]] (op : TensorOp[V,_]) = this.:-=(op);
+
+
+  /** Make Scala happy about inheritance */
+  final def :-= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:-=(op:PartialMap[I,Double]); }
+
+  /** Make Scala happy about inheritance */
+  final def -= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:-=(op:PartialMap[I,Double]); }
+
   
   /** Multiplies each element in this map by the corresponding value as returned by the given operation. */
-  def :*= [S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) : Unit = {
+  def :*= [V<:Tensor[I],S<:TensorShapes.PublicShape] (op : TensorOp[V,S]) : Unit = {
     op match {
       case TensorMultScalar(m, s) => {
         val t = getPartialMap(m);
@@ -371,12 +360,15 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
         this.default *= (t.default + s);
         this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x * (t(i) + s));
       }
-      case op : TensorOp[_,_,_,_] => this :*= op.value.asInstanceOf[PartialMap[I,Double]];
+      case _ => this :*= op.value;
     }
   }
-  
+
+  /** Make Scala happy about inheritance */
+  final def :*= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:*=(op:PartialMap[I,Double]); }
+
   /** Divides each element in this map by the corresponding value as returned by the given operation. */
-  def :/= [S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) : Unit = {
+  def :/= [V<:Tensor[I],S<:TensorShapes.PublicShape] (op : TensorOp[V,S]) : Unit = {
     op match {
       case TensorMultScalar(m, s) => {
         val t = getPartialMap(m);
@@ -393,14 +385,20 @@ trait Tensor[I] extends MutablePartialMap[I,Double] {
         this.default /= (t.default + s);
         this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x / (t(i) + s));
       }
-      case op : TensorOp[_,_,_,_] => this :/= op.value.asInstanceOf[PartialMap[I,Double]];
+      case _ => this :/= op.value;
     }
   }
 
+  /** Make Scala happy about inheritance */
+  final def :/= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:/=(op:PartialMap[I,Double]); }
+
   /** Raises each element in this map to the power (in the corresponding value) in the value returned by the given operation. */
-  def :^= [S<:TensorShapes.PublicShape] (op : TensorOp[I,_,_,S]) : Unit =
+  def :^= [V<:Tensor[I],S<:PublicShape] (op : TensorOp[V,S]) : Unit =
     this :^= op.value.asInstanceOf[PartialMap[I,Double]];
   
+  /** Make Scala happy about inheritance */
+  final def :^= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:^=(op:PartialMap[I,Double]); }
+
   /** Approximate equality at a given tolerance level. */
   def =~= (tolerance : Double)(that : Tensor[I]) : Boolean = {
     (this eq that) ||
@@ -434,11 +432,7 @@ object Tensor {
 }
 
 /** A one-axis tensor is defined on single iterator from a domain. */
-trait Tensor1[I] extends Tensor[I] {
-  /**
-  * Creates a tensor "like" this one, but with zeros everywhere.
-  */
-  def like: Tensor1[I];
+trait Tensor1[I] extends Tensor[I] with TensorSelfOp[I,Tensor1[I],Shape1Col] {
 
   /** Returns the inner product of this tensor with another. */
   def dot(that : Tensor1[I]) : Double = {
@@ -449,15 +443,25 @@ trait Tensor1[I] extends Tensor[I] {
       for (k <- this.activeDomain ** that.activeDomain) {
         sum += (this(k) * that(k));
       }
-      return sum;
+      sum;
     } else {
       var sum = 0.0;
       for (value <- this.join(that)(_ * _).valuesIterator) {
         sum += value;
       }
-      return sum;
+      sum;
     }
   }
+
+
+  def +=(t: Tensor1[I]) { super.+=(t:PartialMap[(I),Double]) }
+  def -=(t: Tensor1[I]) { super.-=(t:PartialMap[(I),Double]) }
+  def :+=(t: Tensor1[I]) { super.:+=(t:PartialMap[(I),Double]) }
+  def :-=(t: Tensor1[I]) { super.:-=(t:PartialMap[(I),Double]) }
+  def :*=(t: Tensor1[I]) { super.:*=(t:PartialMap[(I),Double]) }
+  def :/=(t: Tensor1[I]) { super.:/=(t:PartialMap[(I),Double]) }
+  def :^=(t: Tensor1[I]) { super.:^=(t:PartialMap[(I),Double]) }
+
 }
 
 object Tensor1 {
@@ -465,12 +469,7 @@ object Tensor1 {
 }
 
 /** A two-axes tensor is defined on pairs of iterator from two domains. */
-trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
-  /**
-  * Creates a tensor "like" this one, but with zeros everywhere.
-  */
-  def like: Tensor2[I1,I2];
-
+trait Tensor2[I1,I2] extends Tensor[(I1,I2)] with TensorSelfOp[(I1,I2),Tensor2[I1,I2],Shape2] {
   /** Gets the value indexed by (i,j). */
   def apply(i : I1, j : I2) : Double;
   
@@ -514,6 +513,15 @@ trait Tensor2[I1,I2] extends Tensor[(I1,I2)] {
       override def contains(row : I1) = Tensor2.this.activeDomain.contains((row,col));
     };
   }
+
+  def +=(t: Tensor2[I1,I2]) { super.+=(t:PartialMap[(I1,I2),Double]) }
+  def -=(t: Tensor2[I1,I2]) { super.-=(t:PartialMap[(I1,I2),Double]) }
+  def :+=(t: Tensor2[I1,I2]) { super.:+=(t:PartialMap[(I1,I2),Double]) }
+  def :-=(t: Tensor2[I1,I2]) { super.:-=(t:PartialMap[(I1,I2),Double]) }
+  def :*=(t: Tensor2[I1,I2]) { super.:*=(t:PartialMap[(I1,I2),Double]) }
+  def :/=(t: Tensor2[I1,I2]) { super.:/=(t:PartialMap[(I1,I2),Double]) }
+  def :^=(t: Tensor2[I1,I2]) { super.:^=(t:PartialMap[(I1,I2),Double]) }
+
 }
 
 /**

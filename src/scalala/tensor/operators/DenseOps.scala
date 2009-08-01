@@ -23,6 +23,8 @@ import scalala.collection.{MergeableSet,ProductSet};
 import scalala.tensor.{Vector,Matrix};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
 
+import TensorShapes._;
+
 import VectorTypes._;
 import MatrixTypes._;
 
@@ -69,13 +71,6 @@ trait DenseVectorOps {
 /** Singleton instance of DenseVectorOps trait. */
 object DenseVectorOps extends DenseVectorOps;
 
-class RichColDenseVectorOp[V<:DenseVector](base : ColDenseVectorOp[V])
-extends RichColVectorOp[V,DenseMatrix](base);
-
-class RichRowDenseVectorOp[V<:DenseVector](base : RowDenseVectorOp[V])
-extends RichRowVectorOp[V](base);
-
-
 /** Implicits supporting DenseMatrix operations. */
 trait DenseMatrixOps {
 //  import DenseVectorOps._;
@@ -88,21 +83,10 @@ trait DenseMatrixOps {
 /** Singleton instance of DenseMatrixOps trait. */
 object DenseMatrixOps extends DenseMatrixOps;
 
-/** Extra operators for DenseMatrices. */
-class RichDenseMatrixOp[M<:DenseMatrix,V<:DenseVector](base : DenseMatrixOp[M]) {
-  def \ [V<:DenseVector] (op : ColDenseVectorOp[V]) =
-    DenseMatrixSolveDenseVector(base, op);
-  
-  def \ [M2<:DenseMatrix] (op : DenseMatrixOp[M2]) =
-    DenseMatrixSolveDenseMatrix(base, op);
-}
-
 /** Matrix solve vector, like matlab's "\", uses DenseMatrixSolveDenseMatrix. */
 case class DenseMatrixSolveDenseVector[M<:DenseMatrix,V<:DenseVector]
 (m : DenseMatrixOp[M], v : ColDenseVectorOp[V])
 extends ColDenseVectorOp[DenseVector] {
-  override def domain = v.domain;
-  
   import OperatorImplicits._;
   
   /** Solves via repurposing the DenseMatrixSolveDenseMatrix code. */
@@ -123,22 +107,26 @@ class MatrixSingularException extends RuntimeException;
  */
 case class DenseMatrixSolveDenseMatrix[M1<:DenseMatrix,M2<:DenseMatrix]
 (a : DenseMatrixOp[M1], b : DenseMatrixOp[M2])
-extends TensorReferenceOp(a) {
+extends TensorReferenceOp[M1,Shape2](a) {
   import scalala.tensor.dense.Numerics;
   
   override lazy val value = {
-    val domain = ProductSet(a.domain.asInstanceOf[ProductSet[Int,Int]]._2,
-                            b.domain.asInstanceOf[ProductSet[Int,Int]]._2);
     
+
+    val aWorking = a.working;
+    val _B = b.value; 
+    
+    val domain = ProductSet(aWorking.domain._2,
+                            _B.domain.asInstanceOf[ProductSet[Int,Int]]._2);
+
     val rows = domain._1.size;
     val cols = domain._2.size;
-    
-    
+
     // from MTJ 0.9.9
-    if (a.domain.asInstanceOf[ProductSet[Int,Int]]._1 == a.domain.asInstanceOf[ProductSet[Int,Int]]._2) {
+    if (aWorking.domain._1 == aWorking.domain._2) { // square?
       // LUSolve
-      val _A : DenseMatrix = a.working//.asInstanceOf[DenseMatrix]; // will be overwritten
-      val _B : DenseMatrix = b.value//.asInstanceOf[DenseMatrix];   // won't be overwritten
+      val _A : DenseMatrix = aWorking; // will be overwritten
+      val _B : DenseMatrix = b.value;   // won't be overwritten
       val rv = _A.matrixLike(rows,cols);
 
       if (_A.rows != _B.rows)
@@ -160,9 +148,8 @@ extends TensorReferenceOp(a) {
       // QRSolve
       val (trans,_A) = a match {
         case Tensor2Transpose(aT) => (true,aT.working.asInstanceOf[M1]);
-        case _ => (false, a.working.asInstanceOf[M1]);
+        case _ => (false, aWorking);
       }
-      val _B = b.value;
       val rv = _A.matrixLike(rows,cols);
           
       // allocate temporary solution matrix

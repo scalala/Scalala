@@ -37,11 +37,11 @@ object Tensor1Op {
  * Type aliases for Tensor1 support.
  */
 object Tensor1Types {
-  type ColTensor1Op[I,Bound<:Tensor[I],Value<:Bound] =
-    TensorOp[I,Bound,Value,Tensor1Op.Col];
+  type ColTensor1Op[+Value<:Tensor1[_]] =
+    TensorOp[Value,Tensor1Op.Col];
 
-  type RowTensor1Op[I,Bound<:Tensor[I],Value<:Bound] =
-    TensorOp[I,Bound,Value,Tensor1Op.Row];
+  type RowTensor1Op[+Value<:Tensor1[_]] =
+    TensorOp[Value,Tensor1Op.Row];
 }
 
 import Tensor1Types._;
@@ -59,9 +59,9 @@ object Tensor1Ops extends Tensor1Ops;
 
 
 /** Operators for column tensors. */
-class RichColTensor1Op[I,Bound<:Tensor1[I],Value<:Bound,OuterMult<:Tensor2[I,I]]
-(base : ColTensor1Op[I,Bound,Value])
-extends RichTensorOp[I,Bound,Value,Tensor1Op.Col](base) {
+class RichColTensor1Op[Value<:Tensor1[_]]
+(base : ColTensor1Op[Value])
+extends RichTensorOp[Value,Shape1Col](base) {
   /** Transposes this tensor to a row tensor. */
   def t = Tensor1ColToRow(base);
   
@@ -70,59 +70,55 @@ extends RichTensorOp[I,Bound,Value,Tensor1Op.Col](base) {
    * for accepting raw values because raw values cannot be
    * RowTensors without an explicit transpose.
    */
-  def * [V<:Bound] (op : RowTensor1Op[I,Bound,V])
-  (implicit tpB: TensorProductBuilder[Value,V,OuterMult]) =
-    Tensor1OuterMultTensor1[I,Bound,Value,V,OuterMult](base,op);
+  def * [V<:Tensor1[_],OuterMult<:Tensor2[_,_]] (op : RowTensor1Op[V])
+  (implicit ops: TensorProductBuilder[Value,V,OuterMult,Shape1Col,Shape1Row,Shape2]) =
+    ops.makeProduct(base,op);
 }
 
 /** Operators for row tensors. */
-class RichRowTensor1Op[I,Bound<:Tensor1[I],Value<:Bound]
-(base : RowTensor1Op[I,Bound,Value])
-extends RichTensorOp[I,Bound,Value,Tensor1Op.Row](base) {
+class RichRowTensor1Op[Value<:Tensor1[_]]
+(base : RowTensor1Op[Value])
+extends RichTensorOp[Value,Tensor1Op.Row](base) {
   
   def t = Tensor1RowToCol(base);
   
   /** Inner multiplication. */
-  def * [V<:Tensor1[I]] (op : ColTensor1Op[I,Tensor1[I],V]) =
-    base.value dot op.value;
+  def * [V<:Tensor1[_]] (op : ColTensor1Op[V])(implicit ops: Tensor1Arith[_,Value,V,Shape1Row]) =
+    ops.dotProduct(base.value, op.value);
   
   /** Vector-matrix multiplication */
-  // TODO: tighten this bound
-  def * [J,M<:Tensor2[I,J]]
-  (op : Tensor2Op[I,J,Tensor2[I,J],M])
-  (implicit tpB: TensorProductBuilder[Value,M,Tensor1[J]]) =
-    RowTensor1MultTensor2[I,J,Tensor1[J],Tensor1[J],Bound,Value,Tensor2[I,J],M](base, op);
+  def * [M<:Tensor2[_,_],R<:Tensor1[_]] 
+  (op : Tensor2Op[M])
+  (implicit ops: TensorProductBuilder[Value,M,R,Shape1Row,Shape2,Shape1Row]) =
+    ops.makeProduct(base, op);
 }
 
 /** Transposes a column to a row. */
-case class Tensor1ColToRow[I,Bound<:Tensor1[I],Value<:Bound]
-(op : TensorOp[I,Bound,Value,Tensor1Op.Col])
-extends TensorOp[I,Bound,Value,Tensor1Op.Row] {
-  override def domain = op.domain;
+case class Tensor1ColToRow[Value<:Tensor1[_]]
+(op : TensorOp[Value,Tensor1Op.Col])
+extends TensorOp[Value,Tensor1Op.Row] {
   override def value = op.value;
   override def working = op.working;
 }
 
 /** Transposes a row to a column. */
-case class Tensor1RowToCol[I,Bound<:Tensor1[I],Value<:Bound]
-(op : TensorOp[I,Bound,Value,Tensor1Op.Row])
-extends TensorOp[I,Bound,Value,Tensor1Op.Col] {
-  override def domain = op.domain;
+case class Tensor1RowToCol[Value<:Tensor1[_]]
+(op : TensorOp[Value,Tensor1Op.Row])
+extends TensorOp[Value,Tensor1Op.Col] {
   override def value = op.value;
   override def working = op.working;
 }
 
 /** Outer multiplication to create a Tensor2. */
-case class Tensor1OuterMultTensor1[I,Bound<:Tensor1[I],V1<:Bound,V2<:Bound,OuterMult<:Tensor2[I,I]]
-(a : TensorOp[I,Bound,V1,Tensor1Op.Col], b : TensorOp[I,Bound,V2,Tensor1Op.Row])
-(implicit tpB: TensorProductBuilder[V1,V2,OuterMult])
-extends TensorOp[(I,I),Tensor2[I,I],OuterMult,Shape2[I,I]] {
-  override def domain = ProductSet(a.domain,b.domain);
+case class Tensor1OuterMultTensor1[I,J,V1<:Tensor1[I],V2<:Tensor1[J],OuterMult<:Tensor2[I,J]]
+(a : TensorOp[V1,Tensor1Op.Col], b : TensorOp[V2,Tensor1Op.Row])
+(implicit tpB: TensorProductBuilder[V1,V2,OuterMult,Shape1Col,Shape1Row,Shape2])
+extends TensorOp[OuterMult,Shape2] {
   override lazy val value = {
     val av = a.value;
     val bv = b.value;
     val rv = tpB.create(av,bv);
-    for (i <- a.domain; j <- b.domain) {
+    for (i <- av.domain; j <- bv.domain) {
       rv(i,j) = av(i) * bv(j);
     }
     rv;
@@ -130,18 +126,21 @@ extends TensorOp[(I,I),Tensor2[I,I],OuterMult,Shape2[I,I]] {
 }
 
 /** Row tensor to Tensor2 multiplication. */
-case class RowTensor1MultTensor2[I,J,Bound<:Tensor1[J],Value<:Bound,Bound1<:Tensor1[I],Value1<:Bound1,Bound2<:Tensor2[I,J],Value2<:Bound2]
-(a : RowTensor1Op[I,Bound1,Value1], b : Tensor2Op[I,J,Bound2,Value2])
-(implicit tpB: TensorProductBuilder[Value1,Value2,Value])
-extends RowTensor1Op[J,Bound,Value] {
-  override def domain = b.domain.asInstanceOf[ProductSet[I,J]]._2;
+case class RowTensor1MultTensor2[I,J,Value<:Tensor1[J],Value1<:Tensor1[I],Value2<:Tensor2[I,J]]
+(a : RowTensor1Op[Value1], b : Tensor2Op[Value2])
+(implicit ops: TensorProductBuilder[Value1,Value2,Value,Shape1Row,Shape2,Shape1Row])
+extends RowTensor1Op[Value] {
   override lazy val value = {
     val vv = a.value;
     val mv = b.value;
-    val rv = tpB.create(vv,mv);
-    for (j <- domain) {
+    val rv = ops.create(vv,mv);
+    for (j <- mv.domain._2) {
       rv(j) = vv dot mv.getCol(j);
     }
     rv;
   }
+}
+
+class Tensor1Arith[I,V<:Tensor1[I],-V2<:Tensor1[I],S<:TensorShape] extends TensorArith[I,V,V2,S] {
+  def dotProduct(v: V, v2: V2):Double = v dot v2;
 }

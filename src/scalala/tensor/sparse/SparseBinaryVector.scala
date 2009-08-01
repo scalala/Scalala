@@ -19,7 +19,7 @@
  */
 package scalala.tensor.sparse
 
-import scalala.tensor.Vector;
+import scalala.tensor.{Tensor1,Vector};
 import scalala.collection.{MergeableSet,IntSpanSet,DomainException};
 
 import scalala.tensor.Tensor.CreateException;

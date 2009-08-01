@@ -20,6 +20,8 @@
 package scalala.tensor;
 
 import scalala.collection.IntSpanSet;
+import operators.TensorShapes._;
+import scalala.tensor.operators.TensorSelfOp;
 
 /**
  * A standard numerical Tensor1 defined over 0 inclusive to
@@ -27,7 +29,7 @@ import scalala.collection.IntSpanSet;
  * 
  * @author dramage
  */
-trait Vector extends Tensor1[Int] {
+trait Vector extends Tensor1[Int] with TensorSelfOp[Int,Vector,Shape1Col] {
   /**
   * Creates a vector "like" this one, but with zeros everywhere.
   */

@@ -105,6 +105,7 @@
           <args>
             <!-- <arg>-Xlog-implicits</arg> -->
             <arg>-deprecation</arg>
+            <arg>-Xexperimental</arg>
           </args>
           <scalaVersion>${scala.version}</scalaVersion>
           <mainConsole>scalala.ScalalaConsole</mainConsole>

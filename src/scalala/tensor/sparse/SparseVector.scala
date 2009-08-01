@@ -19,11 +19,14 @@
  */
 package scalala.tensor.sparse
 
-import scalala.tensor.Vector;
+import scalala.tensor.{Tensor1,Vector};
 import scalala.collection.{MergeableSet,IntSpanSet,DomainException};
 
 import scalala.tensor.Tensor.CreateException;
 import scalala.tensor.dense.DenseVector;
+
+import scalala.tensor.operators.TensorShapes._;
+import scalala.tensor.operators.TensorSelfOp;
 
 /**
  * A sparse vector implementation based on an array of indeces and
@@ -35,7 +38,8 @@ import scalala.tensor.dense.DenseVector;
  * 
  * @author dramage
  */
-class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
+class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector 
+  with TensorSelfOp[Int,Vector,Shape1Col] {
   if (domainSize < 0)
     throw new IllegalArgumentException("Invalid domain size: "+domainSize);
   
@@ -85,10 +89,7 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector {
   override def activeDomain = new MergeableSet[Int] {
     override def size = used;
     override def contains(i : Int) = findOffset(i) >= 0;
-    override def iterator = {
-      if (used == index.length) index.iterator;
-      else index.iterator.take(used);
-    }
+    override def iterator = activeKeys;
   }
 
   override def activeElements = new Iterator[(Int,Double)] {

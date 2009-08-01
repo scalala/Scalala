@@ -25,15 +25,17 @@ import scalala.collection.{MergeableSet, ProductSet, IntSpanSet};
 import scalala.tensor.Tensor.CreateException;
 
 import scalala.tensor.operators._;
+import TensorShapes._;
 
 /**
- * A vector backed by a dense array of doubles, with each column stored
+ * A matrix backed by a dense array of doubles, with each column stored
  * before the next column begins.
  * 
  * @author dramage
  */
 class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
-  DoubleArrayData(data) with Matrix with DenseTensor[(Int,Int)] {
+  DoubleArrayData(data) with Matrix with DenseTensor[(Int,Int)]
+  with TensorSelfOp[(Int,Int),DenseMatrix,Shape2] {
   
   if (nRows * nCols != data.length)
     throw new IllegalArgumentException("data.length must equal nRows*nCols");

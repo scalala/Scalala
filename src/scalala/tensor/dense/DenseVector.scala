@@ -25,6 +25,8 @@ import scalala.tensor.Vector;
 import scalala.tensor.sparse._;
 import scalala.tensor.operators._;
 
+import scalala.tensor._;
+import scalala.tensor.operators.TensorShapes._;
 import scalala.tensor.Tensor.CreateException;
 
 /**
@@ -33,7 +35,8 @@ import scalala.tensor.Tensor.CreateException;
  * @author dramage
  */
 class DenseVector(data : Array[Double]) extends
-  DoubleArrayData(data) with Vector with DenseTensor[Int] {
+  DoubleArrayData(data) with Vector with DenseTensor[Int]
+  with TensorSelfOp[Int,DenseVector,Shape1Col] {
   
   /** Constructor for a vector of zeros of the given size. */
   def this(size : Int) = this(new Array[Double](size));

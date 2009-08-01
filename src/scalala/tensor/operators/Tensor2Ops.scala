@@ -26,70 +26,67 @@ import TensorShapes._;
 
 /** Type aliases for Tensor2 support. */
 object Tensor2Types {
-  type Tensor2Op[I,J,Bound<:Tensor2[I,J],Value<:Bound] =
-    TensorOp[(I,J),Bound,Value,Shape2[I,J]];
+  type Tensor2Op[+Value<:Tensor2[_,_]] =
+    TensorOp[Value,Shape2];
 }
 
 import Tensor2Types._;
 import Tensor1Types._;
 
-/** Implicits for working with Tensor2 instances. */
 trait Tensor2Ops {
+}
+
+trait MatrixTranspose[V<:Tensor2[_,_],VT<:Tensor2[_,_]] {
+  def makeTranspose(op: Tensor2Op[V]): Tensor2Op[VT];
+}
+
+trait TensorSolver[V<:Tensor2[_,_],V2<:Tensor[_],VR<:Tensor[_],S2<:TensorShape,SR<:TensorShape] {
+  def solve(v: TensorOp[V,Shape2], v2: TensorOp[V2,S2]): TensorOp[VR,SR];
 }
 
 /** Singleton instsance of Tensor2Ops trait. */
 object Tensor2Ops extends Tensor2Ops;
 
 /** Operators on Tensor2 instances. */
-class RichTensor2Op[I,J,Bound2[X,Y]<:Tensor2[X,Y],Value2[X,Y]<:Bound2[X,Y],MV<:Value2[I,J],Bound1[X]<:Tensor1[X]]
-(base : Tensor2Op[I,J,Bound2[I,J],MV])
-extends RichTensorOp[(I,J),Bound2[I,J],MV,Shape2[I,J]](base) {
+class RichTensor2Op[MV<:Tensor2[_,_]](base : Tensor2Op[MV])
+    extends RichTensorOp[MV,Shape2](base) {
   
-  if (!base.domain.isInstanceOf[ProductSet[_,_]]) {
-    throw new IllegalArgumentException("Tensor2 instance must have its domain as a ProductSet");
+  def t[VT<:Tensor2[_,_]](implicit ops: MatrixTranspose[MV,VT]) =
+    ops.makeTranspose(base);
+
+
+  def \ [V2<:Tensor[_],S2<:TensorShape,VR<:Tensor[_],SR<:TensorShape](op : TensorOp[V2,S2])
+    (implicit solver: TensorSolver[MV,V2,VR,S2,SR]) = {
+    solver.solve(base,op);
   }
   
-  def domain2 = base.domain.asInstanceOf[ProductSet[I,J]];
-  
-  def t = Tensor2Transpose[I,J,Bound2[I,J],MV,Bound2[J,I],Value2[J,I]](base);
-  
   /** Matrix-matrix multiplication */
-  def *[K,V2<:Bound2[J,K]] (op : Tensor2Op[J,K,Bound2[J,K],V2])
-    (implicit tpB: TensorProductBuilder[MV,V2,Value2[I,K]]) =
-    Tensor2MultTensor2[I,J,K,Bound2,Value2[I,K],MV,V2](base,op);
-  
-  /** Matrix-tensor multiplication */
-  def *[V<:Bound1[J]] (op : ColTensor1Op[J,Bound1[J],V])
-    (implicit tpB: TensorProductBuilder[MV,V,Bound1[I]]) =
-    Tensor2MultColTensor1[I,J,Bound1,V,Bound2,MV,Bound1[I]](base, op);
+  def *[V2<:Tensor[_],VR<:Tensor[_],S2<:TensorShape,SR<:TensorShape] (op : TensorOp[V2,S2])
+    (implicit ops: TensorProductBuilder[MV,V2,VR,Shape2,S2,SR]) ={
+    ops.makeProduct(base,op);
+  }
+
 }
 
 /** Type-safe transposes of a Tensor2. */
-case class Tensor2Transpose[I,J,Bound<:Tensor2[I,J],Value<:Bound,BoundTranspose<:Tensor2[J,I],ValueTranspose<:BoundTranspose]
-(op : Tensor2Op[I,J,Bound,Value])
-extends Tensor2Op[J,I,BoundTranspose,ValueTranspose] {
-  override def domain = op.domain.asInstanceOf[ProductSet[I,J]].transpose;
+case class Tensor2Transpose[I,J,Value<:Tensor2[I,J],ValueTranspose<:Tensor2[J,I]]
+(op : Tensor2Op[Value])
+extends Tensor2Op[ValueTranspose] {
   override def value = op.value.transpose.asInstanceOf[ValueTranspose];
   override def working = op.working.asInstanceOf[ValueTranspose];
 }
 
 /** Multiplication of tensor2 to tensor2. */
-case class Tensor2MultTensor2[I,INNER,J,Bound2[X,Y]<:Tensor2[X,Y],Value<:Bound2[I,J],V1<:Bound2[I,INNER],V2<:Bound2[INNER,J]]
-(a : Tensor2Op[I,INNER,Bound2[I,INNER],V1], b : Tensor2Op[INNER,J,Bound2[INNER,J],V2])
-(implicit tpB: TensorProductBuilder[V1,V2,Value])
-extends Tensor2Op[I,J,Bound2[I,J],Value] {
-  if (a.domain.asInstanceOf[ProductSet[I,INNER]]._2 != b.domain.asInstanceOf[ProductSet[INNER,J]]._1)
-    throw new DomainException;
-  
-  override def domain =
-    ProductSet[I,J](a.domain.asInstanceOf[ProductSet[I,INNER]]._1, b.domain.asInstanceOf[ProductSet[INNER,J]]._2);
-  
+case class Tensor2MultTensor2[I,INNER,J,Value<:Tensor2[I,J],V1<:Tensor2[I,INNER],V2<:Tensor2[INNER,J]]
+(a : Tensor2Op[V1], b : Tensor2Op[V2])
+(implicit tpB: TensorProductBuilder[V1,V2,Value,Shape2,Shape2,Shape2])
+extends Tensor2Op[Value] {
   override def value = {
-    val innerDomain = a.domain.asInstanceOf[ProductSet[I,INNER]]._2;
     val av = a.value;
     val bv = b.value;
     val rv = tpB.create(av,bv);
-    for (i <- domain._1; j <- domain._2) {
+    for (i <- rv.domain.asInstanceOf[ProductSet[I,INNER]]._1;
+         j <- rv.domain.asInstanceOf[ProductSet[INNER,J]]._2) {
       rv(i,j) = av.getRow(i) dot bv.getCol(j);
     }
     rv;
@@ -98,19 +95,16 @@ extends Tensor2Op[I,J,Bound2[I,J],Value] {
 }
 
 /** Right multiplication of a Tensor2 by a column. */
-case class Tensor2MultColTensor1[I,J,Bound1[X]<:Tensor1[X],VV<:Bound1[J],Bound2[X,Y]<:Tensor2[X,Y],MV<:Bound2[I,J],Value<:Bound1[I]]
-(a : Tensor2Op[I,J,Bound2[I,J],MV], b : ColTensor1Op[J,Bound1[J],VV])
-(implicit tpB: TensorProductBuilder[MV,VV,Value])
-extends RowTensor1Op[I,Bound1[I],Value] {
-  if (a.domain.asInstanceOf[ProductSet[I,J]]._2 != b.domain)
-    throw new DomainException;
-    
-  override def domain = a.domain.asInstanceOf[ProductSet[I,J]]._1;
+case class Tensor2MultColTensor1[I,J,VV<:Tensor1[J],MV<:Tensor2[I,J],Value<:Tensor1[I]]
+(a : Tensor2Op[MV], b : ColTensor1Op[VV])
+(implicit tpB: TensorProductBuilder[MV,VV,Value,Shape2,Shape1Col,Shape1Col])
+extends ColTensor1Op[Value] {
   
   override def value = {
     val mv = a.value;
     val vv = b.value;
     val rv = tpB.create(mv,vv);
+    val domain = mv.domain._1;
     for (i <- domain) {
       rv(i) = mv.getRow(i) dot vv;
     }

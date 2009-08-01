@@ -43,15 +43,12 @@ trait SparseBinaryVectorOps {
    implicit val sparseBVBuilder = new TensorBuilder[SparseBinaryVector] {
      def like(t: SparseBinaryVector): SparseBinaryVector = new SparseBinaryVector(t.size);
    }
-  implicit def iSparseBinaryVectorToTensorIdentity(v : SparseBinaryVector) =
-    new TensorIdentity[Int,Vector,SparseBinaryVector,Tensor1Op.Col](v);
   
   implicit def iSparseBinaryVectorToRichColVectorOp(v : SparseBinaryVector) =
-    new RichColVectorOp(ColSparseBinaryVectorAsSparseVectorIdentity(v));
+    new RichColTensor1Op(ColSparseBinaryVectorAsSparseVectorIdentity(v));
   
   case class ColSparseBinaryVectorAsSparseVectorIdentity(val tensor : SparseBinaryVector)
-  extends TensorOp[Int,Vector,SparseVector,Tensor1Op.Col] {
-    override def domain = tensor.domain;
+  extends TensorOp[SparseVector,Tensor1Op.Col] {
     override lazy val value = tensor.toSparseVector;
     override lazy val working = value.copy;
   }

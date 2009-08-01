@@ -90,3 +90,5 @@ object ScalalaTest {
     }
   }
 }
+
+object TestConsoleMain extends ScalalaTest.TestConsoleMain;
