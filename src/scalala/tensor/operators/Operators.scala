@@ -188,8 +188,8 @@ trait OperatorImplicits extends TensorOps
   (op : RowTensor1Op[V]) =
     new RichRowTensor1Op[V](op);
 
-  implicit def iTensor2OpToRichTensor2Op[V<:Tensor2[_,_] with Tensor[_]]
-  (op : V with TensorSelfOp[_,V,Shape2]) =
+  implicit def iTensorX2OpToRichTensor2Op[V<:Tensor2[_,_] with TensorSelfOp[_,V,Shape2]]
+  (op : V):RichTensor2Op[V]  = 
     new RichTensor2Op[V](op);
   
   
