@@ -20,7 +20,7 @@
 package scalala.tensor.operators;
 
 import scalala.collection.{MergeableSet,ProductSet};
-import scalala.tensor.{Vector,Matrix};
+import scalala.tensor.{Vector,Matrix,Tensor1,Tensor2};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
 
 import TensorShapes._;
@@ -38,6 +38,8 @@ object DenseVectorTypes {
 }
 
 import DenseVectorTypes._;
+import Tensor1Types._;
+import Tensor2Types._;
 
 /** Type aliases supporting DenseMatrix operators. */
 object DenseMatrixTypes {
@@ -46,26 +48,33 @@ object DenseMatrixTypes {
 
   type DenseMatrixTranspose[M<:DenseMatrix] =
     MatrixTranspose[M,Matrix];
+
 }
 
 import DenseMatrixTypes._;
 
 /** Implicits supporting DenseVector operations. */
 trait DenseVectorOps {
-//  implicit def iColDenseVectorOpTopRichColVectorOp[V<:DenseVector]
-//  (op : ColDenseVectorOp[V]) =
-//    new RichColDenseVectorOp(op);
-//
-//  implicit def iRowDenseVectorOpToRichRowDenseVectorOp[V<:DenseVector]
-//  (op : RowDenseVectorOp[V]) =
-//    new RichRowDenseVectorOp(op);
-  
-//  implicit def iArrayToColDenseVectorOp(array : Array[Double])
-//  : ColDenseVectorOp[DenseVector] =
-//    new DenseVector(array);
-//  
-//  implicit def iArrayToRichColVectorOp(array : Array[Double]) =
-//    new RichColDenseVectorOp(new DenseVector(array));
+  implicit val denseVectorColArith = new Tensor1Arith[Int,DenseVector,Tensor1[Int],Shape1Col];
+  implicit val denseVectorRowArith = new Tensor1Arith[Int,DenseVector,Tensor1[Int],Shape1Row];
+
+
+  implicit val denseVectorPBuilder: TensorProductBuilder[DenseVector,Vector,DenseMatrix,Shape1Col,Shape1Row,Shape2] =
+  new TensorProductBuilder[DenseVector,Vector,DenseMatrix,Shape1Col,Shape1Row,Shape2] {
+    def create(t: DenseVector, t2: Vector) = new DenseMatrix(t.size,t2.size);
+    def makeProduct(t: ColTensor1Op[DenseVector], t2: RowTensor1Op[Vector]) = {
+      Tensor1OuterMultTensor1[Int,Int,DenseVector,Vector,DenseMatrix](t,t2);
+    }
+  }
+
+  class DenseVectorMPBuilder extends TensorProductBuilder[DenseVector,Matrix,DenseVector,Shape1Row,Shape2,Shape1Row] {
+    def create(t: DenseVector,t2: Matrix) = t.vectorLike(t2.cols);
+    def makeProduct(t: RowTensor1Op[DenseVector], t2: Tensor2Op[Matrix]) = {
+      RowTensor1MultTensor2[Int,Int,DenseVector,DenseVector,Matrix](t,t2);
+    }
+  }
+
+  implicit val denseVectorMPBuilder = new DenseVectorMPBuilder;
 }
 
 /** Singleton instance of DenseVectorOps trait. */
@@ -73,11 +82,42 @@ object DenseVectorOps extends DenseVectorOps;
 
 /** Implicits supporting DenseMatrix operations. */
 trait DenseMatrixOps {
-//  import DenseVectorOps._;
-//  
-//  implicit def iDenseMatrixOpToRichDenseMatrixOp[M<:DenseMatrix]
-//  (op : DenseMatrixOp[M]) =
-//    new RichDenseMatrixOp(op);
+  implicit val denseMatrixArith = new TensorArith[(Int,Int),DenseMatrix,Tensor2[Int,Int],Shape2];
+
+  implicit val dmtranspose = new MatrixTranspose[DenseMatrix,DenseMatrix] {
+    def makeTranspose(op: Tensor2Op[DenseMatrix]) = Tensor2Transpose[Int,Int,DenseMatrix,DenseMatrix](op);
+  }
+
+  implicit val denseMatrixSolveDenseVector: TensorSolver[DenseMatrix,DenseVector,DenseVector,Shape1Col,Shape1Col] =
+    new TensorSolver[DenseMatrix,DenseVector,DenseVector,Shape1Col,Shape1Col] {
+      def solve(m: TensorOp[DenseMatrix,Shape2], v: TensorOp[DenseVector,Shape1Col]): TensorOp[DenseVector,Shape1Col] =  {
+        DenseMatrixSolveDenseVector(m,v);
+      }
+    }
+
+  implicit val denseMatrixSolveDenseMatrix = new TensorSolver[DenseMatrix,DenseMatrix,DenseMatrix,Shape1Col,Shape2] {
+    def solve(m: TensorOp[DenseMatrix,Shape2], m2: TensorOp[DenseMatrix,Shape2]): TensorOp[DenseMatrix,Shape2] =  {
+      DenseMatrixSolveDenseMatrix(m,m2);
+    }
+  }
+
+  implicit val denseMatrixPBuilder: TensorProductBuilder[DenseMatrix,Matrix,DenseMatrix,Shape2,Shape2,Shape2] = {
+    new TensorProductBuilder[DenseMatrix,Matrix,DenseMatrix,Shape2,Shape2,Shape2] {
+      def create(t: DenseMatrix, t2: Matrix) = new DenseMatrix(t.rows,t2.cols);
+      def makeProduct(t: Tensor2Op[DenseMatrix], t2: Tensor2Op[Matrix]) = {
+        Tensor2MultTensor2[Int,Int,Int,DenseMatrix,DenseMatrix,Matrix](t,t2);
+      }
+    }
+  }
+
+  implicit val denseMatrixVPBuilder : TensorProductBuilder[DenseMatrix,Vector,DenseVector,Shape2,Shape1Col,Shape1Col] =
+    new TensorProductBuilder[DenseMatrix,Vector,DenseVector,Shape2,Shape1Col,Shape1Col] {
+      def create(t: DenseMatrix, t2: Vector) = new DenseVector(t.rows);
+      def makeProduct(t: Tensor2Op[DenseMatrix], t2: ColTensor1Op[Vector]) = {
+        Tensor2MultColTensor1[Int,Int,Vector,DenseMatrix,DenseVector](t,t2);
+      }
+  }
+
 }
 
 /** Singleton instance of DenseMatrixOps trait. */

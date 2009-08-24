@@ -34,6 +34,8 @@ import Tensor2Types._;
 import Tensor1Types._;
 
 trait Tensor2Ops {
+  implicit def tensor2Arith[I,J] = new TensorArith[(I,J),Tensor2[I,J],Tensor2[I,J],Shape2];
+
 }
 
 trait MatrixTranspose[V<:Tensor2[_,_],VT<:Tensor2[_,_]] {

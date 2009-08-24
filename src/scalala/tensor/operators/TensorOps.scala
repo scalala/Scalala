@@ -22,33 +22,6 @@ package scalala.tensor.operators;
 import scalala.collection.{MergeableSet, IntSpanSet, PartialMap, DomainException};
 import scalala.tensor.{Tensor1, Tensor, Tensor2, Vector, Matrix};
 
-/** Implicits for TensorOp support. */
-trait TensorOps {
-
-
-////  implicit def iTensorToTensorOp[V<:Tensor[I]](tensor : V) =
-////    TensorIdentity[I,Tensor[I],V,Any](tensor);
-//  implicit def iTensorToTensorOp[I](tensor : Tensor[I]) =
-//    TensorIdentity[I,Tensor[I],Tensor[I],Any](tensor);
-//
-////  implicit def iTensorToRichTensorOp[V<:Tensor[I]](tensor : V) =
-////    new RichTensorOp[I,Tensor[I],V,Any](tensor);
-//  implicit def iTensorToRichTensorOp[I](tensor : Tensor[I]) =
-//    new RichTensorOp[I,Tensor[I],Tensor[I],Any](tensor);
-
-//  implicit def iScalarToRichScalarTensorOp(s : Double) =
-//    new RichScalarTensorOp(s);
-
-//  implicit def iTensorOpToTensor[I,Base<:Tensor[I],V<:Base]
-//   (x : TensorOp[I,Base,V,_]) : V =
-//    x.value;
-
-}
-
-/** Singleton instance of TensorOps trait. */
-object TensorOps extends TensorOps;
-
-
 object TensorShapes {
   /** The shape of a tensor. */
   abstract sealed class TensorShape;
@@ -70,23 +43,14 @@ object TensorShapes {
 
 import TensorShapes._;
 
-trait TensorBuilder[Value<:Tensor[_]] {
-  /**
-  * Creates a tensor "like" the provided tensor, but zero'd out.
-  */
-  def like(t: Value): Value;
-  def ones(t: Value) = {
-    val r = like(t);
-    r += 1;
-    r;
-  }
-  def copy(t: Value): Value = {
-    // stupid type system
-    val a = like(t);
-    a.asInstanceOf[Tensor[Any]] :+= t.asInstanceOf[Tensor[Any]];
-    a;
-  }
+
+/** Implicits for TensorOp support. */
+trait TensorOps {
+  implicit def tensorArith[I] = new TensorArith[I,Tensor[I],Tensor[I],AnyShape];
 }
+
+/** Singleton instance of TensorOps trait. */
+object TensorOps extends TensorOps;
 
 /**
 * Creates a tensor that can be used as the result of multiplying
@@ -321,13 +285,6 @@ class RichScalarTensorOp(s : Double) {
   (base : TensorOp[Value,Shape])
    =
     TensorNeScalar(base, s);
-}
-
-/** A reference to an underlying tensor. */
-case class TensorIdentity[Value<:Tensor[_],Shape<:TensorShape]
-(tensor : Value)(implicit b: TensorBuilder[Value]) extends TensorOp[Value,Shape] {
-  override def value = tensor;
-  override def working = b.copy(tensor);
 }
 
 /** Tensors should extends this to maintain their type in TensorOps. */

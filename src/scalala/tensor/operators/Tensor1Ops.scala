@@ -52,6 +52,9 @@ import Tensor2Types._;
  * Implicits for row and column Tensor1's.
  */
 trait Tensor1Ops extends TensorOps {
+  implicit def tensor1ColArith[I] = new Tensor1Arith[I,Tensor1[I],Tensor1[I],Shape1Col];
+  implicit def tensor1RowArith[I] = new TensorArith[I,Tensor1[I],Tensor1[I],Shape1Row];
+
 }
 
 /** Singleton instance of Tensor1Ops trait. */

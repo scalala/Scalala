@@ -21,7 +21,7 @@ package scalala.tensor.operators;
 
 import scalala.collection.{MergeableSet, IntSpanSet, ProductSet, DomainException};
                              
-import scalala.tensor.{Vector,Matrix};
+import scalala.tensor.{Vector,Matrix,Tensor2};
 
 import TensorShapes._;
 
@@ -36,9 +36,37 @@ object MatrixTypes {
 
 import MatrixTypes._;
 import VectorTypes._;
+import Tensor1Types._;
+import Tensor2Types._;
 
 /** Implicits supporting Matrix operations. */
 trait MatrixOps {
+
+  implicit val matrixArith = new TensorArith[(Int,Int),Matrix,Tensor2[Int,Int],Shape2];
+
+  implicit val mtranspose = new MatrixTranspose[Matrix,Matrix] {
+    def makeTranspose(op: Tensor2Op[Matrix]) = Tensor2Transpose[Int,Int,Matrix,Matrix](op);
+  }
+
+  implicit val matrixVPBuilder : TensorProductBuilder[Matrix,Vector,Vector,Shape2,Shape1Col,Shape1Col] = {
+    new TensorProductBuilder[Matrix,Vector,Vector,Shape2,Shape1Col,Shape1Col] {
+      def create(t: Matrix, t2: Vector):Vector = t.vectorLike(t.rows);
+      def makeProduct(t: Tensor2Op[Matrix], t2: ColTensor1Op[Vector]) = {
+        Tensor2MultColTensor1[Int,Int,Vector,Matrix,Vector](t,t2);
+      }
+    }
+  }
+
+  implicit val matrixPBuilder : TensorProductBuilder[Matrix,Matrix,Matrix,Shape2,Shape2,Shape2] = {
+    new TensorProductBuilder[Matrix,Matrix,Matrix,Shape2,Shape2,Shape2] {
+      def create(t: Matrix, t2: Matrix):Matrix = t.matrixLike(t.rows,t2.cols);
+      def makeProduct(t: Tensor2Op[Matrix], t2: Tensor2Op[Matrix]) = {
+        Tensor2MultTensor2[Int,Int,Int,Matrix,Matrix,Matrix](t,t2);
+      }
+    }
+  }
+
+
 }
 
 /** Singleton instance of MatrixOps trait. */
