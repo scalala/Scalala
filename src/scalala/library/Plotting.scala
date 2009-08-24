@@ -19,7 +19,7 @@
  */
 package scalala.library;
 
-import scala.collection.mutable.ListBuffer;
+import scala.collection.mutable.ArrayBuffer;
 
 import scalala.collection.PartialMap;
 import scalala.tensor.{Tensor,Vector,Matrix};
@@ -536,20 +536,20 @@ object Plotting {
   
   /** Class that holds a collection of Figure instances */
   class Figures {
-    private val figures = ListBuffer[Figure]();
+    private val figures = ArrayBuffer[Option[Figure]]();
     
     /** Returns the number of the given figure */
-    def number(figure : Figure) : Int = figures.indexOf(figure);
+    def number(figure : Figure) : Int = figures.indexOf(Some(figure));
     
     /** Returns the current figure */
     var figure_ : Int = 0;
-    def figure : Figure = figures(figure_);
+    def figure : Figure = figures(figure_).get;
     def figure_=(number : Int) : Unit = {
       while (figures.length <= number) {
-        figures += null;
+        figures += None;
       }
-      if (figures(number) == null) {
-        figures(number) = new Figure(this);
+      if (figures(number) == None) {
+        figures(number) = Some(new Figure(this));
       }
       figure_ = number;
     }
@@ -564,7 +564,7 @@ object Plotting {
   /** A Figure holds a collection of XYPlot instances */
   class Figure(figures : Figures) {
     /** List of plots in the figure */
-    private val plots = ListBuffer[XYPlot]();
+    private val plots = ArrayBuffer[XYPlot]();
 
     /** Clears the current plot */
     def clear() {
