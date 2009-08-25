@@ -34,13 +34,13 @@ trait IO extends Library {
   import java.lang.Double.parseDouble;
   
   def dlmread(file : String) : Matrix = {
-    val numCols = scala.io.Source.fromFile(new File(file)).getLines().next.trim.split("\\s+").length;
-    val numRows = scala.io.Source.fromFile(new File(file)).getLines().map(_ => 1).reduceLeft(_+_);
+    val numCols = scala.io.Source.fromFile(new File(file)).getLines.next.trim.split("\\s+").length;
+    val numRows = scala.io.Source.fromFile(new File(file)).getLines.map(_ => 1).reduceLeft(_+_);
     
     val m = new DenseMatrix(numRows, numCols);
     
     var i = 0;
-    for (line <- scala.io.Source.fromFile(new File(file)).getLines()) {
+    for (line <- scala.io.Source.fromFile(new File(file)).getLines) {
       var j = 0;
       for (entry <- line.trim.split("\\s+").map(parseDouble)) {
         m(i,j) = entry;
