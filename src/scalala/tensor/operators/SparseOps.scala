@@ -40,10 +40,6 @@ import SparseBinaryVectorTypes._;
 /** Implicits supporting DenseVector operations. */
 trait SparseBinaryVectorOps {
 
-   implicit val sparseBVBuilder = new TensorBuilder[SparseBinaryVector] {
-     def like(t: SparseBinaryVector): SparseBinaryVector = new SparseBinaryVector(t.size);
-   }
-  
   implicit def iSparseBinaryVectorToRichColVectorOp(v : SparseBinaryVector) =
     new RichColTensor1Op(ColSparseBinaryVectorAsSparseVectorIdentity(v));
   
