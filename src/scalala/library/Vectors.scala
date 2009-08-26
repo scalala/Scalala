@@ -95,10 +95,22 @@ trait Vectors extends Library with Operators {
 //    sum(op.value);
   
   /** Log each element of a vector or matrix */
+
   def log[I](v : PartialMap[I,Double]) = v.map(Math.log _);
   def log(v : Iterator[Double]) = v.map(Math.log);
   def log(v : Iterable[Double]) = v.map(Math.log);
   def log(v : Seq[Double]) = v.map(Math.log);
+  
+  def sin[I](v : PartialMap[I,Double]) = v.map(Math.sin _);
+  def sin(v : Iterator[Double]) = v.map(Math.sin);
+  def sin(v : Iterable[Double]) = v.map(Math.sin);
+  def sin(v : Seq[Double]) = v.map(Math.sin);
+
+  def cos[I](v : PartialMap[I,Double]) = v.map(Math.cos _);
+  def cos(v : Iterator[Double]) = v.map(Math.cos);
+  def cos(v : Iterable[Double]) = v.map(Math.cos);
+  def cos(v : Seq[Double]) = v.map(Math.cos);
+
 //  def log[I](op : TensorOp[I]) : Double = log(op.value);
   
   /** The maximum value of the map. */
