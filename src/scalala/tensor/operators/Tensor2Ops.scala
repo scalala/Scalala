@@ -92,8 +92,8 @@ extends Tensor2Op[Value] {
     val av = a.value;
     val bv = b.value;
     val rv = tpB.create(av,bv);
-    for (i <- rv.domain.asInstanceOf[ProductSet[I,INNER]]._1;
-         j <- rv.domain.asInstanceOf[ProductSet[INNER,J]]._2) {
+    for (i <- av.domain._1;
+         j <- bv.domain._2) {
       rv(i,j) = av.getRow(i) dot bv.getCol(j);
     }
     rv;
