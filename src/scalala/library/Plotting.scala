@@ -632,8 +632,8 @@ object Plotting {
     def writeEPS(out : java.io.OutputStream, dpi : Int) {
       // default dpi is 72
       val scale = dpi / 72.0;
-      val width  = (frame.getContentPane.getSize.width  * scale).asInstanceOf[Int];
-      val height = (frame.getContentPane.getSize.height * scale).asInstanceOf[Int];
+      val width  = (frame.getContentPane.getSize.width  * scale).toInt;
+      val height = (frame.getContentPane.getSize.height * scale).toInt;
 
       // an attempt at getting the renderer to do high-res correctly. failed.
       /*
@@ -663,12 +663,12 @@ object Plotting {
     def writePNG(out : java.io.OutputStream, dpi : Int) {
       // default dpi is 72
       val scale = dpi / 72.0;
-      val width  = (frame.getContentPane.getSize.width  * scale).asInstanceOf[Int];
-      val height = (frame.getContentPane.getSize.height * scale).asInstanceOf[Int];
+      val width  = (frame.getContentPane.getSize.width  * scale).toInt;
+      val height = (frame.getContentPane.getSize.height * scale).toInt;
       
       import java.awt.image.BufferedImage;
       val image = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
-      val g2d = image.getGraphics.asInstanceOf[java.awt.Graphics2D];
+      val g2d = image.createGraphics();
       g2d.scale(scale, scale);
       frame.getContentPane.paintAll(g2d);
       g2d.dispose;
@@ -691,8 +691,8 @@ object Plotting {
       import com.lowagie.text.pdf.PdfTemplate;
       import com.lowagie.text.pdf.PdfWriter;
 
-      val width  = (frame.getContentPane.getSize.width).asInstanceOf[Int];
-      val height = (frame.getContentPane.getSize.height).asInstanceOf[Int];
+      val width  = (frame.getContentPane.getSize.width).toInt;
+      val height = (frame.getContentPane.getSize.height).toInt;
 
       // step 1: creation of a document-object
       val document = new Document();

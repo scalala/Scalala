@@ -31,11 +31,6 @@ import scalala.tensor.operators.TensorSelfOp;
  */
 trait Matrix extends Tensor2[Int,Int] with TensorSelfOp[(Int,Int),Matrix,Shape2] {
 
-  /**
-  * Creates a matrix "like" this one, but with zeros everywhere.
-  */
-  def like: Matrix;
-
   /** The number of rows in this matrix. */
   def rows : Int;
   
@@ -96,8 +91,6 @@ trait Matrix extends Tensor2[Int,Int] with TensorSelfOp[(Int,Int),Matrix,Shape2]
   * Creates a matrix "like" this matrix, with the dimensionality provided
   */
   def matrixLike(rows: Int, cols: Int): Matrix;
-  
-  override def copy : Matrix = super.copy.asInstanceOf[Matrix];
   
   /*
   def apply(select : (Int => (Int,Int))) : Vector = {

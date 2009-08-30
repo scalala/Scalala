@@ -208,21 +208,21 @@ trait OperatorTest extends scalala.library.Library with OperatorImplicits with s
   
   /** Tests that static types are correctly propogated through operators. */
   test("Operators:StaticTypePropogation") {
-   /* assertEquals(
-      typeOf(Vector(1,2,3).asInstanceOf[Tensor[Int]]),
-      typeOf(Vector(1,2,3).asInstanceOf[Tensor[Int]] + 1 value));*/
+    assertEquals(
+      typeOf(Vector(1,2,3):Tensor[Int]),
+      typeOf( (Vector(1,2,3):Tensor[Int]) + 1 value));
     
     assertEquals(
-      typeOf(Vector(1,2,3).asInstanceOf[Tensor1[Int]]),
-      typeOf(Vector(1,2,3).asInstanceOf[Tensor1[Int]] + 1 value));
+      typeOf(Vector(1,2,3):Tensor1[Int]),
+      typeOf( (Vector(1,2,3):Tensor1[Int]) + 1 value));
     
     assertEquals(
-      typeOf(Vector(1,2,3).asInstanceOf[Vector]),
-      typeOf(Vector(1,2,3).asInstanceOf[Vector] + 1 value));
+      typeOf(Vector(1,2,3):Vector),
+      typeOf( (Vector(1,2,3):Vector) + 1 value));
     
     assertEquals(
-      typeOf(Vector(1,2,3).asInstanceOf[DenseVector]),
-      typeOf(Vector(1,2,3).asInstanceOf[DenseVector] + 1 value));
+      typeOf(Vector(1,2,3)),
+      typeOf(Vector(1,2,3) + 1 value));
   }
   
   test("Operators:Vector") {

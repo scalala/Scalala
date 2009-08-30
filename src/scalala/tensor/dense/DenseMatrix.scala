@@ -63,7 +63,7 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
   private val _colDomain = IntSpanSet(0, rows);
   override def activeDomainInCol(col : Int) = _colDomain;
   
-  override def copy = new DenseMatrix(rows, cols, data.toArray).asInstanceOf[this.type];
+  override def copy = new DenseMatrix(rows, cols, data.toArray);
 
   override def like = new DenseMatrix(rows, cols);
   
@@ -81,7 +81,7 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
       else if (x.isNaN)
         " NaN"
       else
-        x.asInstanceOf[Int].toString;
+        x.toInt.toString;
     }
 
     def formatDouble(x : Double) : String = {
@@ -103,7 +103,7 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
         ("", formatInt _);
       } else {
         val maxlog = scalala.Scalala.max(for (value <- data; if !value.isInfinite && !value.isNaN) yield Math.log(value));
-        val exponent = ((maxlog / Math.log(10)) + 1e-3).asInstanceOf[Int];
+        val exponent = ((maxlog / Math.log(10)) + 1e-3).toInt;
         if (Math.abs(exponent) >= 3) {
           // special case for very large or small numbers
           val scale = Math.pow(10,exponent);

@@ -299,7 +299,7 @@ trait Vectors extends Library with Operators {
   
   /** Returns the sum vector of a bunch of vectors. */
   def sum(vectors : Seq[Vector]) : Vector = {
-    val sum = vectors(0).copy.asInstanceOf[Vector];
+    val sum = vectors(0).copy;
     for (vector <- vectors.iterator.drop(1)) {
       sum += (vector:PartialMap[Int,Double]);
     }

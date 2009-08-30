@@ -92,8 +92,8 @@ private object Scratch {
   
   import OperatorImplicits._;
   
-  val dense : DenseVector = scalala.Scalala.Vector(1,2,3).asInstanceOf[DenseVector]
-  val vector = scalala.Scalala.Vector(1,2,3).asInstanceOf[scalala.tensor.Vector];
+  val dense : DenseVector = scalala.Scalala.Vector(1,2,3);
+  val vector : Vector = scalala.Scalala.Vector(1,2,3);
 
   val mixed = vector + dense;
 
