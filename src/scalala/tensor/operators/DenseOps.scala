@@ -127,6 +127,25 @@ trait DenseMatrixOps {
 /** Singleton instance of DenseMatrixOps trait. */
 object DenseMatrixOps extends DenseMatrixOps;
 
+case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M]) 
+    extends TensorReferenceOp[M,Shape2](m) {
+  
+  override lazy val value = {
+    val r = m.working;
+    val (rows,cols) = r.dimensions;
+    require(rows == cols, "Matrix is not square!");
+
+    scalala.tensor.dense.Numerics.lapack.potrf("L", rows, r.data);
+    // Now zero out the rest.
+    for(k <- 1 until cols) {
+      java.util.Arrays.fill(r.data, k * rows, k * rows + k,0.0);
+    }
+    
+    r;
+  }
+}
+
+/*
 // Based on "Efficient Cholesky" http://www.maths.ed.ac.uk/~s0455378/EfficientCholesky.pdf
 // Returns a lower triangular "square root" of this matrix
 // http://www.hpjava.org/papers/HPJava/HPJava/node33.html
@@ -152,7 +171,7 @@ case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M])
       }
 
       for(j <- i+1 until cols;
-          // col j := col j - r(i,i) * r(j,i) * col i
+          // col j := col j - r(j,i) * r(k,i)
           k <- j until rows) {
         r(k,j) -= r(j,i) * r(k,i);
       }
@@ -160,8 +179,8 @@ case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M])
 
     r;
   }
-  
 }
+*/
 
 /** Matrix solve vector, like matlab's "\", uses DenseMatrixSolveDenseMatrix. */
 case class DenseMatrixSolveDenseVector[M<:DenseMatrix,V<:DenseVector]

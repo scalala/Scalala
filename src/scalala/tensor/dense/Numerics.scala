@@ -443,12 +443,14 @@ class JLAPACK_LAPACKkernel {
                 ld(kd + 1), B, 0, ld(n), info);
         return info.val;
     }
+    */
 
-    public int potrf(UpLo uplo, int n, double[] A) {
-        intW info = new intW(0);
-        Dpotrf.dpotrf(uplo(uplo), n, A, 0, ld(n), info);
-        return info.val;
+    def potrf(uplo: String, n: Int, A: Array[Double]) = {
+        val info = new intW(0);
+        Dpotrf.dpotrf(uplo, n, A, 0, ld(n), info);
+        info.`val`;
     }
+    /*
 
     public int potrs(UpLo uplo, int n, int nrhs, double[] A, double[] B) {
         intW info = new intW(0);
