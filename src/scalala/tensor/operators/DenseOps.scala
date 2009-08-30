@@ -88,6 +88,10 @@ trait DenseMatrixOps {
     def makeTranspose(op: Tensor2Op[DenseMatrix]) = Tensor2Transpose[Int,Int,DenseMatrix,DenseMatrix](op);
   }
 
+  implicit val dmCholesky = new CholeskyDecomposer[DenseMatrix,DenseMatrix] {
+    def decompose(op: Tensor2Op[DenseMatrix]) = DenseCholeskyDecomposition[DenseMatrix](op);
+  }
+
   implicit val denseMatrixSolveDenseVector: TensorSolver[DenseMatrix,DenseVector,DenseVector,Shape1Col,Shape1Col] =
     new TensorSolver[DenseMatrix,DenseVector,DenseVector,Shape1Col,Shape1Col] {
       def solve(m: TensorOp[DenseMatrix,Shape2], v: TensorOp[DenseVector,Shape1Col]): TensorOp[DenseVector,Shape1Col] =  {
@@ -122,6 +126,42 @@ trait DenseMatrixOps {
 
 /** Singleton instance of DenseMatrixOps trait. */
 object DenseMatrixOps extends DenseMatrixOps;
+
+// Based on "Efficient Cholesky" http://www.maths.ed.ac.uk/~s0455378/EfficientCholesky.pdf
+// Returns a lower triangular "square root" of this matrix
+// http://www.hpjava.org/papers/HPJava/HPJava/node33.html
+case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M]) 
+    extends TensorReferenceOp[M,Shape2](m) {
+  
+  override lazy val value = {
+    val r = m.working;
+    val (rows,cols) = r.dimensions;
+    require(rows == cols, "Matrix is not square!");
+    for(i <- 0 until cols) {
+      // divide rows i+1 to rows by r(i,i);
+
+      // make lower triangular:
+      for(k <- i+1 until cols) {
+        r(i,k) = 0.0;
+      }
+
+      r(i,i) = Math.sqrt(r(i,i));
+
+      for(k <- i+1 until rows) {
+        r(k,i) /= r(i,i);
+      }
+
+      for(j <- i+1 until cols;
+          // col j := col j - r(i,i) * r(j,i) * col i
+          k <- j until rows) {
+        r(k,j) -= r(j,i) * r(k,i);
+      }
+    }
+
+    r;
+  }
+  
+}
 
 /** Matrix solve vector, like matlab's "\", uses DenseMatrixSolveDenseMatrix. */
 case class DenseMatrixSolveDenseVector[M<:DenseMatrix,V<:DenseVector]

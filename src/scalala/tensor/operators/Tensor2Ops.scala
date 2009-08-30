@@ -36,6 +36,12 @@ import Tensor1Types._;
 trait Tensor2Ops {
   implicit def tensor2Arith[I,J] = new TensorArith[(I,J),Tensor2[I,J],Tensor2[I,J],Shape2];
 
+  def cholesky[M<:Tensor2[_,_],R<:Tensor2[_,_]](m: Tensor2Op[M])(implicit op: CholeskyDecomposer[M,R]): Tensor2Op[R] =
+    op.decompose(m);
+}
+
+trait CholeskyDecomposer[M<:Tensor2[_,_],R<:Tensor2[_,_]] {
+  def decompose(m: Tensor2Op[M]): Tensor2Op[R];
 }
 
 trait MatrixTranspose[V<:Tensor2[_,_],VT<:Tensor2[_,_]] {
@@ -55,7 +61,6 @@ class RichTensor2Op[MV<:Tensor2[_,_]](base : Tensor2Op[MV])
   
   def t[VT<:Tensor2[_,_]](implicit ops: MatrixTranspose[MV,VT]) =
     ops.makeTranspose(base);
-
 
   def \ [V2<:Tensor[_],S2<:TensorShape,VR<:Tensor[_],SR<:TensorShape](op : TensorOp[V2,S2])
     (implicit solver: TensorSolver[MV,V2,VR,S2,SR]) = {
