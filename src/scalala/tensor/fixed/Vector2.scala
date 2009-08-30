@@ -68,6 +68,8 @@ final case class Vector2(var x: Double, var y: Double) extends Vector with Tenso
   def matrixLike(rows: Int, cols: Int) = new DenseMatrix(rows,cols);
 
   def activeDomain = domain;
+
+  override def toString = "Vector2("+x+","+y+")";
 }
 
 object Vector2 {
