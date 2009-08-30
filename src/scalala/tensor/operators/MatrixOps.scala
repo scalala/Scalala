@@ -29,9 +29,6 @@ import TensorShapes._;
 object MatrixTypes {
   type MatrixOp[M<:Matrix] =
     TensorOp[M,Shape2];
-
-  type MatrixTranspose[M<:Matrix,T<:Matrix] =
-    Tensor2Transpose[Int,Int,M,T];
 }
 
 import MatrixTypes._;
@@ -45,7 +42,9 @@ trait MatrixOps {
   implicit val matrixArith = new TensorArith[(Int,Int),Matrix,Tensor2[Int,Int],Shape2];
 
   implicit val mtranspose = new MatrixTranspose[Matrix,Matrix] {
-    def makeTranspose(op: Tensor2Op[Matrix]) = Tensor2Transpose[Int,Int,Matrix,Matrix](op);
+    def makeTranspose(op: Tensor2Op[Matrix]) ={
+      MatrixTransOp(op);
+    }
   }
 
   implicit val matrixVPBuilder : TensorProductBuilder[Matrix,Vector,Vector,Shape2,Shape1Col,Shape1Col] = {
@@ -67,6 +66,14 @@ trait MatrixOps {
   }
 
 
+}
+
+/** Type-safe transposes of a Matrix. */
+case class MatrixTransOp
+(op : Tensor2Op[Matrix])
+extends MatrixOp[Matrix] {
+  override def value = op.value.transpose;
+  override def working = op.working.transpose;
 }
 
 /** Singleton instance of MatrixOps trait. */

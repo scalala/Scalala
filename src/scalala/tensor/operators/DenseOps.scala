@@ -85,7 +85,7 @@ trait DenseMatrixOps {
   implicit val denseMatrixArith = new TensorArith[(Int,Int),DenseMatrix,Tensor2[Int,Int],Shape2];
 
   implicit val dmtranspose = new MatrixTranspose[DenseMatrix,DenseMatrix] {
-    def makeTranspose(op: Tensor2Op[DenseMatrix]) = Tensor2Transpose[Int,Int,DenseMatrix,DenseMatrix](op);
+    def makeTranspose(op: Tensor2Op[DenseMatrix]) = DenseMatrixTransOp(op);
   }
 
   implicit val dmCholesky = new CholeskyDecomposer[DenseMatrix,DenseMatrix] {
@@ -126,6 +126,26 @@ trait DenseMatrixOps {
 
 /** Singleton instance of DenseMatrixOps trait. */
 object DenseMatrixOps extends DenseMatrixOps;
+
+
+/** Type-safe transposes of a Matrix. */
+case class DenseMatrixTransOp
+(op : Tensor2Op[DenseMatrix])
+extends MatrixOp[DenseMatrix] {
+  override lazy val value = {
+    val opVal = op.value;
+    val lk: DenseMatrix = opVal.matrixLike(opVal.cols,opVal.rows);
+    lk := opVal.transpose;
+    lk;
+  }
+  override def working = {
+    val opVal = op.working;
+    val lk: DenseMatrix = opVal.matrixLike(opVal.cols,opVal.rows);
+    lk := opVal.transpose;
+    lk;
+  }
+}
+
 
 case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M]) 
     extends TensorReferenceOp[M,Shape2](m) {
@@ -183,8 +203,8 @@ case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M])
 */
 
 /** Matrix solve vector, like matlab's "\", uses DenseMatrixSolveDenseMatrix. */
-case class DenseMatrixSolveDenseVector[M<:DenseMatrix,V<:DenseVector]
-(m : DenseMatrixOp[M], v : ColDenseVectorOp[V])
+case class DenseMatrixSolveDenseVector
+(m : DenseMatrixOp[DenseMatrix], v : ColDenseVectorOp[DenseVector])
 extends ColDenseVectorOp[DenseVector] {
   import OperatorImplicits._;
   
@@ -192,7 +212,7 @@ extends ColDenseVectorOp[DenseVector] {
   override lazy val value = {
     val _b = v.working;
     val _B = new DenseMatrix(_b.size, 1, _b.data);
-    val _X = DenseMatrixSolveDenseMatrix[M,DenseMatrix](m, _B).value;
+    val _X = DenseMatrixSolveDenseMatrix(m, _B).value;
     
     new DenseVector(_X.data);
   }
@@ -204,19 +224,19 @@ class MatrixSingularException extends RuntimeException;
 /**
  * DenseMatrix solver based on code from MTJ 0.9.9.
  */
-case class DenseMatrixSolveDenseMatrix[M1<:DenseMatrix,M2<:DenseMatrix]
-(a : DenseMatrixOp[M1], b : DenseMatrixOp[M2])
-extends TensorReferenceOp[M1,Shape2](a) {
+case class DenseMatrixSolveDenseMatrix
+(a : DenseMatrixOp[DenseMatrix], b : DenseMatrixOp[DenseMatrix])
+extends TensorReferenceOp[DenseMatrix,Shape2](a) {
   import scalala.tensor.dense.Numerics;
   
-  override lazy val value = {
+  override lazy val value : DenseMatrix = {
     
 
     val aWorking = a.working;
     val _B = b.value; 
     
     val domain = ProductSet(aWorking.domain._2,
-                            _B.domain.asInstanceOf[ProductSet[Int,Int]]._2);
+                            _B.domain._2);
 
     val rows = domain._1.size;
     val cols = domain._2.size;
@@ -224,7 +244,7 @@ extends TensorReferenceOp[M1,Shape2](a) {
     // from MTJ 0.9.9
     if (aWorking.domain._1 == aWorking.domain._2) { // square?
       // LUSolve
-      val _A : DenseMatrix = aWorking; // will be overwritten
+      val _A = aWorking; // will be overwritten
       val _B : DenseMatrix = b.value;   // won't be overwritten
       val rv = _A.matrixLike(rows,cols);
 
@@ -242,11 +262,11 @@ extends TensorReferenceOp[M1,Shape2](a) {
         throw new MatrixSingularException();
       else if (info < 0)
         throw new IllegalArgumentException();
-      rv.asInstanceOf[M1];
+      rv;
     } else {
       // QRSolve
       val (trans,_A) = a match {
-        case Tensor2Transpose(aT) => (true,aT.working.asInstanceOf[M1]);
+        case DenseMatrixTransOp(aT) => (true,aT.working.asInstanceOf[DenseMatrix]);
         case _ => (false, aWorking);
       }
       val rv = _A.matrixLike(rows,cols);
@@ -267,7 +287,7 @@ extends TensorReferenceOp[M1,Shape2](a) {
           if (queryInfo != 0)
             Math.max(1, Math.min(_A.rows, _A.cols) + Math.max(Math.min(_A.rows, _A.cols), nrhs));
           else
-            Math.max(queryWork(0).asInstanceOf[Int], 1);
+            Math.max(queryWork(0).toInt, 1);
         }
         new Array[Double](lwork);
       }
@@ -281,7 +301,7 @@ extends TensorReferenceOp[M1,Shape2](a) {
       // extract solution
       val N = if (!trans) _A.cols else _A.rows;
       for (j <- 0 until nrhs; i <- 0 until N) rv(i,j) = _Xtmp(i,j);
-      rv.asInstanceOf[M1];
+      rv;
     }
     
   }

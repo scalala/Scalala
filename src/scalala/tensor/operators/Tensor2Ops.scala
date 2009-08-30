@@ -76,11 +76,11 @@ class RichTensor2Op[MV<:Tensor2[_,_]](base : Tensor2Op[MV])
 }
 
 /** Type-safe transposes of a Tensor2. */
-case class Tensor2Transpose[I,J,Value<:Tensor2[I,J],ValueTranspose<:Tensor2[J,I]]
+case class Tensor2Transpose[I,J,Value<:Tensor2[I,J]]
 (op : Tensor2Op[Value])
-extends Tensor2Op[ValueTranspose] {
-  override def value = op.value.transpose.asInstanceOf[ValueTranspose];
-  override def working = op.working.asInstanceOf[ValueTranspose];
+extends Tensor2Op[Tensor2[J,I]] {
+  override def value = op.value.transpose;
+  override def working = op.working.transpose;
 }
 
 /** Multiplication of tensor2 to tensor2. */
