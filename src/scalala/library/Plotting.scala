@@ -160,6 +160,8 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
     xyplot.plot.setRenderer(series,new org.jfree.chart.renderer.xy.XYBarRenderer);
     xyplot.refresh();
   }
+
+  private def manifestOf[T](implicit manifest: ClassManifest[T]) = manifest;
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
   def plot(y : Seq[Double])(implicit xyplot : Plotting.XYPlot) : Unit = {
@@ -168,16 +170,16 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
   def plot(y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
-    plot(new DenseVector(Array.tabulate(y.size)(i => i+1.0)), y)(xyplot);
+    plot(new DenseVector(Array.tabulate(y.size)(i => i+1.0)), y)(xyplot,manifestOf[Int]);
   }
   
   /** Plots the given y versus the given x with line drawn */
-  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double])(implicit xyplot : Plotting.XYPlot) : Unit = {
-    plot(x,y,'-')(xyplot);
+  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double])(implicit xyplot : Plotting.XYPlot, man: ClassManifest[I]) : Unit = {
+    plot(x,y,'-')(xyplot,man);
   }
   
   /** Plots the given y versus the given x with the given style */
-  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double], style : Char)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double], style : Char)(implicit xyplot : Plotting.XYPlot, man: ClassManifest[I]) : Unit = {
     lazy val shapeDot = new java.awt.geom.Ellipse2D.Double(0,0,2,2);
     lazy val shapePlus = {
       val shape = new java.awt.geom.GeneralPath();
@@ -417,7 +419,7 @@ object Plotting {
   import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer
   
   /** Returns a JFreeChart XYDataset for plotting y vs x. */
-  def Dataset[I](x : PartialMap[I,Double], y : PartialMap[I,Double]) : XYDataset = {
+  def Dataset[I:ClassManifest](x : PartialMap[I,Double], y : PartialMap[I,Double]) : XYDataset = {
     if (x.activeDomain != y.activeDomain)
       throw new IllegalArgumentException("Active domains do not match");
     val domain = x.activeDomain.toArray;
