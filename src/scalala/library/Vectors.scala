@@ -304,6 +304,13 @@ trait Vectors extends Library with Operators {
 }
 
 /**
+ * Basic vector functions.
+ * 
+ * @author bethard
+ */
+object Vectors extends Vectors { }
+
+/**
  * Some tests for the vectors package.
  * 
  * @author dramage

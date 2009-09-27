@@ -115,3 +115,10 @@ trait Matrices extends Library with Vectors {
   }
   */
 }
+
+/**
+ * An object with access to the Matrices trait members.
+ * 
+ * @author dramage
+ */
+object Matrices extends Matrices { }

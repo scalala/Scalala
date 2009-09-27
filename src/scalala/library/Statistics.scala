@@ -86,6 +86,13 @@ trait Statistics extends Library with Vectors with Implicits {
     sum(for (i <- 0 to x.toInt) yield nchoosek(n,i) * pow(p,i) * pow(1-p,n-i));
 }
 
+/**
+ * An object with access to the Statistics trait members.
+ * 
+ * @author dramage
+ */
+object Statistics extends Statistics { }
+
 trait StatisticsTest extends Library with Statistics with scalala.ScalalaTest {
   test("CorrTest") {
     assertEquals(corr(Vector(1,2,3), Vector(2,3,3.4)), 0.97072, 1e-5);

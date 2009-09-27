@@ -25,3 +25,10 @@ package scalala.library
  * @author dramage
  */
 trait Implicits extends scalala.tensor.TensorImplicits with Library { }
+
+/**
+ * An object with access to scalala.tensor.TensorImplicits.
+ * 
+ * @author bethard
+ */
+object Implicits extends Implicits { }
