@@ -19,6 +19,8 @@
  */
 package scalala.tensor.operators;
 
+import scala.collection.mutable.ArrayOps;
+
 import scalala.tensor._;
 import scalala.tensor.dense._;
 
@@ -263,7 +265,7 @@ trait OperatorTest extends scalala.library.Library with OperatorImplicits with s
     
     val x = Array(1.,2.,3.);
     x *= 2.0;
-    assertEquals(x.toList, List(2.0,4.0,6.0));
+    assertEquals((x:ArrayOps[Double]).toList, List(2.0,4.0,6.0));
     
     val y = Array(3.,2.,1.);
 
@@ -271,7 +273,7 @@ trait OperatorTest extends scalala.library.Library with OperatorImplicits with s
     
     // y *= 2;      // correct compile error: Array[Int] doesn't promote to mutable
     x :*= Array(3,2,1);
-    assertEquals(x.toList, List(6.0, 8.0, 6.0));
+    assertEquals((x:ArrayOps[Double]).toList, List(6.0, 8.0, 6.0));
   }
   
   test("Operators:Scalars") {

@@ -158,7 +158,7 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   }
   
   /** From recipe in "Programming in Scala" section 28.4. */
-  protected def canEqual(other : Any) : Boolean = other match {
+  override def canEqual(other : Any) : Boolean = other match {
     case that : PartialMap[_,_] => true;
     case _ => false;
   }

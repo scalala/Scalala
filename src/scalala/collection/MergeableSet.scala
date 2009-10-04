@@ -26,7 +26,7 @@ import scala.collection.Set;
  * 
  * @author dramage
  */
-abstract case class MergeableSet[I]() extends Set[I] {
+abstract class MergeableSet[I]() extends Set[I] {
   private lazy val _size = {
     var s = 0;
     for (e <- iterator) { s += 1; }

@@ -20,6 +20,7 @@
 package scalala;
 
 import scalala.library._;
+import scala.collection.mutable.ArrayOps;
 
 /**
  * A matlab-like environment and syntax for scala.  This is the default
@@ -125,7 +126,7 @@ object ScalalaProfilingSuite extends Scalala
     val direct = profile(iter) {
       val sv = new SparseBinaryVector(n,Array(1,20,300,4000,4500,4999));
       for(i<- 0 until iter)
-        for(idx <- sv.index)
+        for(idx <- (sv.index:ArrayOps[Int]))
           0;
     }
 
@@ -133,8 +134,8 @@ object ScalalaProfilingSuite extends Scalala
       override def size = sv.used;
       override def contains(i : Int) = sv.findOffset(i) >= 0;
       override def iterator =
-        if (sv.used==sv.index.length) sv.index.iterator;
-          else sv.index.take(sv.used).iterator;
+        if (sv.used==sv.index.length) (sv.index:ArrayOps[Int]).iterator;
+          else (sv.index:ArrayOps[Int]).view.take(sv.used).iterator;
     }
 
     val indirect = profile(iter) {

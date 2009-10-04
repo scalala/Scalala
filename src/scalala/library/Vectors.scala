@@ -327,10 +327,10 @@ trait VectorsTest extends Library with Vectors with Implicits with Random with s
  test("Tensor:Moments") {
     val v = new SparseVector(1000);
     v += 1;
-    v(0 until 100) = rand(100).valuesIterator.toSequence;
-    assertEquals(mean(v.toArray), mean(v), 1e-10);
-    assertEquals(variance(v.toArray), variance(v), 1e-10);
-    assertEquals(std(v.toArray), std(v), 1e-10);
+    v(0 until 100) = rand(100).valuesIterator.toSeq;
+    assertEquals(mean(v.toArray:Iterable[Double]), mean(v), 1e-10);
+    assertEquals(variance(v.toArray:Iterable[Double]), variance(v), 1e-10);
+    assertEquals(std(v.toArray:Iterable[Double]), std(v), 1e-10);
     
     assertEquals((1 + 3 + 22 + 17) / 4.0, mean(Vector(1,3,22,17)), 1e-10);
     

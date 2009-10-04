@@ -306,7 +306,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   
   /** An XY stacked area chart with default names. */
   def stacked(x : Vector, y : Seq[Vector])(implicit xyplot : Plotting.XYPlot) {
-    stacked(x, y, y.iterator.zipWithIndex.map(_._2.toString).toSequence)(xyplot);
+    stacked(x, y, y.iterator.zipWithIndex.map(_._2.toString).toSeq)(xyplot);
   }
   
   /**
