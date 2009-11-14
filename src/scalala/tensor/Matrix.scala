@@ -39,7 +39,7 @@ trait Matrix extends Tensor2[Int,Int] with TensorSelfOp[(Int,Int),Matrix,Shape2]
   
   @inline final protected def check(row : Int, col : Int) = {
     if (row < 0 || row >= rows || col < 0 || col >= cols) {
-      throw new Predef.IndexOutOfBoundsException(
+      throw new IndexOutOfBoundsException(
         "Matrix out of bounds: "+(row,col)+" size was "+size)
     }
   }
