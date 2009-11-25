@@ -294,7 +294,7 @@ trait TensorSelfOp[I,+Value<:Tensor[I] with TensorSelfOp[I,Value,Shape],Shape<:T
   def like: Value;
   def copy: Value = {
     val r = like;
-    r :+= (this:PartialMap[I,Double]);
+    r := (this:PartialMap[I,Double]);
     r;
   }
   override def working : Value = copy;
