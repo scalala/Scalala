@@ -59,7 +59,7 @@ abstract class MergeableSet[I]() extends Set[I] {
 
   def +(elem: I) : MergeableSet[I] = {
     if (contains(elem)) this
-    else UnionSet(this,SingletonSet(elem));
+    else this ++ SingletonSet(elem)
   }
   
   
@@ -144,13 +144,23 @@ case class SingletonSet[I](theElem: I) extends MergeableSet[I] {
  */
 case class UnionSet[I](sets : Set[I]*) extends MergeableSet[I] {
   override def contains(x : I) : Boolean =
-    sets.iterator.map(_.contains(x)).contains(true);
+    containedInFirstK(x,sets.size);
   
   override def iterator =
     for (i <- (0 until sets.size).iterator;
          e <- sets(i).iterator;
-         if (sets.take(i).forall(!_.contains(e))))
+         if !containedInFirstK(e,i))
       yield e;
+
+  private def containedInFirstK(e: I, k: Int):Boolean = {
+    var i = 0;
+    while(i < k) {
+      if(sets(i) contains e)
+        return true
+      i += 1;
+    }
+    false
+  }
     
   override def ++(that : MergeableSet[I]) = that match {
     case UnionSet(those @ _*) => UnionSet((sets ++ those) : _*);
