@@ -294,7 +294,7 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   /**
   * Creates a vector "like" this one, but with zeros everywhere.
   */
-  def vectorLike(size:Int) = new SparseBinaryVector(size);
+  def vectorLike(size:Int) = new SparseVector(size);
 
   /**
   * Creates a SparseHashVector. May change if we get a new kind of sparse matrix.
