@@ -44,17 +44,17 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
     throw new IllegalArgumentException("Invalid domain size: "+domainSize);
   
   /** Data array will be reassigned as the sparse vector grows. */
-  var data : Array[Double] = new Array[Double](initialNonzeros);
+  final var data : Array[Double] = new Array[Double](initialNonzeros);
   
   /** Index will be reassigned as the sparse vector grows. */
-  var index : Array[Int] = new Array[Int](initialNonzeros);
+  final var index : Array[Int] = new Array[Int](initialNonzeros);
   
   /** How many iterator of data,index are used. */
-  var used : Int = 0;
+  final var used : Int = 0;
   
   /** The previous index and offset found by apply or update. */
-  var lastOffset = -1;
-  var lastIndex = -1;
+  final var lastOffset = -1;
+  final var lastIndex = -1;
 
   /** Constructs a new SparseVector with initially 0 allocation. */
   def this(size : Int) =
@@ -284,7 +284,11 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   
   override def copy = {
     val rv = new SparseVector(size, 0);
-    rv.use(index.toArray, data.toArray, used);
+    val newIndex = new Array[Int](index.length);
+    System.arraycopy(index,0,newIndex,0,index.length); 
+    val newData = new Array[Double](data.length);
+    System.arraycopy(data,0,newData,0,data.length); 
+    rv.use(newIndex, newData, used);
     rv.default = this.default;
     rv;
   }
