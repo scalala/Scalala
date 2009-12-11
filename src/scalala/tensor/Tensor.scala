@@ -431,6 +431,10 @@ object Tensor {
 
 /** A one-axis tensor is defined on single elements from a domain. */
 trait Tensor1[I] extends Tensor[I] {
+  /** Returns the k-norm of this tensor.  Calls scalala.Scalala.norm(this). */
+  def norm(k : Double) =
+    scalala.Scalala.norm(this, k);
+
   /** Returns the inner product of this tensor with another. */
   def dot(that : Tensor1[I]) : Double = {
     ensure(that);
