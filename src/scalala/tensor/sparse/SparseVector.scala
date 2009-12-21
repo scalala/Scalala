@@ -39,7 +39,7 @@ import scalala.tensor.operators.TensorSelfOp;
  * @author dramage
  */
 class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector 
-  with TensorSelfOp[Int,Vector,Shape1Col] {
+  with TensorSelfOp[Int,SparseVector,Shape1Col] {
   if (domainSize < 0)
     throw new IllegalArgumentException("Invalid domain size: "+domainSize);
   
