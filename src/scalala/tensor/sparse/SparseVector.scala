@@ -64,8 +64,9 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   def use(inIndex : Array[Int], inData : Array[Double], inUsed : Int) = {
     if (inIndex.size != inData.size)
       throw new IllegalArgumentException("Index and data sizes do not match");
-    if (inIndex.contains((x:Int) => x < 0 || x > size))
-      throw new IllegalArgumentException("Index array contains out-of-range index");
+    // I spend 7% of my time in this call. It's gotta go.
+    //if (inIndex.contains((x:Int) => x < 0 || x > size))
+    //  throw new IllegalArgumentException("Index array contains out-of-range index");
     if (inIndex == null || inData == null)
       throw new IllegalArgumentException("Index and data must be non-null");
     if (inIndex.size < inUsed)
@@ -102,7 +103,6 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
     }
   }
 
-  
   override def activeKeys = index.take(used).iterator;
   
   override def activeValues = data.take(used).iterator;
@@ -157,6 +157,11 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
           }
         }
       }
+
+      // Simple optimization:
+      // the i'th entry can't be after entry i.
+      if(end > i)
+        end = i;
 
       // this assert is for debug only
       //assert(begin >= 0 && end >= begin,
