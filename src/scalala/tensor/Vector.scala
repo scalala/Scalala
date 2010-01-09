@@ -36,8 +36,7 @@ trait Vector extends Tensor1[Int] with TensorSelfOp[Int,Vector,Shape1Col] {
   override def like: Vector;
   def size : Int;
   
-  private val _domain = IntSpanSet(0, size);
-  final override def domain : IntSpanSet = _domain;
+  final override def domain : IntSpanSet = IntSpanSet(0, size);
   
   /** Returns an array copy of this tensor. */
   def toArray = Array.tabulate(size)(i => this(i));
