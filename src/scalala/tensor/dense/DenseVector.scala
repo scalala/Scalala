@@ -51,7 +51,11 @@ class DenseVector(data : Array[Double]) extends
   */
   def like = new DenseVector(size);
 
-  override def copy = new DenseVector(data.toArray).asInstanceOf[DenseVector.this.type];
+  override def copy = {
+    val arr = new Array[Double](size);
+    System.arraycopy(data,0,arr,0,size);
+    new DenseVector(arr);
+  }
   
   override def dot(other : Tensor1[Int]) : Double = other match {
     case singleton : SingletonBinaryVector => this.apply(singleton.singleIndex)
