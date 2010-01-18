@@ -7,7 +7,7 @@
   <version>0.3-SNAPSHOT</version>
   <inceptionYear>2008</inceptionYear>
   <properties>
-    <scala.version>2.8.0.Beta1-RC7</scala.version>
+    <scala.version>2.8.0.Beta1-RC8</scala.version>
   </properties>
 
 
@@ -119,6 +119,9 @@
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
             <arg>-Xexperimental</arg>
+            <arg>-make:transitivenocp</arg>
+            <arg>-dependencyfile</arg>
+            <arg>${project.build.directory}/.scala_dependencies</arg>
           </args>
           <scalaVersion>${scala.version}</scalaVersion>
           <mainConsole>scalala.ScalalaConsole</mainConsole>
