@@ -119,9 +119,6 @@
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
             <arg>-Xexperimental</arg>
-            <arg>-make:transitivenocp</arg>
-            <arg>-dependencyfile</arg>
-            <arg>${project.build.directory}/.scala_dependencies</arg>
           </args>
           <scalaVersion>${scala.version}</scalaVersion>
           <mainConsole>scalala.ScalalaConsole</mainConsole>
