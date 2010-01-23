@@ -71,12 +71,13 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
       throw new IllegalArgumentException("Index and data must be non-null");
     if (inIndex.size < inUsed)
       throw new IllegalArgumentException("Used is greater than provided array");
-    for (i <- 1 until used; if (inIndex(i-1) > inIndex(i))) {
-      throw new IllegalArgumentException("Input index is not sorted at "+i);
-    }
-    for (i <- 0 until used; if (inIndex(i) < 0)) {
-      throw new IllegalArgumentException("Input index is less than 0 at "+i);
-    }
+    // I spend 7% of my time in this call. It's gotta go. and this one.
+    //for (i <- 1 until used; if (inIndex(i-1) > inIndex(i))) {
+    //  throw new IllegalArgumentException("Input index is not sorted at "+i);
+    //}
+    //for (i <- 0 until used; if (inIndex(i) < 0)) {
+    //  throw new IllegalArgumentException("Input index is less than 0 at "+i);
+    //}
     
     data = inData;
     index = inIndex;
