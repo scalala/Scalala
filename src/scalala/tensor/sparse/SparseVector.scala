@@ -20,7 +20,7 @@
 package scalala.tensor.sparse
 
 import scalala.tensor.Vector;
-import scalala.collection.{MergeableSet,IntSpanSet,DomainException};
+import scalala.collection.{PartialMap,MergeableSet,IntSpanSet,DomainException};
 
 import scalala.tensor.Tensor.CreateException;
 import scalala.tensor.dense.DenseVector;
@@ -494,6 +494,15 @@ object SparseVector {
   def apply(size : Int)(default : Double) = {
     val sv = new SparseVector(size, 0);
     sv += default;
+    sv;
+  }
+  
+  def apply(map : PartialMap[Int,Double]) = {
+    val sv = new SparseVector(map.domain.size, map.activeDomain.size);
+    sv.default = map.default;
+    for ((k,v) <- map) {
+      sv(k) = v;
+    }
     sv;
   }
   

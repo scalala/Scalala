@@ -19,7 +19,7 @@
  */
 package scalala.tensor.dense;
 
-import scalala.collection.{MergeableSet, IntSpanSet, DomainException};
+import scalala.collection.{PartialMap, MergeableSet, IntSpanSet, DomainException};
 
 import scalala.tensor.Vector;
 import scalala.tensor.sparse._;
@@ -76,4 +76,7 @@ object DenseVector {
    */
   def apply(size : Int)(values : Double*) =
     new DenseVector(Array.fromFunction(i => values(i % values.length))(size));
+  
+  def apply(map : PartialMap[Int,Double]) =
+    new DenseVector(Array.fromFunction(i => map(i))(map.domain.size));
 }
