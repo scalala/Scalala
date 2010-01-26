@@ -52,3 +52,10 @@ trait IO extends Library {
     return m;
   }
 }
+
+/**
+ * An object with access to the IO trait members.
+ * 
+ * @author dramage
+ */
+object IO extends IO { }

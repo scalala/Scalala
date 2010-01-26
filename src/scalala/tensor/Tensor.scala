@@ -250,13 +250,6 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
   //
   // Assignments and updates from an op
   //
-
-//  /** Assigns each element in this map to the corresponding value as returned by the given operation. */
-//  def := [V<:Base] (op : TensorOp[I,Base,V,Shape]) : Unit = {
-//    op match {
-//      case op : TensorOp[_,_,_,_] => this := op.value;
-//    }
-//  }
   
   /** Returns the partial map representing this tensor op skipping negations. */
   private def getPartialMap[V<:Tensor[I],S<:TensorShape] (op : TensorOp[V,S]) : PartialMap[I,Double] = {
@@ -433,6 +426,9 @@ object Tensor {
 
 /** A one-axis tensor is defined on single iterator from a domain. */
 trait Tensor1[I] extends Tensor[I] with TensorSelfOp[I,Tensor1[I],Shape1Col] {
+  /** Returns the k-norm of this tensor.  Calls scalala.Scalala.norm(this). */
+  def norm(k : Double) =
+    scalala.Scalala.norm(this, k);
 
   /** Returns the inner product of this tensor with another. */
   def dot(that : Tensor1[I]) : Double = {

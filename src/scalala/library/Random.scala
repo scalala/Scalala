@@ -73,3 +73,10 @@ trait Random extends Library {
     return m;
   }
 }
+
+/**
+ * Random number generation.
+ * 
+ * @author bethard
+ */
+object Random extends Random { }

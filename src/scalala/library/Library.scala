@@ -67,3 +67,10 @@ trait Library {
   /** Alias for Math.sqrt. */
   final def sqrt(x : Double) = Math.sqrt(x);
 }
+
+/**
+ * An object with access to the Library trait members.
+ * 
+ * @author dramage
+ */
+object Library extends Library { }

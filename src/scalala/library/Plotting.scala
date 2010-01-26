@@ -31,39 +31,40 @@ import scalala.tensor.dense.{DenseVector,DenseMatrix};
  * @author dramage
  */
 trait Plotting extends Library with Vectors with Matrices with Operators {
+  import PlottingSupport._;
   
   /** Implicit graphics context */
-  implicit var _scalala_figures = new Plotting.Figures();
+  implicit var _scalala_figures = new Figures();
   implicit def _scalala_figure = _scalala_figures.figure;
   implicit def _scalala_xyplot = _scalala_figures.figure.plot;
   
-  implicit def iFigure(figures : Plotting.Figures) = figures.figure;
-  implicit def iXYPlot(figures : Plotting.Figures) = figures.figure.plot;
-  implicit def iXYPlot(figure  : Plotting.Figure)  = figure.plot;
+  implicit def iFigure(figures : Figures) = figures.figure;
+  implicit def iXYPlot(figures : Figures) = figures.figure.plot;
+  implicit def iXYPlot(figure  : Figure)  = figure.plot;
   
   //
   // Plotting
   //
 
   /** Selects the given figure */
-  def figure(select:Int)(implicit figures : Plotting.Figures) : Plotting.Figure = {
+  def figure(select:Int)(implicit figures : Figures) : Figure = {
     figures.figure = select-1
     figures.figure.refresh
     return figures.figure
   }
   
   /** Clears the current figure */
-  def clf()(implicit figure : Plotting.Figure) = {
+  def clf()(implicit figure : Figure) = {
     figure.clear;
   }
   
   /** Saves the current figure at 72 dpi to the given filename. */
-  def saveas(filename : String)(implicit figure : Plotting.Figure) : Unit = {
+  def saveas(filename : String)(implicit figure : Figure) : Unit = {
     saveas(filename, 72)(figure);
   }
   
   /** Saves the current figure at the requested dpi to the given filename. */
-  def saveas(filename : String, dpi : Int)(implicit figure : Plotting.Figure) : Unit = {
+  def saveas(filename : String, dpi : Int)(implicit figure : Figure) : Unit = {
     import java.io._;
     
     // make sure figure is visible or saved image will come up empty
@@ -85,7 +86,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   }
   
   /** Selects the given subplot */
-  def subplot(rows:Int,cols:Int,select:Int)(implicit figure : Plotting.Figure) : Plotting.XYPlot = {
+  def subplot(rows:Int,cols:Int,select:Int)(implicit figure : Figure) : XYPlot = {
     figure.rows = rows
     figure.cols = cols
     figure.plot = select-1
@@ -94,17 +95,17 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   }
 
   /** Sets the title of this figure. */
-  def title(title : String)(implicit xyplot : Plotting.XYPlot) {
+  def title(title : String)(implicit xyplot : XYPlot) {
     xyplot.title = title;
   }
   
   /** Sets the label of the x axis */
-  def xlabel(text : String)(implicit xyplot : Plotting.XYPlot) {
+  def xlabel(text : String)(implicit xyplot : XYPlot) {
     xyplot.xaxis.setLabel(text);
   }
   
   /** Sets the label of the y axis */
-  def ylabel(text : String)(implicit xyplot : Plotting.XYPlot) {
+  def ylabel(text : String)(implicit xyplot : XYPlot) {
     xyplot.yaxis.setLabel(text);
   }
   
@@ -112,18 +113,18 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
    * Sets tooltips for the last series plotted (assumes x,y series).
    * NB: This is not standard Matlab.
    */
-  def tooltips(tips : Seq[String])(implicit xyplot : Plotting.XYPlot) {
-    xyplot.plot.getRenderer(xyplot.series).setBaseToolTipGenerator(Plotting.Tooltips(tips))
+  def tooltips(tips : Seq[String])(implicit xyplot : XYPlot) {
+    xyplot.plot.getRenderer(xyplot.series).setBaseToolTipGenerator(Tooltips(tips))
   }
   
   /** Plots a histogram of the given data into 10 equally spaced bins */
-  def hist[I](data : PartialMap[I,Double])(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def hist[I](data : PartialMap[I,Double])(implicit xyplot : XYPlot) : Unit = {
     hist(data, 10)(xyplot)
   }
   
   
   /** Plots a histogram of the given data into the given number of bins */
-  def hist[I](data : PartialMap[I,Double], nbins : Int)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def hist[I](data : PartialMap[I,Double], nbins : Int)(implicit xyplot : XYPlot) : Unit = {
     hist(data, linspace(min(data),max(data),nbins))(xyplot)
   }
   
@@ -131,7 +132,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
    * Plots a histogram of the given data into bins with centers at the given
    * positions.
    */
-  def hist[I](data : PartialMap[I,Double], bins : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def hist[I](data : PartialMap[I,Double], bins : Vector)(implicit xyplot : XYPlot) : Unit = {
     def bucket(point : Double, lower : Int, upper : Int) : Int = {
       val mid = (lower + upper) / 2;
       if (lower == upper) {
@@ -154,7 +155,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
       (pair => Math.abs(pair._2 - pair._1)) reduceLeft Math.min };
     
     val dataset = new org.jfree.data.xy.XYBarDataset(
-      Plotting.Dataset(bins, counts), width);
+      Dataset(bins, counts), width);
     val series = xyplot.nextSeries;
     xyplot.plot.setDataset(series,dataset);
     xyplot.plot.setRenderer(series,new org.jfree.chart.renderer.xy.XYBarRenderer);
@@ -164,22 +165,22 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   private def manifestOf[T](implicit manifest: ClassManifest[T]) = manifest;
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
-  def plot(y : Seq[Double])(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def plot(y : Seq[Double])(implicit xyplot : XYPlot) : Unit = {
     plot(Vector(y :_*))(xyplot);
   }
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
-  def plot(y : Vector)(implicit xyplot : Plotting.XYPlot) : Unit = {
+  def plot(y : Vector)(implicit xyplot : PlottingSupport.XYPlot) : Unit = {
     plot(new DenseVector(Array.tabulate(y.size)(i => i+1.0)), y)(xyplot,manifestOf[Int]);
   }
   
   /** Plots the given y versus the given x with line drawn */
-  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double])(implicit xyplot : Plotting.XYPlot, man: ClassManifest[I]) : Unit = {
+  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double])(implicit xyplot : PlottingSupport.XYPlot, man: ClassManifest[I]) : Unit = {
     plot(x,y,'-')(xyplot,man);
   }
   
   /** Plots the given y versus the given x with the given style */
-  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double], style : Char)(implicit xyplot : Plotting.XYPlot, man: ClassManifest[I]) : Unit = {
+  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double], style : Char)(implicit xyplot : PlottingSupport.XYPlot, man: ClassManifest[I]) : Unit = {
     lazy val shapeDot = new java.awt.geom.Ellipse2D.Double(0,0,2,2);
     lazy val shapePlus = {
       val shape = new java.awt.geom.GeneralPath();
@@ -192,7 +193,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   
     
     // initialize dataset and series
-    val dataset = Plotting.Dataset(x,y);
+    val dataset = Dataset(x,y);
     val series = xyplot.nextSeries;
     
     xyplot.plot.setDataset(series, dataset);
@@ -227,16 +228,16 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
    * Displays a scatter plot of x versus y, each point drawn at the given
    * size and mapped with the given color.
    */
-  def scatter(x : Vector, y : Vector, s : Vector, c : Vector)(implicit xyplot : Plotting.XYPlot) {
+  def scatter(x : Vector, y : Vector, s : Vector, c : Vector)(implicit xyplot : XYPlot) {
     assert(x.size == y.size);
     assert(y.size == s.size, y.size + " != " + s.size);
     assert(s.size == c.size, s.size + " != " + c.size);
     
-    val dataset = Plotting.Dataset(x,y,s,c);
+    val dataset = Dataset(x,y,s,c);
     val series = xyplot.nextSeries;
     xyplot.plot.setDataset(series, dataset);
     
-    val gradient = Plotting.Gradients.GRADIENT_BLUE_TO_RED;
+    val gradient = Gradients.GRADIENT_BLUE_TO_RED;
     
     val paintscale = new org.jfree.chart.renderer.PaintScale {
       override def getLowerBound = 0.0;
@@ -281,7 +282,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   */
   
   /** An XY stacked area chart. */
-  def stacked(x : Vector, y : Seq[Vector], names : Seq[String])(implicit xyplot : Plotting.XYPlot) {
+  def stacked(x : Vector, y : Seq[Vector], names : Seq[String])(implicit xyplot : XYPlot) {
     import org.jfree.data.xy.{AbstractXYDataset, TableXYDataset};
     val dataset = new AbstractXYDataset with TableXYDataset {
       override def getX(series : Int, item : Int) = x(item);
@@ -305,7 +306,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   }
   
   /** An XY stacked area chart with default names. */
-  def stacked(x : Vector, y : Seq[Vector])(implicit xyplot : Plotting.XYPlot) {
+  def stacked(x : Vector, y : Seq[Vector])(implicit xyplot : PlottingSupport.XYPlot) {
     stacked(x, y, y.iterator.zipWithIndex.map(_._2.toString).toSeq)(xyplot);
   }
   
@@ -316,19 +317,19 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
    * @param x The range on the x axis for drawing the image.  If x._1 < x._2, the matrix column numbers are inverted.
    * @param y The range on the y axis for drawing the image.  If y._1 < y._2, the matrix row numbers are inverted.
    */
-  private def image(x : (Double,Double), y : (Double,Double), c : Matrix, lower : Double, upper : Double)(implicit xyplot : Plotting.XYPlot) {
+  private def image(x : (Double,Double), y : (Double,Double), c : Matrix, lower : Double, upper : Double)(implicit xyplot : XYPlot) {
     import org.jfree.chart.axis.NumberAxis;
     
     val (minX,maxX) = (Math.min(x._1,x._2),Math.max(x._1,x._2));
     val (minY,maxY) = (Math.min(y._1,y._2),Math.max(y._1,y._2));
     
-    val dataset = Plotting.Dataset(c, x, y);
+    val dataset = Dataset(c, x, y);
     val series = xyplot.nextSeries;
     
     xyplot.plot.setDataset(series, dataset);
     
     // initialize paint scale
-    val gradient = Plotting.Gradients.GRADIENT_BLUE_TO_RED;
+    val gradient = Gradients.GRADIENT_BLUE_TO_RED;
     val paintscale = new org.jfree.chart.renderer.PaintScale {
       override def getLowerBound = lower;
       override def getUpperBound = upper;
@@ -362,39 +363,39 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   }
   
   /** Plots the given matrix as an image. */
-  def image(c : Matrix)(implicit xyplot : Plotting.XYPlot) {
+  def image(c : Matrix)(implicit xyplot : XYPlot) {
     image((0,c.cols),(0,c.rows),c,0.0,1.0)(xyplot);
   }
   
   /** Plots the given matrix as an image. */
-  def image(x : (Double,Double), y : (Double,Double), c : Matrix)(implicit xyplot : Plotting.XYPlot) {
+  def image(x : (Double,Double), y : (Double,Double), c : Matrix)(implicit xyplot : XYPlot) {
     image(x,y,c,0.0,1.0)(xyplot);
   }
   
   /** Plots the given matrix as an image. */
-  def imagesc(c : Matrix)(implicit xyplot : Plotting.XYPlot) {
+  def imagesc(c : Matrix)(implicit xyplot : XYPlot) {
     image((0,c.cols),(0,c.rows),c,min(c),max(c))(xyplot);
   }
   
   /** Plots the given matrix as an image. */
-  def imagesc(x : (Double,Double), y : (Double,Double), c : Matrix)(implicit xyplot : Plotting.XYPlot) {
+  def imagesc(x : (Double,Double), y : (Double,Double), c : Matrix)(implicit xyplot : XYPlot) {
     image(x, y, c, min(c), max(c))(xyplot);
   }
   
   /** Sets the lower and upper bounds of the current plot. */
-  def xlim(xmin : Double, xmax : Double)(implicit xyplot : Plotting.XYPlot) {
+  def xlim(xmin : Double, xmax : Double)(implicit xyplot : XYPlot) {
     xyplot.plot.getDomainAxis.setLowerBound(xmin);
     xyplot.plot.getDomainAxis.setUpperBound(xmax);
   }
   
   /** Sets the lower and upper bounds of the current plot. */
-  def ylim(ymin : Double, ymax : Double)(implicit xyplot : Plotting.XYPlot) {
+  def ylim(ymin : Double, ymax : Double)(implicit xyplot : XYPlot) {
     xyplot.plot.getRangeAxis.setLowerBound(ymin);
     xyplot.plot.getRangeAxis.setUpperBound(ymax);
   }
   
   /** For re-plotting to same figure */
-  def hold(state : Boolean)(implicit figures : Plotting.Figures) : Unit = {
+  def hold(state : Boolean)(implicit figures : Figures) : Unit = {
     val xyplot = figures.figure.plot;
     xyplot.hold = state;
   }
@@ -403,7 +404,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
 
 
 /** Plotting operations */
-object Plotting {
+object PlottingSupport {
   import org.jfree.chart._
   import org.jfree.chart.plot._
 
@@ -949,3 +950,10 @@ object Plotting {
     }
   }
 }
+
+/**
+ * An object with access to the Plotting trait members.
+ * 
+ * @author dramage
+ */
+object Plotting extends Plotting { }
