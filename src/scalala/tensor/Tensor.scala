@@ -26,74 +26,6 @@ import scalala.tensor.operators._;
 import TensorShapes._;
 
 /**
- * Implicit type promotions from arrays and sequences.
- * 
- * @author dramage
- */
-trait TensorImplicits {
-  import dense.DenseVector;
-  
-  implicit def iSeqToDoublePartialMap[T](seq : Seq[T])(implicit convert : T=>Double) = {
-    new PartialMap[Int,Double] {
-      override def default = 0.0;
-      override lazy val domain : MergeableSet[Int] = IntSpanSet(0, seq.length);
-      override def activeDomain = domain;
-      override def apply(i : Int) = convert(seq(i));
-    };
-  }
-  
-  implicit def iArrayToVector(x : Array[Double]) =
-    new dense.DenseVector(x);
-  
-  implicit def iArrayToPartialMap(x : Array[Float]) = {
-    new PartialMap[Int,Double] {
-      override def default = 0;
-      override lazy val domain : MergeableSet[Int] = IntSpanSet(0, x.length);
-      override def activeDomain = domain;
-      override def apply(i : Int) = x(i);
-    }
-  }
-  
-  implicit def iArrayToPartialMap(x : Array[Int]) = {
-    new PartialMap[Int,Double] {
-      override def default = 0;
-      override lazy val domain : MergeableSet[Int] = IntSpanSet(0, x.length);
-      override def activeDomain = domain;
-      override def apply(i : Int) = x(i);
-    }
-  }
-  
-  implicit def iArrayToPartialMap(x : Array[Long]) = {
-    new PartialMap[Int,Double] {
-      override def default = 0;
-      override lazy val domain : MergeableSet[Int] = IntSpanSet(0, x.length);
-      override def activeDomain = domain;
-      override def apply(i : Int) = x(i);
-    }
-  }
-  
-  implicit def iArrayToPartialMap(x : Array[Short]) = {
-    new PartialMap[Int,Double] {
-      override def default = 0;
-      override lazy val domain : MergeableSet[Int] = IntSpanSet(0, x.length);
-      override def activeDomain = domain;
-      override def apply(i : Int) = x(i);
-    }
-  }
-  
-  implicit def iArrayToPartialMap(x : Array[Byte]) = {
-    new PartialMap[Int,Double] {
-      override def default = 0;
-      override lazy val domain : MergeableSet[Int] = IntSpanSet(0, x.length);
-      override def activeDomain = domain;
-      override def apply(i : Int) = x(i);
-    }
-  }
-}
-
-object TensorImplicits extends TensorImplicits { }
-
-/**
  * A double-valued mutable partial map with support for assignment operators.
  * See {@link Tensor1} and {@link Tensor2} for tensors defined over a domain of 1 key
  * (e.g. {@link Vector}) and 2 key (e.g. {@link Matrix}), respectively.
@@ -181,6 +113,9 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
     this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => t(i));
     this.default = t.default;
   }
+
+  def := [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
+    this.:=(t.map(convert));
   
   /** Multiplies each value in this map by the corresponding value in the other map. */
   def :*= (t : PartialMap[I,Double]) {
@@ -194,12 +129,20 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
     this.default = this.default * t.default;
   }
 
+  def :*= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
+    this.:*=(t.map(convert));
+
+
   /** Divides each value in this map by the corresponding value in the other map. */
   def :/= (t : PartialMap[I,Double]) {
     ensure(t);
     this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x/t(i));
     this.default = this.default / t.default;
   }
+
+  def :/= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
+    this.:/=(t.map(convert));
+
   
   /** Increments each value in this map by the corresponding value in the other map. */
   def :+= (t : PartialMap[I,Double]) {
@@ -213,6 +156,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
       this.default += t.default;
     }
   }
+
+  def :+= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
+    this.:+=(t.map(convert));
+
   
   /** Decrements each value in this map by the corresponding value in the other map. */
   def :-= (t : PartialMap[I,Double]) {
@@ -227,12 +174,18 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
     }
   }
 
+  def :-= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
+    this.:-=(t.map(convert));
+
   /** Raises each value in this map by the corresponding value in the other map. */
   def :^= (t : PartialMap[I,Double]) {
     ensure(t);
     this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => Math.pow(x,t(i)));
     this.default = Math.pow(this.default, t.default);
   }
+
+  def :^= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
+    this.:^=(t.map(convert));
   
   /** Modulos each value in this map by the corresponding value in the other map. */
   def :%= (t : PartialMap[I,Double]) {
@@ -241,12 +194,21 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
     this.default = this.default % t.default;
   }
   
+  def :%= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
+    this.:%=(t.map(convert));
+
   /** += with another PartialMap is a fixed alias for :+= */
   final def += (t : PartialMap[I,Double]) = this.:+=(t);
-  
+
+  final def += [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
+    this.+=(t.map(convert));
+
   /** -= with another PartialMap is a fixed alias for :-= */
   final def -= (t : PartialMap[I,Double]) = this.:-=(t);
-  
+
+  final def -= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
+    this.-=(t.map(convert));
+
   //
   // Assignments and updates from an op
   //

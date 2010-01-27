@@ -42,6 +42,7 @@ import scala.collection.mutable.ArrayOps;
 trait Scalala extends Library
   with Implicits
   with Operators
+  with Traversables
   with Matrices
   with Vectors
   with Plotting

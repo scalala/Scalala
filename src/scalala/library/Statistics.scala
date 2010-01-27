@@ -26,7 +26,7 @@ import scalala.tensor.{Tensor,Vector,Matrix};
  * 
  * @author dramage
  */
-trait Statistics extends Library with Vectors with Implicits {
+trait Statistics extends Library with Traversables with Vectors with Implicits {
   /**
    * Computes the Pearson correlation coefficient between the two vectors.
    * Code adapted excerpted from Wikipedia:

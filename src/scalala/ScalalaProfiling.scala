@@ -39,7 +39,7 @@ trait ScalalaProfiling {
       for (i <- 0 until n) yield {
         val start = System.currentTimeMillis;
         func;
-        System.currentTimeMillis - start;
+        (System.currentTimeMillis - start).toDouble;
       }
     );
   }

@@ -90,28 +90,8 @@ trait Vectors extends Library with Operators {
   def sum[I](v : PartialMap[I,Double]) : Double =
     sumcount(v)._1;
   
-  /** Returns the sum of the values of the value of the operation. */
-//  def sum[I](op : TensorOp[I]) : Double =
-//    sum(op.value);
-  
   /** Log each element of a vector or matrix */
-
   def log[I](v : PartialMap[I,Double]) = v.map(Math.log _);
-  def log(v : Iterator[Double]) = v.map(Math.log);
-  def log(v : Iterable[Double]) = v.map(Math.log);
-  def log(v : Seq[Double]) = v.map(Math.log);
-  
-  def sin[I](v : PartialMap[I,Double]) = v.map(Math.sin _);
-  def sin(v : Iterator[Double]) = v.map(Math.sin);
-  def sin(v : Iterable[Double]) = v.map(Math.sin);
-  def sin(v : Seq[Double]) = v.map(Math.sin);
-
-  def cos[I](v : PartialMap[I,Double]) = v.map(Math.cos _);
-  def cos(v : Iterator[Double]) = v.map(Math.cos);
-  def cos(v : Iterable[Double]) = v.map(Math.cos);
-  def cos(v : Seq[Double]) = v.map(Math.cos);
-
-//  def log[I](op : TensorOp[I]) : Double = log(op.value);
   
   /** The maximum value of the map. */
   def max[I](v : PartialMap[I,Double]) : Double = {
@@ -125,7 +105,6 @@ trait Vectors extends Library with Operators {
   
   def max(v : Iterator[Double]) : Double = v.reduceLeft(Math.max);
   def max(v : Iterable[Double]) : Double = max(v.iterator);
-//  def max[I](op : TensorOp[I]) : Double = max(op.value);
 
   /** Returns a key i of the map such that v(i)=max(v). */
   def argmax[I](v : PartialMap[I,Double]) : I = {
@@ -149,9 +128,6 @@ trait Vectors extends Library with Operators {
   def argmax[I](v : Seq[Double]) : Int =
     argmax(v.iterator);
   
-//  def argmax[I](op : TensorOp[I]) : I =
-//    argmax(op.value);
-  
   /** The minimum value of the map. */
   def min[I](v : PartialMap[I,Double]) : Double = {
     val minActive = min(v.activeValues);
@@ -164,7 +140,6 @@ trait Vectors extends Library with Operators {
 
   def min(v : Iterator[Double]) : Double = v.reduceLeft(Math.min);
   def min(v : Iterable[Double]) : Double = min(v.iterator);
-//  def min[I](op : TensorOp[I]) : Double = min(op.value);
   
   /** Returns a key i of the map such that v(i)=min(v). */
   def argmin[I](v : PartialMap[I,Double]) : I = {
@@ -187,8 +162,6 @@ trait Vectors extends Library with Operators {
    */
   def argmin[I](v : Seq[Double]) : Int =
     argmin(v.iterator);
-//  def argmin[I](op : TensorOp[I]) : I =
-//    argmin(op.value);
   
   /**
    * Returns the sum of the squares of the iterator of the vector.
@@ -196,7 +169,6 @@ trait Vectors extends Library with Operators {
   def sumsq[I](v : PartialMap[I,Double]) : Double = sum(v.map((x:Double) => x*x));
   def sumsq(v : Iterator[Double]) = sum(v.map(x => x*x));
   def sumsq(v : Iterable[Double]) = sum(v.map(x => x*x));
-//  def sumsq[I](op : TensorOp[I]) : Double = sumsq(op.value);
 
   /** Returns the mean of the given iterator.  Based on a Knuth online algorithm. */
   def mean(v : Iterator[Double]) : Double = {
@@ -225,8 +197,6 @@ trait Vectors extends Library with Operators {
   
   /** Returns the mean of the given iterator. */
   def mean(v : Iterable[Double]) : Double = mean(v.iterator);
-  
-//  def mean[I](op : TensorOp[I]) : Double = mean(op.value);
   
   /**
    * Online algorithm for variance computation from Knuth vol 2.
@@ -301,7 +271,7 @@ trait Vectors extends Library with Operators {
   def sum(vectors : Seq[Vector]) : Vector = {
     val sum = vectors(0).copy;
     for (vector <- vectors.iterator.drop(1)) {
-      sum += (vector:PartialMap[Int,Double]);
+      sum += vector;
     }
     sum;
   }
