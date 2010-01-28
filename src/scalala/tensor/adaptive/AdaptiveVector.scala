@@ -62,7 +62,7 @@ class AdaptiveVector(private var vec: Vector) extends Vector with TensorSelfOp[I
 
   override def apply(i : Int) : Double = vec(i);
   override def update(i: Int, value: Double) = vec match {
-    case sparse: SparseVector if( sparse.used >= densityThreshold)  =>
+    case sparse: SparseVector if( sparse.used >= densityThreshold * sparse.size)  =>
       vec = switchRepr();
       vec.update(i,value);
     case _ =>
