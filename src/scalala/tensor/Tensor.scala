@@ -440,7 +440,7 @@ trait Tensor1[I] extends Tensor[I] with TensorSelfOp[I,Tensor1[I],Shape1Col] {
     
     if (this.default == 0.0 || that.default == 0.0) {
       var sum = 0.0;
-      for (k <- this.activeDomain ** that.activeDomain) {
+      for (k <- this.activeDomain ++ that.activeDomain) {
         sum += (this(k) * that(k));
       }
       sum;
