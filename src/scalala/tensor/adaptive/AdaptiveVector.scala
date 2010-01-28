@@ -71,6 +71,7 @@ class AdaptiveVector(private var vec: Vector) extends Vector with TensorSelfOp[I
 
   override def copy = {
     new AdaptiveVector(vec.copy);
+
   }
 
   def like = new AdaptiveVector(size);
@@ -89,10 +90,8 @@ class AdaptiveVector(private var vec: Vector) extends Vector with TensorSelfOp[I
   override def dot(other : Tensor1[Int]) : Double = vec.dot(other);
 
   protected def switchRepr() = {
-    val arr = new Array[Double](size);
-    Arrays.fill(arr,default);
-    val newVec = new DenseVector(arr);
-    newVec := this;
+    val newVec = new DenseVector(size);
+    newVec := vec;
     newVec;
   }
 }
