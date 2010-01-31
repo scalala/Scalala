@@ -19,7 +19,9 @@
  */
 package scalala.tensor.dense;
 
-import scalala.collection.{MergeableSet, IntSpanSet, DomainException};
+import java.util.Arrays;
+
+import scalala.collection.{MergeableSet, IntSpanSet, DomainException, PartialMap};
 
 import scalala.tensor.Vector;
 import scalala.tensor.sparse._;
@@ -41,7 +43,7 @@ class DenseVector(data : Array[Double]) extends
   /** Constructor for a vector of zeros of the given size. */
   def this(size : Int) = this(new Array[Double](size));
   
-  override def size = data.size;
+  override def size = data.length;
   
   override def apply(i : Int) = data(i);
   override def update(i : Int, value : Double) = data(i) = value;
@@ -78,6 +80,20 @@ class DenseVector(data : Array[Double]) extends
   }
   
   override def toString() = new DenseMatrix(size, 1, data).toString();
+
+  override def :=  (t : PartialMap[Int,Double]) = t match {
+    case v: DenseVector =>
+      ensure(v)
+      System.arraycopy(v.data,0,this.data,0,this.data.length);
+    case s: SparseVector =>
+      Arrays.fill(this.data,s.default);
+      var offset = 0;
+      while(offset < s.used) {
+        data(s.index(offset)) = s.data(offset);
+        offset+=1;
+      }
+    case _ => super.:=(t);
+  }
 }
 
 object DenseVector {

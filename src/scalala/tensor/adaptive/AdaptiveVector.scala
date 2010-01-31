@@ -41,7 +41,7 @@ class AdaptiveVector(private var vec: Vector) extends Vector with TensorSelfOp[I
   /**
    * Computes the point at which we switch to using a DenseVector
    */
-  protected def densityThreshold = 0.6;
+  protected def densityThreshold = 0.5;
 
   def this(domainSize:Int) = this(new SparseVector(domainSize));
 
@@ -88,6 +88,13 @@ class AdaptiveVector(private var vec: Vector) extends Vector with TensorSelfOp[I
 
   /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = vec.dot(other);
+
+  def densify() {
+    vec match {
+      case x: DenseVector =>
+      case _ => vec = switchRepr();
+    }
+  }
 
   protected def switchRepr() = {
     val newVec = new DenseVector(size);
