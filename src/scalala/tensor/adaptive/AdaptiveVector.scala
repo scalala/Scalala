@@ -69,6 +69,11 @@ class AdaptiveVector(private var vec: Vector) extends Vector with TensorSelfOp[I
       vec.update(i,value);
   }
 
+  override def +=(c: Double) = vec += c;
+  override def -=(c: Double) = vec -= c;
+  override def *=(c: Double) = vec *= c;
+  override def /=(c: Double) = vec /= c;
+
   override def copy = {
     new AdaptiveVector(vec.copy);
 
