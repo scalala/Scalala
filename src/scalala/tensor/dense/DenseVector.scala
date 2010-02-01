@@ -81,6 +81,38 @@ class DenseVector(data : Array[Double]) extends
   
   override def toString() = new DenseMatrix(size, 1, data).toString();
 
+  override def +=(c: Double) {
+    var i = 0;
+    while(i < data.length) {
+      data(i) += c;
+      i += 1;
+    }
+  }
+
+  override def -=(c: Double) {
+    var i = 0;
+    while(i < data.length) {
+      data(i) -= c;
+      i += 1;
+    }
+  }
+
+  override def *=(c: Double) {
+    var i = 0;
+    while(i < data.length) {
+      data(i) *= c;
+      i += 1;
+    }
+  }
+
+  override def /=(c: Double) {
+    var i = 0;
+    while(i < data.length) {
+      data(i) /= c;
+      i += 1;
+    }
+  }
+
   override def :=  (t : PartialMap[Int,Double]) = t match {
     case v: DenseVector =>
       ensure(v)
