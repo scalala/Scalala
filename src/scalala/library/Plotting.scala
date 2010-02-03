@@ -30,7 +30,7 @@ import scalala.tensor.dense.{DenseVector,DenseMatrix};
  * 
  * @author dramage
  */
-trait Plotting extends Library with Vectors with Matrices with Operators {
+trait Plotting extends Library with PartialMaps with Vectors with Matrices with Operators {
   import PlottingSupport._;
   
   /** Implicit graphics context */
@@ -118,21 +118,21 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   }
   
   /** Plots a histogram of the given data into 10 equally spaced bins */
-  def hist[I](data : PartialMap[I,Double])(implicit xyplot : XYPlot) : Unit = {
-    hist(data, 10)(xyplot)
+  def hist[K,V](data : PartialMap[K,V])(implicit xyplot : XYPlot, convert : V=>Double) : Unit = {
+    hist(data, 10)(xyplot, convert);
   }
   
   
   /** Plots a histogram of the given data into the given number of bins */
-  def hist[I](data : PartialMap[I,Double], nbins : Int)(implicit xyplot : XYPlot) : Unit = {
-    hist(data, linspace(min(data),max(data),nbins))(xyplot)
+  def hist[K,V](data : PartialMap[K,V], nbins : Int)(implicit xyplot : XYPlot, cv : V=>Double) : Unit = {
+    hist(data, linspace(min(data),max(data),nbins))(xyplot, cv);
   }
   
   /**
    * Plots a histogram of the given data into bins with centers at the given
    * positions.
    */
-  def hist[I](data : PartialMap[I,Double], bins : Vector)(implicit xyplot : XYPlot) : Unit = {
+  def hist[K,V](data : PartialMap[K,V], bins : Vector)(implicit xyplot : XYPlot, cv : V=>Double) : Unit = {
     def bucket(point : Double, lower : Int, upper : Int) : Int = {
       val mid = (lower + upper) / 2;
       if (lower == upper) {
@@ -171,16 +171,21 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   
   /** Plots the given y versus 1 to y.size as x with line drawn */
   def plot(y : Vector)(implicit xyplot : PlottingSupport.XYPlot) : Unit = {
-    plot(new DenseVector(Array.tabulate(y.size)(i => i+1.0)), y)(xyplot,manifestOf[Int]);
+    plot(new DenseVector(Array.tabulate(y.size)(i => i+1.0)), y)(
+      xyplot,manifestOf[Int],(i:Double)=>i,(i:Double)=>i);
   }
   
   /** Plots the given y versus the given x with line drawn */
-  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double])(implicit xyplot : PlottingSupport.XYPlot, man: ClassManifest[I]) : Unit = {
-    plot(x,y,'-')(xyplot,man);
+  def plot[K,V1,V2](x : PartialMap[K,V1], y : PartialMap[K,V2])
+  (implicit xyplot : PlottingSupport.XYPlot, man: ClassManifest[K],
+   cv1 : V1=>Double, cv2 : V2=>Double) : Unit = {
+    plot(x,y,'-')(xyplot,man,cv1,cv2);
   }
   
   /** Plots the given y versus the given x with the given style */
-  def plot[I](x : PartialMap[I,Double], y : PartialMap[I,Double], style : Char)(implicit xyplot : PlottingSupport.XYPlot, man: ClassManifest[I]) : Unit = {
+  def plot[K,V1,V2](x : PartialMap[K,V1], y : PartialMap[K,V2], style : Char)
+  (implicit xyplot : PlottingSupport.XYPlot, man: ClassManifest[K],
+   cv1 : V1 => Double, cv2 : V2=>Double) : Unit = {
     lazy val shapeDot = new java.awt.geom.Ellipse2D.Double(0,0,2,2);
     lazy val shapePlus = {
       val shape = new java.awt.geom.GeneralPath();
@@ -193,7 +198,7 @@ trait Plotting extends Library with Vectors with Matrices with Operators {
   
     
     // initialize dataset and series
-    val dataset = Dataset(x,y);
+    val dataset = Dataset(x.map(cv1),y.map(cv2));
     val series = xyplot.nextSeries;
     
     xyplot.plot.setDataset(series, dataset);

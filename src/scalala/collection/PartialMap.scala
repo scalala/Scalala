@@ -19,6 +19,9 @@
  */
 package scalala.collection;
 
+import scala.collection.{Traversable,TraversableLike};
+import scala.collection.generic.CanBuildFrom;
+
 /**
  * A PartialMap is an immutable map-like object (keys of type A,
  * values of type B) that decouples the domain of possible keys
@@ -27,7 +30,8 @@ package scalala.collection;
  * 
  * @author dramage
  */
-trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
+trait PartialMap[@specialized A, @specialized B]
+extends PartialFunction[A,B] with Iterable[(A,B)] {
   /**
    * Returns the complete domain of the function.  For some types of
    * maps (e.g. those converted from scala.collection.Map), domain may
@@ -116,19 +120,14 @@ trait PartialMap[A,B] extends PartialFunction[A,B] with Iterable[(A,B)] {
   
   /** Getter for an iterator over keys. */
   def apply(keys : Iterator[A]) : Iterator[B] = keys.map(apply);
-  
-  /** Getter for a collection of keys. */
-  def apply(keys : Iterable[A]) : Iterable[B] = keys.map(apply);
-  
-  /** Getter for a collection of keys. */
-  def apply(keys : Seq[A]) : Seq[B] = keys.map(apply);
-  
-  /** A set is both an Iterable and a (A=>Boolean), so it is special-cased. */
-  def apply(keys : scala.collection.Set[A]) : Iterable[B] = keys.map(apply);
 
   /** Getter for all values for which the given key function returns true. */
   def apply(f : (A => Boolean)) : Iterator[B] =
     for ((k,v) <- iterator; if f(k)) yield v;
+
+  /** Get all values with keys listed in the given traversable. */
+  def apply[This <: Traversable[A], That](keys : TraversableLike[A,This])
+  (implicit bf: CanBuildFrom[This, B, That]) : That = keys.map(apply);
   
   /** Returns the keys for which the value returns true. */
   def find(f : (B => Boolean)) : Iterator[A] = {

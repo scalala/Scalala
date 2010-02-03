@@ -31,7 +31,7 @@ import scalala.tensor.operators.TensorOp;
  * 
  * @author dramage
  */
-trait Vectors extends Library with Operators {
+trait Vectors extends Library with PartialMaps with Operators {
   /** 100 evenly spaced points between a and b */
   def linspace(a : Double, b : Double) : DenseVector =
     linspace(a,b,100);
@@ -92,76 +92,6 @@ trait Vectors extends Library with Operators {
   
   /** Log each element of a vector or matrix */
   def log[I](v : PartialMap[I,Double]) = v.map(Math.log _);
-  
-  /** The maximum value of the map. */
-  def max[I](v : PartialMap[I,Double]) : Double = {
-    val maxActive = max(v.activeValues);
-    if (!(v.domain -- v.activeDomain).isEmpty) {
-      Math.max(v.default, maxActive)
-    } else {
-      maxActive;
-    }
-  }
-  
-  def max(v : Iterator[Double]) : Double = v.reduceLeft(Math.max);
-  def max(v : Iterable[Double]) : Double = max(v.iterator);
-
-  /** Returns a key i of the map such that v(i)=max(v). */
-  def argmax[I](v : PartialMap[I,Double]) : I = {
-    val nonActive = v.domain -- v.activeDomain;
-    if (nonActive.isEmpty) {
-      argmax(v.activeElements);
-    } else {
-      argmax(v.activeElements ++ Iterator.single((nonActive.iterator.next, v.default)));
-    }
-  }
-  
-  def argmax[I](v : Iterator[(I,Double)]) : I =
-    v.reduceLeft((tupA,tupB) => if (tupA._2 >= tupB._2) tupA else tupB)._1;
-  def argmax[I](v : Iterator[Double]) : Int =
-    argmax(v.zipWithIndex.map(tup => (tup._2,tup._1)));
-  
-  /**
-   * Due to iteration ordering requirements, argmax is ill-defined on general Iterables,
-   * but perfectly valid on sequences.
-   */
-  def argmax[I](v : Seq[Double]) : Int =
-    argmax(v.iterator);
-  
-  /** The minimum value of the map. */
-  def min[I](v : PartialMap[I,Double]) : Double = {
-    val minActive = min(v.activeValues);
-    if (!(v.domain -- v.activeDomain).isEmpty) {
-      Math.min(v.default, minActive)
-    } else {
-      minActive;
-    }
-  }
-
-  def min(v : Iterator[Double]) : Double = v.reduceLeft(Math.min);
-  def min(v : Iterable[Double]) : Double = min(v.iterator);
-  
-  /** Returns a key i of the map such that v(i)=min(v). */
-  def argmin[I](v : PartialMap[I,Double]) : I = {
-    val nonActive = v.domain -- v.activeDomain;
-    if (nonActive.isEmpty) {
-      argmin(v.activeElements);
-    } else {
-      argmin(v.activeElements ++ Iterator.single((nonActive.iterator.next, v.default)));
-    }
-  }
-  
-  def argmin[I](v : Iterator[(I,Double)]) : I =
-    v.reduceLeft((tupA,tupB) => if (tupA._2 <= tupB._2) tupA else tupB)._1;
-  def argmin[I](v : Iterator[Double]) : Int =
-    argmin(v.zipWithIndex.map(tup => (tup._2,tup._1)));
-  
-  /**
-   * Due to iteration ordering requirements, argmax is ill-defined on general Iterables,
-   * but perfectly valid on sequences.
-   */
-  def argmin[I](v : Seq[Double]) : Int =
-    argmin(v.iterator);
   
   /**
    * Returns the sum of the squares of the iterator of the vector.
@@ -261,7 +191,7 @@ trait Vectors extends Library with Operators {
     } else if (n % 2 == 1) {
       return Math.pow(sum(v.map((x:Double) => Math.pow(Math.abs(x), n))), 1.0 / n);
     } else if (n == Double.PositiveInfinity) {
-      return max(v.map((x:Double) => Math.abs(x)));
+      return max(v.map((x : Double) => Math.abs(x)));
     } else {
       throw new UnsupportedOperationException();
     }
@@ -328,21 +258,5 @@ trait VectorsTest extends Library with Vectors with Implicits with Random with s
     assertEquals(norm(v,5), 1.7146, 1e-4);
     assertEquals(norm(v,6), 1.6940, 1e-4);
     assertEquals(norm(v,Double.PositiveInfinity), 1.6656, 1e-4);
-  }
-  
-  test("Tensor:MinMax") {
-    val v = new SparseVector(10);
-    v(3) = 1;
-    assertEquals(1, max(v));
-    assertEquals(3, argmax(v));
-    assertEquals(0, min(v));
-    assertEquals(0, argmin(v));
-    
-    v += 2;
-    v(3) = 1;
-    assertEquals(2, max(v));
-    assertEquals(0, argmax(v));
-    assertEquals(1, min(v));
-    assertEquals(3, argmin(v));
   }
 }

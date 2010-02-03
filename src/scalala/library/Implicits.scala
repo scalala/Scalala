@@ -37,25 +37,25 @@ trait Implicits {
   implicit def iRichDoubleArray(array : Array[Double]) =
     RichDoubleArray(array);
 
-  implicit def iRichIndexedSeqFromIntArray(array : Array[Int]) =
+  implicit def iRichIndexedSeqFromArray(array : Array[Int]) =
     iRichIndexedSeq(array);
 
-  implicit def iRichIndexedSeqFromIntArray(array : Array[Long]) =
+  implicit def iRichIndexedSeqFromArray(array : Array[Long]) =
     iRichIndexedSeq(array);
 
-  implicit def iRichIndexedSeqFromIntArray(array : Array[Byte]) =
+  implicit def iRichIndexedSeqFromArray(array : Array[Byte]) =
     iRichIndexedSeq(array);
 
-  implicit def iRichIndexedSeqFromIntArray(array : Array[Short]) =
+  implicit def iRichIndexedSeqFromArray(array : Array[Short]) =
     iRichIndexedSeq(array);
 
-  implicit def iRichIndexedSeqFromIntArray(array : Array[Float]) =
+  implicit def iRichIndexedSeqFromArray(array : Array[Float]) =
     iRichIndexedSeq(array);
 
-  implicit def iRichIndexedSeqFromIntArray(array : Array[Char]) =
+  implicit def iRichIndexedSeqFromArray(array : Array[Char]) =
     iRichIndexedSeq(array);
 
-  implicit def iRichIndexedSeqFromIntArray(array : Array[Boolean]) =
+  implicit def iRichIndexedSeqFromArray(array : Array[Boolean]) =
     iRichIndexedSeq(array);
 }
 
@@ -82,7 +82,6 @@ case class RichIndexedSeqLike[T,Repr](seq : IndexedSeqLike[T,Repr])(implicit m :
     asPartialMapWithDefault(default);
   }
 }
-
 
 /**
  * A version of Array[Double] that contains a method toVector to construct
