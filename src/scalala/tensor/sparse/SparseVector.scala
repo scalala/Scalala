@@ -311,6 +311,47 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   */
   def matrixLike(rows:Int, cols:Int) = new SparseHashMatrix(rows,cols);
 
+  override def +=(c: Double) = {
+    default += c;
+    var offset = 0;
+    while(offset < used) {
+      data(offset) += c;
+      offset += 1;
+    }
+  }
+
+  override def -=(c: Double) = {
+    default += c;
+    var offset = 0;
+    while(offset < used) {
+      data(offset) -= c;
+      offset += 1;
+    }
+  }
+
+
+  override def *=(c: Double) = {
+    default += c;
+    var offset = 0;
+    while(offset < used) {
+      data(offset) *= c;
+      offset += 1;
+    }
+  }
+
+
+  override def /=(c: Double) = {
+    default += c;
+    var offset = 0;
+    while(offset < used) {
+      data(offset) /= c;
+      offset += 1;
+    }
+  }
+
+
+
+
 
   
   /** Uses optimized implementations. */

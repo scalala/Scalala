@@ -75,6 +75,7 @@ object ScalalaTestSuite extends Scalala
   with scalala.tensor.sparse.SparseHashVectorTest
   with scalala.tensor.sparse.SparseBinaryVectorTest
   with scalala.tensor.sparse.SingletonBinaryVectorTest
+  with scalala.tensor.adaptive.AdaptiveVectorTest
   with PartialMapsTest
   with VectorsTest
   with StatisticsTest

@@ -42,6 +42,9 @@ trait Vector extends Tensor1[Int] with TensorSelfOp[Int,Vector,Shape1Col] {
   def toArray = Array.tabulate(size)(i => this(i));
   
   override def copy : Vector = super.copy.asInstanceOf[Vector];
+
+  override def apply(i: Int): Double;
+  override def update(i: Int,v: Double):Unit;
   
   final protected def check(i : Int) {
     if (i < 0 || i >= size) {

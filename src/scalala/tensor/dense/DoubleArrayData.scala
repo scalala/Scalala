@@ -24,4 +24,4 @@ package scalala.tensor.dense;
  * 
  * @author dramage
  */
-abstract class DoubleArrayData(val data : Array[Double]);
+abstract class DoubleArrayData(final val data : Array[Double]);

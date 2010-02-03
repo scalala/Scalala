@@ -64,8 +64,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
     if (s == 1) {
       // do nothing
     } else {
-      for (i <- activeDomain) { this(i) *= s; }
+      // Defaults shoud always come before the "real" assignments.
+      //(Think about sparsevectors with different defaults)
       this.default = this.default * s;
+      for (i <- activeDomain) { this(i) *= s; }
     }
   }
   
@@ -74,33 +76,41 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
     if (s == 1) {
       // do nothing
     } else {
-      this(activeDomain) = ((x:Double) => x / s);
+      // Defaults shoud always come before the "real" assignments.
+      //(Think about sparsevectors with different defaults)
       this.default = this.default / s;
+      this(activeDomain) = ((x:Double) => x / s);
     }
   }
   
   /** Increments element by the given scalar. */
   def += (s : Double) = {
-    this(activeDomain) = ((x:Double) => x + s);
+    // Defaults shoud always come before the "real" assignments.
+    //(Think about sparsevectors with different defaults)
     this.default = this.default + s;
+    this(activeDomain) = ((x:Double) => x + s);
   }
   
   /** Decrements each element by the given scalar. */
   def -= (s : Double) = {
-    this(activeDomain) = ((x:Double) => x - s);
+    // Defaults shoud always come before the "real" assignments.
+    //(Think about sparsevectors with different defaults)
     this.default = this.default - s;
+    this(activeDomain) = ((x:Double) => x - s);
   }
   
   /** Raises each element to the the given power. */
   def :^= (s : Double) = {
-    this(activeDomain) = ((x:Double) => Math.pow(x,s));
+    // Defaults shoud always come before the "real" assignments.
+    //(Think about sparsevectors with different defaults)
     this.default = Math.pow(this.default, s);
+    this(activeDomain) = ((x:Double) => Math.pow(x,s));
   }
   
   /** Each element becomes itself modulo the given scalar. */
   def %= (s : Double) = {
-    this(activeDomain) = ((x:Double) => x % s);
     this.default %= s;
+    this(activeDomain) = ((x:Double) => x % s);
   }
   
   //
@@ -110,8 +120,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
   /** Assigns each element in this map to the corresponding value in the other map. */
   def :=  (t : PartialMap[I,Double]) {
     ensure(t);
-    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => t(i));
+    // Defaults shoud always come before the "real" assignments.
+    //(Think about sparsevectors with different defaults)
     this.default = t.default;
+    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => t(i));
   }
 
   def := [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
@@ -120,13 +132,15 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
   /** Multiplies each value in this map by the corresponding value in the other map. */
   def :*= (t : PartialMap[I,Double]) {
     ensure(t);
+    // Defaults shoud always come before the "real" assignments.
+    //(Think about sparsevectors with different defaults)
+    this.default = this.default * t.default;
     // if our default is 0 then we can skip active iterator in the other domain
     val domain = {
       if (this.default == 0.0) (this.activeDomain)
       else                     (this.activeDomain ++ t.activeDomain)
     }
     this(domain) = ((i : I, x : Double) => x*t(i));
-    this.default = this.default * t.default;
   }
 
   def :*= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
@@ -136,8 +150,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
   /** Divides each value in this map by the corresponding value in the other map. */
   def :/= (t : PartialMap[I,Double]) {
     ensure(t);
-    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x/t(i));
+    // Defaults shoud always come before the "real" assignments.
+    //(Think about sparsevectors with different defaults)
     this.default = this.default / t.default;
+    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x/t(i));
   }
 
   def :/= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
@@ -152,8 +168,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
         this(i) += t(i);
       }
     } else {
-      this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x+t(i));
+      // Defaults shoud always come before the "real" assignments.
+      //(Think about sparsevectors with different defaults)
       this.default += t.default;
+      this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x+t(i));
     }
   }
 
@@ -169,8 +187,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
         this(i) -= t(i);
       }
     } else {
-      this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x-t(i));
+      // Defaults shoud always come before the "real" assignments.
+      //(Think about sparsevectors with different defaults)
       this.default -= t.default;
+      this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x-t(i));
     }
   }
 
@@ -180,8 +200,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
   /** Raises each value in this map by the corresponding value in the other map. */
   def :^= (t : PartialMap[I,Double]) {
     ensure(t);
-    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => Math.pow(x,t(i)));
+    // Defaults shoud always come before the "real" assignments.
+    //(Think about sparsevectors with different defaults)
     this.default = Math.pow(this.default, t.default);
+    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => Math.pow(x,t(i)));
   }
 
   def :^= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
@@ -190,8 +212,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
   /** Modulos each value in this map by the corresponding value in the other map. */
   def :%= (t : PartialMap[I,Double]) {
     ensure(t);
-    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x%t(i));
+    // Defaults shoud always come before the "real" assignments.
+    //(Think about sparsevectors with different defaults)
     this.default = this.default % t.default;
+    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => x%t(i));
   }
   
   def :%= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
@@ -398,7 +422,7 @@ trait Tensor1[I] extends Tensor[I] with TensorSelfOp[I,Tensor1[I],Shape1Col] {
     
     if (this.default == 0.0 || that.default == 0.0) {
       var sum = 0.0;
-      for (k <- this.activeDomain ** that.activeDomain) {
+      for (k <- this.activeDomain ++ that.activeDomain) {
         sum += (this(k) * that(k));
       }
       sum;
