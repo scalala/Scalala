@@ -592,7 +592,11 @@ object PlottingSupport {
       f.setSize(600,400);
       f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
       f.setLayout(new java.awt.GridLayout(cols,rows));
-      f
+
+      // we use visible_ to avoid an infinite loop
+      f.setVisible(visible_);
+
+      return f
     }
     
     /** How many rows of plots are in the figure */
