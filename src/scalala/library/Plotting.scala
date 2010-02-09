@@ -52,7 +52,10 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
     figures.figure.refresh
     return figures.figure
   }
-  
+
+  def figure()(implicit figures : Figures) : Figure =
+    figures.figure;
+
   /** Clears the current figure */
   def clf()(implicit figure : Figure) = {
     figure.clear;
@@ -400,6 +403,7 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
   }
   
   /** For re-plotting to same figure */
+  @deprecated("Use figure.hold = true or figure.hold = false.")
   def hold(state : Boolean)(implicit figures : Figures) : Unit = {
     val xyplot = figures.figure.plot;
     xyplot.hold = state;
@@ -606,7 +610,15 @@ object PlottingSupport {
       cols_ = newcols;
       refresh();
     }
-    
+
+    /** Visibility state of the plot */
+    private var visible_ = true;
+    def visible = visible_;
+    def visible_=(newvis : Boolean) : Unit = {
+      visible_ = newvis;
+      frame.setVisible(visible_);
+    }
+
     def number(plot : XYPlot) : Int = plots.indexOf(plot);
     
     private var plot_ = 0;
@@ -630,7 +642,7 @@ object PlottingSupport {
         frame.getContentPane.add(if (plot == null) new JPanel() else plot.panel);
       }
       frame.repaint();
-      frame.setVisible(true);
+      frame.setVisible(visible);
     }
     
     // create the initial plot (don't call clear lest we pop up a window)

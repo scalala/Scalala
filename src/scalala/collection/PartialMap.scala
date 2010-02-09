@@ -23,10 +23,9 @@ import scala.collection.{Traversable,TraversableLike};
 import scala.collection.generic.CanBuildFrom;
 
 /**
- * A PartialMap is an immutable map-like object (keys of type A,
- * values of type B) that decouples the domain of possible keys
- * (domain) with those that have (possibly) non-default values
- * (activeDomain).
+ * A PartialMap is a map-like object (keys of type A, values of type B)
+ * that decouples the domain of possible keys (domain) with those that have
+ * (possibly) non-default values (activeDomain).
  * 
  * @author dramage
  */

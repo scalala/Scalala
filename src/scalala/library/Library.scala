@@ -19,9 +19,7 @@
  */
 package scalala.library;
 
-import scalala.tensor.{Tensor,Vector,Matrix,DiagonalMatrix};
-import scalala.tensor.dense.{DenseVector,DenseMatrix};
-import scalala.tensor.sparse.{SparseVector};
+import scalala.tensor.dense.DenseVector;
 
 /**
  * Basic data type construction and manipulation.
@@ -41,13 +39,19 @@ trait Library {
   //
   
   /** Log a value. */
-  final def log(v : Double) : Double = Math.log(v);
+  @inline final def log(v : Double) : Double = Math.log(v);
   
   /** Exponentiate a value. */
-  final def exp(v : Double) : Double = Math.exp(v);
+  @inline final def exp(v : Double) : Double = Math.exp(v);
 
-  final def pow(base : Double, exponent : Double) : Double =
+  @inline final def pow(base : Double, exponent : Double) : Double =
     Math.pow(base, exponent);
+
+  /** Alias for x.isNaN. */
+  @inline final def isnan(x : Double) = x.isNaN;
+
+  /** Alias for Math.sqrt. */
+  @inline final def sqrt(x : Double) = Math.sqrt(x);
   
   /** Alias for Double.NaN */
   final val NaN = Double.NaN;
@@ -60,12 +64,6 @@ trait Library {
   
   /** Alias for Double.PositiveInfinity */
   final val inf = Inf;
-  
-  /** Alias for x.isNaN. */
-  final def isnan(x : Double) = x.isNaN;
-
-  /** Alias for Math.sqrt. */
-  final def sqrt(x : Double) = Math.sqrt(x);
 }
 
 /**
