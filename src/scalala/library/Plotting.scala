@@ -417,7 +417,7 @@ object PlottingSupport {
   import org.jfree.chart._
   import org.jfree.chart.plot._
 
-  import java.awt.Container
+  import java.awt.Graphics2D;
   import javax.swing._
   
   import org.jfree.chart._
@@ -575,30 +575,9 @@ object PlottingSupport {
   
   /** A Figure holds a collection of XYPlot instances */
   class Figure(figures : Figures) {
-    /** List of plots in the figure */
-    private val plots = ArrayBuffer[XYPlot]();
+    /** List of plots in the figure. */
+    protected val plots = ArrayBuffer[Option[XYPlot]]();
 
-    /** Clears the current plot */
-    def clear() {
-      plots.clear();
-      plot = 0;
-      rows = 1;
-      cols = 1;
-    }
-    
-    /** The Swing frame for this plot */
-    lazy val frame : JFrame = {
-      val f = new JFrame("Figure "+(figures.number(this)+1));
-      f.setSize(600,400);
-      f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-      f.setLayout(new java.awt.GridLayout(cols,rows));
-
-      // we use visible_ to avoid an infinite loop
-      f.setVisible(visible_);
-
-      return f
-    }
-    
     /** How many rows of plots are in the figure */
     private var rows_ = 1;
     def rows = rows_;
@@ -606,7 +585,7 @@ object PlottingSupport {
       rows_ = newrows;
       refresh();
     }
-    
+
     /** How many cols of plots are in the figure */
     private var cols_ = 1 ;
     def cols = cols_;
@@ -623,41 +602,85 @@ object PlottingSupport {
       frame.setVisible(visible_);
     }
 
-    def number(plot : XYPlot) : Int = plots.indexOf(plot);
+    /** JPanel holding for drawing subplots in this figure. */
+    val contents = {
+      val _c = new JPanel();
+      _c.setSize(600,400);
+      _c;
+    }
+    
+    /** The Swing frame for this plot */
+    lazy val frame : JFrame = {
+      val f = new JFrame("Figure "+(figures.number(this)+1));
+      f.setSize(600,400);
+      f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+      f.setLayout(new java.awt.BorderLayout());
+      f.add(contents, java.awt.BorderLayout.CENTER);
+
+      // we use visible_ to avoid an infinite loop
+      f.setVisible(visible_);
+
+      f
+    }
+
+    /** Returns the number of the given plot in this container */
+    def number(plot : XYPlot) : Int =
+      plots.indexOf(plot);
     
     private var plot_ = 0;
-    def plot : XYPlot = plots(plot_);
+    /** Returns the current plot in the figure */
+    def plot : XYPlot = plots(plot_).get;
+
+    /** Uses the given plot number. */
     def plot_=(number : Int) : Unit = {
       assert(number >= 0);
       while (plots.length <= number) {
-        plots += null;
+        plots += None;
       }
-      if (plots(number) == null) {
-        plots(number) = new XYPlot(this);
+      if (plots(number) == None) {
+        plots(number) = Some(new XYPlot(this));
       }
       plot_ = number;
     }
-    
+
+    // create the initial plot (don't call clear lest we pop up a window)
+    plot = 0;
+
+    /** Clears the current plot */
+    def clear() {
+      contents.removeAll();
+      plots.clear();
+      plot = 0;
+      rows = 1;
+      cols = 1;
+      refresh();
+    }
+
     /** Redraws the figure */
     def refresh() : Unit = {
-      frame.getContentPane.removeAll;
-      frame.getContentPane.setLayout(new java.awt.GridLayout(rows,cols));
-      for (plot <- plots) {
-        frame.getContentPane.add(if (plot == null) new JPanel() else plot.panel);
+      while (plots.length < rows * cols) {
+        plots += None;
       }
+      while (plots.length > rows * cols) {
+        plots.remove(plots.length-1);
+      }
+
+      contents.removeAll;
+      contents.setLayout(new java.awt.GridLayout(rows,cols));
+      for (plot <- plots) {
+        contents.add(plot match { case Some(plot) => plot.panel; case None => new JPanel() });
+      }
+      
       frame.repaint();
       frame.setVisible(visible);
     }
-    
-    // create the initial plot (don't call clear lest we pop up a window)
-    plot = 0;
     
     // export the plot
     def writeEPS(out : java.io.OutputStream, dpi : Int) {
       // default dpi is 72
       val scale = dpi / 72.0;
-      val width  = (frame.getContentPane.getSize.width  * scale).toInt;
-      val height = (frame.getContentPane.getSize.height * scale).toInt;
+      val width = (contents.getWidth  * scale).toInt;
+      val height = (contents.getHeight * scale).toInt;
 
       // an attempt at getting the renderer to do high-res correctly. failed.
       /*
@@ -679,79 +702,70 @@ object PlottingSupport {
       g2d.setGraphicContext(new org.apache.xmlgraphics.java2d.GraphicContext);
       g2d.setupDocument(out, width, height);
       g2d.scale(scale, scale);
-      frame.getContentPane.paintAll(g2d);
-      // plot.chart.draw(g2d, new java.awt.geom.Rectangle2D.Double(0,0,width,height));
+      drawPlots(g2d);
       g2d.finish();
     }
     
     def writePNG(out : java.io.OutputStream, dpi : Int) {
       // default dpi is 72
       val scale = dpi / 72.0;
-      val width  = (frame.getContentPane.getSize.width  * scale).toInt;
-      val height = (frame.getContentPane.getSize.height * scale).toInt;
-      
+      val width = (contents.getWidth  * scale).toInt;
+      val height = (contents.getHeight * scale).toInt;
+
       import java.awt.image.BufferedImage;
       val image = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
       val g2d = image.createGraphics();
       g2d.scale(scale, scale);
-      frame.getContentPane.paintAll(g2d);
+      drawPlots(g2d);
       g2d.dispose;
       
       javax.imageio.ImageIO.write(image, "png", out);
-      
-      //org.jfree.chart.ChartUtilities.writeChartAsPNG(
-      //  out, plot.chart, frame.getSize.width, frame.getSize.height);
     }
 
     /** Contributed by Robby McKilliam */
     def writePDF(out : java.io.OutputStream) {
       import com.lowagie.text.Document;
-      import com.lowagie.text.DocumentException;
-      import com.lowagie.text.Paragraph;
       import com.lowagie.text.Rectangle;
-      import com.lowagie.text.pdf.PdfContentByte;
-      import com.lowagie.text.pdf.PdfImportedPage;
-      import com.lowagie.text.pdf.PdfReader;
-      import com.lowagie.text.pdf.PdfTemplate;
       import com.lowagie.text.pdf.PdfWriter;
 
-      val width  = (frame.getContentPane.getSize.width).toInt;
-      val height = (frame.getContentPane.getSize.height).toInt;
+      val width  = contents.getWidth;
+      val height = contents.getHeight;
 
-      // step 1: creation of a document-object
       val document = new Document();
 
       try {
         document.setPageSize(new Rectangle(width, height));
-
-        // step 2: creation of the writer
         val writer = PdfWriter.getInstance(document, out);
-        // step 3: we open the document
         document.open();
 
         val cb = writer.getDirectContent();
-
         val tp = cb.createTemplate(width, height);
         val g2d = tp.createGraphics(width, height);
 
-        val plotwidth = width/cols;
-        val plotheight = height/rows;
-        var px = 0; var py = 0;
-        for(plot <- plots) {
-          if (plot != null) {
-            plot.chart.draw(g2d, new java.awt.Rectangle(px*plotwidth, py*plotheight, plotwidth, plotheight));
-          }
-          px = (px +1)%cols;
-          if(px == 0) py = (py + 1)%rows;
-        }
-        //frame.getContentPane.paintAll(g2d)
+        drawPlots(g2d);
+
         g2d.dispose;
 
         cb.addTemplate(tp, 1, 0, 0, 1, 0, 0);
+      } finally {
+        document.close();
       }
+    }
 
-      document.close();
-    }    
+    protected def drawPlots(g2d : Graphics2D) {
+      val plotWidth  = contents.getWidth / cols;
+      val plotHeight = contents.getHeight / rows;
+      var px = 0; var py = 0;
+      for (opt <- plots) {
+        opt match {
+          case Some(plot) =>
+            plot.chart.draw(g2d, new java.awt.Rectangle(px*plotWidth, py*plotHeight, plotWidth, plotHeight));
+          case None => {}
+        }
+        px = (px +1)%cols;
+        if(px == 0) py = (py + 1)%rows;
+      }
+    }
   }
   
   object XYPlot {
@@ -794,8 +808,6 @@ object PlottingSupport {
     // private var title_ : String = ""
     def title_=(str : String) : Unit = {
       chart.setTitle(str);
-      //title_ = str
-      //refresh()
     }
     def title : String = chart.getTitle.getText;
 
