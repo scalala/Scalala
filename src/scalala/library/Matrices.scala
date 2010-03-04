@@ -125,7 +125,28 @@ trait Matrices extends Library with Vectors {
    */
   def diag(v : Vector) : DiagonalMatrix =
     new DiagonalMatrix(v.copy);
-  
+
+  /**
+   * Computes the Eigenvalue decomposition of the matrix.
+   * Returns the eigenvectors (in a matrix) V and the eigenvalues in a diagonal D such that
+   *  m * V = V * D
+   */
+  def eig(m: DenseMatrix, symmetric:Boolean=false):(DenseMatrix,Matrix) = {
+    require(m.rows == m.cols,"Matrix must be square");
+    val n = m.rows;
+    val Wr = new Array[Double](n);
+    val Wi = new Array[Double](n);
+    val Vl = new Array[Double](0);
+    val Vr = m.like;
+    val work = new Array[Double](4 * n);
+    import scalala.tensor.dense.Numerics.lapack._;
+    val result = geev(Eigenvalues,EigenvaluesAndVectors,n,m.data,Wr,Wi,Vl,Vr.data,work,work.length);
+    if(result != 0) error("Eig failure!");
+    val D = diag(new DenseVector(Wr));
+    val V = Vr;
+    (V,D)
+  }
+
   /**
    * Turns the given matrices into a block diagonal matrix.
    */
