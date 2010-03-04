@@ -87,7 +87,37 @@ trait Matrices extends Library with Vectors {
     val rv = new DenseMatrix(n,n);
     rv := diag(ones(n));
     rv;
-  } 
+  }
+
+  /** Concatenates matrices on top of each other. Must have the same column dimension */
+  def vertcat(m1:Matrix, matrices: Matrix*):DenseMatrix = {
+    require(matrices.forall(_.cols == m1.cols),"Not all matrices have the same column dimension!");
+    val newRowSize = matrices.foldLeft(m1.rows)(_+_.rows);
+    val ret = new DenseMatrix(newRowSize,m1.cols);
+    var start = 0;
+    for( m <- Iterator.single(m1) ++ matrices.iterator) {
+      for( ((i,j),v) <- m) {
+        ret(i+start,j) = v;
+      }
+      start += m.rows;
+    }
+    ret
+  }
+
+  /** Concatenates matrices next to each other. Must have the same row dimension */
+  def horzcat(m1:Matrix, matrices: Matrix*):DenseMatrix = {
+    require(matrices.forall(_.rows == m1.rows),"Not all matrices have the same row dimension!");
+    val newColumnSize = matrices.foldLeft(m1.cols)(_+_.cols);
+    val ret = new DenseMatrix(m1.rows,newColumnSize);
+    var start = 0;
+    for( m <- Iterator.single(m1) ++ matrices.iterator) {
+      for( ((i,j),v) <- m) {
+        ret(i,j+start) = v; 
+      }
+      start += m.cols;
+    }
+    ret
+  }
   
   /**
    * Returns a diagonal matrix with the given vector on the diagonal.
