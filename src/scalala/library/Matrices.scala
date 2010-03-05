@@ -173,6 +173,31 @@ trait Matrices extends Library with PartialMaps with Vectors {
   }
 
   /**
+   * Computes the SVD of a m by n matrix
+   * Returns an m*m matrix U, a vector of singular values, and a n*n matrix V'
+   */
+  def svd(mat: DenseMatrix):(DenseMatrix,DenseVector,DenseMatrix) = {
+    val m = mat.rows;
+    val n = mat.cols;
+    val S = new DenseVector(m min n);
+    val U = new DenseMatrix(m,m);
+    val Vt = new DenseMatrix(n,n);
+    val iwork = new Array[Int](8 * (m min n) );
+    val workSize = ( 3
+                    * Math.min(m, n)
+                    * Math.min(m, n)
+                    + Math.max(Math.max(m, n), 4 * Math.min(m, n)
+                               * Math.min(m, n) + 4 * Math.min(m, n))
+                   );
+    val work = new Array[Double](workSize);
+    import scalala.tensor.dense.Numerics.lapack._;
+    val result = gesdd(JobSVD.All,m,n,mat.data,S.data,U.data,Vt.data,work,work.length,iwork);
+    if(result != 0) error("SVD failure!");
+    (U,S,Vt);
+  }
+
+
+  /**
    * Turns the given matrices into a block diagonal matrix.
    */
   // TODO re-implement

@@ -62,25 +62,34 @@ class JLAPACK_LAPACKkernel {
   def laenv(ispec : Int, name : String, opts : String, n1 : Int, n2 : Int, n3 : Int, n4 : Int) =
     Ilaenv.ilaenv(ispec, name, opts, n1, n2, n3, n4);
 
-  /*
-    public int gesvd(JobSVD jobu, JobSVD jobvt, int m, int n, double[] A,
-            double[] s, double[] U, double[] Vt, double[] work, int lwork) {
-        intW info = new intW(0);
-        Dgesvd.dgesvd(jobSVD(jobu), jobSVD(jobvt), m, n, A, 0, ld(m), s, 0, U,
+    sealed trait JobSVD { def repr: String }
+    object JobSVD {
+      case object All extends JobSVD { def repr = "A" };
+      case object Some extends JobSVD { def repr = "S" };
+      case object Overwrite extends JobSVD { def repr = "O" };
+      case object None extends JobSVD { def repr = "N" };
+    }
+
+     def gesvd(jobu: JobSVD, jobvt: JobSVD, m: Int, n: Int, A: Array[Double],
+            s: Array[Double], U: Array[Double], Vt: Array[Double], work: Array[Double], lwork: Int):Int = {
+        val info = new intW(0);
+        Dgesvd.dgesvd(jobu.repr, jobvt.repr, m, n, A, 0, ld(m), s, 0, U,
                 0, ld(m), Vt, 0, ld(n), work, 0, lwork, info);
-        return info.val;
+        info.`val`;
     }
 
-    public int gesdd(JobSVD jobz, int m, int n, double[] A, double[] s,
-            double[] U, double[] Vt, double[] work, int lwork, int[] iwork) {
-        intW info = new intW(0);
-        Dgesdd.dgesdd(jobSVD(jobz), m, n, A, 0, ld(m), s, 0, U, 0, ld(m), Vt,
-                0, ld(n), work, 0, lwork, iwork, 0, info);
-        return info.val;
+    def gesdd(jobz: JobSVD, m: Int, n: Int, A: Array[Double],
+            s: Array[Double], U: Array[Double], Vt: Array[Double], work: Array[Double], lwork: Int, iwork: Array[Int]):Int = {
+        val info = new intW(0);
+        Dgesdd.dgesdd(jobz.repr, m, n, A, 0, ld(m), s, 0, U,
+                0, ld(m), Vt, 0, ld(n), work, 0, lwork, iwork, 0, info);
+        info.`val`;
     }
 
-    public int gelss(int m, int n, int nrhs, double[] A, double[] B,
-            double[] s, double rcond, int[] rank, double[] work, int lwork) {
+
+  /*
+    public gelss: Int(m: Int, n: Int, nrhs: Int, A: Array[Double], B: Array[Double],
+            s: Array[Double], double rcond, int[] rank, work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         intW rankW = new intW(rank[0]);
         Dgelss.dgelss(m, n, nrhs, A, 0, ld(m), B, 0, ld(m, n), s, 0, rcond,
@@ -89,8 +98,8 @@ class JLAPACK_LAPACKkernel {
         return info.val;
     }
 
-    public int gelsd(int m, int n, int nrhs, double[] A, double[] B,
-            double[] s, double rcond, int[] rank, double[] work, int lwork,
+    public gelsd: Int(m: Int, n: Int, nrhs: Int, A: Array[Double], B: Array[Double],
+            s: Array[Double], double rcond, int[] rank, work: Array[Double], lwork: Int,
             int[] iwork) {
         intW info = new intW(0);
         doubleW rcondW = new doubleW(rcond);
@@ -114,32 +123,32 @@ class JLAPACK_LAPACKkernel {
         info.`val`;
     }
 /*
-    public int syev(JobEig jobz, UpLo uplo, int n, double[] A, double[] w,
-            double[] work, int lwork) {
+    public syev: Int(JobEig jobz, UpLo uplo, n: Int, A: Array[Double], w: Array[Double],
+            work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dsyev.dsyev(jobEig(jobz), uplo(uplo), n, A, 0, ld(n), w, 0, work, 0,
                 lwork, info);
         return info.val;
     }
 
-    public int spev(JobEig jobz, UpLo uplo, int n, double[] Ap, double[] w,
-            double[] Z, double[] work) {
+    public spev: Int(JobEig jobz, UpLo uplo, n: Int, Ap: Array[Double], w: Array[Double],
+            Z: Array[Double], work: Array[Double]) {
         intW info = new intW(0);
         Dspev.dspev(jobEig(jobz), uplo(uplo), n, Ap, 0, w, 0, Z, 0, ld(n),
                 work, 0, info);
         return info.val;
     }
 
-    public int sbev(JobEig jobz, UpLo uplo, int n, int kd, double[] Ab,
-            double[] w, double[] Z, double[] work) {
+    public sbev: Int(JobEig jobz, UpLo uplo, n: Int, kd: Int, Ab: Array[Double],
+            w: Array[Double], Z: Array[Double], work: Array[Double]) {
         intW info = new intW(0);
         Dsbev.dsbev(jobEig(jobz), uplo(uplo), n, kd, Ab, 0, ld(kd + 1), w, 0,
                 Z, 0, ld(n), work, 0, info);
         return info.val;
     }
 
-    public int stev(JobEig jobz, int n, double[] d, double[] e, double[] Z,
-            double[] work) {
+    public stev: Int(JobEig jobz, n: Int, d: Array[Double], e: Array[Double], Z: Array[Double],
+            work: Array[Double]) {
         intW info = new intW(0);
         Dstev.dstev(jobEig(jobz), n, d, 0, e, 0, Z, 0, ld(n), work, 0, info);
         return info.val;
@@ -161,47 +170,47 @@ class JLAPACK_LAPACKkernel {
     }
 
     /*
-    public int gbsv(int n, int kl, int ku, int nrhs, double[] Ab, int[] ipiv,
-            double[] B) {
+    public gbsv: Int(n: Int, kl: Int, ku: Int, nrhs: Int, Ab: Array[Double], int[] ipiv,
+            B: Array[Double]) {
         intW info = new intW(0);
         Dgbsv.dgbsv(n, kl, ku, nrhs, Ab, 0, ld(2 * kl + ku + 1), ipiv, 0, B, 0,
                 ld(n), info);
         return info.val;
     }
 
-    public int gtsv(int n, int nrhs, double[] dl, double[] d, double[] du,
-            double[] B) {
+    public gtsv: Int(n: Int, nrhs: Int, dl: Array[Double], d: Array[Double], du: Array[Double],
+            B: Array[Double]) {
         intW info = new intW(0);
         Dgtsv.dgtsv(n, nrhs, dl, 0, d, 0, du, 0, B, 0, ld(n), info);
         return info.val;
     }
 
-    public int posv(UpLo uplo, int n, int nrhs, double[] A, double[] B) {
+    public posv: Int(UpLo uplo, n: Int, nrhs: Int, A: Array[Double], B: Array[Double]) {
         intW info = new intW(0);
         Dposv.dposv(uplo(uplo), n, nrhs, A, 0, ld(n), B, 0, ld(n), info);
         return info.val;
     }
 
-    public int ppsv(UpLo uplo, int n, int nrhs, double[] Ap, double[] B) {
+    public ppsv: Int(UpLo uplo, n: Int, nrhs: Int, Ap: Array[Double], B: Array[Double]) {
         intW info = new intW(0);
         Dppsv.dppsv(uplo(uplo), n, nrhs, Ap, 0, B, 0, ld(n), info);
         return info.val;
     }
 
-    public int pptrf(UpLo uplo, int n, double[] Ap) {
+    public pptrf: Int(UpLo uplo, n: Int, Ap: Array[Double]) {
         intW info = new intW(0);
         Dpptrf.dpptrf(uplo(uplo), n, Ap, 0, info);
         return info.val;
     }
 
-    public int pptrs(UpLo uplo, int n, int nrhs, double[] Ap, double[] B) {
+    public pptrs: Int(UpLo uplo, n: Int, nrhs: Int, Ap: Array[Double], B: Array[Double]) {
         intW info = new intW(0);
         Dpptrs.dpptrs(uplo(uplo), n, nrhs, Ap, 0, B, 0, ld(n), info);
         return info.val;
     }
 
-    public int ppcon(UpLo uplo, int n, double[] Ap, double anorm,
-            double[] rcond, double[] work, int[] iwork) {
+    public ppcon: Int(UpLo uplo, n: Int, Ap: Array[Double], double anorm,
+            rcond: Array[Double], work: Array[Double], int[] iwork) {
         intW info = new intW(0);
         doubleW rcondW = new doubleW(rcond[0]);
         Dppcon.dppcon(uplo(uplo), n, Ap, 0, anorm, rcondW, work, 0, iwork, 0,
@@ -210,28 +219,28 @@ class JLAPACK_LAPACKkernel {
         return info.val;
     }
 
-    public int pbsv(UpLo uplo, int n, int kd, int nrhs, double[] Ab, double[] B) {
+    public pbsv: Int(UpLo uplo, n: Int, kd: Int, nrhs: Int, Ab: Array[Double], B: Array[Double]) {
         intW info = new intW(0);
         Dpbsv.dpbsv(uplo(uplo), n, kd, nrhs, Ab, 0, ld(kd + 1), B, 0, ld(n),
                 info);
         return info.val;
     }
 
-    public int pbtrf(UpLo uplo, int n, int kd, double[] Ab) {
+    public pbtrf: Int(UpLo uplo, n: Int, kd: Int, Ab: Array[Double]) {
         intW info = new intW(0);
         Dpbtrf.dpbtrf(uplo(uplo), n, kd, Ab, 0, ld(kd + 1), info);
         return info.val;
     }
 
-    public int pbtrs(UpLo uplo, int n, int kd, int nrhs, double[] Ab, double[] B) {
+    public pbtrs: Int(UpLo uplo, n: Int, kd: Int, nrhs: Int, Ab: Array[Double], B: Array[Double]) {
         intW info = new intW(0);
         Dpbtrs.dpbtrs(uplo(uplo), n, kd, nrhs, Ab, 0, ld(kd + 1), B, 0, ld(n),
                 info);
         return info.val;
     }
 
-    public int pbcon(UpLo uplo, int n, int kd, double[] Ab, double anorm,
-            double[] rcond, double[] work, int[] iwork) {
+    public pbcon: Int(UpLo uplo, n: Int, kd: Int, Ab: Array[Double], double anorm,
+            rcond: Array[Double], work: Array[Double], int[] iwork) {
         intW info = new intW(0);
         doubleW rcondW = new doubleW(rcond[0]);
         Dpbcon.dpbcon(uplo(uplo), n, kd, Ab, 0, ld(kd + 1), anorm, rcondW,
@@ -240,36 +249,36 @@ class JLAPACK_LAPACKkernel {
         return info.val;
     }
 
-    public int ptsv(int n, int nrhs, double[] d, double[] e, double[] B) {
+    public ptsv: Int(n: Int, nrhs: Int, d: Array[Double], e: Array[Double], B: Array[Double]) {
         intW info = new intW(0);
         Dptsv.dptsv(n, nrhs, d, 0, e, 0, B, 0, ld(n), info);
         return info.val;
     }
 
-    public int sysv(UpLo uplo, int n, int nrhs, double[] A, int[] ipiv,
-            double[] B, double[] work, int lwork) {
+    public sysv: Int(UpLo uplo, n: Int, nrhs: Int, A: Array[Double], int[] ipiv,
+            B: Array[Double], work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dsysv.dsysv(uplo(uplo), n, nrhs, A, 0, ld(n), ipiv, 0, B, 0, ld(n),
                 work, 0, lwork, info);
         return info.val;
     }
 
-    public int spsv(UpLo uplo, int n, int nrhs, double[] Ap, int[] ipiv,
-            double[] B) {
+    public spsv: Int(UpLo uplo, n: Int, nrhs: Int, Ap: Array[Double], int[] ipiv,
+            B: Array[Double]) {
         intW info = new intW(0);
         Dspsv.dspsv(uplo(uplo), n, nrhs, Ap, 0, ipiv, 0, B, 0, ld(n), info);
         return info.val;
     }
 
-    public int geqrf(int m, int n, double[] A, double[] tau, double[] work,
-            int lwork) {
+    public geqrf: Int(m: Int, n: Int, A: Array[Double], tau: Array[Double], work: Array[Double],
+            lwork: Int) {
         intW info = new intW(0);
         Dgeqrf.dgeqrf(m, n, A, 0, ld(m), tau, 0, work, 0, lwork, info);
         return info.val;
     }
 
-    public int ormqr(Side side, Transpose trans, int m, int n, int k,
-            double[] A, double[] tau, double[] C, double[] work, int lwork) {
+    public ormqr: Int(Side side, Transpose trans, m: Int, n: Int, k: Int,
+            A: Array[Double], tau: Array[Double], C: Array[Double], work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dormqr.dormqr(side(side), trans(trans), m, n, k, A, 0,
                 side == Side.Left ? ld(m) : ld(n), tau, 0, C, 0, ld(m), work,
@@ -277,22 +286,22 @@ class JLAPACK_LAPACKkernel {
         return info.val;
     }
 
-    public int orgqr(int m, int n, int k, double[] A, double[] tau,
-            double[] work, int lwork) {
+    public orgqr: Int(m: Int, n: Int, k: Int, A: Array[Double], tau: Array[Double],
+            work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dorgqr.dorgqr(m, n, k, A, 0, ld(m), tau, 0, work, 0, lwork, info);
         return info.val;
     }
 
-    public int geqlf(int m, int n, double[] A, double[] tau, double[] work,
-            int lwork) {
+    public geqlf: Int(m: Int, n: Int, A: Array[Double], tau: Array[Double], work: Array[Double],
+            lwork: Int) {
         intW info = new intW(0);
         Dgeqlf.dgeqlf(m, n, A, 0, ld(m), tau, 0, work, 0, lwork, info);
         return info.val;
     }
 
-    public int ormql(Side side, Transpose trans, int m, int n, int k,
-            double[] A, double[] tau, double[] C, double[] work, int lwork) {
+    public ormql: Int(Side side, Transpose trans, m: Int, n: Int, k: Int,
+            A: Array[Double], tau: Array[Double], C: Array[Double], work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dormql.dormql(side(side), trans(trans), m, n, k, A, 0,
                 side == Side.Left ? ld(m) : ld(n), tau, 0, C, 0, ld(m), work,
@@ -300,87 +309,87 @@ class JLAPACK_LAPACKkernel {
         return info.val;
     }
 
-    public int orgql(int m, int n, int k, double[] A, double[] tau,
-            double[] work, int lwork) {
+    public orgql: Int(m: Int, n: Int, k: Int, A: Array[Double], tau: Array[Double],
+            work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dorgql.dorgql(m, n, k, A, 0, ld(m), tau, 0, work, 0, lwork, info);
         return info.val;
     }
 
-    public int gerqf(int m, int n, double[] A, double[] tau, double[] work,
-            int lwork) {
+    public gerqf: Int(m: Int, n: Int, A: Array[Double], tau: Array[Double], work: Array[Double],
+            lwork: Int) {
         intW info = new intW(0);
         Dgerqf.dgerqf(m, n, A, 0, ld(m), tau, 0, work, 0, lwork, info);
         return info.val;
     }
 
-    public int ormrq(Side side, Transpose trans, int m, int n, int k,
-            double[] A, double[] tau, double[] C, double[] work, int lwork) {
+    public ormrq: Int(Side side, Transpose trans, m: Int, n: Int, k: Int,
+            A: Array[Double], tau: Array[Double], C: Array[Double], work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dormrq.dormrq(side(side), trans(trans), m, n, k, A, 0, ld(k), tau, 0,
                 C, 0, ld(m), work, 0, lwork, info);
         return info.val;
     }
 
-    public int orgrq(int m, int n, int k, double[] A, double[] tau,
-            double[] work, int lwork) {
+    public orgrq: Int(m: Int, n: Int, k: Int, A: Array[Double], tau: Array[Double],
+            work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dorgrq.dorgrq(m, n, k, A, 0, ld(m), tau, 0, work, 0, lwork, info);
         return info.val;
     }
 
-    public int gelqf(int m, int n, double[] A, double[] tau, double[] work,
-            int lwork) {
+    public gelqf: Int(m: Int, n: Int, A: Array[Double], tau: Array[Double], work: Array[Double],
+            lwork: Int) {
         intW info = new intW(0);
         Dgelqf.dgelqf(m, n, A, 0, ld(m), tau, 0, work, 0, lwork, info);
         return info.val;
     }
 
-    public int ormlq(Side side, Transpose trans, int m, int n, int k,
-            double[] A, double[] tau, double[] C, double[] work, int lwork) {
+    public ormlq: Int(Side side, Transpose trans, m: Int, n: Int, k: Int,
+            A: Array[Double], tau: Array[Double], C: Array[Double], work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dormlq.dormlq(side(side), trans(trans), m, n, k, A, 0, ld(k), tau, 0,
                 C, 0, ld(m), work, 0, lwork, info);
         return info.val;
     }
 
-    public int orglq(int m, int n, int k, double[] A, double[] tau,
-            double[] work, int lwork) {
+    public orglq: Int(m: Int, n: Int, k: Int, A: Array[Double], tau: Array[Double],
+            work: Array[Double], lwork: Int) {
         intW info = new intW(0);
         Dorglq.dorglq(m, n, k, A, 0, ld(m), tau, 0, work, 0, lwork, info);
         return info.val;
     }
 
-    public int gbtrf(int m, int n, int kl, int ku, double[] Ab, int[] ipiv) {
+    public gbtrf: Int(m: Int, n: Int, kl: Int, ku: Int, Ab: Array[Double], int[] ipiv) {
         intW info = new intW(0);
         Dgbtrf.dgbtrf(m, n, kl, ku, Ab, 0, 2 * kl + ku + 1, ipiv, 0, info);
         return info.val;
     }
 
-    public int gbtrs(Transpose trans, int n, int kl, int ku, int nrhs,
-            double[] Ab, int[] ipiv, double[] B) {
+    public gbtrs: Int(Transpose trans, n: Int, kl: Int, ku: Int, nrhs: Int,
+            Ab: Array[Double], int[] ipiv, B: Array[Double]) {
         intW info = new intW(0);
         Dgbtrs.dgbtrs(trans(trans), n, kl, ku, nrhs, Ab, 0, 2 * kl + ku + 1,
                 ipiv, 0, B, 0, ld(n), info);
         return info.val;
     }
 
-    public int getrf(int m, int n, double[] A, int[] ipiv) {
+    public getrf: Int(m: Int, n: Int, A: Array[Double], int[] ipiv) {
         intW info = new intW(0);
         Dgetrf.dgetrf(m, n, A, 0, ld(m), ipiv, 0, info);
         return info.val;
     }
 
-    public int getrs(Transpose trans, int n, int nrhs, double[] A, int[] ipiv,
-            double[] B) {
+    public getrs: Int(Transpose trans, n: Int, nrhs: Int, A: Array[Double], int[] ipiv,
+            B: Array[Double]) {
         intW info = new intW(0);
         Dgetrs.dgetrs(trans(trans), n, nrhs, A, 0, ld(n), ipiv, 0, B, 0, ld(n),
                 info);
         return info.val;
     }
 
-    public int gecon(Norm norm, int n, double[] A, double anorm,
-            double[] rcond, double[] work, int[] iwork) {
+    public gecon: Int(Norm norm, n: Int, A: Array[Double], double anorm,
+            rcond: Array[Double], work: Array[Double], int[] iwork) {
         intW info = new intW(0);
         doubleW rcondW = new doubleW(rcond[0]);
         Dgecon.dgecon(norm(norm), n, A, 0, ld(n), anorm, rcondW, work, 0,
@@ -389,8 +398,8 @@ class JLAPACK_LAPACKkernel {
         return info.val;
     }
 
-    public int gbcon(Norm norm, int n, int kl, int ku, double[] Ab, int[] ipiv,
-            double anorm, double[] rcond, double[] work, int[] iwork) {
+    public gbcon: Int(Norm norm, n: Int, kl: Int, ku: Int, Ab: Array[Double], int[] ipiv,
+            double anorm, rcond: Array[Double], work: Array[Double], int[] iwork) {
         intW info = new intW(0);
         doubleW rcondW = new doubleW(rcond[0]);
         Dgbcon.dgbcon(norm(norm), n, kl, ku, Ab, 0, ld(2 * kl + ku + 1), ipiv,
@@ -399,24 +408,24 @@ class JLAPACK_LAPACKkernel {
         return info.val;
     }
 
-    public int gttrf(int n, double[] dl, double[] d, double[] du, double[] du2,
+    public gttrf: Int(n: Int, dl: Array[Double], d: Array[Double], du: Array[Double], du2: Array[Double],
             int[] ipiv) {
         intW info = new intW(0);
         Dgttrf.dgttrf(n, dl, 0, d, 0, du, 0, du2, 0, ipiv, 0, info);
         return info.val;
     }
 
-    public int gttrs(Transpose trans, int n, int nrhs, double[] dl, double[] d,
-            double[] du, double[] du2, int[] ipiv, double[] B) {
+    public gttrs: Int(Transpose trans, n: Int, nrhs: Int, dl: Array[Double], d: Array[Double],
+            du: Array[Double], du2: Array[Double], int[] ipiv, B: Array[Double]) {
         intW info = new intW(0);
         Dgttrs.dgttrs(trans(trans), n, nrhs, dl, 0, d, 0, du, 0, du2, 0, ipiv,
                 0, B, 0, ld(n), info);
         return info.val;
     }
 
-    public int gtcon(Norm norm, int n, double[] dl, double[] d, double[] du,
-            double[] du2, int[] ipiv, double anorm, double[] rcond,
-            double[] work, int[] iwork) {
+    public gtcon: Int(Norm norm, n: Int, dl: Array[Double], d: Array[Double], du: Array[Double],
+            du2: Array[Double], int[] ipiv, double anorm, rcond: Array[Double],
+            work: Array[Double], int[] iwork) {
         intW info = new intW(0);
         doubleW rcondW = new doubleW(rcond[0]);
         Dgtcon.dgtcon(norm(norm), n, dl, 0, d, 0, du, 0, du2, 0, ipiv, 0,
@@ -425,24 +434,24 @@ class JLAPACK_LAPACKkernel {
         return info.val;
     }
 
-    public int trtrs(UpLo uplo, Transpose trans, Diag diag, int n, int nrhs,
-            double[] A, int lda, double[] B) {
+    public trtrs: Int(UpLo uplo, Transpose trans, Diag diag, n: Int, nrhs: Int,
+            A: Array[Double], lda: Int, B: Array[Double]) {
         intW info = new intW(0);
         Dtrtrs.dtrtrs(uplo(uplo), trans(trans), diag(diag), n, nrhs, A, 0, lda,
                 B, 0, ld(n), info);
         return info.val;
     }
 
-    public int tptrs(UpLo uplo, Transpose trans, Diag diag, int n, int nrhs,
-            double[] Ap, double[] B) {
+    public tptrs: Int(UpLo uplo, Transpose trans, Diag diag, n: Int, nrhs: Int,
+            Ap: Array[Double], B: Array[Double]) {
         intW info = new intW(0);
         Dtptrs.dtptrs(uplo(uplo), trans(trans), diag(diag), n, nrhs, Ap, 0, B,
                 0, ld(n), info);
         return info.val;
     }
 
-    public int tbtrs(UpLo uplo, Transpose trans, Diag diag, int n, int kd,
-            int nrhs, double[] Ab, double[] B) {
+    public tbtrs: Int(UpLo uplo, Transpose trans, Diag diag, n: Int, kd: Int,
+            nrhs: Int, Ab: Array[Double], B: Array[Double]) {
         intW info = new intW(0);
         Dtbtrs.dtbtrs(uplo(uplo), trans(trans), diag(diag), n, kd, nrhs, Ab, 0,
                 ld(kd + 1), B, 0, ld(n), info);
@@ -457,14 +466,14 @@ class JLAPACK_LAPACKkernel {
     }
     /*
 
-    public int potrs(UpLo uplo, int n, int nrhs, double[] A, double[] B) {
+    public potrs: Int(UpLo uplo, n: Int, nrhs: Int, A: Array[Double], B: Array[Double]) {
         intW info = new intW(0);
         Dpotrs.dpotrs(uplo(uplo), n, nrhs, A, 0, ld(n), B, 0, ld(n), info);
         return info.val;
     }
 
-    public int pocon(UpLo uplo, int n, double[] A, double anorm,
-            double[] rcond, double[] work, int[] iwork) {
+    public pocon: Int(UpLo uplo, n: Int, A: Array[Double], double anorm,
+            rcond: Array[Double], work: Array[Double], int[] iwork) {
         intW info = new intW(0);
         doubleW rcondW = new doubleW(rcond[0]);
         Dpocon.dpocon(uplo(uplo), n, A, 0, ld(n), anorm, rcondW, work, 0,
@@ -542,27 +551,27 @@ class JLAPACK_LAPACKkernel {
                     "Norm must be the 1 or the Infinity norm");
     }
 
-    public int sbevd(JobEig jobz, UpLo uplo, int n, int kd, double[] Ab,
-            double[] w, double[] Z, double[] work, int lwork, int[] iwork,
-            int liwork) {
+    public sbevd: Int(JobEig jobz, UpLo uplo, n: Int, kd: Int, Ab: Array[Double],
+            w: Array[Double], Z: Array[Double], work: Array[Double], lwork: Int, int[] iwork,
+            liwork: Int) {
         intW info = new intW(0);
         Dsbevd.dsbevd(jobEig(jobz), uplo(uplo), n, kd, Ab, 0, ld(kd + 1), w, 0,
                 Z, 0, ld(n), work, 0, lwork, iwork, 0, liwork, info);
         return info.val;
     }
 
-    public int spevd(JobEig jobz, UpLo uplo, int n, double[] Ap, double[] w,
-            double[] Z, double[] work, int lwork, int[] iwork, int liwork) {
+    public spevd: Int(JobEig jobz, UpLo uplo, n: Int, Ap: Array[Double], w: Array[Double],
+            Z: Array[Double], work: Array[Double], lwork: Int, int[] iwork, liwork: Int) {
         intW info = new intW(0);
         Dspevd.dspevd(jobEig(jobz), uplo(uplo), n, Ap, 0, w, 0, Z, 0, ld(n),
                 work, 0, lwork, iwork, 0, liwork, info);
         return info.val;
     }
 
-    public int stevr(JobEig jobz, JobEigRange range, int n, double[] d,
-            double[] e, double vl, double vu, int il, int iu, double abstol,
-            int[] m, double[] w, double[] Z, int[] isuppz, double[] work,
-            int lwork, int[] iwork, int liwork) {
+    public stevr: Int(JobEig jobz, JobEigRange range, n: Int, d: Array[Double],
+            e: Array[Double], double vl, double vu, il: Int, iu: Int, double abstol,
+            int[] m, w: Array[Double], Z: Array[Double], int[] isuppz, work: Array[Double],
+            lwork: Int, int[] iwork, liwork: Int) {
         intW info = new intW(0);
         intW mW = new intW(0);
         Dstevr.dstevr(jobEig(jobz), jobEigRange(range), n, d, 0, e, 0, vl, vu,
@@ -572,10 +581,10 @@ class JLAPACK_LAPACKkernel {
         return info.val;
     }
 
-    public int syevr(JobEig jobz, JobEigRange range, UpLo uplo, int n,
-            double[] A, double vl, double vu, int il, int iu, double abstol,
-            int[] m, double[] w, double[] Z, int[] isuppz, double[] work,
-            int lwork, int[] iwork, int liwork) {
+    public syevr: Int(JobEig jobz, JobEigRange range, UpLo uplo, n: Int,
+            A: Array[Double], double vl, double vu, il: Int, iu: Int, double abstol,
+            int[] m, w: Array[Double], Z: Array[Double], int[] isuppz, work: Array[Double],
+            lwork: Int, int[] iwork, liwork: Int) {
         intW info = new intW(0);
         intW mW = new intW(0);
         Dsyevr.dsyevr(jobEig(jobz), jobEigRange(range), uplo(uplo), n, A, 0,
@@ -594,117 +603,117 @@ class JLAPACK_BLASkernel() {
     Ddot.ddot(N, X, 0, 1, Y, 0, 1);
 
   /*
-    public double nrm2(int N, double[] X) {
+    public double nrm2(N: Int, X: Array[Double]) {
         return Dnrm2.dnrm2(N, X, 0, 1);
     }
 
-    public double asum(int N, double[] X) {
+    public double asum(N: Int, X: Array[Double]) {
         return Dasum.dasum(N, X, 0, 1);
     }
 
-    public int idamax(int N, double[] X) {
+    public idamax: Int(N: Int, X: Array[Double]) {
         return Idamax.idamax(N, X, 0, 1);
     }
 
-    public void swap(int N, double[] X, double[] Y) {
+    public void swap(N: Int, X: Array[Double], Y: Array[Double]) {
         Dswap.dswap(N, X, 0, 1, Y, 0, 1);
     }
 
-    public void copy(int N, double[] X, double[] Y) {
+    public void copy(N: Int, X: Array[Double], Y: Array[Double]) {
         Dcopy.dcopy(N, X, 0, 1, Y, 0, 1);
     }
 
-    public void axpy(int N, double alpha, double[] X, double[] Y) {
+    public void axpy(N: Int, double alpha, X: Array[Double], Y: Array[Double]) {
         Daxpy.daxpy(N, alpha, X, 0, 1, Y, 0, 1);
     }
 
-    public void scal(int N, double alpha, double[] X) {
+    public void scal(N: Int, double alpha, X: Array[Double]) {
         Dscal.dscal(N, alpha, X, 0, 1);
     }
 
-    public void gemv(Transpose TransA, int M, int N, double alpha, double[] A,
-            int lda, double[] X, double beta, double[] Y) {
+    public void gemv(Transpose TransA, M: Int, N: Int, double alpha, A: Array[Double],
+            lda: Int, X: Array[Double], double beta, Y: Array[Double]) {
         Dgemv.dgemv(trans(TransA), M, N, alpha, A, 0, lda, X, 0, 1, beta, Y, 0,
                 1);
     }
 
-    public void gbmv(Transpose TransA, int M, int N, int KL, int KU,
-            double alpha, double[] A, int lda, double[] X, double beta,
-            double[] Y) {
+    public void gbmv(Transpose TransA, M: Int, N: Int, KL: Int, KU: Int,
+            double alpha, A: Array[Double], lda: Int, X: Array[Double], double beta,
+            Y: Array[Double]) {
         Dgbmv.dgbmv(trans(TransA), M, N, KL, KU, alpha, A, 0, lda, X, 0, 1,
                 beta, Y, 0, 1);
     }
 
-    public void trmv(UpLo uplo, Transpose TransA, Diag diag, int N, double[] A,
-            int lda, double[] X) {
+    public void trmv(UpLo uplo, Transpose TransA, Diag diag, N: Int, A: Array[Double],
+            lda: Int, X: Array[Double]) {
         Dtrmv.dtrmv(uplo(uplo), trans(TransA), diag(diag), N, A, 0, lda, X, 0,
                 1);
     }
 
-    public void tbmv(UpLo uplo, Transpose TransA, Diag diag, int N, int K,
-            double[] A, int lda, double[] X) {
+    public void tbmv(UpLo uplo, Transpose TransA, Diag diag, N: Int, K: Int,
+            A: Array[Double], lda: Int, X: Array[Double]) {
         Dtbmv.dtbmv(uplo(uplo), trans(TransA), diag(diag), N, K, A, 0, lda, X,
                 0, 1);
     }
 
-    public void tpmv(UpLo uplo, Transpose TransA, Diag diag, int N,
-            double[] Ap, double[] X) {
+    public void tpmv(UpLo uplo, Transpose TransA, Diag diag, N: Int,
+            Ap: Array[Double], X: Array[Double]) {
         Dtpmv.dtpmv(uplo(uplo), trans(TransA), diag(diag), N, Ap, 0, X, 0, 1);
     }
 
-    public void trsv(UpLo uplo, Transpose TransA, Diag diag, int N, double[] A,
-            int lda, double[] X) {
+    public void trsv(UpLo uplo, Transpose TransA, Diag diag, N: Int, A: Array[Double],
+            lda: Int, X: Array[Double]) {
         Dtrsv.dtrsv(uplo(uplo), trans(TransA), diag(diag), N, A, 0, lda, X, 0,
                 1);
     }
 
-    public void tbsv(UpLo uplo, Transpose TransA, Diag diag, int N, int K,
-            double[] A, int lda, double[] X) {
+    public void tbsv(UpLo uplo, Transpose TransA, Diag diag, N: Int, K: Int,
+            A: Array[Double], lda: Int, X: Array[Double]) {
         Dtbsv.dtbsv(uplo(uplo), trans(TransA), diag(diag), N, K, A, 0, lda, X,
                 0, 1);
     }
 
-    public void tpsv(UpLo uplo, Transpose TransA, Diag diag, int N,
-            double[] Ap, double[] X) {
+    public void tpsv(UpLo uplo, Transpose TransA, Diag diag, N: Int,
+            Ap: Array[Double], X: Array[Double]) {
         Dtpsv.dtpsv(uplo(uplo), trans(TransA), diag(diag), N, Ap, 0, X, 0, 1);
     }
 
-    public void symv(UpLo uplo, int N, double alpha, double[] A, int lda,
-            double[] X, double beta, double[] Y) {
+    public void symv(UpLo uplo, N: Int, double alpha, A: Array[Double], lda: Int,
+            X: Array[Double], double beta, Y: Array[Double]) {
         Dsymv.dsymv(uplo(uplo), N, alpha, A, 0, lda, X, 0, 1, beta, Y, 0, 1);
     }
 
-    public void sbmv(UpLo uplo, int N, int K, double alpha, double[] A,
-            int lda, double[] X, double beta, double[] Y) {
+    public void sbmv(UpLo uplo, N: Int, K: Int, double alpha, A: Array[Double],
+            lda: Int, X: Array[Double], double beta, Y: Array[Double]) {
         Dsbmv.dsbmv(uplo(uplo), N, K, alpha, A, 0, lda, X, 0, 1, beta, Y, 0, 1);
     }
 
-    public void spmv(UpLo uplo, int N, double alpha, double[] Ap, double[] X,
-            double beta, double[] Y) {
+    public void spmv(UpLo uplo, N: Int, double alpha, Ap: Array[Double], X: Array[Double],
+            double beta, Y: Array[Double]) {
         Dspmv.dspmv(uplo(uplo), N, alpha, Ap, 0, X, 0, 1, beta, Y, 0, 1);
     }
 
-    public void ger(int M, int N, double alpha, double[] X, double[] Y,
-            double[] A, int lda) {
+    public void ger(M: Int, N: Int, double alpha, X: Array[Double], Y: Array[Double],
+            A: Array[Double], lda: Int) {
         Dger.dger(M, N, alpha, X, 0, 1, Y, 0, 1, A, 0, lda);
     }
 
-    public void syr(UpLo uplo, int N, double alpha, double[] X, double[] A,
-            int lda) {
+    public void syr(UpLo uplo, N: Int, double alpha, X: Array[Double], A: Array[Double],
+            lda: Int) {
         Dsyr.dsyr(uplo(uplo), N, alpha, X, 0, 1, A, 0, lda);
     }
 
-    public void spr(UpLo uplo, int N, double alpha, double[] X, double[] Ap) {
+    public void spr(UpLo uplo, N: Int, double alpha, X: Array[Double], Ap: Array[Double]) {
         Dspr.dspr(uplo(uplo), N, alpha, X, 0, 1, Ap, 0);
     }
 
-    public void syr2(UpLo uplo, int N, double alpha, double[] X, double[] Y,
-            double[] A, int lda) {
+    public void syr2(UpLo uplo, N: Int, double alpha, X: Array[Double], Y: Array[Double],
+            A: Array[Double], lda: Int) {
         Dsyr2.dsyr2(uplo(uplo), N, alpha, X, 0, 1, Y, 0, 1, A, 0, lda);
     }
 
-    public void spr2(UpLo uplo, int N, double alpha, double[] X, double[] Y,
-            double[] A) {
+    public void spr2(UpLo uplo, N: Int, double alpha, X: Array[Double], Y: Array[Double],
+            A: Array[Double]) {
         Dspr2.dspr2(uplo(uplo), N, alpha, X, 0, 1, Y, 0, 1, A, 0);
     }
    */
@@ -716,34 +725,34 @@ class JLAPACK_BLASkernel() {
                 0, ldb, beta, C, 0, ldc);
 
     /*
-    public void symm(Side side, UpLo uplo, int M, int N, double alpha,
-            double[] A, int lda, double[] B, int ldb, double beta, double[] C,
-            int ldc) {
+    public void symm(Side side, UpLo uplo, M: Int, N: Int, double alpha,
+            A: Array[Double], lda: Int, B: Array[Double], ldb: Int, double beta, C: Array[Double],
+            ldc: Int) {
         Dsymm.dsymm(side(side), uplo(uplo), M, N, alpha, A, 0, lda, B, 0, ldb,
                 beta, C, 0, ldc);
     }
 
-    public void syrk(UpLo uplo, Transpose Trans, int N, int K, double alpha,
-            double[] A, int lda, double beta, double[] C, int ldc) {
+    public void syrk(UpLo uplo, Transpose Trans, N: Int, K: Int, double alpha,
+            A: Array[Double], lda: Int, double beta, C: Array[Double], ldc: Int) {
         Dsyrk.dsyrk(uplo(uplo), trans(Trans), N, K, alpha, A, 0, lda, beta, C,
                 0, ldc);
     }
 
-    public void syr2k(UpLo uplo, Transpose Trans, int N, int K, double alpha,
-            double[] A, int lda, double[] B, int ldb, double beta, double[] C,
-            int ldc) {
+    public void syr2k(UpLo uplo, Transpose Trans, N: Int, K: Int, double alpha,
+            A: Array[Double], lda: Int, B: Array[Double], ldb: Int, double beta, C: Array[Double],
+            ldc: Int) {
         Dsyr2k.dsyr2k(uplo(uplo), trans(Trans), N, K, alpha, A, 0, lda, B, 0,
                 ldb, beta, C, 0, ldc);
     }
 
-    public void trmm(Side side, UpLo uplo, Transpose TransA, Diag diag, int M,
-            int N, double alpha, double[] A, int lda, double[] B, int ldb) {
+    public void trmm(Side side, UpLo uplo, Transpose TransA, Diag diag, M: Int,
+            N: Int, double alpha, A: Array[Double], lda: Int, B: Array[Double], ldb: Int) {
         Dtrmm.dtrmm(side(side), uplo(uplo), trans(TransA), diag(diag), M, N,
                 alpha, A, 0, lda, B, 0, ldb);
     }
 
-    public void trsm(Side side, UpLo uplo, Transpose TransA, Diag diag, int M,
-            int N, double alpha, double[] A, int lda, double[] B, int ldb) {
+    public void trsm(Side side, UpLo uplo, Transpose TransA, Diag diag, M: Int,
+            N: Int, double alpha, A: Array[Double], lda: Int, B: Array[Double], ldb: Int) {
         Dtrsm.dtrsm(side(side), uplo(uplo), trans(TransA), diag(diag), M, N,
                 alpha, A, 0, lda, B, 0, ldb);
     }
