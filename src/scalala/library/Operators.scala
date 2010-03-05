@@ -26,3 +26,10 @@ package scalala.library
  * @author dramage
  */
 trait Operators extends scalala.tensor.operators.OperatorImplicits { }
+
+/**
+ * An object with access to the Operators trait members.
+ * 
+ * @author dramage
+ */
+object Operators extends Operators { }

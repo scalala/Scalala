@@ -122,6 +122,7 @@ class SparseHashVector(override val size : Int, protected val hashmap : Int2Doub
    */
   override def dot(other : Tensor1[Int]) : Double = other match {
     case singleton : SingletonBinaryVector => this.apply(singleton.singleIndex);
+    case sparseBinary : SparseBinaryVector => sparseBinary.dot(this);
     case dense : DenseVector => dot(dense);
     case _ => super.dot(other);
   }

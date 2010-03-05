@@ -42,6 +42,7 @@ import scala.collection.mutable.ArrayOps;
 trait Scalala extends Library
   with Implicits
   with Operators
+  with Traversables
   with Matrices
   with Vectors
   with Plotting
@@ -75,6 +76,7 @@ object ScalalaTestSuite extends Scalala
   with scalala.tensor.sparse.SparseBinaryVectorTest
   with scalala.tensor.sparse.SingletonBinaryVectorTest
   with scalala.tensor.adaptive.AdaptiveVectorTest
+  with PartialMapsTest
   with VectorsTest
   with StatisticsTest
   with ScalalaTest.TestConsoleMain

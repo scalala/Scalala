@@ -27,7 +27,7 @@ import scalala.tensor.dense.{DenseVector,DenseMatrix};
  * 
  * @author dramage
  */
-trait Matrices extends Library with Vectors {
+trait Matrices extends Library with PartialMaps with Vectors {
   /** A matrix of size m by n with 1 everywhere */
   def ones(rows : Int, cols : Int) =
     DenseMatrix(rows,cols)(1.0);
@@ -166,3 +166,10 @@ trait Matrices extends Library with Vectors {
   }
   */
 }
+
+/**
+ * An object with access to the Matrices trait members.
+ * 
+ * @author dramage
+ */
+object Matrices extends Matrices { }

@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scalanlp</groupId>
   <artifactId>scalala</artifactId>
@@ -10,15 +9,36 @@
     <scala.version>2.8.0.Beta1</scala.version>
   </properties>
 
+  <developers>
+    <developer>
+      <id>dramage</id>
+      <name>Daniel Ramage</name>
+      <email>dramage [at] cs stanford edu</email>
+      <organization>Stanford University</organization>
+      <timezone>-8</timezone>
+    </developer>
+    <developer>
+      <id>dlwh</id>
+      <name>David Leo Wright Hall</name>
+      <email>dlwh [at] cs berkeley edu</email>
+      <organization>University of California, Berkeley</organization>
+      <timezone>-8</timezone>
+    </developer>
+  </developers>
 
-  <distributionManagement>
-     <repository>
-      <id>scalanlp.org</id>
-      <name>Scalanlp Repository</name>
-      <url>dav:http://repo.scalanlp.org/repo/</url>
-    </repository>
-  </distributionManagement>
-  
+  <licenses>
+    <license>
+      <name>Lesser General Public License (LGPL)</name>
+      <url>http://www.gnu.org/copyleft/lesser.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git://scalanlp.org/git/scalala.git</connection>
+    <developerConnection>scm:git:ssh://scalanlp.org/home/dlwhall/git/scalala.git</developerConnection>
+    <url>http://bugs.scalanlp.org/repositories/show/scalala</url>
+  </scm>
 
   <repositories>
     <repository>
@@ -158,8 +178,8 @@
               <packageName>scalala</packageName>
               <!-- options
               <addClasspath>true</addClasspath>
-              <addExtensions/>
-              <classpathPrefix/>
+              <addExtensions />
+              <classpathPrefix />
               -->
             </manifest>
             <manifestEntries>
@@ -185,4 +205,12 @@
       </plugin>
     </plugins>
   </reporting>
+
+  <distributionManagement>
+    <repository>
+      <id>scalanlp.org</id>
+      <name>Scalanlp Repository</name>
+      <url>dav:http://repo.scalanlp.org/repo/</url>
+    </repository>
+  </distributionManagement>
 </project>

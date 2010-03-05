@@ -259,21 +259,20 @@ trait OperatorTest extends scalala.library.Library with OperatorImplicits with s
     val C = new DenseMatrix(3, 2, Array(1.62488,1.75768,1.38775,1.05448,0.89890,1.14609));
     assertEquals(A * B value, C value, 1e-5);
   }
-  
+
   test("Operators:ArrayMath") {
-    import TensorImplicits._;
-    
+    import scalala.library.Implicits._;
     val x = Array(1.,2.,3.);
-    x *= 2.0;
-    assertEquals((x:ArrayOps[Double]).toList, List(2.0,4.0,6.0));
+    x.asVector *= 2.0;
+    assertEquals(x.toList, List(2.0,4.0,6.0));
     
     val y = Array(3.,2.,1.);
 
-    assertEquals(x :* y value, Vector(6,8,6));
+    assertEquals(x.asVector :* y.asVector value, Vector(6,8,6));
     
     // y *= 2;      // correct compile error: Array[Int] doesn't promote to mutable
-    x :*= Array(3,2,1);
-    assertEquals((x:ArrayOps[Double]).toList, List(6.0, 8.0, 6.0));
+    x.asVector :*= Array(3.,2.,1.).asVector;
+    assertEquals(x.toList, List(6.0, 8.0, 6.0));
   }
   
   test("Operators:Scalars") {

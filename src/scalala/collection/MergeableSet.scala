@@ -93,7 +93,7 @@ object MergeableSet {
   
   def apply[I](iterable : Iterable[I]) = new MergeableSet[I] {
     override def iterator = iterable.iterator;
-    override def contains(i:I) = !iterator.forall(_ != i);
+    override def contains(i:I) = iterator.exists(_ == i);
   }
 }
 

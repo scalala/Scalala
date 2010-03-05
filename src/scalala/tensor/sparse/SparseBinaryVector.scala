@@ -284,10 +284,9 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
     case singleton : SingletonBinaryVector => this.apply(singleton.singleIndex);
     case binary : SparseBinaryVector => dot(binary);
     case sparse : SparseVector => dot(sparse);
-    case dense  : DenseVector => dot(dense);
-    case _ => super.dot(other);
+    case _ => dotTensor(other);
   }
-  
+
   def dot(that : SparseBinaryVector) : Double = {
     ensure(that);
     
@@ -311,15 +310,15 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
     
     sum;
   }
-  
-  /** Optimized implementation for SpraseVector dot DenseVector. */
-  def dot(that : DenseVector) : Double = {
+
+  /** Optimized implementation for SparseVector dot Tensor1. */
+  def dotTensor(that : Tensor1[Int]) : Double = {
     ensure(that);
-    
+
     var sum = 0.0;
     var o = 0;
     while (o < this.used) {
-      sum += that.data(this.index(o));
+      sum += that(this.index(o));
       o += 1;
     }
     return sum;

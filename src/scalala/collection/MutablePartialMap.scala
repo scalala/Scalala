@@ -96,6 +96,7 @@ trait MutablePartialMap[A,B] extends PartialMap[A,B] {
     for ((key,value) <- iterator) if (s(key)) update(key,f(key,value));
 
   def transform(f : B=>B) {
+    default = f(default);
     update(activeDomain,f);
   }
 }
