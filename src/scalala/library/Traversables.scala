@@ -69,9 +69,11 @@ trait Traversables {
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
     v.map(i => Math.sqrt(i));
 
+  /*
   def sqrt[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
     v.map(i => Math.sqrt(cv(i)));
+  */
 
   def sin[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =

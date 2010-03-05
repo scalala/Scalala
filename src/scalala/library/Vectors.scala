@@ -21,7 +21,9 @@ package scalala.library
 
 import scalala.collection.PartialMap;
 
+import scalala.tensor.operators.TensorShapes
 import scalala.tensor.{Tensor,Vector};
+import scalala.tensor.operators.TensorSelfOp
 import scalala.tensor.dense.{DenseVector};
 
 import scalala.tensor.operators.TensorOp;
@@ -92,6 +94,17 @@ trait Vectors extends Library with PartialMaps with Operators {
   
   /** Log each element of a vector or matrix */
   def log[I](v : PartialMap[I,Double]) = v.map(Math.log _);
+
+  import TensorShapes._;
+  def sqrt[V<:Vector with TensorSelfOp[Int,V,Shape1Col]](vec: V):V = {
+    val r : V = (vec:TensorSelfOp[Int,V,Shape1Col]).like;
+    for( (k,v) <- vec.activeElements) {
+      r(k) = sqrt(v);
+    }
+    r
+  }
+
+
   
   /**
    * Returns the sum of the squares of the iterator of the vector.

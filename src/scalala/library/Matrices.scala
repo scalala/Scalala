@@ -19,6 +19,8 @@
  */
 package scalala.library
 
+import scalala.tensor.operators.TensorSelfOp
+import scalala.tensor.operators.TensorShapes
 import scalala.tensor.{Tensor,Vector,Matrix,DiagonalMatrix};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
 
@@ -81,7 +83,7 @@ trait Matrices extends Library with PartialMaps with Vectors {
   /** Returns a square diagonal matrix of the given size */
   def diag(n : Int) : DiagonalMatrix =
     return diag(ones(n));
-  
+
   /** Returns a dense vector with ones on the diagonal. */
   def eye(n : Int) = {
     val rv = new DenseMatrix(n,n);
@@ -118,6 +120,29 @@ trait Matrices extends Library with PartialMaps with Vectors {
     }
     ret
   }
+
+  /**
+   * Returns a vector comprised of elements off the diagonal of the matrix
+   */
+  def diag(m : Matrix) : Vector = {
+    val v = m.vectorLike(m.rows min m.cols);
+    for( i <- 0 until v.size) {
+      v(i) = m(i,i);
+    }
+    v
+  }
+
+  /*
+  import TensorShapes._;
+  def sqrt[M<:Matrix with TensorSelfOp[(Int,Int),M,Shape2]](m: M):M = {
+    val r = m.like;
+    for( (k,v) <- m.activeElements) {
+      r(k) = sqrt(v);
+    }
+    r
+  }
+  */
+
   
   /**
    * Returns a diagonal matrix with the given vector on the diagonal.
@@ -128,10 +153,10 @@ trait Matrices extends Library with PartialMaps with Vectors {
 
   /**
    * Computes the Eigenvalue decomposition of the matrix.
-   * Returns the eigenvectors (in a matrix) V and the eigenvalues in a diagonal D such that
-   *  m * V = V * D
+   * Returns the eigenvectors (in a matrix) V and the eigenvalues in a vector D such that
+   *  m * V = V * diag(d)
    */
-  def eig(m: DenseMatrix, symmetric:Boolean=false):(DenseMatrix,Matrix) = {
+  def eig(m: DenseMatrix, symmetric:Boolean=false):(DenseMatrix,DenseVector) = {
     require(m.rows == m.cols,"Matrix must be square");
     val n = m.rows;
     val Wr = new Array[Double](n);
@@ -142,7 +167,7 @@ trait Matrices extends Library with PartialMaps with Vectors {
     import scalala.tensor.dense.Numerics.lapack._;
     val result = geev(Eigenvalues,EigenvaluesAndVectors,n,m.data,Wr,Wi,Vl,Vr.data,work,work.length);
     if(result != 0) error("Eig failure!");
-    val D = diag(new DenseVector(Wr));
+    val D = new DenseVector(Wr);
     val V = Vr;
     (V,D)
   }
