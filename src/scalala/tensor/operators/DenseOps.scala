@@ -22,6 +22,7 @@ package scalala.tensor.operators;
 import scalala.collection.{MergeableSet,ProductSet};
 import scalala.tensor.{Vector,Matrix,Tensor1,Tensor2};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
+import scalala.library.Matrices;
 
 import TensorShapes._;
 
@@ -91,6 +92,11 @@ trait DenseMatrixOps {
   implicit val dmCholesky = new CholeskyDecomposer[DenseMatrix,DenseMatrix] {
     def decompose(op: Tensor2Op[DenseMatrix]) = DenseCholeskyDecomposition[DenseMatrix](op);
   }
+
+  implicit val dmPower = new TensorPower[DenseMatrix,DenseMatrix] {
+    def power(op: Tensor2Op[DenseMatrix], scale:Double) = DenseMatrixPower(op,scale);
+  }
+
 
   implicit val denseMatrixSolveDenseVector: TensorSolver[DenseMatrix,DenseVector,DenseVector,Shape1Col,Shape1Col] =
     new TensorSolver[DenseMatrix,DenseVector,DenseVector,Shape1Col,Shape1Col] {
@@ -201,6 +207,23 @@ case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M])
   }
 }
 */
+
+/** Matrix solve vector, like matlab's "\", uses DenseMatrixSolveDenseMatrix. */
+case class DenseMatrixPower
+(m : DenseMatrixOp[DenseMatrix], p : Double)
+extends DenseMatrixOp[DenseMatrix] {
+  import OperatorImplicits._;
+
+  override lazy val value = {
+    val b = m.working;
+    val (_V,_D) = Matrices.eig(b);
+    val result = (_V.t \ (_V*Matrices.diag(_D:^p)).t).t value;
+    result;
+  }
+
+}
+
+
 
 /** Matrix solve vector, like matlab's "\", uses DenseMatrixSolveDenseMatrix. */
 case class DenseMatrixSolveDenseVector

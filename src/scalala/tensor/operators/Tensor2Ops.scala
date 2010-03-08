@@ -52,6 +52,11 @@ trait TensorSolver[V<:Tensor2[_,_],V2<:Tensor[_],VR<:Tensor[_],S2<:TensorShape,S
   def solve(v: TensorOp[V,Shape2], v2: TensorOp[V2,S2]): TensorOp[VR,SR];
 }
 
+trait TensorPower[V<:Tensor2[_,_],VR<:Tensor2[_,_]] {
+  def power(v: TensorOp[V,Shape2], power: Double): TensorOp[VR,Shape2];
+}
+
+
 /** Singleton instsance of Tensor2Ops trait. */
 object Tensor2Ops extends Tensor2Ops;
 
@@ -66,6 +71,11 @@ class RichTensor2Op[MV<:Tensor2[_,_]](base : Tensor2Op[MV])
     (implicit solver: TensorSolver[MV,V2,VR,S2,SR]) = {
     solver.solve(base,op);
   }
+
+  def ^[VR<:Tensor2[_,_]](op : Double)(implicit power: TensorPower[MV,VR]) = {
+    power.power(base,op);
+  }
+
   
   /** Matrix-matrix multiplication */
   def *[V2<:Tensor[_],VR<:Tensor[_],S2<:TensorShape,SR<:TensorShape] (op : TensorOp[V2,S2])
