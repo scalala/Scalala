@@ -23,6 +23,7 @@ import scalala.collection.{MergeableSet,ProductSet};
 import scalala.tensor.{Vector,Matrix,Tensor1,Tensor2};
 import scalala.tensor.dense.{DenseVector,DenseMatrix};
 import scalala.library.Matrices;
+import scalala.library.LinearAlgebra;
 
 import TensorShapes._;
 
@@ -216,7 +217,7 @@ extends DenseMatrixOp[DenseMatrix] {
 
   override lazy val value = {
     val b = m.working;
-    val (_V,_D) = Matrices.eig(b);
+    val (_D,_,_V) = LinearAlgebra.eig(b);
     val result = (_V.t \ (_V*Matrices.diag(_D:^p)).t).t value;
     result;
   }

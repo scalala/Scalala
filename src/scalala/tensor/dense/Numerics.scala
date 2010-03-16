@@ -111,20 +111,18 @@ class JLAPACK_LAPACKkernel {
     }
 */
 
-    sealed trait JobEig { def repr: String }
-    case object Eigenvalues  extends JobEig{ def repr = "N" };
-    case object EigenvaluesAndVectors  extends JobEig{ def repr = "V" };
-
-    def geev(jobvl: JobEig, jobvr: JobEig, n: Int, A: Array[Double], wr: Array[Double],
-             wi: Array[Double], Vl: Array[Double], Vr: Array[Double], work: Array[Double], lwork: Int)  = {
+    def geev(jobvl: Boolean, jobvr: Boolean, n: Int, A: Array[Double],
+          wr: Array[Double], wi: Array[Double], Vl: Array[Double], Vr: Array[Double],
+          work: Array[Double], lwork: Int) = {
         val info = new intW(0);
-        Dgeev.dgeev(jobvl.repr, jobvr.repr, n, A, 0, ld(n), wr, 0, wi, 0,
+        Dgeev.dgeev(jobEig(jobvl), jobEig(jobvr), n, A, 0, ld(n), wr, 0, wi, 0,
                 Vl, 0, ld(n), Vr, 0, ld(n), work, 0, lwork, info);
         info.`val`;
     }
-/*
-    public syev: Int(JobEig jobz, UpLo uplo, n: Int, A: Array[Double], w: Array[Double],
-            work: Array[Double], lwork: Int) {
+
+    /*
+    public int syev(JobEig jobz, UpLo uplo, int n, double[] A, double[] w,
+            double[] work, int lwork) {
         intW info = new intW(0);
         Dsyev.dsyev(jobEig(jobz), uplo(uplo), n, A, 0, ld(n), w, 0, work, 0,
                 lwork, info);
@@ -514,12 +512,16 @@ class JLAPACK_LAPACKkernel {
             return "U";
     }
 
-    private String jobEig(JobEig job) {
-        if (job == JobEig.Eigenvalues)
-            return "N";
+    */
+
+    private def jobEig(computeEigenvectors: Boolean) = {
+        if (!computeEigenvectors) 
+            "N"
         else
-            return "V";
+            "V"
     }
+
+    /*
 
     private String jobEigRange(JobEigRange job) {
         if (job == JobEigRange.All)

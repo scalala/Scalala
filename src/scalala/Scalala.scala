@@ -49,6 +49,7 @@ trait Scalala extends Library
   with Random
   with Statistics
   with IO
+  with LinearAlgebra
 {
   // This object inherits all its method from the component mixins.
 }
