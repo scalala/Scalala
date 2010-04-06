@@ -55,6 +55,9 @@ class SparseHashVector(override val size : Int, protected val hashmap : Int2Doub
     check(key);
     hashmap.get(key);
   }
+
+  /** Returns the number of elements currently stored */
+  def used = hashmap.size;
   
   override def update(key : Int, value : Double) = {
     check(key);
