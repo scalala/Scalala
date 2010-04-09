@@ -30,6 +30,7 @@ import scalala.tensor.dense.DenseVector;
 import scalala.tensor.operators.TensorShapes._;
 import scalala.tensor.operators.TensorSelfOp;
 import scalala.tensor.sparse.SparseVector;
+import scalala.tensor.sparse.SparseHashVector;
 import scalala.tensor.sparse.SparseHashMatrix;
 
 /**
@@ -62,6 +63,9 @@ class AdaptiveVector(private var vec: Vector) extends Vector with TensorSelfOp[I
 
   override def apply(i : Int) : Double = vec(i);
   override def update(i: Int, value: Double) = vec match {
+    case sparse: SparseHashVector if( sparse.used >= densityThreshold * sparse.size)  =>
+      vec = switchRepr();
+      vec.update(i,value);
     case sparse: SparseVector if( sparse.used >= densityThreshold * sparse.size)  =>
       vec = switchRepr();
       vec.update(i,value);
