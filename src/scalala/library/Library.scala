@@ -64,6 +64,51 @@ trait Library {
   
   /** Alias for Double.PositiveInfinity */
   final val inf = Inf;
+
+  /**
+   * Sums in log space.
+   * @return log(exp(a) + exp(b))
+   */
+  def logSum(a : Double, b : Double) = {
+    if(a == Double.NegativeInfinity) b
+    else if (b == Double.NegativeInfinity) a
+    else if(a < b) b + log(1 + exp(a-b))
+    else a + log(1+exp(b-a));    
+  }
+
+  /**
+   * Sums together things in log space.
+   * @return log(\sum exp(a_i))
+   */
+  def logSum(a: Double, b:Double, c: Double*):Double ={
+    logSum(Array(a,b) ++ c);
+  }
+
+
+  /**
+   * Sums together things in log space.
+   * @return log(\sum exp(a_i))
+   */
+  def logSum(iter:Iterator[Double], max: Double):Double = {
+    max + log(iter.foldLeft(0.)( (a,b) => if(b == Double.NegativeInfinity) a else a+exp( b - max )))
+  }
+
+  /**
+  * Sums together things in log space.
+  * @return log(\sum exp(a_i))
+  */
+  def logSum(a:Seq[Double]):Double = {
+    a.length match {
+      case 0 => Double.NegativeInfinity;
+      case 1 => a(0)
+      case 2 => logSum(a(0),a(1));
+      case _ =>
+        val m = a reduceLeft(_ max _);
+        if(m.isInfinite) m
+        else m + log(a.foldLeft(0.)( (a,b) => a+exp( b - m )))
+    }
+  }
+
 }
 
 /**
