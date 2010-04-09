@@ -25,17 +25,30 @@ import scalala.collection.{MergeableSet, IntSpanSet, ProductSet};
 import scalala.tensor.operators._;
 import TensorShapes._;
 
-class Tensor2Linearizer[I,J,T<: Tensor2[I,J] with TensorSelfOp[(I,J),T,Shape2], Bound<:Tensor2[I,J]](implicit ops2: TensorArith[(I,J),T,Bound,Shape2])  {
-  class ProjectedTensor(private[Tensor2Linearizer] val t: T) extends Tensor1[(I,J)] with TensorSelfOp[(I,J),ProjectedTensor,Shape1Col] {
-    def like = new ProjectedTensor(t.like);
-    def update(k: (I,J), v: Double) = t.update(k,v);
-    def activeDomain = t.activeDomain;
-    def domain = t.domain;
-    def apply(k: (I,J)) = t(k);
-  }
-  implicit val ops = new Tensor1Arith[(I,J),ProjectedTensor,Tensor1[(I,J)],Shape1Col];
-  implicit val rowOps = new Tensor1Arith[(I,J),ProjectedTensor,Tensor1[(I,J)],Shape1Row];
+trait TensorLinearizer[I,J,T<:Tensor[I], ProjectedTensor <: Tensor1[J] with TensorSelfOp[J,ProjectedTensor,Shape1Col]] {
+  implicit val ops = new Tensor1Arith[J,ProjectedTensor,Tensor1[J],Shape1Col];
+  implicit val rowOps = new Tensor1Arith[J,ProjectedTensor,Tensor1[J],Shape1Row];
+  def linearize(t: T):ProjectedTensor;
+  def reshape(pt: ProjectedTensor):T;
+}
 
-  def linearize(t: T) = new ProjectedTensor(t);
-  def reshape(pt: ProjectedTensor) = pt.t
+object TensorLinearizer  {
+  class DefaultProjectedTensor[I,T<:Tensor[I] with TensorSelfOp[I,T,_]](private[TensorLinearizer] val t: T)
+      extends Tensor1[I] with TensorSelfOp[I,DefaultProjectedTensor[I,T],Shape1Col] {
+      def like = new DefaultProjectedTensor[I,T](t.like);
+      def update(k: I, v: Double) = t.update(k,v);
+      def activeDomain = t.activeDomain;
+      def domain = t.domain;
+      def apply(k: I) = t(k);
+    }
+
+  implicit def apply[I,T]() = new DefaultTensorLinearizer();
+
+  class DefaultTensorLinearizer[I,T<:Tensor[I] with TensorSelfOp[I,T,_]] 
+        extends TensorLinearizer[I, I, T, DefaultProjectedTensor[I,T]]  {
+    type ProjectedTensor = DefaultProjectedTensor[I,T];
+    def linearize(t: T) = new ProjectedTensor(t);
+    def reshape(pt: ProjectedTensor) = pt.t
+  }
+
 }
