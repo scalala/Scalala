@@ -111,15 +111,51 @@
       <groupId>com.lowagie</groupId>
       <artifactId>itext</artifactId>
       <version>2.1.5</version>
-    </dependency> 
-  </dependencies>
+    </dependency>
 
+
+    <dependency>
+      <groupId>org.scala-tools.testing</groupId>
+      <artifactId>scalacheck_2.8.0.Beta1-RC5</artifactId>
+      <version>1.7-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest</artifactId>
+      <version>1.0.1-for-scala-2.8.0.Beta1-RC5-with-test-interfaces-0.2-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.5</version>
+    </dependency>
+  </dependencies>
   <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <testSourceDirectory>src/test/scala</testSourceDirectory>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-webdav</artifactId>
+        <version>1.0-beta-2</version>
+      </extension>
+    </extensions>
     <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.10</version>
+        <version>2.12</version>
         <executions>
           <execution>
             <goals>
@@ -129,24 +165,18 @@
           </execution>
         </executions>
         <configuration>
-          <jvmArgs>
-            <jvmArg>-Xmx2g</jvmArg>
-          </jvmArgs>
+          <displayCmd>true</displayCmd>
           <args>
-            <!-- <arg>-Xlog-implicits</arg> -->
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
-            <arg>-Xexperimental</arg>
           </args>
-          <scalaVersion>${scala.version}</scalaVersion>
-          <mainConsole>scalala.ScalalaConsole</mainConsole>
           <jvmArgs>
-            <jvmArg>-Xmx256m</jvmArg>
+            <jvmArg>-Xmx1G</jvmArg>
+            <jvmArg>-Xms64m</jvmArg>
           </jvmArgs>
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-eclipse-plugin</artifactId>
         <configuration>
           <downloadSources>true</downloadSources>
@@ -161,6 +191,26 @@
             <classpathContainer>ch.epfl.lamp.sdt.launching.SCALA_CONTAINER</classpathContainer>
           </classpathContainers>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-scm-plugin</artifactId>
+            <version>1.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-api</artifactId>
+            <version>1.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-site-plugin</artifactId>
+            <version>2.0-beta-7</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -193,7 +243,7 @@
         <configuration>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
-            <descriptorRef>src</descriptorRef>
+            <descriptorRef>src/main/scala</descriptorRef>
           </descriptorRefs>
           <executions>
             <execution>
@@ -213,6 +263,7 @@
       </plugin>
     </plugins>
   </build>
+
   <reporting>
     <plugins>
       <plugin>
