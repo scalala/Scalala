@@ -5,10 +5,10 @@ numerical routines; support for plotting.
 
 (c) Daniel Ramage 2009-
 
+This project can be built with maven:
+  mvn compile
 
-This project can be built with ant (set your SCALA_HOME environmental
-variable to point to a recent scala installation) or with maven (no
-configuration necessary).
-
-Run ./scalala.sh from the command line to get an interactive shell.
+To run an interactive console:
+  mvn assembly:assembly
+  java -jar target/scalala-*-jar-with-dependencies.jar
 

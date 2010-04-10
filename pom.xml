@@ -36,8 +36,8 @@
 
   <scm>
     <connection>scm:git:git://scalanlp.org/git/scalala.git</connection>
-    <developerConnection>scm:git:ssh://scalanlp.org/home/dlwhall/git/scalala.git</developerConnection>
-    <url>http://bugs.scalanlp.org/repositories/show/scalala</url>
+    <developerConnection>scm:git:git@github.com:scalala/Scalala.git</developerConnection>
+    <url>http://groups.google.com/group/scalala</url>
   </scm>
 
   <repositories>
@@ -115,8 +115,6 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>src/</sourceDirectory>
-    <testSourceDirectory>test-src/</testSourceDirectory>
     <plugins>
       <plugin>
         <groupId>org.scala-tools</groupId>
@@ -187,6 +185,29 @@
               <url>${pom.url}</url>
             </manifestEntries>
             <!-- <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile> -->
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin> <!-- for building the distributable jar -->
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+            <descriptorRef>src</descriptorRef>
+          </descriptorRefs>
+          <executions>
+            <execution>
+              <id>make-assembly</id> <!-- this is used for inheritance merges -->
+              <phase>package</phase> <!-- append to the packaging phase. -->
+              <goals>
+                <goal>single</goal> <!-- goals == mojos -->
+              </goals>
+            </execution>
+          </executions>
+          <archive>
+            <manifest>
+              <mainClass>scalala.ScalalaConsole</mainClass>
+            </manifest>
           </archive>
         </configuration>
       </plugin>
