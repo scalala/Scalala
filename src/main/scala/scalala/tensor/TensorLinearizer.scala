@@ -42,7 +42,7 @@ object TensorLinearizer  {
       def apply(k: I) = t(k);
     }
 
-  implicit def apply[I,T]() = new DefaultTensorLinearizer();
+  implicit def apply[I,T<:Tensor[I] with TensorSelfOp[I,T,_]]() = new DefaultTensorLinearizer[I,T]();
 
   class DefaultTensorLinearizer[I,T<:Tensor[I] with TensorSelfOp[I,T,_]] 
         extends TensorLinearizer[I, I, T, DefaultProjectedTensor[I,T]]  {
