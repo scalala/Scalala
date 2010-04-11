@@ -38,7 +38,9 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
   * Default value should defer to BaseDoubleCounter.default
   */
   protected val counts = new Object2DoubleOpenHashMap[T]();
-  counts.defaultReturnValue(default);
+
+  override def default_=(d: Double) = counts.defaultReturnValue(d);
+  override def default = counts.defaultReturnValue;
 
   val activeDomain : MergeableSet[T] = new MergeableSet[T] {
     def contains(t:T) = counts.containsKey(t);
@@ -78,9 +80,9 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
   def contains(t:T) = counts containsKey t;
 
   /**
-  * Returns the value associated with t, or default if none is.
-  */
- def apply(t: T) = counts.getDouble(t);
+   * Returns the value associated with t, or default if none is.
+   */
+  override def apply(t: T) = counts.getDouble(t);
 
   /**
   * Equivalent to this(t) += inc. it may be faster (though at the moment it isn't)

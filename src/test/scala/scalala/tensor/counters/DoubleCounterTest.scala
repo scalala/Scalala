@@ -20,6 +20,7 @@ import org.scalacheck._
 import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
+import scalala.Scalala._;
 import Counters._;
 import org.junit.runner.RunWith
 
@@ -39,11 +40,19 @@ class DoubleCounterTest extends FunSuite with Checkers {
     });
   }
 
-  test("Adding to a counter makes it contain it") {
+  test("Adding to a counter makes it contain the added key") {
     check(Prop.forAll { (c: DoubleCounter[Int], a: Int) =>
       val c2 = c.copy;
       c2.incrementCount(a,1);
       c2.contains(a) && c2.activeDomain.contains(a);
+    });
+  }
+
+  test("element-wise multiplication by an empty counter with a default works") {
+    check(Prop.forAll { (c: DoubleCounter[Int]) =>
+      val c2 = DoubleCounter[Int]();
+      c2 += 1.0;
+      c == (c :* c2).value;
     });
   }
 
