@@ -32,9 +32,8 @@ class LogDoubleCounterTest extends FunSuite with Checkers {
     check( Prop.forAll{ (cl: List[(Int,Double)]) =>
       // We have to aggregate twice because of overflow issues.
       val c = aggregate(aggregate(cl));
-      c.logTotal == Math.NEG_INF_DOUBLE || {
+      c.logTotal ==  Double.NegativeInfinity || {
         val cn = LogCounters.normalize(c);
-        val cn2 = LogCounters.normalize(c);
         (cn.total - 1.0).abs/c.logTotal < 1E-2 && c.forall { case (k,v) =>
           (Math.log(cn(k)) + c.logTotal - v).abs < 1E-6
         }

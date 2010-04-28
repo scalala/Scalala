@@ -84,6 +84,8 @@ abstract class BasePairedDoubleCounter[K1,K2]
     yield ( (k1,k2),v);
   }
 
+  def max = theMap.valuesIterator.map(_.max).reduceLeft(_ max _);
+
   def apply(k1 : K1) = getRow(k1);
   def get(k1 : K1, k2 : K2) : Option[Double] = theMap.get(k1).flatMap(_.get(k2))
   def apply(k1 : K1, k2: K2) : Double= apply(k1)(k2);

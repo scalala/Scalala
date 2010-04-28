@@ -101,18 +101,20 @@ object TrackedStatistics {
   * just track whether or not we can keep using it.
   */
   trait LogTotal[T] extends TrackedStatistics[T] {
+
+
     private var logTotalOk = true;
     private var logTotal_ = Double.NegativeInfinity;
 
     def logTotal = if(logTotalOk) {
       logTotal_
     } else {
-      val max = valuesIterator.foldLeft(Double.NegativeInfinity)(_ max _);
       logTotal_ = logSum(valuesIterator,max);
       logTotalOk = true;
       logTotal_
     }
 
+    def max: Double;
     def valuesIterator: Iterator[Double];
 
     override protected[counters] def updateStatistics(t: T, oldV: Double, newV: Double) {

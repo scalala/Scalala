@@ -170,7 +170,8 @@ object LogCounters extends DoubleCounterFactory {
       assert(!(v - ctr.logTotal).isNaN,k + " " + v + " " + ctr.logTotal);
       result(k) = v - ctr.logTotal;
     }
-    assert(result.logTotal < 1E-10);
+    if(result.logTotal > 1E-6)
+      assert(result.logTotal < 1E-10,"Total is too big: " + result.logTotal);
 
     result;
   }

@@ -49,10 +49,26 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
   }
   val domain : MergeableSet[T] = activeDomain;
 
-  override def valuesIterator = new Iterator[Double] {
+  override def valuesIterator:Iterator[Double] = new Iterator[Double] {
     val iter = counts.values.doubleIterator;
     override def hasNext = iter.hasNext;
     override def next = iter.nextDouble;
+  }
+
+  override def foreach[A](f: ((T,Double))=>A) {
+    val iter = counts.object2DoubleEntrySet.fastIterator;
+    while(iter.hasNext) {
+      val n = iter.next;
+      f((n.getKey,n.getDoubleValue));
+    }
+  }
+
+  def foreach[A](f: (T,Double)=>A) {
+    val iter = counts.object2DoubleEntrySet.fastIterator;
+    while(iter.hasNext) {
+      val n = iter.next;
+      f(n.getKey,n.getDoubleValue);
+    }
   }
 
   /**
@@ -115,6 +131,7 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
       val entry = iter.next;
       if (entry.getDoubleValue > maxV) {
         maxK = entry.getKey;
+        maxV = entry.getDoubleValue;
       }
     }
     (maxK,maxV);
@@ -128,6 +145,7 @@ trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer 
       val entry = iter.next;
       if (entry.getDoubleValue < minV) {
         minK = entry.getKey;
+        minV = entry.getDoubleValue;
       }
     }
     (minK,minV);
