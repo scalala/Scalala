@@ -29,7 +29,9 @@ import scala.collection.generic.CanBuildFrom;
  * 
  * @author dramage
  */
-trait PartialMap[@specialized A, @specialized B]
+// despecializing for now:
+//trait PartialMap[@specialized A, @specialized B]
+trait PartialMap[A,B]
 extends PartialFunction[A,B] with Iterable[(A,B)] {
   /**
    * Returns the complete domain of the function.  For some types of
