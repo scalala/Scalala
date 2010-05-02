@@ -6,7 +6,7 @@
   <version>0.3.1-SNAPSHOT</version>
   <inceptionYear>2008</inceptionYear>
   <properties>
-    <scala.version>2.8.0-SNAPSHOT</scala.version>
+    <scala.version>2.8.0.Beta1</scala.version>
   </properties>
 
   <developers>
@@ -116,13 +116,13 @@
 
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_2.8.0-SNAPSHOT</artifactId>
-      <version>1.8-SNAPSHOT</version>
+      <artifactId>scalacheck_2.8.0.Beta1-RC5</artifactId>
+      <version>1.7-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest</artifactId>
-      <version>1.0.1-for-scala-2.8.0.RC1-SNAPSHOT</version>
+      <version>1.0.1-for-scala-2.8.0.Beta1-RC5-with-test-interfaces-0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -169,7 +169,6 @@
           <args>
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
-            <!-- <arg>-Ylog:specialize</arg> -->
           </args>
           <jvmArgs>
             <jvmArg>-Xmx1G</jvmArg>
