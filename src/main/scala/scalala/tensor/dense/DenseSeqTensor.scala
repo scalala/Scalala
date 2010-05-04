@@ -9,6 +9,7 @@ final class DenseSeqTensor(val dims: Seq[Int], data: Array[Double])
   def this(dims: Seq[Int]) = this(dims,new Array(dims.reduceLeft(_ * _)));
 
   require(dims.reduceLeft(_ * _) == data.size);
+  final override def size = data.size;
 
   @inline final def index(indices: Seq[Int]) : Int = {
     var i = 0;
@@ -17,6 +18,7 @@ final class DenseSeqTensor(val dims: Seq[Int], data: Array[Double])
     while(i < indices.size) {
       require(indices(i) >= 0 && indices(i) < dims(i));
       index = indices(i) + dims(i) * index;
+      i += 1;
     }
     index;
   }
@@ -30,8 +32,8 @@ final class DenseSeqTensor(val dims: Seq[Int], data: Array[Double])
   def domain = new MergeableSet[Seq[Int]] {
     override lazy val size = dims.reduceLeft(_ * _);
     def iterator = {
-      def unroll(seq: Seq[Int]) : Iterator[Seq[Int]]  = {
-        if(seq.isEmpty) Iterator.empty
+      def unroll(seq: Seq[Int]) : Iterator[IndexedSeq[Int]]  = {
+        if(seq.size == 1) for( i <- 0 until seq(0) iterator) yield IndexedSeq(i);
         else {
           val rest = unroll(seq.tail);
           for { s <- rest; i <- 0 until seq(0) iterator } yield i +: s;
