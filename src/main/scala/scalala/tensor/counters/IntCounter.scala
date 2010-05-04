@@ -125,6 +125,7 @@ trait BaseIntCounter[T] extends MutablePartialMap[T,Int] with TrackedIntStatisti
       val entry = iter.next;
       if (entry.getIntValue > maxV) {
         maxK = entry.getKey;
+        maxV = entry.getIntValue
       }
     }
     (maxK,maxV);
@@ -138,6 +139,7 @@ trait BaseIntCounter[T] extends MutablePartialMap[T,Int] with TrackedIntStatisti
       val entry = iter.next;
       if (entry.getIntValue < minV) {
         minK = entry.getKey;
+        minV = entry.getIntValue
       }
     }
     (minK,minV);

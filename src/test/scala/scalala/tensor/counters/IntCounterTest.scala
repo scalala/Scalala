@@ -73,6 +73,18 @@ class IntCounterTest extends FunSuite with Checkers {
     })
   }
 
+  test("min and max are actually min and max") {
+    check( Prop.forAll{ (c: IntCounter[Int]) =>
+      (c.size == 0) || c.iterator.map(_._2).foldLeft(Int.MaxValue)(_ min _) == c.min
+    }
+    );
+    check( Prop.forAll{ (c: IntCounter[Int]) =>
+      (c.size == 0) || c.iterator.map(_._2).foldLeft(Int.MinValue)(_ max _) == c.max
+    }
+    );
+  }
+
+
   test("scale preserves total") {
     check ( Prop.forAll { (cp:(IntCounter[Int],Int))  => 
       val (c2,i) = cp;
@@ -95,4 +107,5 @@ class IntCounterTest extends FunSuite with Checkers {
       }
     })
   }
+
 }
