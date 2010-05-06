@@ -126,6 +126,78 @@ class DenseVector(data : Array[Double]) extends
       }
     case _ => super.:=(t);
   }
+
+  override def :+=  (t : PartialMap[Int,Double]) = t match {
+    case v: DenseVector =>
+      ensure(t);
+      var i = 0;
+      while(i < size) {
+        this(i) += v(i);
+        i += 1;
+      }
+    case s: SparseVector =>
+      Arrays.fill(this.data,s.default);
+      var offset = 0;
+      while(offset < s.used) {
+        data(s.index(offset)) += s.data(offset);
+        offset+=1;
+      }
+    case _ => super.:=(t);
+  }
+
+
+  /** Make Scala happy about inheritance */
+  def :+= [V<:Tensor[Int]]  (op : Vector) { this.:+=(op:PartialMap[Int,Double]); }
+
+  /** Increments each element in this map by the corresponding value as returned by the given operation. */
+  override def :+= [V<:Tensor[Int]] (op : TensorOp[V,_]) : Unit = {
+    op match {
+      case TensorMultScalar(t:DenseVector, s) if (s != 0) => {
+        var i = 0;
+        ensure(t);
+        while(i < size) {
+          this(i) += t(i) * s;
+          i += 1;
+        }
+      }
+      case t:DenseVector => {
+        ensure(t);
+        var i = 0;
+        while(i < size) {
+          this(i) += t(i);
+          i += 1;
+        }
+      }
+      case _ => super.:+=(op);
+    }
+  }
+
+  /** Make Scala happy about inheritance */
+  def :-= [V<:Tensor[Int]]  (op : Vector) { this.:-=(op:PartialMap[Int,Double]); }
+
+  /** Decrements each element in this map by the corresponding value as returned by the given operation. */
+  override def :-= [V<:Tensor[Int]] (op : TensorOp[V,_]) : Unit = {
+    op match {
+      case TensorMultScalar(t:DenseVector, s) if (s != 0) => {
+        ensure(t);
+        var i = 0;
+        while(i < size) {
+          this(i) -= t(i) * s;
+          i += 1;
+        }
+      }
+      case t:DenseVector => {
+        ensure(t);
+        var i = 0;
+        while(i < size) {
+          this(i) -= t(i);
+          i += 1;
+        }
+      }
+      case _ => super.:-=(op);
+    }
+  }
+
 }
 
 object DenseVector {

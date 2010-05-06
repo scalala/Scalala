@@ -277,10 +277,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
   final def += [V<:Tensor[I]]  (op : TensorOp[V,_]) = this.:+=(op);
 
   /** Make Scala happy about inheritance */
-  final def :+= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:+=(op:PartialMap[I,Double]); }
+  def :+= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:+=(op:PartialMap[I,Double]); }
 
   /** Make Scala happy about inheritance */
-  final def += [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:+=(op:PartialMap[I,Double]); }
+  def += [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:+=(op:PartialMap[I,Double]); }
 
   /** Decrements each element in this map by the corresponding value as returned by the given operation. */
   def :-= [V<:Tensor[I]] (op : TensorOp[V,_]) : Unit = {
@@ -315,10 +315,10 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
 
 
   /** Make Scala happy about inheritance */
-  final def :-= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:-=(op:PartialMap[I,Double]); }
+  def :-= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:-=(op:PartialMap[I,Double]); }
 
   /** Make Scala happy about inheritance */
-  final def -= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:-=(op:PartialMap[I,Double]); }
+  def -= [V<:Tensor[I]]  (op : V with TensorOp[V,_]) { this.:-=(op:PartialMap[I,Double]); }
 
   
   /** Multiplies each element in this map by the corresponding value as returned by the given operation. */
