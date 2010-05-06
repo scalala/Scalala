@@ -63,7 +63,11 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
   private val _colDomain = IntSpanSet(0, rows);
   override def activeDomainInCol(col : Int) = _colDomain;
   
-  override def copy = new DenseMatrix(rows, cols, data.toArray);
+  override def copy = {
+    val arr = new Array[Double](rows * cols);
+    System.arraycopy(data,0,arr,0,size);
+    new DenseMatrix(rows, cols, arr);
+  }
 
   override def like = new DenseMatrix(rows, cols);
   

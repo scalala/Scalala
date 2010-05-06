@@ -90,7 +90,7 @@ trait LinearAlgebra {
                    );
     val work = new Array[Double](workSize);
     import scalala.tensor.dense.Numerics.lapack._;
-    val result = gesdd(JobSVD.All,m,n,mat.data,S.data,U.data,Vt.data,work,work.length,iwork);
+    val result = gesdd(JobSVD.All,m,n,mat.copy.data,S.data,U.data,Vt.data,work,work.length,iwork);
     if (result > 0)
       throw new NotConvergedException(NotConvergedException.Reason.Iterations)
     else if (result < 0)
