@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="Scala" name="Scala">
+      <configuration>
+        <option name="takeFromSettings" value="true" />
+        <option name="myScalaCompilerJarPaths">
+          <array>
+            <option value="$MAVEN_REPOSITORY$/org/scala-lang/scala-compiler/2.8.0.Beta1/scala-compiler-2.8.0.Beta1.jar" />
+          </array>
+        </option>
+        <option name="myScalaSdkJarPaths">
+          <array>
+            <option value="$MAVEN_REPOSITORY$/org/scala-lang/scala-library/2.8.0.Beta1/scala-library-2.8.0.Beta1.jar" />
+          </array>
+        </option>
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/target/classes" />
+    <output-test url="file://$MODULE_DIR$/target/test-classes" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/main/resources" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/scala" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/scala" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="Maven: org.scala-lang:scala-compiler:2.8.0.Beta1" level="project" />
+    <orderEntry type="library" exported="" name="Maven: org.scala-lang:scala-library:2.8.0.Beta1" level="project" />
+    <orderEntry type="library" exported="" name="Maven: mtj:mtj:0.9.9" level="project" />
+    <orderEntry type="library" exported="" name="Maven: jfree:jcommon:1.0.12" level="project" />
+    <orderEntry type="library" exported="" name="Maven: jfree:jfreechart:1.0.9" level="project" />
+    <orderEntry type="library" exported="" name="Maven: org.apache.xmlgraphics:xmlgraphics-commons:1.3.1" level="project" />
+    <orderEntry type="library" exported="" name="Maven: commons-io:commons-io:1.3.1" level="project" />
+    <orderEntry type="library" exported="" name="Maven: commons-logging:commons-logging:1.0.4" level="project" />
+    <orderEntry type="library" exported="" name="Maven: fastutil:fastutil:5.1.5" level="project" />
+    <orderEntry type="library" exported="" name="Maven: com.lowagie:itext:2.1.5" level="project" />
+    <orderEntry type="library" exported="" name="Maven: bouncycastle:bcmail-jdk14:138" level="project" />
+    <orderEntry type="library" exported="" name="Maven: bouncycastle:bcprov-jdk14:138" level="project" />
+    <orderEntry type="library" exported="" name="Maven: org.scala-tools.testing:scalacheck_2.8.0.Beta1-RC5:1.7-SNAPSHOT" level="project" />
+    <orderEntry type="library" exported="" name="Maven: org.scala-tools.testing:test-interface:0.2" level="project" />
+    <orderEntry type="library" exported="" name="Maven: org.scalatest:scalatest:1.0.1-for-scala-2.8.0.Beta1-RC5-with-test-interfaces-0.2-SNAPSHOT" level="project" />
+    <orderEntry type="library" exported="" name="Maven: junit:junit:4.5" level="project" />
+  </component>
+</module>
+
