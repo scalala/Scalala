@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.scala-tools.testing:scalacheck_2.8.0.Beta1-RC5:1.7-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-tools/testing/scalacheck_2.8.0.Beta1-RC5/1.7-SNAPSHOT/scalacheck_2.8.0.Beta1-RC5-1.7-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-tools/testing/scalacheck_2.8.0.Beta1-RC5/1.7-SNAPSHOT/scalacheck_2.8.0.Beta1-RC5-1.7-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scala-tools/testing/scalacheck_2.8.0.Beta1-RC5/1.7-SNAPSHOT/scalacheck_2.8.0.Beta1-RC5-1.7-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
