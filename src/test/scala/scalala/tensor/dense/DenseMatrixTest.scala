@@ -1,5 +1,3 @@
-package scalala.tensor.dense
-
 /*
  Copyright 2010 David Hall, Daniel Ramage
 
@@ -15,16 +13,14 @@ package scalala.tensor.dense
  See the License for the specific language governing permissions and
  limitations under the License.
 */
+package scalala.tensor.dense
 
-import org.scalacheck._
-import org.scalatest._;
 import org.scalatest.junit._;
-import org.scalatest.prop._;
-import scalala.Scalala._;
+import scalala.ScalalaTest;
 import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
-class DenseMatrixTest extends FunSuite with Checkers {
+class DenseMatrixTest extends ScalalaTest {
  import scalala.tensor.dense.DenseMatrix
  import scalala.Scalala._
 

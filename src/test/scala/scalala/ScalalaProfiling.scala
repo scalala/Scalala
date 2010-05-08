@@ -21,7 +21,6 @@ package scalala
 
 import scalala.Scalala._;
   
-
 /**
  * Profiling extensions of ScalalaTest.
  * 

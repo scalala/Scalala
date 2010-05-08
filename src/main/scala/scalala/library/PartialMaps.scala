@@ -83,26 +83,3 @@ trait PartialMaps extends Traversables with Iterators {
     argmin(v.map(cv));
 
 }
-
-/**
- * Unit tests for PartialMaps functions.
- *
- * @author dramage
- */
-trait PartialMapsTest extends Library with PartialMaps with scalala.ScalalaTest {
-  test("PartialMap:MinMax") {
-    val v = new scalala.tensor.sparse.SparseVector(10);
-    v(3) = 1;
-    assertEquals(1, max(v));
-    assertEquals(3, argmax(v));
-    assertEquals(0, min(v));
-    assertEquals(0, argmin(v));
-
-    v += 2;
-    v(3) = 1;
-    assertEquals(2, max(v));
-    assertEquals(0, argmax(v));
-    assertEquals(1, min(v));
-    assertEquals(3, argmin(v));
-  }
-}
