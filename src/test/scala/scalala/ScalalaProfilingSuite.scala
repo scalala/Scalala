@@ -1,7 +1,7 @@
-package scalala
+package scalala;
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.junit.runner.RunWith;
+import org.scalatest.junit.JUnitRunner;
 import scala.collection.mutable.ArrayOps;
 
 /**
@@ -14,8 +14,8 @@ import scala.collection.mutable.ArrayOps;
 class ScalalaProfilingSuite extends Scalala with ScalalaProfiling with ScalalaTest {
 
 //  test("SparseBinaryVectorMultAdd") {
-//    import scalala.tensor.dense._;
-//    import scalala.tensor.sparse._;
+//    import tensor.dense._;
+//    import tensor.sparse._;
 //
 //    val iter = 100;
 //    val n = 50000;
@@ -38,8 +38,8 @@ class ScalalaProfilingSuite extends Scalala with ScalalaProfiling with ScalalaTe
 //  }
 
   test("SparseBinaryVectorActiveDomain") {
-    import scalala.tensor.sparse._;
-    import scalala.collection.MergeableSet;
+    import tensor.sparse._;
+    import collection.MergeableSet;
 
     val iter = 2000;
     val n = 5000;
@@ -77,7 +77,7 @@ class ScalalaProfilingSuite extends Scalala with ScalalaProfiling with ScalalaTe
   }
 
   test("SparseVector vs SparseHashVector") {
-    import scalala.tensor.sparse._;
+    import tensor.sparse._;
 
     val iter = 100;
     val n = 50000;

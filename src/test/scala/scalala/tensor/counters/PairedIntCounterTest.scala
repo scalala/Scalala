@@ -13,15 +13,16 @@
  See the License for the specific language governing permissions and
  limitations under the License. 
 */
-package scalala.tensor.counters;
+package scalala;
+package tensor;
+package counters;
 
-import org.scalacheck._
+import org.scalacheck._;
 import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
 import Counters._;
-import scalala.ScalalaTest;
-import org.junit.runner.RunWith
+import org.junit.runner.RunWith;
 
 @RunWith(classOf[JUnitRunner])
 class PairedIntCounterTest extends ScalalaTest {

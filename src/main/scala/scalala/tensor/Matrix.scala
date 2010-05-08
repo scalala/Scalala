@@ -17,11 +17,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor;
+package scalala;
+package tensor;
 
-import scalala.collection.{MergeableSet, IntSpanSet, ProductSet};
-import scalala.tensor.operators.TensorShapes._;
-import scalala.tensor.operators.TensorSelfOp;
+import collection.{MergeableSet, IntSpanSet, ProductSet};
+import tensor.operators.TensorShapes._;
+import tensor.operators.TensorSelfOp;
 
 /**
  * A standard numerical Tensor2 defined over (0,0) inclusive to 

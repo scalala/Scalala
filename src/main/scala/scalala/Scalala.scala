@@ -19,7 +19,7 @@
  */
 package scalala;
 
-import scalala.library._;
+import library._;
 
 /**
  * A matlab-like environment and syntax for scala.  This is the default

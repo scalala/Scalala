@@ -17,14 +17,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.operators;
+package scalala;
+package tensor;
+package operators;
 
-import scala.collection.mutable.ArrayOps
+import scala.collection.mutable.ArrayOps;
 
-import scalala.tensor._;
-import scalala.tensor.dense._;
-import scalala.Scalala.Vector;
-import org.junit.runner.RunWith
+import tensor._;
+import tensor.dense._;
+import Scalala.Vector;
+import org.junit.runner.RunWith;
 import org.scalatest.junit.JUnitRunner;
 
 /**
@@ -263,7 +265,7 @@ class OperatorTest extends scalala.library.Library with OperatorImplicits with s
   }
 
   test("Operators:ArrayMath") {
-    import scalala.library.Implicits._;
+    import library.Implicits._;
     val x = Array(1.,2.,3.);
     x.asVector *= 2.0;
     assertEquals(x.toList, List(2.0,4.0,6.0));

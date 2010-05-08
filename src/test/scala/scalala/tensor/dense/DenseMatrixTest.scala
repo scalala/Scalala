@@ -13,16 +13,17 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalala.tensor.dense
+package scalala;
+package tensor;
+package dense;
 
 import org.scalatest.junit._;
-import scalala.ScalalaTest;
-import org.junit.runner.RunWith
+import org.junit.runner.RunWith;
 
 @RunWith(classOf[JUnitRunner])
 class DenseMatrixTest extends ScalalaTest {
- import scalala.tensor.dense.DenseMatrix
- import scalala.Scalala._
+ import tensor.dense.DenseMatrix;
+ import Scalala._;
 
  def createM1 = DenseMatrix(2, 2)(1.0, 2.0, 3.0, 4.0)
 

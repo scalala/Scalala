@@ -17,16 +17,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.operators;
+package scalala;
+package tensor;
+package operators;
 
-import scalala.collection.{MergeableSet,ProductSet};
-import scalala.tensor.{Vector,Matrix,Tensor1,Tensor2};
-import scalala.tensor.dense.{DenseVector,DenseMatrix};
-import scalala.library.Matrices;
-import scalala.library.LinearAlgebra;
-
+import collection.{MergeableSet,ProductSet};
+import dense.{DenseVector,DenseMatrix};
+import library.Matrices;
+import library.LinearAlgebra;
 import TensorShapes._;
-
 import VectorTypes._;
 import MatrixTypes._;
 
@@ -251,7 +250,7 @@ class MatrixSingularException extends RuntimeException;
 case class DenseMatrixSolveDenseMatrix
 (a : DenseMatrixOp[DenseMatrix], b : DenseMatrixOp[DenseMatrix])
 extends TensorReferenceOp[DenseMatrix,Shape2](a) {
-  import scalala.tensor.dense.Numerics;
+  import dense.Numerics;
   
   override lazy val value : DenseMatrix = {
     

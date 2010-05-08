@@ -17,16 +17,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.sparse
+package scalala;
+package tensor;
+package sparse;
 
-import scalala.tensor.{Tensor1,Vector};
-import scalala.collection.{PartialMap,MergeableSet,IntSpanSet,DomainException};
-
-import scalala.tensor.Tensor.CreateException;
-import scalala.tensor.dense.DenseVector;
-
-import scalala.tensor.operators.TensorShapes._;
-import scalala.tensor.operators.TensorSelfOp;
+import collection.{PartialMap,MergeableSet,IntSpanSet,DomainException};
+import Tensor.CreateException;
+import dense.DenseVector;
+import operators.TensorShapes._;
+import operators.TensorSelfOp;
 
 /**
  * A sparse vector implementation based on an array of indeces and

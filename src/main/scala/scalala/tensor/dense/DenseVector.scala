@@ -17,19 +17,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.dense;
+package scalala;
+package tensor;
+package dense;
 
 import java.util.Arrays;
-
 import scalala.collection.{MergeableSet, IntSpanSet, DomainException, PartialMap};
-
-import scalala.tensor.Vector;
-import scalala.tensor.sparse._;
-import scalala.tensor.operators._;
-
-import scalala.tensor._;
-import scalala.tensor.operators.TensorShapes._;
-import scalala.tensor.Tensor.CreateException;
+import sparse._;
+import operators._;
+import TensorShapes._;
+import Tensor.CreateException;
 
 /**
  * A vector backed by a dense array of doubles.

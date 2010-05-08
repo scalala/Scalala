@@ -17,13 +17,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library;
+package scalala;
+package library;
 
 import scala.collection.mutable.ArrayBuffer;
 
-import scalala.collection.PartialMap;
-import scalala.tensor.{Tensor,Vector,Matrix};
-import scalala.tensor.dense.{DenseVector,DenseMatrix};
+import collection.PartialMap;
+import tensor.{Tensor,Vector,Matrix};
+import tensor.dense.{DenseVector,DenseMatrix};
 
 /**
  * Matlab-like plotting routines.
@@ -257,14 +258,14 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
     }
     
     // set the renderer
-    import java.awt.Graphics2D
-    import java.awt.geom.Rectangle2D
-    import org.jfree.data.xy.XYDataset
-    import org.jfree.ui.RectangleEdge
-    import org.jfree.chart.axis.ValueAxis
-    import org.jfree.chart.renderer.xy.AbstractXYItemRenderer
-    import org.jfree.chart.renderer.xy.XYBubbleRenderer
-    import org.jfree.chart.renderer.xy.XYItemRendererState
+    import java.awt.Graphics2D;
+    import java.awt.geom.Rectangle2D;
+    import org.jfree.data.xy.XYDataset;
+    import org.jfree.ui.RectangleEdge;
+    import org.jfree.chart.axis.ValueAxis;
+    import org.jfree.chart.renderer.xy.AbstractXYItemRenderer;
+    import org.jfree.chart.renderer.xy.XYBubbleRenderer;
+    import org.jfree.chart.renderer.xy.XYItemRendererState;
     
     val renderer = new XYBubbleRenderer(XYBubbleRenderer.SCALE_ON_DOMAIN_AXIS) {;
       val stroke = new java.awt.BasicStroke(0f);
@@ -414,19 +415,19 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
 
 /** Plotting operations */
 object PlottingSupport {
-  import org.jfree.chart._
-  import org.jfree.chart.plot._
+  import org.jfree.chart._;
+  import org.jfree.chart.plot._;
 
   import java.awt.Graphics2D;
-  import javax.swing._
+  import javax.swing._;
   
-  import org.jfree.chart._
-  import org.jfree.chart.axis._
-  import org.jfree.chart.plot._
+  import org.jfree.chart._;
+  import org.jfree.chart.axis._;
+  import org.jfree.chart.plot._;
   
-  import org.jfree.data.xy.{XYDataset, XYZDataset}
-  import org.jfree.chart.labels.XYToolTipGenerator
-  import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer
+  import org.jfree.data.xy.{XYDataset, XYZDataset};
+  import org.jfree.chart.labels.XYToolTipGenerator;
+  import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
   
   /** Returns a JFreeChart XYDataset for plotting y vs x. */
   def Dataset[I:ClassManifest](x : PartialMap[I,Double], y : PartialMap[I,Double]) : XYDataset = {
@@ -817,9 +818,9 @@ object PlottingSupport {
       if (show != legend_) {
         chart.removeLegend();
         if (show) {
-          import org.jfree.chart.title._
-          import org.jfree.ui._
-          import org.jfree.chart.block._
+          import org.jfree.chart.title._;
+          import org.jfree.ui._;
+          import org.jfree.chart.block._;
           import java.awt.Color;
           val legend = new LegendTitle(this.plot);
           legend.setMargin(new RectangleInsets(1.0, 1.0, 1.0, 1.0));
@@ -870,7 +871,7 @@ object PlottingSupport {
    * Color graident code from http://www.mbeckler.org/heatMap/heatMap.html
    */
   object Gradients {
-    import java.awt.Color
+    import java.awt.Color;
   
     /** Produces a gradient using the University of Minnesota's school colors, from maroon (low) to gold (high) */
     lazy val GRADIENT_MAROON_TO_GOLD = createGradient(new Color(0xA0, 0x00, 0x00), new Color(0xFF, 0xFF, 0x00), 256);

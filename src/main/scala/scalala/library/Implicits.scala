@@ -17,10 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library;
+package scalala;
+package library;
 
-import scalala.collection.{PartialMap,MergeableSet,IntSpanSet};
-import scalala.tensor.dense.DenseVector;
+import collection.{PartialMap,MergeableSet,IntSpanSet};
+import tensor.dense.DenseVector;
 
 import scala.collection.IndexedSeqLike;
 import scala.reflect.Manifest;

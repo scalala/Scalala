@@ -17,9 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor
+package scalala;
+package tensor;
 
-import scalala.collection.MergeableSet;
+import collection.MergeableSet;
 
 /**
  * A view of the given vector as a matrix with diagonal entries

@@ -17,16 +17,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library
+package scalala;
+package library;
 
-import scalala.collection.PartialMap;
-
-import scalala.tensor.operators.TensorShapes
-import scalala.tensor.{Tensor,Vector};
-import scalala.tensor.operators.TensorSelfOp
-import scalala.tensor.dense.{DenseVector};
-
-import scalala.tensor.operators.TensorOp;
+import collection.PartialMap;
+import tensor.operators.TensorShapes;
+import tensor.{Tensor,Vector};
+import tensor.operators.TensorSelfOp;
+import tensor.dense.{DenseVector};
+import tensor.operators.TensorOp;
 
 /**
  * Basic vector functions.

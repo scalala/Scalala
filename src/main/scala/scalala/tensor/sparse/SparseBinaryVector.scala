@@ -17,13 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.sparse
+package scalala;
+package tensor;
+package sparse;
 
-import scalala.tensor.{Tensor1,Vector};
-import scalala.collection.{MergeableSet,IntSpanSet,DomainException};
-
-import scalala.tensor.Tensor.CreateException;
-import scalala.tensor.dense.DenseVector;
+import collection.{MergeableSet,IntSpanSet,DomainException};
+import Tensor.CreateException;
+import dense.DenseVector;
 
 /**
  * A SparseBinaryVector is a sparse vector data structure that holds a single

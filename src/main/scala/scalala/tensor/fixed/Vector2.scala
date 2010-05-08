@@ -17,17 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.fixed;
+package scalala;
+package tensor;
+package fixed;
 
-import scalala.collection.{MergeableSet, IntSpanSet, DomainException};
-
-import scalala.tensor.Vector;
-import scalala.tensor.dense._;
-import scalala.tensor.operators._;
-
-import scalala.tensor._;
-import scalala.tensor.operators.TensorShapes._;
-import scalala.tensor.Tensor.CreateException;
+import dense._;
+import operators._;
+import operators.TensorShapes._;
 
 /**
 * A vector with dimension 2

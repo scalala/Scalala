@@ -17,9 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-package scalala.library;
+package scalala;
+package library;
 
-import org.junit.runner.RunWith
+import org.junit.runner.RunWith;
 import org.scalatest.junit.JUnitRunner;
 
 /**

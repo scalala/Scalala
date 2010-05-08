@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala
+package scalala;
 
 import org.scalatest._;
 import org.scalatest.prop._;
@@ -29,7 +29,7 @@ import org.scalatest.prop._;
  */
 trait ScalalaTest extends FunSuite with Checkers {
   import ScalalaTest._;
-  import scalala.collection.PartialMap;
+  import collection.PartialMap;
 
   def assertEquals[V1,V2](v1 : =>V1, v2 : =>V2) : Unit =
     if (v1 != v2) throw new TestFailedException(v1 + "!=" + v2);

@@ -1,10 +1,10 @@
 
-package scalala.tensor.counters;
+package scalala;
+package tensor;
+package counters;
 
 import scala.collection.mutable.ArrayBuffer;
-
-import scalala.Scalala._;
-import scalala.tensor._;
+import Scalala._;
 
 /**
 * Mixin for tracking various statistics in things like counters.

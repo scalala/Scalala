@@ -14,14 +14,15 @@
  limitations under the License. 
 */
 
-package scalala.tensor.counters;
+package scalala;
+package tensor;
+package counters;
 
-import scalala.Scalala._;
-import scalala.tensor._;
-import scalala.tensor.operators._;
+import Scalala._;
+import tensor.operators._;
 import TensorShapes._;
-import scalala.tensor.sparse._;
-import scalala.collection._;
+import sparse._;
+import collection._;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 
 /**

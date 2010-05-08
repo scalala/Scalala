@@ -17,21 +17,22 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.adaptive
+package scalala;
+package tensor;
+package adaptive;
 
 import java.util.Arrays;
 
-import scalala.tensor.{Tensor1,Vector};
-import scalala.collection.{MergeableSet,IntSpanSet,DomainException};
+import collection.{MergeableSet,IntSpanSet,DomainException};
 
-import scalala.tensor.Tensor.CreateException;
-import scalala.tensor.dense.DenseVector;
+import Tensor.CreateException;
+import dense.DenseVector;
 
-import scalala.tensor.operators.TensorShapes._;
-import scalala.tensor.operators.TensorSelfOp;
-import scalala.tensor.sparse.SparseVector;
-import scalala.tensor.sparse.SparseHashVector;
-import scalala.tensor.sparse.SparseHashMatrix;
+import operators.TensorShapes._;
+import operators.TensorSelfOp;
+import sparse.SparseVector;
+import sparse.SparseHashVector;
+import sparse.SparseHashMatrix;
 
 /**
  * An adaptive vector switches between a SparseVector and a DenseVector depending on sparsity.

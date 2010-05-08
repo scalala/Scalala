@@ -13,15 +13,16 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package scalala.tensor.counters;
+package scalala;
+package tensor;
+package counters;
 
-import org.scalacheck._
-import org.scalatest._
+import org.scalacheck._;
+import org.scalatest._;
 import org.junit.runner.RunWith;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
 import LogCounters._;
-import scalala.ScalalaTest;
 
 @RunWith(classOf[JUnitRunner])
 class LogDoubleCounterTest extends ScalalaTest {

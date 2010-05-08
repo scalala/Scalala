@@ -17,18 +17,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.sparse
+package scalala;
+package tensor;
+package sparse;
 
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
-
-import scalala.tensor.{Tensor1,Vector};
-import scalala.collection.{MergeableSet,IntSpanSet,DomainException};
-
-import scalala.tensor.Tensor.CreateException;
-import scalala.collection.DomainException;
-import scalala.tensor.dense.DenseVector;
-import scalala.tensor.operators.TensorSelfOp;
-import scalala.tensor.operators.TensorShapes._;
+import collection.{MergeableSet,IntSpanSet,DomainException};
+import Tensor.CreateException;
+import collection.DomainException;
+import dense.DenseVector;
+import operators.TensorSelfOp;
+import operators.TensorShapes._;
 
 /**
  * Sparse vector backed by an open address hash table with expected
