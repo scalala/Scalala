@@ -3,3 +3,6 @@ bin/
 docs/
 target/
 workspace.xml
+lib_managed
+project/boot
+
