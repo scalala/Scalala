@@ -260,7 +260,7 @@ class SparseBinaryVector(domainSize : Int, initialNonzeros : Int) extends Vector
   
   override def copy = {
     val rv = new SparseBinaryVector(size, 0);
-    rv.use(index.toArray, used);
+    rv.use(java.util.Arrays.copyOf(index, index.length), used);
     rv;
   }
 
