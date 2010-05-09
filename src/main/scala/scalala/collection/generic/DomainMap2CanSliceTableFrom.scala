@@ -18,29 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
-package tensor;
-package dense;
+package collection;
+package generic;
 
-import org.scalacheck._
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith
+import domain._;
 
-@RunWith(classOf[JUnitRunner])
-class DenseMatrixTest extends FunSuite with Checkers {
-
-  test("Slicing") {
-    val matrix = DenseMatrix(2,3)(0);
-    matrix((0 to 1), (1 to 2)) := 1;
-    matrix((0 to 1), (0 to 1)) += 4;
-
-    assert(matrix.data.toList === List(4, 4, 5, 5, 1, 1));
-  }
-
-  test("Transpose") {
-    val matrix = DenseMatrix(2,3)(1,2,0,3,0,0);
-    assert(matrix.transpose === DenseMatrix(3,2)(1,0,0,2,3,0));
-    assert(matrix.transpose.isInstanceOf[Matrix]);
-  }
+/**
+ * Builder trait for a DomainMap2SliceTable.
+ *
+ * @author dramage
+ */
+trait DomainMap2CanSliceTableFrom
+[-From, @specialized A1, @specialized A2, @specialized B,
+ D1<:IterableDomain[A1], D2<:IterableDomain[A2],
+ D<:Product2Domain[A1,A2,D1,D2], +To] {
+  def apply(from : From, keys1 : Seq[A1], keys2 : Seq[A2]) : To;
 }

@@ -1,67 +1,54 @@
 /*
  * Distributed as part of Scalala, a linear algebra library.
- * 
+ *
  * Copyright (C) 2008- Daniel Ramage
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
-
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-package scalala.tensor;
+package scalala;
+package tensor;
 
-import scalala.collection.IntSpanSet;
-import operators.TensorShapes._;
-import scalala.tensor.operators.TensorSelfOp;
+import collection._;
+import collection.domain._;
 
-/**
- * A standard numerical Tensor1 defined over 0 inclusive to
- * size exclusive.
- * 
- * @author dramage
- */
-trait Vector extends Tensor1[Int] with TensorSelfOp[Int,Vector,Shape1Col] {
-  /** Creates a vector "like" this one, but with zeros everywhere. */
-  override def like: Vector;
-  def size : Int;
-  
-  final override def domain : IntSpanSet = IntSpanSet(0, size);
-  
-  /** Returns an array copy of this tensor. */
-  def toArray = Array.tabulate(size)(i => this(i));
-  
-  override def copy : Vector = super.copy.asInstanceOf[Vector];
+trait VectorLike[+This]
+extends MutableDomainSeqLike[Double,This]
+with Tensor1Like[Int,IndexDomain,This];
 
-  override def apply(i: Int): Double;
-  override def update(i: Int,v: Double):Unit;
-  
-  final protected def check(i : Int) {
-    if (i < 0 || i >= size) {
-      throw new IndexOutOfBoundsException("Index out of range: "+i+" not in [0,"+size+")");
-    }
-  }
-
-  /** Creates a vector "like" this vector, with the dimensionality provided. */
-  def vectorLike(sz: Int): Vector;
-
-  /** Creates a matrix "like" this vector, with the dimensionality provided. */
-  def matrixLike(rows: Int, cols: Int): Matrix;
-}
+trait Vector
+extends MutableDomainSeq[Double]
+with Tensor1[Int,IndexDomain]
+with VectorLike[Vector];
 
 object Vector {
-  /**
-   * DenseVector literal, equivalent to
-   * <pre>DenseVector(values.size)(values :_*)</pre>.
-   */
-  def apply(values : Double*) =
-    dense.DenseVector(values.size)(values :_*);
+  /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
+  trait SliceSeqLike
+  [A, D<:IterableDomain[A], +Coll <: MutableDomainMap[A,Double,D],
+   +This <: SliceSeqLike[A, D, Coll, This]]
+  extends MutableDomainMapSliceSeqLike[A,D,Double,Coll,This]
+  with VectorLike[This];
+
+  /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
+  trait SliceSeq
+  [A, D<:IterableDomain[A], +Coll <: MutableDomainMap[A,Double,D]]
+  extends MutableDomainMapSliceSeq[A,D,Double,Coll]
+  with Vector with SliceSeqLike[A,D,Coll,SliceSeq[A,D,Coll]];
+
+  class SliceFromKeySeq
+  [@specialized A, D<:IterableDomain[A], +Coll<:MutableDomainMap[A, Double, D]]
+  (underlying : Coll, keys : Seq[A])
+  extends MutableDomainMapSliceSeq.FromKeySeq[A,D,Double,Coll](underlying, keys)
+  with SliceSeq[A,D,Coll];
 }

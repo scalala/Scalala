@@ -28,19 +28,26 @@ import org.scalatest.prop._;
 import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
-class DenseMatrixTest extends FunSuite with Checkers {
+class DenseVectorTest extends FunSuite with Checkers {
 
-  test("Slicing") {
-    val matrix = DenseMatrix(2,3)(0);
-    matrix((0 to 1), (1 to 2)) := 1;
-    matrix((0 to 1), (0 to 1)) += 4;
+  val TOLERANCE = 1e-4;
+  def assertClose(a : Double, b : Double) =
+    assert(Math.abs(a - b) < TOLERANCE);
 
-    assert(matrix.data.toList === List(4, 4, 5, 5, 1, 1));
+  test("Norm") {
+    val v = DenseVector(5)(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
+    assertClose(v.norm(1), 3.6577);
+    assertClose(v.norm(2), 2.0915);
+    assertClose(v.norm(3), 1.8405);
+    assertClose(v.norm(4), 1.7541);
+    assertClose(v.norm(5), 1.7146);
+    assertClose(v.norm(6), 1.6940);
+    assertClose(v.norm(Double.PositiveInfinity), 1.6656);
   }
 
-  test("Transpose") {
-    val matrix = DenseMatrix(2,3)(1,2,0,3,0,0);
-    assert(matrix.transpose === DenseMatrix(3,2)(1,0,0,2,3,0));
-    assert(matrix.transpose.isInstanceOf[Matrix]);
+  test("Dot") {
+    val a = DenseVector(5)(0.56390,0.36231,0.14601,0.60294,0.14535);
+    val b = DenseVector(5)(0.15951,0.83671,0.56002,0.57797,0.54450);
+    assertClose(a dot b, .90249);
   }
 }

@@ -18,29 +18,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
-package tensor;
-package dense;
+package collection;
 
-import org.scalacheck._
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith
+import domain._;
+import generic._;
 
-@RunWith(classOf[JUnitRunner])
-class DenseMatrixTest extends FunSuite with Checkers {
+/**
+ * Implementation trait for a MutableDomainMap that is also a DomainTable.
+ *
+ * @author dramage
+ */
+trait MutableDomainTableLike[@specialized B, +This]
+extends DomainTableLike[B,This]
+with MutableDomainMap2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,This];
 
-  test("Slicing") {
-    val matrix = DenseMatrix(2,3)(0);
-    matrix((0 to 1), (1 to 2)) := 1;
-    matrix((0 to 1), (0 to 1)) += 4;
-
-    assert(matrix.data.toList === List(4, 4, 5, 5, 1, 1));
-  }
-
-  test("Transpose") {
-    val matrix = DenseMatrix(2,3)(1,2,0,3,0,0);
-    assert(matrix.transpose === DenseMatrix(3,2)(1,0,0,2,3,0));
-    assert(matrix.transpose.isInstanceOf[Matrix]);
-  }
-}
+/**
+ * MutableDomainMap that is also a DomainTable.
+ *
+ * @author dramage
+ */
+trait MutableDomainTable[@specialized B]
+extends DomainTable[B]
+with MutableDomainMap2[Int,Int,B,IndexDomain,IndexDomain,TableDomain]
+with MutableDomainTableLike[B,MutableDomainTable[B]];

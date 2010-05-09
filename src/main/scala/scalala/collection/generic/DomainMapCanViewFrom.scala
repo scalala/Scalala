@@ -18,29 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
-package tensor;
-package dense;
+package collection;
+package generic;
 
-import org.scalacheck._
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith
+import domain._;
 
-@RunWith(classOf[JUnitRunner])
-class DenseMatrixTest extends FunSuite with Checkers {
-
-  test("Slicing") {
-    val matrix = DenseMatrix(2,3)(0);
-    matrix((0 to 1), (1 to 2)) := 1;
-    matrix((0 to 1), (0 to 1)) += 4;
-
-    assert(matrix.data.toList === List(4, 4, 5, 5, 1, 1));
-  }
-
-  test("Transpose") {
-    val matrix = DenseMatrix(2,3)(1,2,0,3,0,0);
-    assert(matrix.transpose === DenseMatrix(3,2)(1,0,0,2,3,0));
-    assert(matrix.transpose.isInstanceOf[Matrix]);
-  }
+/**
+ * Trait for constructing a lazy view of a given DomainMap.
+ *
+ * @author dramage
+ */
+trait DomainMapCanViewFrom[-From, +To] {
+  def apply(from : From) : To;
 }
