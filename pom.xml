@@ -188,7 +188,7 @@
             </goals>
             <phase>test-compile</phase>
             <configuration>
-              <sourceDir>src/test/scala</sourceDir>
+              <testSourceDir>src/test/scala</testSourceDir>
             </configuration>
           </execution>
         </executions>
