@@ -172,10 +172,24 @@
         <version>2.12</version>
         <executions>
           <execution>
+            <id>compile-scala</id>
             <goals>
               <goal>compile</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+               <sourceDir>src/main/scala</sourceDir>
+            </configuration>
+          </execution>
+          <execution>
+            <id>test-compile-scala</id>
+            <goals>
               <goal>testCompile</goal>
             </goals>
+            <phase>test-compile</phase>
+            <configuration>
+              <sourceDir>src/test/scala</sourceDir>
+            </configuration>
           </execution>
         </executions>
         <configuration>
