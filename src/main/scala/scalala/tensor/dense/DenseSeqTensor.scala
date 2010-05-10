@@ -1,7 +1,9 @@
-package scalala.tensor.dense
+package scalala;
+package tensor;
+package dense;
 
-import scalala.collection.MergeableSet
-import scalala.tensor.Tensor;
+import collection.MergeableSet;
+import tensor.Tensor;
 
 final class DenseSeqTensor(val dims: Seq[Int], data: Array[Double])
   extends DoubleArrayData(data) with Tensor[Seq[Int]] with DenseTensor[Seq[Int]] {

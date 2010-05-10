@@ -17,10 +17,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.operators;
-import scalala.tensor._;
-import scalala.tensor.dense._;
-import scalala.tensor.sparse._;
+package scalala;
+package tensor;
+package operators;
+
+import tensor.dense._;
+import tensor.sparse._;
 
 /**
  * Standard operator library includes TensorOps, Tensor1Ops, VectorOps,
@@ -33,8 +35,8 @@ trait OperatorImplicits extends TensorOps
   
   implicit def iTensorOpToTensor[V<:Tensor[_],S<:PublicShape](x : TensorOp[V,S]) : V = x.value;
 
-  import scalala.tensor.dense._;
-  import scalala.tensor.sparse._;
+  import dense._;
+  import sparse._;
 
   import Tensor1Types._;
   import Tensor2Types._;
@@ -68,8 +70,7 @@ trait OperatorImplicits extends TensorOps
     new RichTensor2Op[V](op);
   
   import VectorTypes._;
-  import scalala.tensor._;
-  import scalala.tensor.dense._;
+  import dense._;
   
   implicit def iArrayToRichColVectorOp(array : Array[Double]) =
     new RichColTensor1Op(new DenseVector(array));
@@ -86,9 +87,8 @@ object OperatorImplicits extends OperatorImplicits;
 
 /** Some scratch space for making sure the right things compile. */
 private object Scratch {
-  import scalala.tensor._;
-  import scalala.tensor.dense._;
-  import scalala.tensor.sparse._;
+  import tensor.dense._;
+  import sparse._;
   
   import OperatorImplicits._;
   

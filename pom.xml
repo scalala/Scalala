@@ -1,13 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.scalanlp</groupId>
-  <artifactId>scalala</artifactId>
-  <name>Scalala</name>
-  <version>0.3.1-SNAPSHOT</version>
-  <inceptionYear>2008</inceptionYear>
   <properties>
     <scala.version>2.8.0.Beta1</scala.version>
   </properties>
+
+  <groupId>org.scalanlp</groupId>
+  <artifactId>scalala_${scala.version}</artifactId>
+  <!-- <artifactId>scalala</artifactId> -->
+  <name>Scalala</name>
+  <version>0.3.1-SNAPSHOT</version>
+  <inceptionYear>2008</inceptionYear>
 
   <developers>
     <developer>
@@ -35,7 +37,7 @@
   </licenses>
 
   <scm>
-    <connection>scm:git:git://scalanlp.org/git/scalala.git</connection>
+    <connection>scm:git:git://github.com/scalala/Scalala.git</connection>
     <developerConnection>scm:git:git@github.com:scalala/Scalala.git</developerConnection>
     <url>http://groups.google.com/group/scalala</url>
   </scm>
@@ -82,52 +84,64 @@
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
     </dependency>
-    <dependency>
+    <dependency> <!-- some numerical routines -->
       <groupId>mtj</groupId>
       <artifactId>mtj</artifactId>
       <version>0.9.9</version>
     </dependency>
-    <dependency>
+    <dependency> <!-- plotting -->
       <groupId>jfree</groupId>
       <artifactId>jcommon</artifactId>
       <version>1.0.12</version>
     </dependency>
-    <dependency>
+    <dependency> <!-- plotting -->
       <groupId>jfree</groupId>
       <artifactId>jfreechart</artifactId>
       <version>1.0.9</version>
     </dependency>
-    <dependency>
+    <dependency> <!-- eps support -->
       <groupId>org.apache.xmlgraphics</groupId>
       <artifactId>xmlgraphics-commons</artifactId>
       <version>1.3.1</version>
     </dependency>
-    <dependency>
+    <dependency> <!-- sparse data structures with primitive types -->
       <groupId>fastutil</groupId>
       <artifactId>fastutil</artifactId>
       <version>5.1.5</version>
     </dependency>
-    <dependency>
+    <dependency> <!-- pdf support -->
       <groupId>com.lowagie</groupId>
       <artifactId>itext</artifactId>
       <version>2.1.5</version>
+      <exclusions>
+          <exclusion>
+              <groupId>bouncycastle</groupId>
+              <artifactId>bcmail-jdk14</artifactId>
+          </exclusion>
+          <exclusion>
+              <groupId>bouncycastle</groupId>
+              <artifactId>bcprov-jdk14</artifactId>
+          </exclusion>
+      </exclusions>
     </dependency>
-
 
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
       <artifactId>scalacheck_2.8.0.Beta1-RC5</artifactId>
       <version>1.7-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest</artifactId>
       <version>1.0.1-for-scala-2.8.0.Beta1-RC5-with-test-interfaces-0.2-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.5</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -158,10 +172,24 @@
         <version>2.12</version>
         <executions>
           <execution>
+            <id>compile-scala</id>
             <goals>
               <goal>compile</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+               <sourceDir>src/main/scala</sourceDir>
+            </configuration>
+          </execution>
+          <execution>
+            <id>test-compile-scala</id>
+            <goals>
               <goal>testCompile</goal>
             </goals>
+            <phase>test-compile</phase>
+            <configuration>
+              <testSourceDir>src/test/scala</testSourceDir>
+            </configuration>
           </execution>
         </executions>
         <configuration>
@@ -243,7 +271,7 @@
         <configuration>
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
-            <descriptorRef>src/main/scala</descriptorRef>
+            <descriptorRef>src</descriptorRef>
           </descriptorRefs>
           <executions>
             <execution>

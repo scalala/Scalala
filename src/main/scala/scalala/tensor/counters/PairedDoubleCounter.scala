@@ -14,12 +14,13 @@
  limitations under the License. 
 */
 
-package scalala.tensor.counters;
+package scalala;
+package tensor;
+package counters;
 
 import scala.collection.mutable.HashMap;
-import scalala.Scalala._;
-import scalala.tensor._;
-import scalala.collection._;
+import Scalala._;
+import collection._;
 
 /**
 * Base class for classes like {#link Counters#PairedDoubleCounter}. Roughly, it is a 

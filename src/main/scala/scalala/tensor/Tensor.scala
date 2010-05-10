@@ -17,12 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor;
+package scalala;
+package tensor;
 
-import scalala.collection.{DomainException, PartialMap, MutablePartialMap}
-import scalala.collection.{MergeableSet, IntSpanSet, ProductSet};
+import collection.{DomainException, PartialMap, MutablePartialMap}
+import collection.{MergeableSet, IntSpanSet, ProductSet};
 
-import scalala.tensor.operators._;
+import tensor.operators._;
 import TensorShapes._;
 
 /**
@@ -447,7 +448,7 @@ trait Tensor1[I] extends Tensor[I] with TensorSelfOp[I,Tensor1[I],Shape1Col] {
 }
 
 object Tensor1 {
-  import scalala.tensor.operators._;
+  import tensor.operators._;
 }
 
 /** A two-axes tensor is defined on pairs of iterator from two domains. */

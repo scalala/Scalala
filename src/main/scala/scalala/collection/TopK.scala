@@ -2,9 +2,8 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
-package scalala.collection
-
+package scalala;
+package collection;
 
 import scala.collection.mutable.ArrayBuffer;
 

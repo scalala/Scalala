@@ -17,10 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-package scalala.tensor.operators;
+package scalala;
+package tensor;
+package operators;
 
-import scalala.collection.{MergeableSet, IntSpanSet, PartialMap, DomainException};
-import scalala.tensor.{Tensor1, Tensor, Tensor2, Vector, Matrix};
+import collection.{MergeableSet, IntSpanSet, PartialMap, DomainException};
 
 object TensorShapes {
   /** The shape of a tensor. */

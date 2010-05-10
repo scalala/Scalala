@@ -1,7 +1,8 @@
-package scalala.library
+package scalala;
+package library;
 
-import scalala.tensor.{Matrix, Vector}
-import scalala.tensor.dense.{DenseVector, Numerics, DenseMatrix}
+import tensor.{Matrix, Vector}
+import tensor.dense.{DenseVector, Numerics, DenseMatrix}
 
 /**
  * Basic linear algebraic operations
@@ -89,7 +90,7 @@ trait LinearAlgebra {
                                * Math.min(m, n) + 4 * Math.min(m, n))
                    );
     val work = new Array[Double](workSize);
-    import scalala.tensor.dense.Numerics.lapack._;
+    import tensor.dense.Numerics.lapack._;
     val result = gesdd(JobSVD.All,m,n,mat.copy.data,S.data,U.data,Vt.data,work,work.length,iwork);
     if (result > 0)
       throw new NotConvergedException(NotConvergedException.Reason.Iterations)
