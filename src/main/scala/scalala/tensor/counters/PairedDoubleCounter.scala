@@ -65,6 +65,9 @@ abstract class BasePairedDoubleCounter[K1,K2]
 
   def rows = theMap.iterator;
 
+  /** Does this counter have any nondefault values for this row? */
+  def comtains(k: K1) = theMap.contains(k);
+
   val activeDomain = new MergeableSet[(K1,K2)] {
     def contains(c: (K1,K2)) = theMap.contains(c._1) && theMap(c._1).contains(c._2);
 
