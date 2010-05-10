@@ -17,9 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-package scalala.library;
+package scalala;
+package library;
 
-import scalala.collection.PartialMap;
+import collection.PartialMap;
 
 /**
  * Math on PartialMap instances.
@@ -82,27 +83,4 @@ trait PartialMaps extends Traversables with Iterators {
   def argmin[I,V](v : PartialMap[I,V])(implicit cv : V=>Double) : I =
     argmin(v.map(cv));
 
-}
-
-/**
- * Unit tests for PartialMaps functions.
- *
- * @author dramage
- */
-trait PartialMapsTest extends Library with PartialMaps with scalala.ScalalaTest {
-  test("PartialMap:MinMax") {
-    val v = new scalala.tensor.sparse.SparseVector(10);
-    v(3) = 1;
-    assertEquals(1, max(v));
-    assertEquals(3, argmax(v));
-    assertEquals(0, min(v));
-    assertEquals(0, argmin(v));
-
-    v += 2;
-    v(3) = 1;
-    assertEquals(2, max(v));
-    assertEquals(0, argmax(v));
-    assertEquals(1, min(v));
-    assertEquals(3, argmin(v));
-  }
 }

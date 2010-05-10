@@ -17,16 +17,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library
+package scalala;
+package library;
 
-import scalala.collection.PartialMap;
-
-import scalala.tensor.operators.TensorShapes
-import scalala.tensor.{Tensor,Vector};
-import scalala.tensor.operators.TensorSelfOp
-import scalala.tensor.dense.{DenseVector};
-
-import scalala.tensor.operators.TensorOp;
+import collection.PartialMap;
+import tensor.operators.TensorShapes;
+import tensor.{Tensor,Vector};
+import tensor.operators.TensorSelfOp;
+import tensor.dense.{DenseVector};
+import tensor.operators.TensorOp;
 
 /**
  * Basic vector functions.
@@ -234,42 +233,3 @@ trait Vectors extends Library with PartialMaps with Operators {
  * @author bethard
  */
 object Vectors extends Vectors { }
-
-/**
- * Some tests for the vectors package.
- * 
- * @author dramage
- */
-trait VectorsTest extends Library with Vectors with Implicits with Random with scalala.ScalalaTest {  
-  
-  import scalala.tensor.sparse.SparseVector;
-  
- test("Tensor:Moments") {
-    val v = new SparseVector(1000);
-    v += 1;
-    v(0 until 100) = rand(100).valuesIterator.toSeq;
-    assertEquals(mean(v.toArray:Iterable[Double]), mean(v), 1e-10);
-    assertEquals(variance(v.toArray:Iterable[Double]), variance(v), 1e-10);
-    assertEquals(std(v.toArray:Iterable[Double]), std(v), 1e-10);
-    
-    assertEquals((1 + 3 + 22 + 17) / 4.0, mean(Vector(1,3,22,17)), 1e-10);
-    
-    assertEquals(0.08749136216928063,
-                 variance(Vector(0.29854716128994807,0.9984567314422015,0.3056949899038196,
-                                 0.8748240977963917,0.6866542395503176,0.48871321020847913,
-                                 0.23221169231853678,0.992966911646403,0.8839015907147733,
-                                 0.6435495508602755)),
-                 1e-10);
-  }
-  
-  test("Tensor:Norm") {
-    val v = Vector(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
-    assertEquals(norm(v,1), 3.6577, 1e-4);
-    assertEquals(norm(v,2), 2.0915, 1e-4);
-    assertEquals(norm(v,3), 1.8405, 1e-4);
-    assertEquals(norm(v,4), 1.7541, 1e-4);
-    assertEquals(norm(v,5), 1.7146, 1e-4);
-    assertEquals(norm(v,6), 1.6940, 1e-4);
-    assertEquals(norm(v,Double.PositiveInfinity), 1.6656, 1e-4);
-  }
-}

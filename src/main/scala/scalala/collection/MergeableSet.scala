@@ -17,7 +17,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.collection;
+package scalala;
+package collection;
 
 import scala.collection.Set;
 
@@ -80,7 +81,7 @@ abstract class MergeableSet[I]() extends Set[I] {
     case mergeable : MergeableSet[_] => this.**(mergeable);
     case _ => this.**(MergeableSet(that));
   }
-    
+
 }
 
 /** Default implementations based on wrapping scala objects. */
@@ -288,21 +289,4 @@ case class IntSpanSet(start : Int, end : Int) extends MergeableSet[Int] {
   
   override def toString =
     "IntSpanSet("+start+","+end+")";
-}
-
-/**
- * Tests of the MergeableSet architecture.
- * 
- * @author dramage
- */
-trait MergeableSetTest extends scalala.ScalalaTest {
-  test("MergeableSet") {
-    assertEquals(IntSpanSet(-1,9), IntSpanSet(-1,3) ++ IntSpanSet(4,9));
-    assertEquals(IntSpanSet(4,7), IntSpanSet(2,7) ** IntSpanSet(4,14));
-    assertEquals(IntersectionSet(IntSpanSet(2,5),IntSpanSet(6,14)),
-                 IntSpanSet(2,5) ** IntSpanSet(6,14));
-
-    // check that we don't repeat iterator in UnionSet's iterator
-    assertEquals(List(0,1,2,3), UnionSet(IntSpanSet(0,3),IntSpanSet(2,4)).iterator.toList);
-  }
 }

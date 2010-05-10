@@ -17,9 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library;
+package scalala;
+package library;
 
-import scalala.tensor.{Tensor,Vector,Matrix};
+import tensor.{Tensor,Vector,Matrix};
 
 /**
  * Some statistical routines.
@@ -92,11 +93,3 @@ trait Statistics extends Library with Traversables with Vectors with Implicits {
  * @author dramage
  */
 object Statistics extends Statistics { }
-
-trait StatisticsTest extends Library with Statistics with scalala.ScalalaTest {
-  test("CorrTest") {
-    assertEquals(corr(Vector(1,2,3), Vector(2,3,3.4)), 0.97072, 1e-5);
-    assertThrows[IllegalArgumentException](corr(Vector(1,2), Vector(2,3,3.4)));
-    assertThrows[IllegalArgumentException](corr(Vector(), Vector()));
-  }
-}

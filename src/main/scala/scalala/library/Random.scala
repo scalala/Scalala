@@ -17,11 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library;
+package scalala;
+package library;
 
-import scalala.tensor.{Tensor,Vector,Matrix};
-
-import scalala.tensor.dense.{DenseVector,DenseMatrix};
+import tensor.{Tensor,Vector,Matrix};
+import tensor.dense.{DenseVector,DenseMatrix};
 
 /**
  * Random number generation.
