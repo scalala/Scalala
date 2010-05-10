@@ -17,11 +17,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor;
+package scalala;
+package tensor;
 
-import scalala.collection.IntSpanSet;
+import collection.IntSpanSet;
 import operators.TensorShapes._;
-import scalala.tensor.operators.TensorSelfOp;
+import tensor.operators.TensorSelfOp;
 
 /**
  * A standard numerical Tensor1 defined over 0 inclusive to

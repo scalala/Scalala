@@ -17,12 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library
+package scalala;
+package library;
 
-import scalala.tensor.operators.TensorSelfOp
-import scalala.tensor.operators.TensorShapes
-import scalala.tensor.{Tensor,Vector,Matrix,DiagonalMatrix};
-import scalala.tensor.dense.{DenseVector,DenseMatrix};
+import tensor.operators.TensorSelfOp;
+import tensor.operators.TensorShapes;
+import tensor.{Tensor,Vector,Matrix,DiagonalMatrix};
+import tensor.dense.{DenseVector,DenseMatrix};
 
 /**
  * Basic matrix functions.
@@ -163,7 +164,7 @@ trait Matrices extends Library with PartialMaps with Vectors {
     val Vl = new Array[Double](0);
     val Vr = m.like;
     val work = new Array[Double](4 * n);
-    import scalala.tensor.dense.Numerics.lapack._;
+    import tensor.dense.Numerics.lapack._;
     val result = geev(Eigenvalues,EigenvaluesAndVectors,n,m.data,Wr,Wi,Vl,Vr.data,work,work.length);
     if(result != 0) error("Eig failure!");
     val D = new DenseVector(Wr);

@@ -17,12 +17,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.operators;
+package scalala;
+package tensor;
+package operators;
 
-import scalala.collection.{MergeableSet, IntSpanSet, ProductSet, DomainException};
-                             
-import scalala.tensor.{Vector,Matrix,Tensor2};
-
+import collection.{MergeableSet, IntSpanSet, ProductSet, DomainException};
 import TensorShapes._;
 
 /** Type aliases supporting Matrix operations. */

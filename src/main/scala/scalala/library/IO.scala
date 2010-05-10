@@ -17,12 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.library;
+package scalala;
+package library;
 
 import java.io.File;
 
-import scalala.tensor.{Matrix};
-import scalala.tensor.dense.{DenseMatrix};
+import tensor.Matrix;
+import tensor.dense.DenseMatrix;
 
 /**
  * Input and output routines.

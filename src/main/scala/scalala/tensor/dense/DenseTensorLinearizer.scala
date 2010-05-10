@@ -1,6 +1,6 @@
-package scalala.tensor.dense
-
-import scalala.tensor._;
+package scalala;
+package tensor;
+package dense;
 
 class DenseMatrixLinearizer(rows: Int, cols: Int) extends TensorLinearizer[(Int,Int),Int,DenseMatrix,DenseVector] {
   type ProjectedTensor = DenseVector;

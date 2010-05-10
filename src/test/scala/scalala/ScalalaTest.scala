@@ -17,25 +17,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala
+package scalala;
+
+import org.scalatest._;
+import org.scalatest.prop._;
 
 /**
- * A simple, lightweight testing framework inspired by ScalaCheck's
- * FunSuite but with partial-map support.
+ * Scalala specific test support, extending ScalaTest.
  * 
  * @author dramage
  */
-trait ScalalaTest {
+trait ScalalaTest extends FunSuite with Checkers {
   import ScalalaTest._;
-  import scalala.collection.PartialMap;
+  import collection.PartialMap;
 
-  /** List of test functions. */
-  protected var tests = List[(String, ()=>Unit)]();
-  
-  /** Registers a test function. */
-  protected def test(name : String)(func : => Unit) =
-    tests ::= (name, func _);
-  
   def assertEquals[V1,V2](v1 : =>V1, v2 : =>V2) : Unit =
     if (v1 != v2) throw new TestFailedException(v1 + "!=" + v2);
   
@@ -65,30 +60,4 @@ trait ScalalaTest {
 
 object ScalalaTest {
   case class TestFailedException(message : String) extends Exception;
-  
-  /** Hook for doing tests in a class by reflection. @author dramage */
-  trait TestConsoleMain extends ScalalaTest {
-  
-    /** Main method for running all test functions. */ 
-    def main(args : Array[String]) {
-      for ((name,func) <- tests) {
-        print(name+": ");
-        try {
-          func();
-          println("PASSED");
-        } catch {
-          case ae : TestFailedException => {
-            println("FAILED "+ae.message);
-            ae.printStackTrace();
-          }
-          case oe : Throwable => {
-            println("ERROR "+oe);
-            oe.printStackTrace();
-          }
-        }
-      }
-    }
-  }
 }
-
-object TestConsoleMain extends ScalalaTest.TestConsoleMain;

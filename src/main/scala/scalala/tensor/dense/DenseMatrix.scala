@@ -17,14 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
  */
-package scalala.tensor.dense;
+package scalala;
+package tensor;
+package dense;
 
-import scalala.tensor.{Tensor,Matrix};
-import scalala.collection.{MergeableSet, ProductSet, IntSpanSet};
-
-import scalala.tensor.Tensor.CreateException;
-
-import scalala.tensor.operators._;
+import collection.{MergeableSet, ProductSet, IntSpanSet};
+import Tensor.CreateException;
+import operators._;
 import TensorShapes._;
 
 /**

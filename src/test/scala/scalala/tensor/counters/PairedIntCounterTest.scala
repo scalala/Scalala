@@ -1,5 +1,3 @@
-package scalala.tensor.counters;
-
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
@@ -15,16 +13,19 @@ package scalala.tensor.counters;
  See the License for the specific language governing permissions and
  limitations under the License. 
 */
+package scalala;
+package tensor;
+package counters;
 
-import org.scalacheck._
+import org.scalacheck._;
 import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
 import Counters._;
-import org.junit.runner.RunWith
+import org.junit.runner.RunWith;
 
 @RunWith(classOf[JUnitRunner])
-class PairedIntCounterTest extends FunSuite with Checkers {
+class PairedIntCounterTest extends ScalalaTest {
   import Arbitrary._;
   implicit val arbitraryCounter = Arbitrary{
     for(x <- Gen.listOf(arbitrary[(Int,Int,Int)])) yield {
