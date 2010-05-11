@@ -26,6 +26,7 @@ trait LinearAlgebra {
   def eig(m : Matrix): Tuple3[DenseVector, DenseVector, DenseMatrix] = {
     val (rows,cols) = m.dimensions;
     require(rows == cols, "Matrix is not square!");
+    requireMatrixNonEmpty(m)
 
     val n = rows
 
@@ -77,6 +78,7 @@ trait LinearAlgebra {
    * Returns an m*m matrix U, a vector of singular values, and a n*n matrix V'
    */
   def svd(mat: DenseMatrix):(DenseMatrix,DenseVector,DenseMatrix) = {
+    requireMatrixNonEmpty(mat)
     val m = mat.rows;
     val n = mat.cols;
     val S = new DenseVector(m min n);
@@ -101,6 +103,10 @@ trait LinearAlgebra {
   }
 
 
+  private def requireMatrixNonEmpty(mat: Matrix): Unit = {
+    require(mat.cols > 0, "Matrix is empty")
+    require(mat.rows > 0, "Matrix is empty")
+  }
 }
 
 
