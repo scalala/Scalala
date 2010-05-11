@@ -209,22 +209,22 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
     
     // set the renderer
     val renderer = new org.jfree.chart.renderer.xy.XYLineAndShapeRenderer();
-    renderer.setPaint(xyplot.color(series));
+    renderer.setBasePaint(xyplot.color(series));
     
     style match {
     case '-' => {
-        renderer.setLinesVisible(true);
-        renderer.setShapesVisible(false);
+        renderer.setBaseLinesVisible(true);
+        renderer.setBaseShapesVisible(false);
       }
     case '.' => {
-        renderer.setLinesVisible(false);
-        renderer.setShapesVisible(true);
-        renderer.setShape(shapeDot);
+        renderer.setBaseLinesVisible(false);
+        renderer.setBaseShapesVisible(true);
+        renderer.setBaseShape(shapeDot);
       }
     case '+' => {
-        renderer.setLinesVisible(false);
-        renderer.setShapesVisible(true);
-        renderer.setShape(shapePlus);
+        renderer.setBaseLinesVisible(false);
+        renderer.setBaseShapesVisible(true);
+        renderer.setBaseShape(shapePlus);
       }
     case _ => { }
     }
@@ -449,7 +449,7 @@ object PlottingSupport {
   
   /** Returns a JFreeChart XYZDataset for plotting all iterator of the matrix */
   def Dataset(m : Matrix) : XYZDataset = {
-    Dataset(m, (0., 0.+m.cols), (0., 0.+m.rows));
+    Dataset(m, (0.0, 0.0 + m.cols), (0.0, 0.0 + m.rows));
   }
   
   def Dataset(m : Matrix, x : (Double,Double), y : (Double,Double)) : XYZDataset = {
