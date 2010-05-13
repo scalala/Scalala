@@ -149,9 +149,10 @@ class DenseVector(data : Array[Double]) extends
   /** Increments each element in this map by the corresponding value as returned by the given operation. */
   override def :+= [V<:Tensor[Int]] (op : TensorOp[V,_]) : Unit = {
     op match {
-      case TensorMultScalar(t:DenseVector, s) if (s != 0) => {
-        var i = 0;
+      case TensorMultScalar(tt, s) if tt.isInstanceOf[DenseVector] && (s != 0) => {
+        val t = tt.asInstanceOf[DenseVector]
         ensure(t);
+        var i = 0;
         while(i < size) {
           this(i) += t(i) * s;
           i += 1;
@@ -175,7 +176,8 @@ class DenseVector(data : Array[Double]) extends
   /** Decrements each element in this map by the corresponding value as returned by the given operation. */
   override def :-= [V<:Tensor[Int]] (op : TensorOp[V,_]) : Unit = {
     op match {
-      case TensorMultScalar(t:DenseVector, s) if (s != 0) => {
+      case TensorMultScalar(tt, s) if tt.isInstanceOf[DenseVector] && (s != 0) => {
+        val t = tt.asInstanceOf[DenseVector]
         ensure(t);
         var i = 0;
         while(i < size) {
