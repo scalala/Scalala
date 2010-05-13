@@ -420,8 +420,10 @@ trait Tensor1[I] extends Tensor[I] with TensorSelfOp[I,Tensor1[I],Shape1Col] {
   /** Returns the inner product of this tensor with another. */
   def dot(that : Tensor1[I]) : Double = {
     ensure(that);
-    
-    if (this.default == 0.0 || that.default == 0.0) {
+
+    // TODO simplify when https://lampsvn.epfl.ch/trac/scala/ticket/3434 is solved.
+    val thatDefault = (that: PartialMap[_, _]).default
+    if (this.default == 0.0 || thatDefault == 0.0) {
       var sum = 0.0;
       for (k <- this.activeDomain ++ that.activeDomain) {
         sum += (this(k) * that(k));
