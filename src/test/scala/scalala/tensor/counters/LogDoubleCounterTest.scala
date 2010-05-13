@@ -36,7 +36,7 @@ class LogDoubleCounterTest extends ScalalaTest {
       c.logTotal ==  Double.NegativeInfinity || {
         val cn = LogCounters.normalize(c);
         (cn.total - 1.0).abs/c.logTotal < 1E-2 && c.forall { case (k,v) =>
-          (Math.log(cn(k)) + c.logTotal - v).abs < 1E-6
+          (math.log(cn(k)) + c.logTotal - v).abs < 1E-6
         }
       }
     })

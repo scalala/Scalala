@@ -27,7 +27,7 @@ package library;
  */
 trait Iterators {
   def max(v : Iterator[Double]) : Double =
-    v.reduceLeft(Math.max);
+    v.reduceLeft(math.max);
 
   def argmax[I](v : Iterator[(I,Double)]) : I =
     v.reduceLeft((tupA,tupB) => if (tupA._2 > tupB._2) tupA else tupB)._1;
@@ -42,7 +42,7 @@ trait Iterators {
     argmax(v.map(cv));
 
   def min(v : Iterator[Double]) : Double =
-    v.reduceLeft(Math.min);
+    v.reduceLeft(math.min);
 
   def argmin[I](v : Iterator[(I,Double)]) : I =
     v.reduceLeft((tupA,tupB) => if (tupA._2 < tupB._2) tupA else tupB)._1;

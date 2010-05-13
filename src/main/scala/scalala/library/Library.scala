@@ -40,19 +40,19 @@ trait Library {
   //
   
   /** Log a value. */
-  final def log(v : Double) : Double = Math.log(v);
+  final def log(v : Double) : Double = math.log(v);
   
   /** Exponentiate a value. */
-  final def exp(v : Double) : Double = Math.exp(v);
+  final def exp(v : Double) : Double = math.exp(v);
 
   final def pow(base : Double, exponent : Double) : Double =
-    Math.pow(base, exponent);
+    math.pow(base, exponent);
 
   /** Alias for x.isNaN. */
   final def isnan(x : Double) = x.isNaN;
 
-  /** Alias for Math.sqrt. */
-  final def sqrt(x : Double) = Math.sqrt(x);
+  /** Alias for math.sqrt. */
+  final def sqrt(x : Double) = math.sqrt(x);
   
   /** Alias for Double.NaN */
   final val NaN = Double.NaN;

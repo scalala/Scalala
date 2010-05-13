@@ -195,7 +195,7 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
     val result = Counters.PairedDoubleCounter[T1,T2]();
 
     for( ((k1,k2),v) <- ctr) {
-      result(k1,k2) = Math.exp(v - ctr.logTotal);
+      result(k1,k2) = math.exp(v - ctr.logTotal);
     }
 
     result;

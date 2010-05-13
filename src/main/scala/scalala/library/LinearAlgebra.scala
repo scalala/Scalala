@@ -42,9 +42,9 @@ trait LinearAlgebra {
 
     // Allocate the workspace
     val lwork: Int = if (info != 0)
-      Math.max(1,4*n)
+      math.max(1,4*n)
     else
-      Math.max(1,worksize(0).toInt)
+      math.max(1,worksize(0).toInt)
 
     var work = Array.ofDim[Double](lwork)
 
@@ -84,10 +84,10 @@ trait LinearAlgebra {
     val Vt = new DenseMatrix(n,n);
     val iwork = new Array[Int](8 * (m min n) );
     val workSize = ( 3
-                    * Math.min(m, n)
-                    * Math.min(m, n)
-                    + Math.max(Math.max(m, n), 4 * Math.min(m, n)
-                               * Math.min(m, n) + 4 * Math.min(m, n))
+                    * math.min(m, n)
+                    * math.min(m, n)
+                    + math.max(math.max(m, n), 4 * math.min(m, n)
+                               * math.min(m, n) + 4 * math.min(m, n))
                    );
     val work = new Array[Double](workSize);
     import tensor.dense.Numerics.lapack._;

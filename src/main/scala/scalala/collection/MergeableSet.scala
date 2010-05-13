@@ -270,14 +270,14 @@ case class IntSpanSet(start : Int, end : Int) extends MergeableSet[Int] {
   
   override def ++(other : MergeableSet[Int]) = other match {
     case that : IntSpanSet if (that.start <= this.end || this.start <= that.end) =>
-      IntSpanSet(Math.min(this.start, that.start), Math.max(this.end, that.end));
+      IntSpanSet(math.min(this.start, that.start), math.max(this.end, that.end));
     case _ => super.++(other);
   }
   
   override def **(other : MergeableSet[Int]) = other match {
     case that : IntSpanSet if (that.start <= this.end || this.start <= that.end) =>
-      val newStart = Math.max(this.start, that.start);
-      val newEnd = Math.min(this.end, that.end);
+      val newStart = math.max(this.start, that.start);
+      val newEnd = math.min(this.end, that.end);
       if (newStart >= newEnd) EmptySet[Int]() else IntSpanSet(newStart, newEnd);
     case _ => super.**(other);
   }

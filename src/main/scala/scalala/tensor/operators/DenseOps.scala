@@ -190,7 +190,7 @@ case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M])
         r(i,k) = 0.0;
       }
 
-      r(i,i) = Math.sqrt(r(i,i));
+      r(i,i) = math.sqrt(r(i,i));
 
       for(k <- i+1 until rows) {
         r(k,i) /= r(i,i);
@@ -296,7 +296,7 @@ extends TensorReferenceOp[DenseMatrix,Shape2](a) {
           
       // allocate temporary solution matrix
       val nrhs = _B.cols;
-      val _Xtmp = new DenseMatrix(Math.max(rows,cols),nrhs);
+      val _Xtmp = new DenseMatrix(math.max(rows,cols),nrhs);
       val M = if (!trans) _A.rows else _A.cols;
       for (j <- 0 until nrhs; i <- 0 until M) { _Xtmp(i,j) = _B(i,j); }
           
@@ -308,9 +308,9 @@ extends TensorReferenceOp[DenseMatrix,Shape2](a) {
       val work = {
         val lwork = {
           if (queryInfo != 0)
-            Math.max(1, Math.min(_A.rows, _A.cols) + Math.max(Math.min(_A.rows, _A.cols), nrhs));
+            math.max(1, math.min(_A.rows, _A.cols) + math.max(math.min(_A.rows, _A.cols), nrhs));
           else
-            Math.max(queryWork(0).toInt, 1);
+            math.max(queryWork(0).toInt, 1);
         }
         new Array[Double](lwork);
       }

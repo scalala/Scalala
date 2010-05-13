@@ -484,10 +484,10 @@ class JLAPACK_LAPACKkernel {
     */
 
     private def ld(n : Int) =
-      Math.max(1,n);
+      math.max(1,n);
 
     private def ld(m : Int, n : Int) =
-        Math.max(1, Math.max(m, n));
+        math.max(1, math.max(m, n));
 
     private def trans(trans : Boolean) =
       if (trans) "T" else "N";

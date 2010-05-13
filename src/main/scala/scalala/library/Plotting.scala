@@ -156,7 +156,7 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
     
     // smallest gap between bins
     val width = { bins.valuesIterator zip (bins.valuesIterator drop 1) map
-      (pair => Math.abs(pair._2 - pair._1)) reduceLeft Math.min };
+      (pair => math.abs(pair._2 - pair._1)) reduceLeft math.min };
     
     val dataset = new org.jfree.data.xy.XYBarDataset(
       Dataset(bins, counts), width);
@@ -253,7 +253,7 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
       override def getUpperBound = 1.0;
       override def getPaint(value : Double) = {
         val index = gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound);
-        gradient(Math.min(gradient.length-1, Math.max(0, index.toInt)));
+        gradient(math.min(gradient.length-1, math.max(0, index.toInt)));
       }
     }
     
@@ -329,8 +329,8 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
   private def image(x : (Double,Double), y : (Double,Double), c : Matrix, lower : Double, upper : Double)(implicit xyplot : XYPlot) {
     import org.jfree.chart.axis.NumberAxis;
     
-    val (minX,maxX) = (Math.min(x._1,x._2),Math.max(x._1,x._2));
-    val (minY,maxY) = (Math.min(y._1,y._2),Math.max(y._1,y._2));
+    val (minX,maxX) = (math.min(x._1,x._2),math.max(x._1,x._2));
+    val (minY,maxY) = (math.min(y._1,y._2),math.max(y._1,y._2));
     
     val dataset = Dataset(c, x, y);
     val series = xyplot.nextSeries;
@@ -344,7 +344,7 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
       override def getUpperBound = upper;
       override def getPaint(value : Double) = {
         val index = gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound);
-        gradient(Math.min(gradient.length-1, Math.max(0, index.toInt)));
+        gradient(math.min(gradient.length-1, math.max(0, index.toInt)));
       }
     }
     
@@ -362,8 +362,8 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
     if (maxY - minY == c.rows && minY == minY.intValue) {
       xyplot.plot.getRangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
     }
-    xyplot.plot.getDomainAxis.setLowerBound(Math.min(x._1,x._2));
-    xyplot.plot.getDomainAxis.setUpperBound(Math.max(x._1,x._2));
+    xyplot.plot.getDomainAxis.setLowerBound(math.min(x._1,x._2));
+    xyplot.plot.getDomainAxis.setUpperBound(math.max(x._1,x._2));
     if (maxX - minX == c.cols && minX == minX.intValue) {
       xyplot.plot.getDomainAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
     }
@@ -453,8 +453,8 @@ object PlottingSupport {
   }
   
   def Dataset(m : Matrix, x : (Double,Double), y : (Double,Double)) : XYZDataset = {
-    val (minX,maxX) = (Math.min(x._1,x._2),Math.max(x._1,x._2));
-    val (minY,maxY) = (Math.min(y._1,y._2),Math.max(y._1,y._2));
+    val (minX,maxX) = (math.min(x._1,x._2),math.max(x._1,x._2));
+    val (minY,maxY) = (math.min(y._1,y._2),math.max(y._1,y._2));
     
     val scaleX = (maxX - minX) / m.cols;
     val scaleY = (maxY - minY) / m.rows;

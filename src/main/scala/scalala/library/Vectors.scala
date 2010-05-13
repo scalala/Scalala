@@ -92,7 +92,7 @@ trait Vectors extends Library with PartialMaps with Operators {
     sumcount(v)._1;
   
   /** Log each element of a vector or matrix */
-  def log[I](v : PartialMap[I,Double]) = v.map(Math.log _);
+  def log[I](v : PartialMap[I,Double]) = v.map(math.log _);
 
   import TensorShapes._;
   def sqrt[V<:Vector with TensorSelfOp[Int,V,Shape1Col]](vec: V):V = {
@@ -195,15 +195,15 @@ trait Vectors extends Library with PartialMaps with Operators {
   /** Returns the n'th euclidean norm of the given vector. */
   def norm[I](v : PartialMap[I,Double], n : Double) : Double = {
     if (n == 1) {
-      return sum(v.map((x:Double) => Math.abs(x)));
+      return sum(v.map((x:Double) => math.abs(x)));
     } else if (n == 2) {
       return sqrt(sum(v.map((x:Double) => x * x)));
     } else if (n % 2 == 0) {
-      return Math.pow(sum(v.map((x:Double) => Math.pow(x, n))), 1.0 / n);
+      return math.pow(sum(v.map((x:Double) => math.pow(x, n))), 1.0 / n);
     } else if (n % 2 == 1) {
-      return Math.pow(sum(v.map((x:Double) => Math.pow(Math.abs(x), n))), 1.0 / n);
+      return math.pow(sum(v.map((x:Double) => math.pow(math.abs(x), n))), 1.0 / n);
     } else if (n == Double.PositiveInfinity) {
-      return max(v.map((x : Double) => Math.abs(x)));
+      return max(v.map((x : Double) => math.abs(x)));
     } else {
       throw new UnsupportedOperationException();
     }
