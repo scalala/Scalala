@@ -50,7 +50,7 @@ class AdaptiveVectorTest extends scalala.library.Library with scalala.library.Ra
       new DenseVector(a.toArray) dot new DenseVector (b.toArray);
 
     def checks() = {
-      assertEquals(densedotxy, xdoty);
+      assertEquals(densedot(x, y), x dot y);
       assertEquals(densedot(y,x), y dot x);
       assertEquals(densedot(x,d), x dot d);
       assertEquals(densedot(d,x), d dot x);
