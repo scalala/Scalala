@@ -31,6 +31,11 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.scala-lang:scala-compiler:2.8.0.RC2" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.8.0.RC2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.scala-tools.testing:scalacheck_2.8.0.RC2:1.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.scala-tools.testing:test-interface:0.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.scalatest:scalatest:1.2-for-scala-2.8.0.RC2-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-compiler:2.8.0.RC2" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.8.0.RC2" level="project" />
     <orderEntry type="library" name="Maven: mtj:mtj:0.9.9" level="project" />
     <orderEntry type="library" name="Maven: jfree:jcommon:1.0.12" level="project" />
     <orderEntry type="library" name="Maven: jfree:jfreechart:1.0.9" level="project" />
