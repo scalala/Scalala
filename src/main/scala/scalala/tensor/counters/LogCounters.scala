@@ -95,7 +95,7 @@ object LogCounters extends DoubleCounterFactory {
     val result = Counters.DoubleCounter[T]();
 
     for( (k,v) <- ctr) {
-      result(k) = Math.exp(v - ctr.logTotal);
+      result(k) = math.exp(v - ctr.logTotal);
     }
 
     result;
@@ -108,10 +108,10 @@ object LogCounters extends DoubleCounterFactory {
   def logNormalize[T,U](ctr: Counters.PairedDoubleCounter[T,U]) = {
     val result = LogPairedDoubleCounter[T,U]();
 
-    val logTotal = Math.log(ctr.total);
+    val logTotal = math.log(ctr.total);
     for( (k1,c) <- ctr.rows;
          (k2,v) <- c ) {
-      result(k1,k2) = Math.log(v) - logTotal;
+      result(k1,k2) = math.log(v) - logTotal;
     }
 
     result;
@@ -185,7 +185,7 @@ object LogCounters extends DoubleCounterFactory {
     val result = LogPairedDoubleCounter[T,U]();
 
     for( (k,v) <- ctr) {
-      result(k) = Math.log(v);
+      result(k) = math.log(v);
     }
 
     result
@@ -199,7 +199,7 @@ object LogCounters extends DoubleCounterFactory {
     val result = Counters.PairedDoubleCounter[T,U]();
 
     for( (k,v) <- ctr) {
-      result(k) = Math.exp(v);
+      result(k) = math.exp(v);
     }
 
     result
@@ -213,7 +213,7 @@ object LogCounters extends DoubleCounterFactory {
     val result = LogDoubleCounter[T]();
 
     for( (k,v) <- ctr) {
-      result(k) = Math.log(v);
+      result(k) = math.log(v);
     }
 
     result
@@ -228,9 +228,9 @@ object LogCounters extends DoubleCounterFactory {
   def logNormalize[T](ctr: Counters.DoubleCounter[T]) = {
     val result = LogDoubleCounter[T]();
 
-    val logTotal = Math.log(ctr.total);
+    val logTotal = math.log(ctr.total);
     for( (k,v) <- ctr) {
-      result(k) = Math.log(v) - logTotal;
+      result(k) = math.log(v) - logTotal;
     }
 
     result;
@@ -262,7 +262,7 @@ object LogCounters extends DoubleCounterFactory {
     val result = Counters.PairedDoubleCounter[T1,T2]();
 
     for( ((k1,k2),v) <- ctr) {
-      result(k1,k2) = Math.exp(v - ctr.logTotal);
+      result(k1,k2) = math.exp(v - ctr.logTotal);
     }
 
     result;
@@ -296,7 +296,7 @@ object LogCounters extends DoubleCounterFactory {
           result = Double.PositiveInfinity;
           break;
         }
-        result += Math.exp(logV1-c1.logTotal) * (logV1 - c1.logTotal - logV2 + c2.logTotal);  
+        result += math.exp(logV1-c1.logTotal) * (logV1 - c1.logTotal - logV2 + c2.logTotal);
       }
     }
 

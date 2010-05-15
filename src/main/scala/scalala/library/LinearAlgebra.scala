@@ -26,6 +26,7 @@ trait LinearAlgebra {
   def eig(m : Matrix): Tuple3[DenseVector, DenseVector, DenseMatrix] = {
     val (rows,cols) = m.dimensions;
     require(rows == cols, "Matrix is not square!");
+    requireMatrixNonEmpty(m)
 
     val n = rows
 
@@ -42,9 +43,9 @@ trait LinearAlgebra {
 
     // Allocate the workspace
     val lwork: Int = if (info != 0)
-      Math.max(1,4*n)
+      math.max(1,4*n)
     else
-      Math.max(1,worksize(0).toInt)
+      math.max(1,worksize(0).toInt)
 
     var work = Array.ofDim[Double](lwork)
 
@@ -77,6 +78,7 @@ trait LinearAlgebra {
    * Returns an m*m matrix U, a vector of singular values, and a n*n matrix V'
    */
   def svd(mat: DenseMatrix):(DenseMatrix,DenseVector,DenseMatrix) = {
+    requireMatrixNonEmpty(mat)
     val m = mat.rows;
     val n = mat.cols;
     val S = new DenseVector(m min n);
@@ -84,10 +86,10 @@ trait LinearAlgebra {
     val Vt = new DenseMatrix(n,n);
     val iwork = new Array[Int](8 * (m min n) );
     val workSize = ( 3
-                    * Math.min(m, n)
-                    * Math.min(m, n)
-                    + Math.max(Math.max(m, n), 4 * Math.min(m, n)
-                               * Math.min(m, n) + 4 * Math.min(m, n))
+                    * math.min(m, n)
+                    * math.min(m, n)
+                    + math.max(math.max(m, n), 4 * math.min(m, n)
+                               * math.min(m, n) + 4 * math.min(m, n))
                    );
     val work = new Array[Double](workSize);
     import tensor.dense.Numerics.lapack._;
@@ -101,6 +103,10 @@ trait LinearAlgebra {
   }
 
 
+  private def requireMatrixNonEmpty(mat: Matrix): Unit = {
+    require(mat.cols > 0, "Matrix is empty")
+    require(mat.rows > 0, "Matrix is empty")
+  }
 }
 
 

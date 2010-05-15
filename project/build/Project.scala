@@ -13,11 +13,11 @@ class Project(info: ProjectInfo) extends ProguardProject(info) {
   val XmlgraphicsCommons = "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1" 
   val Fastutil = "fastutil" % "fastutil" % "5.1.5" 
   val Itext = "com.lowagie" % "itext" % "2.1.5" intransitive()
-  val Scalacheck = "org.scala-tools.testing" % "scalacheck_2.8.0.Beta1-RC5" % "1.7-SNAPSHOT" % "test"
-  val Scalatest = "org.scalatest" % "scalatest" % "1.0.1-for-scala-2.8.0.Beta1-RC5-with-test-interfaces-0.2-SNAPSHOT" % "test"
+  val Scalacheck = "org.scala-tools.testing" %% "scalacheck" % "1.7" % "test"
+  val Scalatest = "org.scalatest" % "scalatest" % "1.2-for-scala-2.8.0.RC2-SNAPSHOT" % "test"
   val Junit = "junit" % "junit" % "4.5" % "test"
 
-  override def compileOptions = Optimise :: Deprecation :: target(Target.Java1_5) :: Unchecked :: super.compileOptions.toList
+  override def compileOptions = Optimise :: Deprecation :: CompileOption("-no-specialization") :: target(Target.Java1_5) :: Unchecked :: super.compileOptions.toList
 
   override def packageOptions = ManifestAttributes((IMPLEMENTATION_TITLE, "Scalala"), (IMPLEMENTATION_URL, "http://code.google.com/p/scalala/"), (IMPLEMENTATION_VENDOR, "org.scalanlp"), (SEALED, "true")) :: Nil
 

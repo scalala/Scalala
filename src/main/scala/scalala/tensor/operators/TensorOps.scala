@@ -575,8 +575,8 @@ class TensorArith[I,Value<:Tensor[I],-V2<:Tensor[I],Shape<:TensorShape] {
   extends TensorReferenceOp(tensor) {
     override lazy val value : Value = {
       val rv = tensor.working;
-      rv.default = Math.pow(scalar, rv.default);
-      rv.transform((x:Double) => Math.pow(scalar, x));
+      rv.default = math.pow(scalar, rv.default);
+      rv.transform((x:Double) => math.pow(scalar, x));
       rv;
     }
   }

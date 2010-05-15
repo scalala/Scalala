@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.scalatest:scalatest:1.2-for-scala-2.8.0.RC2-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalatest/scalatest/1.2-for-scala-2.8.0.RC2-SNAPSHOT/scalatest-1.2-for-scala-2.8.0.RC2-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalatest/scalatest/1.2-for-scala-2.8.0.RC2-SNAPSHOT/scalatest-1.2-for-scala-2.8.0.RC2-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/scalatest/scalatest/1.2-for-scala-2.8.0.RC2-SNAPSHOT/scalatest-1.2-for-scala-2.8.0.RC2-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

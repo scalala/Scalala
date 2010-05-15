@@ -36,125 +36,125 @@ trait Traversables {
 
   def abs[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.abs(i));
+    v.map(i => math.abs(i));
 
   def abs[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.abs(cv(i)));
+    v.map(i => math.abs(cv(i)));
 
   def log[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.log(i));
+    v.map(i => math.log(i));
 
   def log[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.log(cv(i)));
+    v.map(i => math.log(cv(i)));
 
   def exp[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.exp(i));
+    v.map(i => math.exp(i));
 
   def exp[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.exp(cv(i)));
+    v.map(i => math.exp(cv(i)));
 
   def pow[This <: Traversable[Double], That](v : TraversableLike[Double,This], exponent : Double)
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.pow(i, exponent));
+    v.map(i => math.pow(i, exponent));
 
   def pow[V, This <: Traversable[V], That](v : TraversableLike[V,This], exponent : Double)
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.pow(cv(i), exponent));
+    v.map(i => math.pow(cv(i), exponent));
 
   def sqrt[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.sqrt(i));
+    v.map(i => math.sqrt(i));
 
   /*
   def sqrt[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.sqrt(cv(i)));
+    v.map(i => math.sqrt(cv(i)));
   */
 
   def sin[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.sin(i));
+    v.map(i => math.sin(i));
 
   def sin[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.sin(cv(i)));
+    v.map(i => math.sin(cv(i)));
 
   def cos[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.cos(i));
+    v.map(i => math.cos(i));
 
   def cos[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.cos(cv(i)));
+    v.map(i => math.cos(cv(i)));
 
   def tan[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.tan(i));
+    v.map(i => math.tan(i));
 
   def tan[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.tan(cv(i)));
+    v.map(i => math.tan(cv(i)));
 
   def asin[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.asin(i));
+    v.map(i => math.asin(i));
 
   def asin[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.asin(cv(i)));
+    v.map(i => math.asin(cv(i)));
 
   def acos[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.acos(i));
+    v.map(i => math.acos(i));
 
   def acos[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.acos(cv(i)));
+    v.map(i => math.acos(cv(i)));
 
   def atan[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.atan(i));
+    v.map(i => math.atan(i));
 
   def atan[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.atan(cv(i)));
+    v.map(i => math.atan(cv(i)));
 
   def ceil[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.ceil(i));
+    v.map(i => math.ceil(i));
 
   def ceil[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.ceil(cv(i)));
+    v.map(i => math.ceil(cv(i)));
 
   def floor[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.floor(i));
+    v.map(i => math.floor(i));
 
   def floor[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.floor(cv(i)));
+    v.map(i => math.floor(cv(i)));
 
   def round[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Long, That]) : That =
-    v.map(i => Math.round(i));
+    v.map(i => math.round(i));
 
   def round[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Long, That], cv : V=>Double) : That =
-    v.map(i => Math.round(cv(i)));
+    v.map(i => math.round(cv(i)));
 
   def signum[This <: Traversable[Double], That](v : TraversableLike[Double,This])
   (implicit bf: CanBuildFrom[This, Double, That]) : That =
-    v.map(i => Math.signum(i));
+    v.map(i => math.signum(i));
 
   def signum[V, This <: Traversable[V], That](v : TraversableLike[V,This])
   (implicit bf: CanBuildFrom[This, Double, That], cv : V=>Double) : That =
-    v.map(i => Math.signum(cv(i)));
+    v.map(i => math.signum(cv(i)));
 
 
   //
@@ -162,13 +162,13 @@ trait Traversables {
   //
 
   def max(v : Traversable[Double]) : Double =
-    v.reduceLeft(Math.max);
+    v.reduceLeft(math.max);
 
   def max[V](v : Traversable[V])(implicit cv : V=>Double) : Double =
     max(v.map(cv));
 
   def min(v : Traversable[Double]) : Double =
-    v.reduceLeft(Math.min);
+    v.reduceLeft(math.min);
 
   def min[V](v : Traversable[V])(implicit cv : V=>Double) : Double =
     min(v.map(cv));

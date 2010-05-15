@@ -104,8 +104,8 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
   def :^= (s : Double) = {
     // Defaults shoud always come before the "real" assignments.
     //(Think about sparsevectors with different defaults)
-    this.default = Math.pow(this.default, s);
-    this(activeDomain) = ((x:Double) => Math.pow(x,s));
+    this.default = math.pow(this.default, s);
+    this(activeDomain) = ((x:Double) => math.pow(x,s));
   }
   
   /** Each element becomes itself modulo the given scalar. */
@@ -203,8 +203,8 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
     ensure(t);
     // Defaults shoud always come before the "real" assignments.
     //(Think about sparsevectors with different defaults)
-    this.default = Math.pow(this.default, t.default);
-    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => Math.pow(x,t(i)));
+    this.default = math.pow(this.default, t.default);
+    this(this.activeDomain ++ t.activeDomain) = ((i : I, x : Double) => math.pow(x,t(i)));
   }
 
   def :^= [V] (t : PartialMap[I,V])(implicit convert : (V => Double)) : Unit =
@@ -385,7 +385,7 @@ trait Tensor[I] extends MutablePartialMap[I,Double] with TensorSelfOp[I,Tensor[I
     (
      (that canEqual this) &&
      (this.domain == that.domain) &&
-     { val joint = (this join that)((a,b) => Math.abs(a - b) < tolerance);
+     { val joint = (this join that)((a,b) => math.abs(a - b) < tolerance);
        ((joint.default == true || joint.activeDomain.size == joint.domain.size)
        && !joint.activeValues.contains(false));
      }
@@ -420,8 +420,10 @@ trait Tensor1[I] extends Tensor[I] with TensorSelfOp[I,Tensor1[I],Shape1Col] {
   /** Returns the inner product of this tensor with another. */
   def dot(that : Tensor1[I]) : Double = {
     ensure(that);
-    
-    if (this.default == 0.0 || that.default == 0.0) {
+
+    // TODO simplify when https://lampsvn.epfl.ch/trac/scala/ticket/3434 is solved.
+    val thatDefault = (that: PartialMap[_, _]).default
+    if (this.default == 0.0 || thatDefault == 0.0) {
       var sum = 0.0;
       for (k <- this.activeDomain ++ that.activeDomain) {
         sum += (this(k) * that(k));

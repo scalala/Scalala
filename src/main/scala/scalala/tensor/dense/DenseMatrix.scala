@@ -105,11 +105,11 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
         // special case for ints
         ("", formatInt _);
       } else {
-        val maxlog = scalala.Scalala.max(for (value <- data; if !value.isInfinite && !value.isNaN) yield Math.log(value));
-        val exponent = ((maxlog / Math.log(10)) + 1e-3).toInt;
-        if (Math.abs(exponent) >= 3) {
+        val maxlog = scalala.Scalala.max(for (value <- data; if !value.isInfinite && !value.isNaN) yield math.log(value));
+        val exponent = ((maxlog / math.log(10)) + 1e-3).toInt;
+        if (math.abs(exponent) >= 3) {
           // special case for very large or small numbers
-          val scale = Math.pow(10,exponent);
+          val scale = math.pow(10,exponent);
           ("  1.0e"+(if (exponent >= 0) "+" else "") + exponent+" * \n\n",
            ((x:Double) => formatDouble(x / scale)));
         } else {
@@ -120,7 +120,7 @@ class DenseMatrix(nRows : Int, nCols : Int, data : Array[Double]) extends
     }
     
     def colWidth(col : Int) : Int =
-      Math.max(4,(0 until rows).map((row:Int) => format(this(row,col)).length).reduceLeft(Math.max));
+      math.max(4,(0 until rows).map((row:Int) => format(this(row,col)).length).reduceLeft(math.max));
     
     val columnWidths = (0 until nCols).map(colWidth).toArray;
     

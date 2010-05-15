@@ -57,8 +57,8 @@ trait Statistics extends Library with Traversables with Vectors with Implicits {
       mean_x += (delta_x / i);
       mean_y += (delta_y / i);
     }
-    val pop_sd_x = Math.sqrt( sum_sq_x / N );
-    val pop_sd_y = Math.sqrt( sum_sq_y / N );
+    val pop_sd_x = math.sqrt( sum_sq_x / N );
+    val pop_sd_y = math.sqrt( sum_sq_y / N );
     val cov_x_y = sum_coproduct / N;
     return cov_x_y / (pop_sd_x * pop_sd_y);
   }
