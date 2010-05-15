@@ -10,5 +10,5 @@ This project can be built with maven:
 
 To run an interactive console:
   mvn assembly:assembly
-  scala -jar target/scalala-*-jar-with-dependencies.jar
+  scala -jar target/scalala*-jar-with-dependencies.jar
 
