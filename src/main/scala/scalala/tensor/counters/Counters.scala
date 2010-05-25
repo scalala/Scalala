@@ -171,6 +171,19 @@ object Counters extends DoubleCounterFactory with IntCounterFactory {
     result;
   }
 
+/**
+  * Returns a Counters.DoubleCounter that has (approximately) total 1.
+  * Each entry (k,v) has a new entry in the map (k,v/total)
+  */
+  def normalize[T](ctr: IntCounter[T]):Counters.DoubleCounter[T] = {
+    val result = Counters.DoubleCounter[T]();
+
+    for( (k,v) <- ctr) {
+      result(k) = v.toDouble /ctr.total;
+    }
+
+    result;
+  }
 
   
   /**
