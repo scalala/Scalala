@@ -35,7 +35,7 @@ trait Random extends Library {
   def rand()(implicit rand : java.util.Random) = rand.nextDouble;
   
   /** Returns vector of size n, each element from 0 to 1 */
-  def rand(n : Int)(implicit rand : java.util.Random) : Vector = {
+  def rand(n : Int)(implicit rand : java.util.Random) : DenseVector = {
     val v = new DenseVector(n);
     for (i <- 0 until n) {
       v(i) = rand.nextDouble;
@@ -44,7 +44,7 @@ trait Random extends Library {
   }
   
   /** Returns a random matrix of the given size, each element drawn from 0 to 1 */
-  def rand(rows : Int, cols : Int)(implicit rand : java.util.Random) : Matrix = {
+  def rand(rows : Int, cols : Int)(implicit rand : java.util.Random) : DenseMatrix = {
     val m = new DenseMatrix(rows,cols);
     for (i <- 0 until rows; j <- 0 until cols) {
       m(i,j) = rand.nextDouble;
@@ -56,7 +56,7 @@ trait Random extends Library {
   def randn()(implicit rand : java.util.Random) = rand.nextGaussian;
   
   /** Returns a vector of size n, each element from a gaussian*/
-  def randn(n : Int)(implicit rand : java.util.Random) : Vector = {
+  def randn(n : Int)(implicit rand : java.util.Random) : DenseVector = {
     val v = new DenseVector(n);
     for (i <- 0 until n) {
       v(i) = rand.nextGaussian;
@@ -65,7 +65,7 @@ trait Random extends Library {
   }
   
   /** Returns a random matrix of the given size, each element drawn from a gaussian */
-  def randn(rows : Int, cols : Int)(implicit rand : java.util.Random) : Matrix = {
+  def randn(rows : Int, cols : Int)(implicit rand : java.util.Random) : DenseMatrix = {
     val m = new DenseMatrix(rows,cols);
     for (i <- 0 until rows; j <- 0 until cols) {
       m(i,j) = rand.nextGaussian;

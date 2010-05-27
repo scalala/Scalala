@@ -36,8 +36,6 @@ import Tensor1Types._;
 trait Tensor2Ops {
   implicit def tensor2Arith[I,J] = new TensorArith[(I,J),Tensor2[I,J],Tensor2[I,J],Shape2];
 
-  def cholesky[M<:Tensor2[_,_],R<:Tensor2[_,_]](m: Tensor2Op[M])(implicit op: CholeskyDecomposer[M,R]): Tensor2Op[R] =
-    op.decompose(m);
 }
 
 trait CholeskyDecomposer[M<:Tensor2[_,_],R<:Tensor2[_,_]] {

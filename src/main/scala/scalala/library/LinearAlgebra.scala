@@ -73,6 +73,8 @@ trait LinearAlgebra {
     }
   }
 
+  class MatrixNotPositiveDefiniteException(m: Matrix) extends Exception(m.toString);
+
   /**
    * Computes the SVD of a m by n matrix
    * Returns an m*m matrix U, a vector of singular values, and a n*n matrix V'
@@ -102,6 +104,73 @@ trait LinearAlgebra {
     (U,S,Vt);
   }
 
+  /**
+   * Computes the Cholesky decomposition, or "matrix square root" of the square matrix.
+   *
+   * The matrix returned has the property that L*L.t == m
+   */
+  def cholesky(m: DenseMatrix) = {
+    val r = m.copy;
+    val (rows,cols) = r.dimensions;
+    require(rows == cols, "Matrix is not square!");
+
+    val ret = scalala.tensor.dense.Numerics.lapack.potrf("L", rows, r.data);
+    if(ret > 0) throw new MatrixNotPositiveDefiniteException(m);
+    else if (ret < 0) throw new IllegalArgumentException(-ret + "'th argument of " + m);
+
+    // Now zero out the rest.
+    for(k <- 1 until cols) {
+      java.util.Arrays.fill(r.data, k * rows, k * rows + k,0.0);
+    }
+
+    r;
+  }
+
+  /**
+   * Returns the determinant of the (square) matrix.
+   * det(m) == 0 implies that the matrix is singular. Values near zero usually give
+   * singularity too.
+   *
+   * The implementation computes the Cholesky decomposition, and then multiplies
+   * the diagnnals. TODO: Cholesky requires positive definite. need to use LU.
+   *
+   * @author dlwh
+   */
+  def det(m: DenseMatrix):Double = {
+    val c = cholesky(m);
+    var sc = 1.0;
+    for(i <- 0 until c.dimensions._1) {
+      sc *= c(i,i);
+    }
+
+    sc
+  }
+
+  /**
+   * Computes the matrix trace, which is the sum of the
+   * elements along the diagonal of the matrix. Requires a square
+   * matrix.
+   *
+   * @author dlwh
+   */
+  def trace(m: Matrix):Double = {
+    require(m.rows == m.cols,"Matrix must be square!");
+    var tr = 0.0;
+    for( i <- 0 until m.rows) {
+      tr += m(i,i);
+    }
+    tr
+  }
+
+  /**
+   * Returns the inverse of a DenseMatrix.
+   */
+  def inv(m: DenseMatrix):DenseMatrix = {
+    require(m.rows == m.cols);
+    val I = Matrices.eye(m.rows);
+    import Operators._;
+    I \ m value
+  }
 
   private def requireMatrixNonEmpty(mat: Matrix): Unit = {
     require(mat.cols > 0, "Matrix is empty")

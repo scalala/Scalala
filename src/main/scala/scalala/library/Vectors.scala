@@ -22,7 +22,7 @@ package library;
 
 import collection.PartialMap;
 import tensor.operators.TensorShapes;
-import tensor.{Tensor,Vector};
+import tensor.{Tensor,Vector,Matrix};
 import tensor.operators.TensorSelfOp;
 import tensor.dense.{DenseVector};
 import tensor.operators.TensorOp;
@@ -208,6 +208,13 @@ trait Vectors extends Library with PartialMaps with Operators {
       throw new UnsupportedOperationException();
     }
   }
+
+  /** Returns the Malahanobis norm: sqrt( (x^T * A * x)).  */
+  // XXX TODO: generify
+  def norm(v: Vector, A: Matrix) = {
+    math.sqrt( v.t * A * v);
+  }
+
   
   /** Returns the sum vector of a bunch of vectors. */
   def sum(vectors : Seq[Vector]) : Vector = {
