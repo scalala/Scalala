@@ -17,7 +17,7 @@ class Project(info: ProjectInfo) extends ProguardProject(info) {
   val Scalatest = "org.scalatest" % "scalatest" % "1.2-for-scala-2.8.0.RC2-SNAPSHOT" % "test"
   val Junit = "junit" % "junit" % "4.5" % "test"
 
-  override def compileOptions = Optimise :: Deprecation :: CompileOption("-no-specialization") :: target(Target.Java1_5) :: Unchecked :: super.compileOptions.toList
+  override def compileOptions = Optimise :: Deprecation :: target(Target.Java1_5) :: Unchecked :: super.compileOptions.toList
 
   override def packageOptions = ManifestAttributes((IMPLEMENTATION_TITLE, "Scalala"), (IMPLEMENTATION_URL, "http://code.google.com/p/scalala/"), (IMPLEMENTATION_VENDOR, "org.scalanlp"), (SEALED, "true")) :: Nil
 
