@@ -29,7 +29,7 @@ import collection.generic._;
  *
  * @author dramage
  */
-trait MatrixLike[+This]
+trait MatrixLike[+This<:Matrix]
 extends MutableDomainTableLike[Double,This]
 with Tensor2Like[Int,Int,IndexDomain,IndexDomain,TableDomain,This];
 
@@ -40,7 +40,7 @@ with MatrixLike[Matrix];
 
 object Matrix {
   /** A Transpose of any Matrix type is a Matrix. */
-  trait TransposeLike[+Coll <: Matrix, +This <: TransposeLike[Coll,This]]
+  trait TransposeLike[+Coll <: Matrix, +This <: Transpose[Coll]]
   extends Tensor2.TransposeLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
   with MatrixLike[This] {
     override def domain = underlying.domain.transpose;
@@ -60,7 +60,7 @@ object Matrix {
   [@specialized A1, @specialized A2,
    D1<:IterableDomain[A1], D2<:IterableDomain[A2],
    D<:Product2Domain[A1,A2,D1,D2], +Coll<:MutableDomainMap2[A1,A2,Double,D1,D2,D],
-   +This<:SliceTableLike[A1,A2,D1,D2,D,Coll,This]]
+   +This<:SliceTable[A1,A2,D1,D2,D,Coll]]
   extends MutableDomainMap2SliceTableLike[A1,A2,Double,D1,D2,D,Coll,This]
   with MatrixLike[This];
 

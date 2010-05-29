@@ -30,7 +30,7 @@ import domain._;
 @RunWith(classOf[JUnitRunner])
 class DomainMapTest extends FunSuite with Checkers {
   def mkDomainMap() =
-    MutableDomainMap[String,Int,SetDomain[String]](SetDomain(Set("a","b","c")), 0);
+    MutableDomainMap[String,Int,SetDomain[String]](SetDomain("a","b","c"), 0);
 
   test("Get and set values") {
     val x = mkDomainMap();
@@ -99,8 +99,9 @@ class DomainMapTest extends FunSuite with Checkers {
     val x = mkDomainMap();
     x("a","b","c") := List(3,4,5);
     val view = x.view.mapValues(_ % 2 == 0);
-    assert(view.isInstanceOf[DomainMapView[_,_,_,_,_]]);
+    assert(view.isInstanceOf[DomainMapView[_,_,_,_]]);
     assert(view.valuesIterator.toList === List(false,true,false));
+    assert(x.view.view eq x.view);
   }
 
 }

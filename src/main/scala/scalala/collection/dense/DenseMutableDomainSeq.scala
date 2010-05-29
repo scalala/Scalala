@@ -28,7 +28,7 @@ import collection.domain.IndexDomain;
  *
  * @author dramage
  */
-trait DenseMutableDomainSeqLike[@specialized B, +This]
+trait DenseMutableDomainSeqLike[@specialized B, +This<:DenseMutableDomainSeq[B]]
 extends DenseMutableDomainMapLike[Int,B,IndexDomain,This]
 with MutableDomainSeqLike[B,This] {
   override def size = data.length;
@@ -63,4 +63,6 @@ with MutableDomainSeqLike[B,This] {
  */
 class DenseMutableDomainSeq[@specialized B](override val data : Array[B])
 extends DenseMutableDomainMap[Int,B,IndexDomain] with MutableDomainSeq[B]
-with DenseMutableDomainSeqLike[B, DenseMutableDomainSeq[B]];
+with DenseMutableDomainSeqLike[B, DenseMutableDomainSeq[B]] {
+  override def copy = new DenseMutableDomainSeq(data.clone);
+}

@@ -29,7 +29,7 @@ import generic._;
  *
  * @author dramage
  */
-trait DomainSeqLike[@specialized B, +Repr]
+trait DomainSeqLike[@specialized B, +Repr<:DomainSeq[B]]
 extends DomainMapLike[Int, B, IndexDomain, Repr] {
 
   def size = domain.size;

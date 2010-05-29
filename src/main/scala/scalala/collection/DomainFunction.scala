@@ -30,7 +30,10 @@ import generic._;
  *
  * @author dramage
  */
-trait DomainFunction[@specialized A, @specialized +B, D <: Domain[A]]
+trait DomainFunction
+[@specialized(scala.Int, scala.Long, scala.Float, scala.Double) A,
+ @specialized(scala.Int, scala.Long, scala.Float, scala.Double, scala.Boolean) +B,
+ D <: Domain[A]]
 extends PartialFunction[A, B] {
   
   /** The domain over which this function is defined. */
@@ -73,22 +76,22 @@ extends PartialFunction[A, B] {
 //  }
 //}
 
-object DomainFunction {
-
-//  implicit def iMakeDomainFunction[From,@specialized A,@specialized B, D<:Domain[A],To]
-//  (from : From)(implicit bf : CanBuildDomainFunction[From,A,B,D,To]) =
-//    bf(from);
-
-  /**
-   * Converts a regular function into a domain function by assuming the
-   * full TypeDomain for the given input type.
-   */
-  implicit def apply[@specialized A,@specialized B,D<:TypeDomain[A]]
-  (function : (A => B))(implicit db : CanBuildTypeDomain[A,D]) = {
-    val _domain = db.domain;
-    new DomainFunction[A,B,D] {
-      override def domain = _domain;
-      override def apply(x : A) = function(x)
-    }
-  }
-}
+//object DomainFunction {
+//
+////  implicit def iMakeDomainFunction[From,@specialized A,@specialized B, D<:Domain[A],To]
+////  (from : From)(implicit bf : CanBuildDomainFunction[From,A,B,D,To]) =
+////    bf(from);
+//
+//  /**
+//   * Converts a regular function into a domain function by assuming the
+//   * full TypeDomain for the given input type.
+//   */
+//  implicit def apply[@specialized A,@specialized B,D<:TypeDomain[A]]
+//  (function : (A => B))(implicit db : CanBuildTypeDomain[A,D]) = {
+//    val _domain = db.domain;
+//    new DomainFunction[A,B,D] {
+//      override def domain = _domain;
+//      override def apply(x : A) = function(x)
+//    }
+//  }
+//}

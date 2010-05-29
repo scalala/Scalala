@@ -31,7 +31,7 @@ import collection.domain._;
  */
 trait Tensor2Like
 [@specialized A1,@specialized A2,D1<:IterableDomain[A1],D2<:IterableDomain[A2],
- D<:Product2Domain[A1,A2,D1,D2], +This]
+ D<:Product2Domain[A1,A2,D1,D2], +This<:Tensor2[A1,A2,D1,D2,D]]
 extends TensorLike[(A1,A2),D,This]
 with MutableDomainMap2Like[A1,A2,Double,D1,D2,D,This] {
 }
@@ -54,7 +54,7 @@ object Tensor2 {
    D2<:IterableDomain[A2], D1<:IterableDomain[A1],
    ID<:Product2Domain[A1,A2,D1,D2], OD<:Product2Domain[A2,A1,D2,D1],
    +Coll <: Tensor2[A1,A2,D1,D2,ID],
-   +This <: TransposeLike[A2,A1,D2,D1,ID,OD,Coll,This]]
+   +This <: Transpose[A2,A1,D2,D1,ID,OD,Coll]]
   extends MutableDomainMap2TransposeLike[A2,A1,Double,D2,D1,ID,OD,Coll,This]
   with Tensor2Like[A2,A1,D2,D1,OD,This];
 

@@ -31,7 +31,8 @@ import generic._;
 trait DomainMap2Like
 [@specialized A1, @specialized A2, @specialized B,
  D1<:IterableDomain[A1],D2<:IterableDomain[A2],
- D<:Product2Domain[A1,A2,D1,D2], +This]
+ D<:Product2Domain[A1,A2,D1,D2],
+ +This<:DomainMap2[A1,A2,B,D1,D2,D]]
 extends DomainMapLike[(A1,A2),B,D,This] {
   def checkKey(k1 : A1, k2 : A2) : Unit = {
     if (!domain._1.contains(k1) || !domain._2.contains(k2)) {

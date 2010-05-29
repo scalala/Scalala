@@ -31,7 +31,7 @@ import generic._;
 trait MutableDomainMap2Like
 [@specialized A1, @specialized A2, @specialized B,
  D1<:IterableDomain[A1],D2<:IterableDomain[A2],D<:Product2Domain[A1,A2,D1,D2],
- +This]
+ +This <: MutableDomainMap2[A1,A2,B,D1,D2,D]]
 extends MutableDomainMapLike[(A1,A2),B,D,This]
 with DomainMap2Like[A1,A2,B,D1,D2,D,This] {
 

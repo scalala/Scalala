@@ -34,7 +34,7 @@ trait MutableDomainMap2SliceTableLike
  D1<:IterableDomain[A1], D2<:IterableDomain[A2],
  D<:Product2Domain[A1,A2,D1,D2],
  +Coll<:MutableDomainMap2[A1,A2,B,D1,D2,D],
- +This<:MutableDomainMap2SliceTableLike[A1,A2,B,D1,D2,D,Coll,This]]
+ +This<:MutableDomainMap2SliceTable[A1,A2,B,D1,D2,D,Coll]]
 extends DomainMap2SliceTableLike[A1,A2,B,D1,D2,D,Coll,This]
 with MutableDomainTableLike[B,This] {
 

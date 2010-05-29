@@ -23,7 +23,7 @@ package tensor;
 import collection._;
 import collection.domain._;
 
-trait VectorLike[+This]
+trait VectorLike[+This<:Vector]
 extends MutableDomainSeqLike[Double,This]
 with Tensor1Like[Int,IndexDomain,This];
 
@@ -36,7 +36,7 @@ object Vector {
   /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
   trait SliceSeqLike
   [A, D<:IterableDomain[A], +Coll <: MutableDomainMap[A,Double,D],
-   +This <: SliceSeqLike[A, D, Coll, This]]
+   +This <: SliceSeq[A, D, Coll]]
   extends MutableDomainMapSliceSeqLike[A,D,Double,Coll,This]
   with VectorLike[This];
 

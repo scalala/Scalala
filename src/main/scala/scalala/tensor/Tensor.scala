@@ -28,7 +28,7 @@ import collection.domain._;
  *
  * @author dramage
  */
-trait TensorLike[@specialized A, D<:IterableDomain[A], +This]
+trait TensorLike[@specialized A, D<:IterableDomain[A], +This<:Tensor[A,D]]
 extends MutableDomainMapLike[A,Double,D,This] {
 
   //
@@ -177,7 +177,7 @@ object Tensor {
   [@specialized A1, D1<:IterableDomain[A1],
    @specialized A2, D2<:IterableDomain[A2],
    +Coll <: MutableDomainMap[A1, Double, D1],
-   +This <: SliceLike[A1, D1, A2, D2, Coll, This]]
+   +This <: Slice[A1, D1, A2, D2, Coll]]
   extends MutableDomainMapSliceLike[A1,D1,A2,D2,Double,Coll,This]
   with Tensor1Like[A2,D2,This];
 
@@ -187,8 +187,8 @@ object Tensor {
    @specialized A2, D2<:IterableDomain[A2],
    +Coll <: MutableDomainMap[A1, Double, D1]]
   extends MutableDomainMapSlice[A1,D1,A2,D2,Double,Coll]
-  with SliceLike[A1,D1,A2,D2,Coll,Slice[A1,D1,A2,D2,Coll]]
-  with Tensor1[A2,D2];
+  with Tensor1[A2,D2]
+  with SliceLike[A1,D1,A2,D2,Coll,Slice[A1,D1,A2,D2,Coll]];
 
 
 //  implicit def canMapValues[@specialized A,D<:IterableDomain[A]] =

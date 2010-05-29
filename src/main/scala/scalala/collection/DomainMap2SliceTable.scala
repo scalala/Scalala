@@ -34,7 +34,7 @@ trait DomainMap2SliceTableLike
  D1<:IterableDomain[A1], D2<:IterableDomain[A2],
  D<:Product2Domain[A1,A2,D1,D2],
  +Coll<:DomainMap2[A1,A2,B,D1,D2,D],
- +This<:DomainMap2SliceTableLike[A1,A2,B,D1,D2,D,Coll,This]]
+ +This<:DomainMap2SliceTable[A1,A2,B,D1,D2,D,Coll]]
 extends DomainMapSliceLike[(A1,A2),D,(Int,Int),TableDomain,B,Coll,This]
 with DomainTableLike[B,This]
 {

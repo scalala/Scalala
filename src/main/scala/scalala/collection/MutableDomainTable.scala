@@ -28,7 +28,7 @@ import generic._;
  *
  * @author dramage
  */
-trait MutableDomainTableLike[@specialized B, +This]
+trait MutableDomainTableLike[@specialized B, +This<:MutableDomainTable[B]]
 extends DomainTableLike[B,This]
 with MutableDomainMap2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,This];
 

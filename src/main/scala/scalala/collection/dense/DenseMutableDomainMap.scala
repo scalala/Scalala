@@ -29,7 +29,7 @@ import collection.domain.IterableDomain;
  * @author dramage
  */
 trait DenseMutableDomainMapLike
-[@specialized A, @specialized B, D<:IterableDomain[A], +This]
+[@specialized A, @specialized B, D<:IterableDomain[A], +This<:DenseMutableDomainMap[A,B,D]]
 extends MutableDomainMapLike[A,B,D,This] {
   def data : Array[B];
 

@@ -30,13 +30,19 @@ import generic._;
  *
  * @author dramage
  */
-trait DomainMapLike[@specialized A, @specialized B, D<:IterableDomain[A], +Repr]
+trait DomainMapLike[@specialized A, @specialized B, D<:IterableDomain[A], +Repr<:DomainMap[A,B,D]]
 extends DomainFunction[A, B, D] {
 self =>
 
   protected type Self = Repr;
 
   def repr : Repr = this.asInstanceOf[Repr];
+
+  /**
+   * Creates a shallow copy of this domain map.  Inner value types are not copied,
+   * so this method is safest when both keys and values are immutable.
+   */
+  def copy : Repr;
 
   /**
    * Applies the given function to each element of the domain and
@@ -106,6 +112,17 @@ self =>
   /** Returns the keys for which the value returns true. */
   def find(p : B => Boolean) : Iterable[A] =
     domain.filter(this andThen p);
+
+//  def zip[I,O](other : DomainMap[A,I,D], compose : (B,I) => O = ((q:B,r:I)=>(q,r))) : DomainMap[A,O,D] = {
+//    null;
+//  }
+
+//  /**
+//   * Constructs a view of this map on which calls to mapValues are
+//   * chained together and lazily evaluated.
+//   */
+//  def view : DomainMapView[A,B,D,Repr] =
+//    new DomainMapView.IdentityViewImpl[A,B,D,Repr](repr);
   
   /**
    * Constructs a view of this map on which calls to mapValues are
@@ -228,7 +245,13 @@ self =>
 
   // TODO: provide better toString
   override def toString = {
-    iterator.take(10).mkString("\n");
+    val iter = iterator;
+    val rv = iter.take(10).mkString("\n");
+    if (iter.hasNext) {
+      rv + "...\n";
+    } else {
+      rv;
+    }
   }
 }
 
@@ -256,10 +279,10 @@ extends DomainMapLike[A, B, D, DomainMap[A, B, D]];
 
 object DomainMap {
 
-  implicit def canViewFrom[@specialized A, @specialized B, D<:IterableDomain[A]] =
-  new DomainMapCanViewFrom[DomainMap[A,B,D],DomainMapView[A,B,B,D,DomainMap[A,B,D]]] {
+  implicit def canViewFrom[A, B, D<:IterableDomain[A]] =
+  new DomainMapCanViewFrom[DomainMap[A,B,D],DomainMapView.IdentityView[A,B,D,DomainMap[A,B,D]]] {
     override def apply(from : DomainMap[A,B,D]) =
-      new DomainMapView.Identity(from);
+      new DomainMapView.IdentityViewImpl[A,B,D,DomainMap[A,B,D]](from);
   }
 
   implicit def canMapValuesFrom[@specialized A,@specialized B,@specialized O,D<:IterableDomain[A]]

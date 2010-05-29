@@ -33,7 +33,7 @@ trait MutableDomainMap2TransposeLike
  D2<:IterableDomain[A2], D1<:IterableDomain[A1],
  ID<:Product2Domain[A1,A2,D1,D2], OD<:Product2Domain[A2,A1,D2,D1],
  +Coll <: MutableDomainMap2[A1,A2,B,D1,D2,ID],
- +This <: MutableDomainMap2TransposeLike[A2,A1,B,D2,D1,ID,OD,Coll,This]]
+ +This <: MutableDomainMap2Transpose[A2,A1,B,D2,D1,ID,OD,Coll]]
 extends DomainMap2TransposeLike[A2,A1,B,D2,D1,ID,OD,Coll,This]
 with MutableDomainMapSliceLike[(A1,A2),ID,(A2,A1),OD,B,Coll,This]
 with MutableDomainMap2Like[A2,A1,B,D2,D1,OD,This] {

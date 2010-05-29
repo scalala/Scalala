@@ -34,7 +34,7 @@ trait DomainMapSliceLike
 [@specialized A1, D1<:IterableDomain[A1],
  @specialized A2, D2<:IterableDomain[A2],
  @specialized B, +Coll <: DomainMap[A1, B, D1],
- +This <: DomainMapSliceLike[A1, D1, A2, D2, B, Coll, This]]
+ +This <: DomainMapSlice[A1, D1, A2, D2, B, Coll]]
 extends DomainMapLike[A2,B,D2,This] {
 self =>
 

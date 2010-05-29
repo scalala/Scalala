@@ -32,7 +32,8 @@ import generic._;
  */
 trait PartialDomainMapLike
 [@specialized A, @specialized B, D <: IterableDomain[A],
- ActiveDomain <: IterableDomain[A], Active <: DomainMap[A,B,ActiveDomain], +Repr]
+ ActiveDomain <: IterableDomain[A], Active <: DomainMap[A,B,ActiveDomain],
+ +Repr<:PartialDomainMap[A,B,D,ActiveDomain,Active]]
 extends DomainMapLike[A,B,D,Repr] {
 self =>
 
@@ -56,7 +57,8 @@ self =>
 trait PartialDomainMap
 [@specialized A, @specialized B, D<:IterableDomain[A],
  ActiveDomain<:IterableDomain[A], Active<:DomainMap[A,B,ActiveDomain]]
-extends PartialDomainMapLike[A, B, D, ActiveDomain, Active, PartialDomainMap[A,B,D,ActiveDomain,Active]];
+extends DomainMap[A,B,D]
+with PartialDomainMapLike[A, B, D, ActiveDomain, Active, PartialDomainMap[A,B,D,ActiveDomain,Active]];
 
 
 /**
@@ -119,46 +121,3 @@ object PartialDomainMap {
 //
 //  class JoinException(msg : String) extends RuntimeException(msg);
 }
-
-
-//
-//trait VectorLike[+Repr]
-//extends MutablePartialMapLike[Int,Double,IndexDomain,Repr]
-//with DomainSeqLike[Double,Repr];
-//
-//trait Vector
-//extends MutablePartialMap[Int,Double,IndexDomain]
-//with  VectorLike[Vector];
-//
-//trait VectorCanBuildFrom[-From,+To<:Vector]
-//extends DomainMapCanBuildFrom[From,Int,Double,IndexDomain,To] {
-//  override def apply(from : From, domain : IndexDomain, default : Double)
-//  : DomainMapBuilder[Int,Double,IndexDomain,To] =
-//    apply(from, domain.size);
-//
-//  def apply(from : From, size : Int)
-//  : DomainMapBuilder[Int,Double,IndexDomain,To];
-//}
-//
-//object Vector {
-//  def apply(size : Int) =
-//    new Impl(new Array[Double](size));
-//
-//  implicit def canMapValues : VectorCanBuildFrom[Vector,Vector]
-//  = new VectorCanBuildFrom[Vector,Vector] {
-//    override def apply(from : Vector, size : Int) =
-//      DomainMapBuilder(Vector(size));
-//  }
-//
-//  class Impl(values : Array[Double]) extends Vector {
-//    override def domain = IndexDomain(values.size);
-//
-//    override def default = 0.0;
-//    override def default_=(value : Double) {}
-//    override def apply(i : Int) =
-//      values(i);
-//    override def update(i : Int, value : Double) =
-//      values(i) = value;
-//    override def activeDomain = MergeableSet(domain);
-//  }
-//}

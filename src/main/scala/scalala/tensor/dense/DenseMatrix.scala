@@ -29,7 +29,7 @@ import tensor.{MatrixLike,Matrix};
  *
  * @author dramage
  */
-trait DenseMatrixLike[+This]
+trait DenseMatrixLike[+This<:DenseMatrix]
 extends DenseMutableDomainTableLike[Double,This]
 with MatrixLike[This];
 
@@ -41,7 +41,9 @@ with MatrixLike[This];
  */
 class DenseMatrix(numRows : Int, numCols : Int, data : Array[Double])
 extends DenseMutableDomainTable[Double](numRows, numCols, data)
-with Matrix with DenseMatrixLike[DenseMatrix];
+with Matrix with DenseMatrixLike[DenseMatrix] {
+  override def copy = new DenseMatrix(numRows, numCols, data.clone);
+}
 
 object DenseMatrix {
   /**

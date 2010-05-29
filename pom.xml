@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <properties>
-    <scala.version>2.8.0.Beta1</scala.version>
-    <!-- <scala.version>2.8.0-SNAPSHOT</scala.version> -->
+    <!-- <scala.version>2.8.0.Beta1</scala.version> -->
+    <scala.version>2.8.0-SNAPSHOT</scala.version>
   </properties>
 
   <groupId>org.scalanlp</groupId>
@@ -117,7 +117,7 @@
 
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_2.8.0.Beta1-RC5</artifactId>
+      <artifactId>scalacheck_${scala.version}</artifactId>
       <version>1.7-SNAPSHOT</version>
     </dependency>
     <dependency>
@@ -170,6 +170,7 @@
           <args>
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
+            <arg>-no-specialization</arg><!-- temporary workaround for 2.8.0-SNAPSHOT bugs -->
           </args>
           <jvmArgs>
             <jvmArg>-Xmx1G</jvmArg>

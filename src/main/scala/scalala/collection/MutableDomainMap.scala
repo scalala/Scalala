@@ -30,7 +30,8 @@ import generic._;
  * @author dramage
  */
 trait MutableDomainMapLike
-[@specialized A, @specialized B, D <: IterableDomain[A], +Repr]
+[@specialized A, @specialized B, D <: IterableDomain[A],
+ +Repr<:MutableDomainMap[A,B,D]]
 extends DomainMapLike[A, B, D, Repr] {
 
   /**

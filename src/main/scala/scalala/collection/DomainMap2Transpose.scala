@@ -33,7 +33,7 @@ trait DomainMap2TransposeLike
  D2<:IterableDomain[A2],D1<:IterableDomain[A1],
  ID<:Product2Domain[A1,A2,D1,D2], OD<:Product2Domain[A2,A1,D2,D1],
  +Coll <: DomainMap2[A1,A2,B,D1,D2,ID],
- +This <: DomainMap2TransposeLike[A2,A1,B,D2,D1,ID,OD,Coll,This]]
+ +This <: DomainMap2Transpose[A2,A1,B,D2,D1,ID,OD,Coll]]
 extends DomainMapSliceLike[(A1,A2),ID,(A2,A1),OD,B,Coll,This]
 with DomainMap2Like[A2,A1,B,D2,D1,OD,This] {
 self =>
@@ -66,5 +66,7 @@ object DomainMap2Transpose {
    ID<:Product2Domain[A1,A2,D1,D2], OD<:Product2Domain[A2,A1,D2,D1],
    +Coll <: DomainMap2[A1,A2,B,D1,D2,ID]]
   (override val underlying : Coll, override val domain : OD)
-  extends DomainMap2Transpose[A2,A1,B,D2,D1,ID,OD,Coll];
+  extends DomainMap2Transpose[A2,A1,B,D2,D1,ID,OD,Coll] {
+    override def copy = new Impl(underlying.copy, domain.copy);
+  }
 }

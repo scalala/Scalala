@@ -31,7 +31,8 @@ import generic._;
  */
 trait MutablePartialDomainMapLike
 [@specialized A, @specialized B, D <: IterableDomain[A],
- ActiveDomain <: IterableDomain[A], Active <: MutableDomainMap[A,B,ActiveDomain], +This]
+ ActiveDomain <: IterableDomain[A], Active <: MutableDomainMap[A,B,ActiveDomain],
+ +This<:MutablePartialDomainMap[A,B,D,ActiveDomain,Active]]
 extends MutableDomainMapLike[A,B,D,This]
 with PartialDomainMapLike[A,B,D,ActiveDomain,Active,This] {
 

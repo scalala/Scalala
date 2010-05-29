@@ -28,7 +28,7 @@ import generic._;
  *
  * @author dramage.
  */
-trait MutableDomainSeqLike[@specialized B,+Repr]
+trait MutableDomainSeqLike[@specialized B,+Repr<:MutableDomainSeq[B]]
 extends DomainSeqLike[B,Repr] with MutableDomainMapLike[Int,B,IndexDomain,Repr] {
 
   def := (seq : Seq[B]) = {

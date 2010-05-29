@@ -29,22 +29,15 @@ import generic._;
  * @author dramage
  */
 trait DomainMapViewLike
-[@specialized A, @specialized B, @specialized O, D<:IterableDomain[A],
- +Coll <: DomainMap[A,B,D], +This <: DomainMapViewLike[A,B,O,D,Coll,This]]
-extends DomainMapLike[A,O,D,This] {
+[@specialized A, @specialized B, D<:IterableDomain[A],
+ +Coll <: DomainMap[A,_,D], +This <: DomainMapView[A,B,D,Coll]]
+extends DomainMapLike[A,B,D,This] {
 self =>
 
   /** The collection underlying this view. */
   def underlying: Coll;
 
-  /** Transform a value in the underlying map to a value in the view. */
-  def transform(value : B) : O;
-
-  override def domain =
-    underlying.domain;
-
-  override def apply(key : A) =
-    transform(underlying.apply(key));
+  override def domain = underlying.domain;
 }
 
 /**
@@ -53,38 +46,123 @@ self =>
  * @author dramage
  */
 trait DomainMapView
-[@specialized A, @specialized B, @specialized O, D<:IterableDomain[A],
- +Coll <: DomainMap[A,B,D]]
-extends DomainMapViewLike[A,B,O,D,Coll,DomainMapView[A,B,O,D,Coll]];
+[@specialized A, @specialized B, D<:IterableDomain[A], +Coll <: DomainMap[A,_,D]]
+extends DomainMap[A,B,D]
+with DomainMapViewLike[A,B,D,Coll,DomainMapView[A,B,D,Coll]];
+
+
+///**
+// * Implementation trait for pass-through views of underlying DomainMap.
+// *
+// * @author dramage
+// */
+//trait DomainMapTransformViewLike
+//[@specialized A, @specialized B, @specialized O, D<:IterableDomain[A],
+// +Coll <: DomainMap[A,B,D], +This <: DomainMapView[A,B,O,D,Coll]]
+//extends DomainMapLike[A,O,D,This] {
+//self =>
+//
+//  /** The collection underlying this view. */
+//  def underlying: Coll;
+//
+//  /** Transform a value in the underlying map to a value in the view. */
+//  def transform(value : B) : O;
+//
+//  override def domain =
+//    underlying.domain;
+//
+//  override def apply(key : A) =
+//    transform(underlying.apply(key));
+//
+//  override def view = repr;
+//}
+//
+///**
+// * Pass-through view of an underlying DomainMap.
+// *
+// * @author dramage
+// */
+//trait DomainMapTransformView
+//[@specialized A, @specialized B, @specialized O, D<:IterableDomain[A],
+// +Coll <: DomainMap[A,B,D]]
+//extends DomainMap[A,O,D]
+//with DomainMapViewLike[A,B,O,D,Coll,DomainMapView[A,B,O,D,Coll]];
 
 
 object DomainMapView {
 
+  trait IdentityViewLike
+  [@specialized A, @specialized B, D<:IterableDomain[A],
+   +Coll <: DomainMap[A,B,D], +This <: IdentityView[A,B,D,Coll]]
+  extends DomainMapViewLike[A,B,D,Coll,This] {
+    override def apply(key : A) =
+      underlying.apply(key);
+
+    def view = repr;
+  }
+
+  trait IdentityView
+  [@specialized A, @specialized B, D<:IterableDomain[A], +Coll <: DomainMap[A,B,D]]
+  extends DomainMapView[A,B,D,Coll]
+  with IdentityViewLike[A,B,D,Coll,IdentityView[A,B,D,Coll]];
+
   /** Returns an unmodified view of the given DomainMap. */
-  class Identity
+  class IdentityViewImpl
   [@specialized A, @specialized B, D<:IterableDomain[A],
    +Coll <: DomainMap[A,B,D]](override val underlying : Coll)
-  extends DomainMapView[A,B,B,D,Coll] {
-    override def transform(value : B) = value;
+  extends IdentityView[A,B,D,Coll];
+
+
+  trait TransformViewLike
+  [@specialized A, @specialized B, @specialized O, D<:IterableDomain[A],
+   +Coll <: DomainMap[A,B,D], +This <: TransformView[A,B,O,D,Coll]]
+  extends DomainMapViewLike[A,O,D,Coll,This] {
+    /** Transform a value in the underlying map to a value in the view. */
+    def transform(value : B) : O;
+
+    override def apply(key : A) =
+      transform(underlying.apply(key));
   }
+
+  trait TransformView
+  [@specialized A, @specialized B, @specialized O, D<:IterableDomain[A],
+   +Coll <: DomainMap[A,B,D]]
+  extends DomainMapView[A,O,D,Coll]
+  with TransformViewLike[A,B,O,D,Coll,TransformView[A,B,O,D,Coll]]
 
   /**
    * Returns an unmodified view of the given DomainMap with
    * values transformed by the given function.
    */
-  class Transform
+  class TransformImpl
   [@specialized A, @specialized B, @specialized O, D<:IterableDomain[A],
    +Coll <: DomainMap[A,B,D]](override val underlying : Coll, fn : (B=>O))
-  extends DomainMapView[A,B,O,D,Coll] {
+  extends TransformView[A,B,O,D,Coll] {
      override def transform(value : B) = fn(value);
   }
 
+// TODO: not sure why this doesn't work
+//  /** View of an IdentityView is a no-op. */
+//  implicit def canViewFrom[A,B,D<:IterableDomain[A]] =
+//  new DomainMapCanViewFrom[IdentityView[A,B,D,DomainMap[A,B,D]],IdentityView[A,B,D,DomainMap[A,B,D]]] {
+//    override def apply(view : IdentityView[A,B,D,DomainMap[A,B,D]]) = view;
+//  }
+
   /** Override canMapValues on DomainMapView instances to construct a lazy view. */
-  implicit def canMapValuesFrom
+  implicit def canMapValuesFromTransformView
   [@specialized A, @specialized B1, @specialized B2, @specialized B3, D<:IterableDomain[A]] =
   new DomainMapCanMapValuesFrom
-  [DomainMapView[A,B1,B2,D,DomainMap[A,B1,D]],A,B2,B3,D,DomainMapView[A,B1,B3,D,DomainMap[A,B1,D]]] {
-    override def apply(from : DomainMapView[A,B1,B2,D,DomainMap[A,B1,D]], fn : (B2=>B3)) =
-      new Transform[A,B1,B3,D,DomainMap[A,B1,D]](from.underlying, from.transform _ andThen fn)
+  [TransformView[A,B1,B2,D,DomainMap[A,B1,D]],A,B2,B3,D,TransformView[A,B1,B3,D,DomainMap[A,B1,D]]] {
+    override def apply(from : TransformView[A,B1,B2,D,DomainMap[A,B1,D]], fn : (B2=>B3)) =
+      new TransformImpl[A,B1,B3,D,DomainMap[A,B1,D]](from.underlying, from.transform _ andThen fn)
+  }
+
+  /** Override canMapValues on DomainMapView instances to construct a lazy view. */
+  implicit def canMapValuesFromIdentityView
+  [@specialized A, @specialized B1, @specialized B2, D<:IterableDomain[A]] =
+  new DomainMapCanMapValuesFrom
+  [IdentityView[A,B1,D,DomainMap[A,B1,D]],A,B1,B2,D,TransformView[A,B1,B2,D,DomainMap[A,B1,D]]] {
+    override def apply(from : IdentityView[A,B1,D,DomainMap[A,B1,D]], fn : (B1=>B2)) =
+      new TransformImpl[A,B1,B2,D,DomainMap[A,B1,D]](from.underlying, fn)
   }
 }

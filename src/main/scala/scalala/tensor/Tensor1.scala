@@ -29,7 +29,7 @@ import collection.domain._;
  *
  * @author dramage
  */
-trait Tensor1Like[A,D<:IterableDomain[A],+This]
+trait Tensor1Like[A,D<:IterableDomain[A],+This<:Tensor1[A,D]]
 extends TensorLike[A,D,This] {
   /** Returns the k-norm of this tensor.  Calls scalala.Scalala.norm(this). */
   def norm(n : Double) : Double = {

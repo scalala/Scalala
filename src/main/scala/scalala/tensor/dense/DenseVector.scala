@@ -28,7 +28,7 @@ import tensor.{VectorLike,Vector};
  *
  * @author dramage
  */
-trait DenseVectorLike[+This]
+trait DenseVectorLike[+This<:DenseVector]
 extends DenseMutableDomainSeqLike[Double,This]
 with VectorLike[This];
 
@@ -39,7 +39,9 @@ with VectorLike[This];
  */
 class DenseVector(data : Array[Double])
 extends DenseMutableDomainSeq[Double](data)
-with Vector with DenseVectorLike[DenseVector];
+with Vector with DenseVectorLike[DenseVector] {
+  override def copy = new DenseVector(data.clone);
+}
 
 object DenseVector {
   /**

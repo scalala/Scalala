@@ -29,7 +29,7 @@ import generic._;
  *
  * @author dramage
  */
-trait DomainTableLike[@specialized B, +Repr]
+trait DomainTableLike[@specialized B, +Repr<:DomainTable[B]]
 extends DomainMap2Like[Int, Int, B, IndexDomain, IndexDomain, TableDomain, Repr] {
 
   /** Number of rows in this table. */
@@ -84,4 +84,5 @@ extends DomainMap2Like[Int, Int, B, IndexDomain, IndexDomain, TableDomain, Repr]
  * @author dramage
  */
 trait DomainTable[@specialized B]
-extends DomainTableLike[B, DomainTable[B]];
+extends DomainMap2[Int,Int,B,IndexDomain,IndexDomain,TableDomain]
+with DomainTableLike[B, DomainTable[B]];

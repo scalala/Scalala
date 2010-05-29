@@ -1,3 +1,4 @@
+
 /*
  * Distributed as part of Scalala, a linear algebra library.
  *
@@ -31,7 +32,7 @@ import generic._;
 trait DomainMapSliceSeqLike
 [@specialized A, D<:IterableDomain[A],
  @specialized B, +Coll<:DomainMap[A, B, D],
- +This <: DomainMapSliceSeqLike[A, D, B, Coll, This]]
+ +This <: DomainMapSliceSeq[A, D, B, Coll]]
 extends DomainMapSliceLike[A, D, Int, IndexDomain, B, Coll, This]
 with DomainSeqLike[B, This];
 
@@ -43,7 +44,8 @@ with DomainSeqLike[B, This];
 trait DomainMapSliceSeq
 [@specialized A, D<:IterableDomain[A],
  @specialized B, +Coll<:DomainMap[A, B, D]]
-extends DomainSeq[B] with DomainMapSliceSeqLike[A, D, B, Coll, DomainMapSliceSeq[A, D, B, Coll]];
+extends DomainMapSlice[A,D,Int,IndexDomain,B,Coll] with DomainSeq[B]
+with DomainMapSliceSeqLike[A, D, B, Coll, DomainMapSliceSeq[A, D, B, Coll]];
 
 object DomainMapSliceSeq {
   class FromKeySeq
