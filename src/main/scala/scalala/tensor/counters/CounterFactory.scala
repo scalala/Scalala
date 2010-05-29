@@ -70,7 +70,7 @@ trait DoubleCounterFactory { factory =>
     }
   }
 
-  implicit def pCounterVPBuilder[T: Manifest,U]: TensorProductBuilder[PairedDoubleCounter[T,U],DoubleCounter[U],DoubleCounter[T],Shape2,Shape1Col,Shape1Col] = {
+  implicit def pCounterVPBuilder[T,U]: TensorProductBuilder[PairedDoubleCounter[T,U],DoubleCounter[U],DoubleCounter[T],Shape2,Shape1Col,Shape1Col] = {
     new TensorProductBuilder[PairedDoubleCounter[T,U],DoubleCounter[U],DoubleCounter[T],Shape2,Shape1Col,Shape1Col] {
       def create(t: PairedDoubleCounter[T,U], t2: DoubleCounter[U]):DoubleCounter[T] = mkDoubleCounter[T];
       def makeProduct(t: Tensor2Op[PairedDoubleCounter[T,U]], t2: ColTensor1Op[DoubleCounter[U]]) = {

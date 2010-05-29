@@ -116,7 +116,7 @@ extends Tensor2Op[Value] {
 /** Right multiplication of a Tensor2 by a column. */
 case class Tensor2MultColTensor1[I,J,VV<:Tensor1[J],MV<:Tensor2[I,J],Value<:Tensor1[I]]
 (a : Tensor2Op[MV], b : ColTensor1Op[VV])
-(implicit tpB: TensorProductBuilder[MV,VV,Value,Shape2,Shape1Col,Shape1Col], man: Manifest[I])
+(implicit tpB: TensorProductBuilder[MV,VV,Value,Shape2,Shape1Col,Shape1Col])
 extends ColTensor1Op[Value] {
 
   override def value = {
@@ -124,8 +124,8 @@ extends ColTensor1Op[Value] {
     val vv = b.value;
     val rv = tpB.create(mv, vv);
     val domain = mv.domain._1;
-    (mv, vv) match {
-      case (dm: DenseMatrix, dv: DenseVector) if man == manifest[Int] =>
+    (rv, mv, vv) match {
+      case (rdv: DenseVector, dm: DenseMatrix, dv: DenseVector) =>
       var i = 0
       while (i < rv.size) {
         var j = 0
@@ -134,8 +134,7 @@ extends ColTensor1Op[Value] {
           result += dm(i, j) * dv(j)
           j += 1
         }
-        // Yuck!
-        rv(i.asInstanceOf[I]) = result;
+        rdv(i) = result;
         i += 1;
       }
       case _ =>
