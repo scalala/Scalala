@@ -173,14 +173,15 @@ class OperatorTest extends scalala.library.Library with OperatorImplicits with s
    * implicit conversion control path.
    */
   test("Operators:Vector-Matrix") {
-    def build1(values : Double*) : Vector =
-      Vector(values :_*);
-    def build2(rows : Int, cols : Int)(values : Double*) : Matrix =
-      DenseMatrix(rows,cols)(values :_*);
+    def build1(values : Double*) : DenseVector = Vector(values :_*);
+    def build2(rows : Int, cols : Int)(values : Double*) : DenseMatrix = DenseMatrix(rows,cols)(values :_*);
 
-    def x = build1(0,1,2,3);
-    def y = build1(2,1,2,-1);
-    def A = build2(4,4)(7,3,6,-2,4,2,6,8,1,0,0,1,3,-1,-1,-1);
+    def xDense = build1(0,1,2,3);
+    def x = xDense: Vector;
+    def yDense = build1(2,1,2,-1);
+    def y = yDense: Vector;
+    def ADense = build2(4,4)(7,3,6,-2,4,2,6,8,1,0,0,1,3,-1,-1,-1);
+    def A = ADense: Matrix;
     def B = build2(4,4)(3,2,1,2,7,8,-1,9,-2,-3,-2,1,5,0,0,0);
 
     // many other permutations (orderings, transposes) should
@@ -189,7 +190,9 @@ class OperatorTest extends scalala.library.Library with OperatorImplicits with s
     assertEquals(x.t * y, 0*2 + 1*1 + 2*2 - 3*1);
     assertEquals(x * y.t value, build2(4,4)(0,2,4,6,0,1,2,3,0,2,4,6,0,-1,-2,-3));
     assertEquals(A * x value, build1(15,-1,3,7));
+    assertEquals(ADense * xDense value, build1(15,-1,3,7));
     assertEquals(A * y value, build1(17,9,19,7));
+    assertEquals(ADense * yDense value, build1(17,9,19,7));
     assertEquals(x.t * A   value, build1(9,38,3,-6));
     assertEquals(x.t * A.t value, build1(15,-1,3,7));
     assertEquals(y.t * A   value, build1(31,14,1,4));
@@ -286,5 +289,23 @@ class OperatorTest extends scalala.library.Library with OperatorImplicits with s
 
 //    x := 2 / Vector(1,2,3);
 //    assertEquals(x, Vector(2,1,2./3.));
+  }
+}
+
+object Test {
+  def main(args: Array[String]) {
+    import Scalala._
+    
+    def build1(values: Double*): DenseVector = Vector(values: _*);
+    def build2(rows: Int, cols: Int)(values: Double*): DenseMatrix = DenseMatrix(rows, cols)(values: _*);
+
+    def xDense = build1(0, 1, 2, 3);
+    def x = xDense: Vector;
+    def ADense = build2(4, 4)(7, 3, 6, -2, 4, 2, 6, 8, 1, 0, 0, 1, 3, -1, -1, -1);
+    def A = ADense: Matrix;
+
+    val op = ADense * xDense
+    println(op.getClass)
+    println(op value)
   }
 }

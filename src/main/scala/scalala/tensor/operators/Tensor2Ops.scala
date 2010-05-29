@@ -21,7 +21,8 @@ package scalala;
 package tensor;
 package operators;
 
-import collection.{MergeableSet, IntSpanSet, ProductSet, DomainException};
+import collection.{MergeableSet, IntSpanSet, ProductSet, DomainException}
+import dense.DenseMatrix;
 import TensorShapes._;
 
 /** Type aliases for Tensor2 support. */
