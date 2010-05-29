@@ -22,7 +22,8 @@ package tensor;
 package operators;
 
 import collection.{MergeableSet, IntSpanSet, ProductSet, DomainException}
-import dense.DenseMatrix;
+import dense.{DenseVector, DenseMatrix}
+
 import TensorShapes._;
 
 /** Type aliases for Tensor2 support. */
@@ -64,7 +65,7 @@ object Tensor2Ops extends Tensor2Ops;
 /** Operators on Tensor2 instances. */
 class RichTensor2Op[MV<:Tensor2[_,_]](base : Tensor2Op[MV])
     extends RichTensorOp[MV,Shape2](base) {
-  
+
   def t[VT<:Tensor2[_,_]](implicit ops: MatrixTranspose[MV,VT]) =
     ops.makeTranspose(base);
 
@@ -77,7 +78,7 @@ class RichTensor2Op[MV<:Tensor2[_,_]](base : Tensor2Op[MV])
     power.power(base,op);
   }
 
-  
+
   /** Matrix-matrix multiplication */
   def *[V2<:Tensor[_],VR<:Tensor[_],S2<:TensorShape,SR<:TensorShape] (op : TensorOp[V2,S2])
     (implicit ops: TensorProductBuilder[MV,V2,VR,Shape2,S2,SR]) ={
@@ -109,22 +110,38 @@ extends Tensor2Op[Value] {
     }
     rv;
   }
-  
+
 }
 
 /** Right multiplication of a Tensor2 by a column. */
 case class Tensor2MultColTensor1[I,J,VV<:Tensor1[J],MV<:Tensor2[I,J],Value<:Tensor1[I]]
 (a : Tensor2Op[MV], b : ColTensor1Op[VV])
-(implicit tpB: TensorProductBuilder[MV,VV,Value,Shape2,Shape1Col,Shape1Col])
+(implicit tpB: TensorProductBuilder[MV,VV,Value,Shape2,Shape1Col,Shape1Col], man: Manifest[I])
 extends ColTensor1Op[Value] {
-  
+
   override def value = {
     val mv = a.value;
     val vv = b.value;
-    val rv = tpB.create(mv,vv);
+    val rv = tpB.create(mv, vv);
     val domain = mv.domain._1;
-    for (i <- domain) {
-      rv(i) = mv.getRow(i) dot vv;
+    (mv, vv) match {
+      case (dm: DenseMatrix, dv: DenseVector) if man == manifest[Int] =>
+      var i = 0
+      while (i < rv.size) {
+        var j = 0
+        var result = 0d
+        while (j < dm.cols) {
+          result += dm(i, j) * dv(j)
+          j += 1
+        }
+        // Yuck!
+        rv(i.asInstanceOf[I]) = result;
+        i += 1;
+      }
+      case _ =>
+        for (i <- domain) {
+          rv(i) = mv.getRow(i) dot vv;
+        }
     }
     rv;
   }

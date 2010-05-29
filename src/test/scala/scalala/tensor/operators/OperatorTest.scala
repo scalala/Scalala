@@ -291,21 +291,3 @@ class OperatorTest extends scalala.library.Library with OperatorImplicits with s
 //    assertEquals(x, Vector(2,1,2./3.));
   }
 }
-
-object Test {
-  def main(args: Array[String]) {
-    import Scalala._
-    
-    def build1(values: Double*): DenseVector = Vector(values: _*);
-    def build2(rows: Int, cols: Int)(values: Double*): DenseMatrix = DenseMatrix(rows, cols)(values: _*);
-
-    def xDense = build1(0, 1, 2, 3);
-    def x = xDense: Vector;
-    def ADense = build2(4, 4)(7, 3, 6, -2, 4, 2, 6, 8, 1, 0, 0, 1, 3, -1, -1, -1);
-    def A = ADense: Matrix;
-
-    val op = ADense * xDense
-    println(op.getClass)
-    println(op value)
-  }
-}

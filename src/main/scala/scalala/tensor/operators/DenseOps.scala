@@ -83,18 +83,7 @@ trait DenseVectorOps {
 object DenseVectorOps extends DenseVectorOps;
 
 /** Implicits supporting DenseMatrix operations. */
-
-trait DenseMatrixOpsLow {
-  implicit val denseMatrixVPBuilder : TensorProductBuilder[DenseMatrix,Vector,DenseVector,Shape2,Shape1Col,Shape1Col] =
-    new TensorProductBuilder[DenseMatrix,Vector,DenseVector,Shape2,Shape1Col,Shape1Col] {
-      def create(t: DenseMatrix, t2: Vector) = new DenseVector(t.rows);
-      def makeProduct(t: Tensor2Op[DenseMatrix], t2: ColTensor1Op[Vector]) = {
-        Tensor2MultColTensor1[Int,Int,Vector,DenseMatrix,DenseVector](t,t2);
-      }
-  }
-}
-
-trait DenseMatrixOps extends DenseMatrixOpsLow {
+trait DenseMatrixOps {
   implicit val denseMatrixArith = new TensorArith[(Int,Int),DenseMatrix,Tensor2[Int,Int],Shape2];
 
   implicit val dmtranspose = new MatrixTranspose[DenseMatrix,DenseMatrix] {
@@ -132,11 +121,11 @@ trait DenseMatrixOps extends DenseMatrixOpsLow {
     }
   }
 
-  implicit val denseMatrixDenseVPBuilder : TensorProductBuilder[DenseMatrix,DenseVector,DenseVector,Shape2,Shape1Col,Shape1Col] =
-    new TensorProductBuilder[DenseMatrix,DenseVector,DenseVector,Shape2,Shape1Col,Shape1Col] {
-      def create(t: DenseMatrix, t2: DenseVector) = new DenseVector(t.rows);
-      def makeProduct(t: Tensor2Op[DenseMatrix], t2: ColTensor1Op[DenseVector]) = {
-        DenseMatrixMultColDenseVector(t,t2);
+  implicit val denseMatrixVPBuilder : TensorProductBuilder[DenseMatrix,Vector,DenseVector,Shape2,Shape1Col,Shape1Col] =
+    new TensorProductBuilder[DenseMatrix,Vector,DenseVector,Shape2,Shape1Col,Shape1Col] {
+      def create(t: DenseMatrix, t2: Vector) = new DenseVector(t.rows);
+      def makeProduct(t: Tensor2Op[DenseMatrix], t2: ColTensor1Op[Vector]) = {
+        Tensor2MultColTensor1[Int,Int,Vector,DenseMatrix,DenseVector](t,t2);
       }
   }
 
@@ -372,28 +361,5 @@ extends TensorReferenceOp[DenseMatrix,Shape2](a) {
 //    _C;
 //  }
 //}
-
-case class DenseMatrixMultColDenseVector
-(a : Tensor2Op[DenseMatrix], b : ColTensor1Op[DenseVector])
-extends ColTensor1Op[DenseVector] {
-
-  override def value = {
-    error("fail")
-    val denseMatrix: DenseMatrix = a.value;
-    val denseVector: DenseVector = b.value;
-    if (denseMatrix.cols != denseVector.size)
-      throw new DomainException("Incompatible domain sizes");
-    val rv = new DenseVector(denseMatrix.rows)
-    var i = 0
-    while (i < rv.size) {
-      var j = 0
-      var result = 0d
-      while (j < denseMatrix.cols) result += denseMatrix(i, j) * denseVector(j)
-      rv(i) = result;
-      i += 1;
-    }
-    rv;
-  }
-}
 
 
