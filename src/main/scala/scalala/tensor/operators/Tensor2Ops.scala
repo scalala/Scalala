@@ -24,7 +24,8 @@ package operators;
 import collection.{MergeableSet, IntSpanSet, ProductSet, DomainException}
 import dense.{DenseVector, DenseMatrix}
 
-import TensorShapes._;
+import TensorShapes._
+import library.Matrices;
 
 /** Type aliases for Tensor2 support. */
 object Tensor2Types {
@@ -119,6 +120,7 @@ case class Tensor2MultColTensor1[I,J,VV<:Tensor1[J],MV<:Tensor2[I,J],Value<:Tens
 (implicit tpB: TensorProductBuilder[MV,VV,Value,Shape2,Shape1Col,Shape1Col])
 extends ColTensor1Op[Value] {
 
+
   override def value = {
     val mv = a.value;
     val vv = b.value;
@@ -126,17 +128,7 @@ extends ColTensor1Op[Value] {
     val domain = mv.domain._1;
     (rv, mv, vv) match {
       case (rdv: DenseVector, dm: DenseMatrix, dv: DenseVector) =>
-      var i = 0
-      while (i < rv.size) {
-        var j = 0
-        var result = 0d
-        while (j < dm.cols) {
-          result += dm(i, j) * dv(j)
-          j += 1
-        }
-        rdv(i) = result;
-        i += 1;
-      }
+      Matrices.matrixVectorProduct(dm, dv, rdv)
       case _ =>
         for (i <- domain) {
           rv(i) = mv.getRow(i) dot vv;

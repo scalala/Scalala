@@ -6,6 +6,8 @@ class Project(info: ProjectInfo) extends ProguardProject(info) {
   val scalanlpRepo = "Scala NLP" at "http://repo.scalanlp.org/repo/"
   val ondexRepo = "ondex" at "http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public"
   val scalaToolsSnapshots = "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
+  lazy val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
+  val publishTo = "Local Nexus" at "http://localhost:8081/nexus/content/repositories/snapshots" 
 
   val Mtj = "mtj" % "mtj" % "0.9.9" 
   val Jcommon = "jfree" % "jcommon" % "1.0.12" 
