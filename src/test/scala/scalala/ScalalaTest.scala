@@ -21,36 +21,25 @@ package scalala;
 
 import org.scalatest._;
 import org.scalatest.prop._;
-import org.scalacheck._;
-
-import scalala.library.Operators
-import scalala.library.Random
-import scalala.tensor.dense._;
 
 /**
  * Scalala specific test support, extending ScalaTest.
  * 
  * @author dramage
  */
-trait ScalalaTest extends FunSuite with Checkers with Random with Operators {
+trait ScalalaTest extends FunSuite with Checkers {
   import ScalalaTest._;
   import collection.PartialMap;
 
   def assertEquals[V1,V2](v1 : =>V1, v2 : =>V2) : Unit =
     if (v1 != v2) throw new TestFailedException(v1 + "!=" + v2);
-
-  /**
-   * Actually returns true or throws.
-   */
-  def assertEquals(v1 : =>Double, v2 : =>Double, tolerance : Double) : Boolean =
-     (math.abs(v1 - v2) < tolerance) || {throw new TestFailedException(v1 + "!=" + v2)};
   
-  /**
-   * Actually returns true or throws.
-   */
-  def assertEquals[I](v1 : PartialMap[I,Double], v2 : PartialMap[I,Double], tolerance : Double) : Boolean =
-     (!((v1 join v2)((a:Double,b:Double) => math.abs(a - b) < tolerance).valuesIterator.contains(false))
-      || {throw new TestFailedException(v1 + "!=" + v2)});
+  def assertEquals(v1 : =>Double, v2 : =>Double, tolerance : Double) : Unit =
+    if (math.abs(v1 - v2) > tolerance) throw new TestFailedException(v1 + "!=" + v2);
+  
+  def assertEquals[I](v1 : PartialMap[I,Double], v2 : PartialMap[I,Double], tolerance : Double) : Unit =
+    if ((v1 join v2)((a:Double,b:Double) => math.abs(a - b) < tolerance).valuesIterator.contains(false))
+      throw new TestFailedException(v1 + "!=" + v2);
 
   /** Expects the exception named in the type arg to be thrown. */
   def assertThrows[T <: AnyRef](func : => Any)(implicit manifest : scala.reflect.Manifest[T]) : T = {
@@ -66,21 +55,6 @@ trait ScalalaTest extends FunSuite with Checkers with Random with Operators {
         die();
     }
     // threw the right thing.  return without issue.
-  }
-
-  implicit val arbDenseMatrix: Arbitrary[DenseMatrix] = Arbitrary {
-    for {
-      n <- Arbitrary.arbitrary[Int].map(_.abs % 100) if n > 0;
-      m <- Arbitrary.arbitrary[Int].map(_.abs % 100) if m > 0;
-      scale <- Arbitrary.arbitrary[Double]
-    } yield (randn(m,n) * scale) value;
-  }
-
-  implicit val arbDenseVector: Arbitrary[DenseVector] = Arbitrary {
-    for {
-      n <- Arbitrary.arbitrary[Int].map(_.abs % 1000);
-      scale <- Arbitrary.arbitrary[Double]
-    } yield (randn(n) * scale) value;
   }
 }
 

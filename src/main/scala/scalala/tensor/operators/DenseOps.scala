@@ -89,6 +89,10 @@ trait DenseMatrixOps {
     def makeTranspose(op: Tensor2Op[DenseMatrix]) = DenseMatrixTransOp(op);
   }
 
+  implicit val dmCholesky = new CholeskyDecomposer[DenseMatrix,DenseMatrix] {
+    def decompose(op: Tensor2Op[DenseMatrix]) = DenseCholeskyDecomposition[DenseMatrix](op);
+  }
+
   implicit val dmPower = new TensorPower[DenseMatrix,DenseMatrix] {
     def power(op: Tensor2Op[DenseMatrix], scale:Double) = DenseMatrixPower(op,scale);
   }
@@ -148,6 +152,63 @@ extends MatrixOp[DenseMatrix] {
   }
 }
 
+
+case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M]) 
+    extends TensorReferenceOp[M,Shape2](m) {
+  
+  override lazy val value = {
+    val r = m.working;
+    val (rows,cols) = r.dimensions;
+    require(rows == cols, "Matrix is not square!");
+
+    scalala.tensor.dense.Numerics.lapack.potrf("L", rows, r.data);
+    // Now zero out the rest.
+    for(k <- 1 until cols) {
+      java.util.Arrays.fill(r.data, k * rows, k * rows + k,0.0);
+    }
+    
+    r;
+  }
+}
+
+/*
+// Based on "Efficient Cholesky" http://www.maths.ed.ac.uk/~s0455378/EfficientCholesky.pdf
+// Returns a lower triangular "square root" of this matrix
+// http://www.hpjava.org/papers/HPJava/HPJava/node33.html
+case class DenseCholeskyDecomposition[M<:DenseMatrix](m: DenseMatrixOp[M]) 
+    extends TensorReferenceOp[M,Shape2](m) {
+  
+  override lazy val value = {
+    val r = m.working;
+    val (rows,cols) = r.dimensions;
+    require(rows == cols, "Matrix is not square!");
+    for(i <- 0 until cols) {
+      // divide rows i+1 to rows by r(i,i);
+
+      // make lower triangular:
+      for(k <- i+1 until cols) {
+        r(i,k) = 0.0;
+      }
+
+      r(i,i) = math.sqrt(r(i,i));
+
+      for(k <- i+1 until rows) {
+        r(k,i) /= r(i,i);
+      }
+
+      for(j <- i+1 until cols;
+          // col j := col j - r(j,i) * r(k,i)
+          k <- j until rows) {
+        r(k,j) -= r(j,i) * r(k,i);
+      }
+    }
+
+    r;
+  }
+}
+*/
+
+/** Matrix solve vector, like matlab's "\", uses DenseMatrixSolveDenseMatrix. */
 case class DenseMatrixPower
 (m : DenseMatrixOp[DenseMatrix], p : Double)
 extends DenseMatrixOp[DenseMatrix] {
@@ -204,7 +265,7 @@ extends TensorReferenceOp[DenseMatrix,Shape2](a) {
     val cols = domain._2.size;
 
     // from MTJ 0.9.9
-    if (aWorking.rows == aWorking.cols) { // square?
+    if (aWorking.domain._1 == aWorking.domain._2) { // square?
       // LUSolve
       val _A = aWorking; // will be overwritten
       val _B : DenseMatrix = b.value;   // won't be overwritten
