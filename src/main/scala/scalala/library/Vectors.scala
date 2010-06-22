@@ -94,6 +94,9 @@ trait Vectors extends Library with PartialMaps with Operators {
   /** Log each element of a vector or matrix */
   def log[I](v : PartialMap[I,Double]) = v.map(math.log _);
 
+  /** Exp each element of a vector or matrix */
+  def exp[I](v : PartialMap[I,Double]) = v.map(math.exp _);
+
   import TensorShapes._;
   def sqrt[V<:Vector with TensorSelfOp[Int,V,Shape1Col]](vec: V):V = {
     val r : V = (vec:TensorSelfOp[Int,V,Shape1Col]).like;
