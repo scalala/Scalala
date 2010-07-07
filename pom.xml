@@ -197,7 +197,7 @@
           <args>
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
-            <arg>-no-specialization</arg>
+            <!-- <arg>-no-specialization</arg> -->
           </args>
           <jvmArgs>
             <jvmArg>-Xmx1G</jvmArg>
