@@ -38,7 +38,8 @@ object ScalalaConsole {
 
     val method = Class.forName("scala.tools.nsc.MainGenericRunner").getMethod(
       "main", classOf[Array[String]]);
-    val aurg : Array[String] = (Array[String]("-i",file.toString,"-classpath",System.getProperty("java.class.path"))++args)
+    // TODO: remove -no-specialization after https://lampsvn.epfl.ch/trac/scala/ticket/3650 is fixed
+    val aurg : Array[String] = (Array[String]("-i",file.toString,"-classpath",System.getProperty("java.class.path"),"-no-specialization")++args)
     method.invoke(null, aurg:AnyRef);
     exit(0);
   }
