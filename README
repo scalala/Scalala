@@ -6,9 +6,9 @@ numerical routines; support for plotting.
 (c) Daniel Ramage 2009-
 
 This project can be built with maven:
-  mvn compile
+  mvn clean compile
+  mvn assembly:assembly
 
 To run an interactive console:
-  mvn assembly:assembly
-  scala -jar target/scalala*-jar-with-dependencies.jar
+  java -jar target/scalala*-jar-with-dependencies.jar
 
