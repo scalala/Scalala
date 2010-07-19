@@ -182,6 +182,13 @@
             </configuration>
           </execution>
           <execution>
+            <id>doc-scala</id>
+            <phase>doc</phase>
+            <configuration>
+               <excludes>src/test/scala</excludes>
+            </configuration>
+          </execution>
+          <execution>
             <id>test-compile-scala</id>
             <goals>
               <goal>testCompile</goal>
@@ -301,7 +308,7 @@
         <version>2.10</version>
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
-          <sourceDir>src/</sourceDir>
+          <sourceDir>src/main/</sourceDir>
         </configuration>
       </plugin>
     </plugins>
