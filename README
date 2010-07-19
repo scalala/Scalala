@@ -9,6 +9,12 @@ This project can be built with maven:
   mvn clean compile
   mvn assembly:assembly
 
+Scaladoc for the public API can be built with:
+  mvn scala:doc
+
+For project maintainers, the project can be deployed with:
+  mvn source:jar deploy
+
 To run an interactive console:
   java -jar target/scalala*-jar-with-dependencies.jar
 
