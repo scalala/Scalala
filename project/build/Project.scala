@@ -11,12 +11,13 @@ class Project(info: ProjectInfo) extends ProguardProject(info) {
 
   val Mtj = "mtj" % "mtj" % "0.9.9" 
   val Jcommon = "jfree" % "jcommon" % "1.0.12" 
-  val Jfreechart = "jfree" % "jfreechart" % "1.0.9" 
+  val Jline = "jline" % "jline" % "0.9.94"
+  val Jfreechart = "jfree" % "jfreechart" % "1.0.9"
   val XmlgraphicsCommons = "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1" 
   val Fastutil = "fastutil" % "fastutil" % "5.1.5" 
   val Itext = "com.lowagie" % "itext" % "2.1.5" intransitive()
   val Scalacheck = "org.scala-tools.testing" %% "scalacheck" % "1.7" % "test"
-  val Scalatest = "org.scalatest" % "scalatest" % "1.2-for-scala-2.8.0.RC2-SNAPSHOT" % "test"
+  val Scalatest = "org.scalatest" % "scalatest" % "1.2-for-scala-2.8.0.RC6-SNAPSHOT" % "test"
   val Junit = "junit" % "junit" % "4.5" % "test"
 
   override def compileOptions = Optimise :: Deprecation :: target(Target.Java1_5) :: Unchecked :: super.compileOptions.toList
