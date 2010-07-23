@@ -21,5 +21,5 @@ export CLASSPATH=$JAR
 #  export CP=$CP:$SCALA_HOME/lib/jline.jar
 #fi
 
-scala scalala.ScalalaConsole
+java -jar $JAR
 
