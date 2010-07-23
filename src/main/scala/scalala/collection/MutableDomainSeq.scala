@@ -28,7 +28,8 @@ import generic._;
  *
  * @author dramage.
  */
-trait MutableDomainSeqLike[@specialized B,+Repr<:MutableDomainSeq[B]]
+trait MutableDomainSeqLike
+[@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:MutableDomainSeq[B]]
 extends DomainSeqLike[B,Repr] with MutableDomainMapLike[Int,B,IndexDomain,Repr] {
 
   def := (seq : Seq[B]) = {
@@ -51,12 +52,12 @@ extends DomainSeqLike[B,Repr] with MutableDomainMapLike[Int,B,IndexDomain,Repr] 
   private def quickSort[K](off: Int, len: Int)(implicit ord: Ordering[B]) {
     import ord._
     val x = this;
-    def swap(a: Int, b: Int) {
+    @inline def swap(a: Int, b: Int) {
       val t = x(a)
       x(a) = x(b)
       x(b) = t
     }
-    def vecswap(_a: Int, _b: Int, n: Int) {
+    @inline def vecswap(_a: Int, _b: Int, n: Int) {
       var a = _a
       var b = _b
       var i = 0
@@ -67,14 +68,14 @@ extends DomainSeqLike[B,Repr] with MutableDomainMapLike[Int,B,IndexDomain,Repr] 
         b += 1
       }
     }
-    def med3(a: Int, b: Int, c: Int) = {
+    @inline def med3(a: Int, b: Int, c: Int) = {
       if (x(a) < x(b)) {
         if (x(b) < x(c)) b else if (x(a) < x(c)) c else a
       } else {
         if (x(b) > x(c)) b else if (x(a) > x(c)) c else a
       }
     }
-    def sort2(off: Int, len: Int) {
+    @inline def sort2(off: Int, len: Int) {
       // Insertion sort on smallest arrays
       if (len < 7) {
         var i = off
@@ -155,7 +156,7 @@ extends DomainSeqLike[B,Repr] with MutableDomainMapLike[Int,B,IndexDomain,Repr] 
 /**
  * MutableDomainMap that is also a DomainSeq.
  */
-trait MutableDomainSeq[@specialized B]
+trait MutableDomainSeq[@specialized(Int,Long,Float,Double,Boolean) B]
 extends DomainSeq[B] with MutableDomainMap[Int,B,IndexDomain]
 with MutableDomainSeqLike[B,MutableDomainSeq[B]];
 

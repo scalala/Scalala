@@ -34,7 +34,8 @@ class DomainMap2Test extends FunSuite with Checkers {
     val domain = new Product2Domain[String,Int,SetDomain[String],SetDomain[Int]](
       SetDomain("a","b","c"), SetDomain(1,2));
     MutableDomainMap2[String,Int,Double,SetDomain[String],SetDomain[Int],
-                      Product2Domain[String,Int,SetDomain[String],SetDomain[Int]]](
+                      Product2Domain[String,Int,SetDomain[String],SetDomain[Int]],
+                      Product2Domain[Int,String,SetDomain[Int],SetDomain[String]]](
       domain, 0.0);
   }
 

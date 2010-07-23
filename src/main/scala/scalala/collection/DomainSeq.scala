@@ -29,7 +29,8 @@ import generic._;
  *
  * @author dramage
  */
-trait DomainSeqLike[@specialized B, +Repr<:DomainSeq[B]]
+trait DomainSeqLike
+[@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:DomainSeq[B]]
 extends DomainMapLike[Int, B, IndexDomain, Repr] {
 
   def size = domain.size;
@@ -53,5 +54,5 @@ extends DomainMapLike[Int, B, IndexDomain, Repr] {
  *
  * @author dramage
  */
-trait DomainSeq[@specialized B]
+trait DomainSeq[@specialized(Int,Long,Float,Double,Boolean) B]
 extends DomainMap[Int,B,IndexDomain] with DomainSeqLike[B,DomainSeq[B]];

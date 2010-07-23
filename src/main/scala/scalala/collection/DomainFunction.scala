@@ -21,7 +21,6 @@ package scalala;
 package collection;
 
 import domain._;
-import generic._;
 
 /**
  * A function over a Domain of elements of type A returning values
@@ -31,8 +30,8 @@ import generic._;
  * @author dramage
  */
 trait DomainFunction
-[@specialized(scala.Int, scala.Long, scala.Float, scala.Double) A,
- @specialized(scala.Int, scala.Long, scala.Float, scala.Double, scala.Boolean) +B,
+[@specialized(Int,Long,Float,Double) A,
+ @specialized(Int,Long,Float,Double,Boolean) +B,
  D <: Domain[A]]
 extends PartialFunction[A, B] {
   

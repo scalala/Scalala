@@ -21,7 +21,7 @@ package scalala;
 package collection.dense
 
 import collection.{MutableDomainMapLike,MutableDomainMap};
-import collection.domain.IterableDomain;
+import collection.domain.{DomainLike,IterableDomain};
 
 /**
  * Implementation trait for a MutableDomainMap backed by a dense array of values.
@@ -29,7 +29,9 @@ import collection.domain.IterableDomain;
  * @author dramage
  */
 trait DenseMutableDomainMapLike
-[@specialized A, @specialized B, D<:IterableDomain[A], +This<:DenseMutableDomainMap[A,B,D]]
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+ D<:IterableDomain[A] with DomainLike[A,D],
+ +This<:DenseMutableDomainMap[A,B,D]]
 extends MutableDomainMapLike[A,B,D,This] {
   def data : Array[B];
 
@@ -57,6 +59,8 @@ extends MutableDomainMapLike[A,B,D,This] {
  *
  * @author dramage
  */
-trait DenseMutableDomainMap[@specialized A, @specialized B, D<:IterableDomain[A]]
+trait DenseMutableDomainMap
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+ D<:IterableDomain[A] with DomainLike[A,D]]
 extends MutableDomainMap[A,B,D]
 with DenseMutableDomainMapLike[A,B,D,DenseMutableDomainMap[A,B,D]];

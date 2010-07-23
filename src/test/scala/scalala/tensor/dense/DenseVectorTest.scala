@@ -32,7 +32,7 @@ class DenseVectorTest extends FunSuite with Checkers {
 
   val TOLERANCE = 1e-4;
   def assertClose(a : Double, b : Double) =
-    assert(Math.abs(a - b) < TOLERANCE);
+    assert(math.abs(a - b) < TOLERANCE);
 
   test("Norm") {
     val v = DenseVector(5)(-0.4326,-1.6656,0.1253,0.2877,-1.1465);

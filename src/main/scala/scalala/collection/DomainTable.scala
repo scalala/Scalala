@@ -29,8 +29,8 @@ import generic._;
  *
  * @author dramage
  */
-trait DomainTableLike[@specialized B, +Repr<:DomainTable[B]]
-extends DomainMap2Like[Int, Int, B, IndexDomain, IndexDomain, TableDomain, Repr] {
+trait DomainTableLike[@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:DomainTable[B]]
+extends DomainMap2Like[Int, Int, B, IndexDomain, IndexDomain, TableDomain, TableDomain, Repr] {
 
   /** Number of rows in this table. */
   def numRows : Int = domain.numRows;
@@ -83,6 +83,6 @@ extends DomainMap2Like[Int, Int, B, IndexDomain, IndexDomain, TableDomain, Repr]
  *
  * @author dramage
  */
-trait DomainTable[@specialized B]
-extends DomainMap2[Int,Int,B,IndexDomain,IndexDomain,TableDomain]
+trait DomainTable[@specialized(Int,Long,Float,Double,Boolean) B]
+extends DomainMap2[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain]
 with DomainTableLike[B, DomainTable[B]];

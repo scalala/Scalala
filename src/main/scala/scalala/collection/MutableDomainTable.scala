@@ -28,16 +28,18 @@ import generic._;
  *
  * @author dramage
  */
-trait MutableDomainTableLike[@specialized B, +This<:MutableDomainTable[B]]
+trait MutableDomainTableLike
+[@specialized(Int,Long,Float,Double,Boolean) B, +This<:MutableDomainTable[B]]
 extends DomainTableLike[B,This]
-with MutableDomainMap2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,This];
+with MutableDomainMap2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,This];
 
 /**
  * MutableDomainMap that is also a DomainTable.
  *
  * @author dramage
  */
-trait MutableDomainTable[@specialized B]
+trait MutableDomainTable
+[@specialized(Int,Long,Float,Double,Boolean) B]
 extends DomainTable[B]
-with MutableDomainMap2[Int,Int,B,IndexDomain,IndexDomain,TableDomain]
+with MutableDomainMap2[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain]
 with MutableDomainTableLike[B,MutableDomainTable[B]];

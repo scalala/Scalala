@@ -29,29 +29,31 @@ import collection.domain._;
  *
  * @author dramage
  */
-trait Tensor1Like[A,D<:IterableDomain[A],+This<:Tensor1[A,D]]
+trait Tensor1Like
+[@specialized(Int,Long)A, D<:IterableDomain[A] with DomainLike[A,D],
+ +This<:Tensor1[A,D]]
 extends TensorLike[A,D,This] {
   /** Returns the k-norm of this tensor.  Calls scalala.Scalala.norm(this). */
   def norm(n : Double) : Double = {
     if (n == 1) {
       var sum = 0.0;
-      valuesIterator.foreach(v => sum += Math.abs(v));
+      valuesIterator.foreach(v => sum += math.abs(v));
       return sum;
     } else if (n == 2) {
       var sum = 0.0;
       valuesIterator.foreach(v => sum += v * v);
-      return Math.sqrt(sum);
+      return math.sqrt(sum);
     } else if (n % 2 == 0) {
       var sum = 0.0;
-      valuesIterator.foreach(v => sum += Math.pow(v,n));
-      return Math.pow(sum, 1.0 / n);
+      valuesIterator.foreach(v => sum += math.pow(v,n));
+      return math.pow(sum, 1.0 / n);
     } else if (n % 2 == 1) {
       var sum = 0.0;
-      valuesIterator.foreach(v => sum += Math.pow(Math.abs(v),n));
-      return Math.pow(sum, 1.0 / n);
+      valuesIterator.foreach(v => sum += math.pow(math.abs(v),n));
+      return math.pow(sum, 1.0 / n);
     } else if (n == Double.PositiveInfinity) {
-      var max = 0.0;
-      valuesIterator.foreach(v => { val av = Math.abs(v); if (av > max) max = av; });
+      var max = Double.NegativeInfinity;
+      valuesIterator.foreach(v => { val av = math.abs(v); if (av > max) max = av; });
       return max;
     } else {
       throw new UnsupportedOperationException();
@@ -73,5 +75,6 @@ extends TensorLike[A,D,This] {
  *
  * @author dramage
  */
-trait Tensor1[A,D<:IterableDomain[A]]
+trait Tensor1
+[@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D]]
 extends Tensor[A,D] with Tensor1Like[A,D,Tensor1[A,D]];

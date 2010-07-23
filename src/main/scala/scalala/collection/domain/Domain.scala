@@ -20,7 +20,8 @@
 package scalala.collection.domain;
 
 import scala.collection.IterableLike;
-import scala.collection.{SetProxy,SetProxyLike};
+import scala.collection.mutable.Builder;
+import scala.collection.generic._;
 
 /**
  * Implementation trait for domains of a DomainFunction, representing
@@ -28,13 +29,11 @@ import scala.collection.{SetProxy,SetProxyLike};
  *
  * @author dramage
  */
-trait DomainLike[@specialized(scala.Int, scala.Long, scala.Double) A, +This<:DomainLike[A,This]]
+trait DomainLike[@specialized(Int,Long,Float,Double) A, +This<:DomainLike[A,This]]
 extends (A => Boolean) {
 
-  type Self = This;
-  
   /** Returns a shallow copy of this domain. For immutable domains, may return this. */
-  def copy : Self;
+  def copy : This;
 
   /** Calls contains(key). */
   final override def apply(key : A) = contains(key);
@@ -48,52 +47,8 @@ extends (A => Boolean) {
  *
  * @author dramage
  */
-trait Domain[@specialized(scala.Int, scala.Long, scala.Double) A]
+trait Domain[@specialized(Int,Long,Float,Double) A]
 extends DomainLike[A, Domain[A]];
-
-//extends (A => Boolean) {
-//
-//  /** Returns true if this domain can be iterated. */
-//  def isIterable : Boolean;
-//
-//  /** Returns true if this domain is finite. */
-//  def isFinite : Boolean;
-//
-//  /** Returns true if an ordering is defined for the domain. */
-//  def isOrdered : Boolean;
-//
-//  /** Returns true if this set is empty. */
-//  def isEmpty : Boolean;
-//}
-
-///**
-// * Domain of all instance of type A.
-// *
-// * @author dramage
-// */
-//trait TypeDomain[@specialized A] extends Domain[A] {
-//  override def isIterable = false;
-//  override def isFinite = false;
-//  override def isOrdered = false;
-//  override def isEmpty = false;
-//  override def contains(key : A) = true;
-//}
-//
-///** Builder for a domain over the given types */
-//trait CanBuildTypeDomain[@specialized A, +D] {
-//  def domain : D;
-//}
-//
-///** Constructors for CanBuildTypeDomain instances. */
-//object CanBuildTypeDomain {
-//  implicit val canBuildDoubleDomain = new CanBuildTypeDomain[Double,RealDomain] {
-//    override def domain = new RealDomain();
-//  }
-//
-//  implicit def canBuildGenericDomain[@specialized A] = new CanBuildTypeDomain[A,TypeDomain[A]] {
-//    override def domain = new TypeDomain[A] {}
-//  }
-//}
 
 
 /**
@@ -101,169 +56,83 @@ extends DomainLike[A, Domain[A]];
  *
  * @author dramage
  */
-trait IterableDomainLike[@specialized(scala.Int, scala.Long) A, +This<:IterableDomainLike[A,This]]
-extends DomainLike[A,This] with IterableLike[A,This];
+trait IterableDomainLike[@specialized(Int,Long) A, +This<:IterableDomainLike[A,This]]
+extends DomainLike[A,This] with IterableLike[A,This]
 
 /**
  * A domain that can be traversed.
  *
  * @author dramage
  */
-trait IterableDomain[@specialized(scala.Int, scala.Long) A]
+trait IterableDomain[@specialized(Int,Long) A]
 extends Domain[A] with Iterable[A]
-with IterableDomainLike[A,IterableDomain[A]];
+with GenericTraversableTemplate[A,IterableDomain]
+with IterableDomainLike[A,IterableDomain[A]] {
+  override def companion : GenericCompanion[IterableDomain] = IterableDomain;
+}
 
-///**
-// * A domain on elements for which an ordering is defined.
-// *
-// * @author dramage
-// */
-//trait OrderedDomain[@specialized A] extends Domain[A] {
-//  final override def isOrdered = true;
-//
-//  /** Returns an ordering on the values of this domain. */
-//  def ordering : Ordering[A];
-//
-//  /** Returns true if this domain is bounded from below. */
-//  def isLowerBounded : Boolean;
-//
-//  /** Returns true if this domain is bounded from above. */
-//  def isUpperBounded : Boolean;
-//
-//  /** The domain is bounded if it is both upper and lower bounded */
-//  def isBounded =
-//    isLowerBounded && isUpperBounded;
-//}
+object IterableDomain extends TraversableFactory[IterableDomain] {
+  /** $genericCanBuildFromInfo */
+  implicit def canBuildFrom[A]: CanBuildFrom[Coll, A, IterableDomain[A]] =
+    new GenericCanBuildFrom[A]
 
-///**
-// * The domain of real numbers, bounded by min and max, both inclusive.
-// * By default, min is Double.NegativeInfinity and max is
-// * Double.PositiveInfinity.
-// *
-// * @author dramage
-// */
-//class RealDomain(_min : Double, _max : Double)
-//extends TypeDomain[Double] with OrderedDomain[Double] {
-//
-//  def this() = this(Double.NegativeInfinity, Double.PositiveInfinity);
-//
-//  /** Minimum of the domain (inclusive) */
-//  def min : Double = _min;
-//
-//  /** Maximum of the domain (inclusive) */
-//  def max : Double = _max;
-//
-//  final override def ordering =
-//    Ordering.Double;
-//
-//  final override def contains(key : Double) =
-//    key >= min && key <= max;
-//
-//  final override def isIterable = false;
-//
-//  final override def isFinite = false;
-//
-//  final override def isLowerBounded =
-//    !min.isNegInfinity;
-//
-//  final override def isUpperBounded =
-//    !max.isPosInfinity;
-//
-//  final override def isEmpty =
-//    min > max;
-//
-//  override def toString() =
-//    "RealDomain("+_min+","+_max+")";
-//}
-
-///**
-// * The domain of integers as represented by Int, bounded by min and max,
-// * both inclusive.
-// *
-// * @author dramage
-// */
-//trait IntDomain extends OrderedDomain[Int] with IterableDomain[Int] {
-//
-//  /** Minimum of the range (inclusive) */
-//  def min : Int;
-//
-//  /** Maximum of the range (inclusive) */
-//  def max : Int;
-//
-//  override def isFinite =
-//    true;
-//
-//  override def ordering =
-//    Ordering.Int;
-//
-//  override def contains(key : Int) =
-//    key >= min && key <= max;
-//
-//  override def isLowerBounded =
-//    true;
-//
-//  override def isUpperBounded =
-//    true;
-//
-//  override def iterator =
-//    Range.inclusive(min, max).iterator;
-//
-//  override def isEmpty =
-//    min > max;
-//}
+  override def newBuilder[A]: Builder[A, IterableDomain[A]] =
+    SetDomain.newBuilder;
+}
 
 /**
  * The domain of elements from a specific set.
  *
  * @author dramage
  */
-class SetDomain[@specialized(scala.Int, scala.Long) A](set : scala.collection.Set[A])
-extends SetProxy[A] with IterableDomain[A] with IterableDomainLike[A,SetDomain[A]] {
-  
-  override def self = set;
-//  override def isFinite = true;
-//  override def isOrdered = false;
+class SetDomain[@specialized(Int,Long) A](set : scala.collection.Set[A])
+extends IterableDomain[A]
+with GenericTraversableTemplate[A,SetDomain]
+with IterableDomainLike[A,SetDomain[A]] {
 
-//  override def apply(key : A) : Boolean =
-//    self.apply(key);
+  override def companion : GenericCompanion[SetDomain] = SetDomain;
 
   override def copy = new SetDomain(Set() ++ set);
 
-  override def contains(key : A) : Boolean =
-    self.contains(key);
+  override def iterator =
+    set.iterator;
 
-  override def - (value : A) = throw new UnsupportedOperationException();
-  override def + (value : A) = throw new UnsupportedOperationException();
+  override def contains(key : A) : Boolean =
+    set.contains(key);
 }
 
-object SetDomain {
-  def apply[@specialized(scala.Int, scala.Long) A](values : A*) =
-    new SetDomain(values.toSet);
+object SetDomain extends TraversableFactory[SetDomain] {
+  /** $genericCanBuildFromInfo */
+  implicit def canBuildFrom[A]: CanBuildFrom[Coll, A, SetDomain[A]] =
+    new GenericCanBuildFrom[A];
+
+  override def newBuilder[A]: Builder[A, SetDomain[A]] =
+    scala.collection.immutable.Set.newBuilder[A].mapResult(s => new SetDomain[A](s));
 }
 
 /**
  * The domain of indices: ints starting from 0 up to a bounded size.
  *
- * TODO: rename to SeqDomain.
- *
  * @author dramage
  */
 case class IndexDomain(override val size : Int)
-extends IterableDomain[Int] with IterableDomainLike[Int,IndexDomain] {
+extends IterableDomain[Int] with DomainLike[Int,IndexDomain] {
+  override def contains(key : Int) =
+    key >= 0 && key < size;
+
   override def copy = this;
 
   override def iterator =
-    Range.inclusive(0, size - 1).iterator;
+    Iterator.range(0, size);
 }
 
 trait Product2DomainLike
-[@specialized(scala.Int, scala.Long) A1,
- @specialized(scala.Int, scala.Long) A2,
- D1 <: IterableDomainLike[A1,D1],
- D2 <: IterableDomainLike[A2,D2],
+[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
+ D1 <: IterableDomain[A1] with DomainLike[A1,D1],
+ D2 <: IterableDomain[A2] with DomainLike[A2,D2],
  +Transpose <: Product2DomainLike[A2,A1,D2,D1,This,Transpose],
  +This <: Product2DomainLike[A1,A2,D1,D2,Transpose,This]]
-extends IterableDomainLike[(A1,A2),This] {
+extends IterableDomain[(A1,A2)] with DomainLike[(A1,A2),This] {
   /** Row-space domain. */
   def _1 : D1;
 
@@ -277,9 +146,13 @@ extends IterableDomainLike[(A1,A2),This] {
   override def iterator =
     for (k1 <- _1.iterator; k2 <- _2.iterator) yield (k1,k2);
 
-  /** Returns true if tup._1 is in the row space and tup._2 is in the col space. */
-  override def contains(tup : (A1,A2)) =
-    _1.contains(tup._1) && _2.contains(tup._2);
+  /** Returns true if a1 is in the row space and a2 is in the col space. */
+  def contains(a1 : A1, a2 : A2) =
+    _1.contains(a1) && _2.contains(a2);
+
+  /** Defers to contains(tup._1, tup._2). */
+  final override def contains(tup : (A1,A2)) =
+    contains(tup._1, tup._2);
 }
 
 /**
@@ -288,11 +161,11 @@ extends IterableDomainLike[(A1,A2),This] {
  * @author dramage
  */
 class Product2Domain
-[@specialized(scala.Int, scala.Long) A1,
- @specialized(scala.Int, scala.Long) A2,
- D1 <: IterableDomainLike[A1,D1], D2 <: IterableDomainLike[A2,D2]]
+[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
+ D1 <: IterableDomain[A1] with DomainLike[A1,D1],
+ D2 <: IterableDomain[A2] with DomainLike[A2,D2]]
 (override val _1 : D1, override val _2 : D2)
-extends Product2[D1,D2] with IterableDomain[(A1,A2)]
+extends Product2[D1,D2]
 with Product2DomainLike[A1,A2,D1,D2,Product2Domain[A2,A1,D2,D1],Product2Domain[A1,A2,D1,D2]] {
 
   def copy =
@@ -300,10 +173,6 @@ with Product2DomainLike[A1,A2,D1,D2,Product2Domain[A2,A1,D2,D1],Product2Domain[A
 
   def transpose =
     new Product2Domain[A2,A1,D2,D1](_2,_1);
-
-//  override def isFinite = _1.isFinite && _2.isFinite;
-//
-//  override def isOrdered = _1.isOrdered && _2.isOrdered;
 
   override def toString =
     "Product2Domain("+_1.toString+","+_2.toString+")";
@@ -315,8 +184,12 @@ with Product2DomainLike[A1,A2,D1,D2,Product2Domain[A2,A1,D2,D1],Product2Domain[A
  * @author dramage
  */
 case class TableDomain(numRows : Int, numCols : Int)
-extends Product2Domain[Int,Int,IndexDomain,IndexDomain](IndexDomain(numRows), IndexDomain(numCols))
+extends Product2[IndexDomain,IndexDomain]
 with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain] {
+
+  override val _1 : IndexDomain = IndexDomain(numRows);
+  
+  override val _2 : IndexDomain = IndexDomain(numCols);
 
   override def copy = this;
 

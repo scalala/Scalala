@@ -31,9 +31,9 @@ import generic._;
  * @author dramage
  */
 trait MutableDomainMapSliceLike
-[@specialized A1, D1<:IterableDomain[A1],
- @specialized A2, D2<:IterableDomain[A2],
- @specialized B, +Coll <: MutableDomainMap[A1, B, D1],
+[@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ @specialized(Int,Long) A2, D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ @specialized(Int,Long,Float,Double,Boolean) B, +Coll <: MutableDomainMap[A1, B, D1],
  +This <: MutableDomainMapSlice[A1, D1, A2, D2, B, Coll]]
 extends MutableDomainMapLike[A2,B,D2,This]
 with DomainMapSliceLike[A1,D1,A2,D2,B,Coll,This] {
@@ -48,17 +48,18 @@ with DomainMapSliceLike[A1,D1,A2,D2,B,Coll,This] {
  * @author dramage
  */
 trait MutableDomainMapSlice
-[@specialized A1, D1 <: IterableDomain[A1],
- @specialized A2, D2 <: IterableDomain[A2],
- @specialized B, +Coll <: MutableDomainMap[A1, B, D1]]
+[@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ @specialized(Int,Long) A2, D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ @specialized(Int,Long,Float,Double,Boolean) B, +Coll <: MutableDomainMap[A1, B, D1]]
 extends MutableDomainMap[A2,B,D2] with DomainMapSlice[A1,D1,A2,D2,B,Coll]
 with MutableDomainMapSliceLike[A1, D1, A2, D2, B, Coll, MutableDomainMapSlice[A1, D1, A2, D2, B, Coll]];
 
 
 object MutableDomainMapSlice {
   class FromKeyMap
-  [@specialized A1, D1<:IterableDomain[A1], @specialized A2,
-   @specialized B, +Coll<:MutableDomainMap[A1, B, D1]]
+  [@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   @specialized(Int,Long) A2, @specialized(Int,Long,Float,Double,Boolean) B,
+   +Coll<:MutableDomainMap[A1, B, D1]]
   (underlying : Coll, keymap : scala.collection.Map[A2,A1])
   extends DomainMapSlice.FromKeyMap[A1,D1,A2,B,Coll](underlying, keymap)
   with MutableDomainMapSlice[A1,D1,A2,SetDomain[A2],B,Coll];

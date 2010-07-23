@@ -29,11 +29,15 @@ import generic._;
  * @author dramage
  */
 trait MutableDomainMap2Like
-[@specialized A1, @specialized A2, @specialized B,
- D1<:IterableDomain[A1],D2<:IterableDomain[A2],D<:Product2Domain[A1,A2,D1,D2],
- +This <: MutableDomainMap2[A1,A2,B,D1,D2,D]]
+[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+ +This <: MutableDomainMap2[A1,A2,B,D1,D2,D,T]]
 extends MutableDomainMapLike[(A1,A2),B,D,This]
-with DomainMap2Like[A1,A2,B,D1,D2,D,This] {
+with DomainMap2Like[A1,A2,B,D1,D2,D,T,This] {
 
   /** Updates the value indexed by (i,j). */
   def update(i : A1, j : A2, value : B) : Unit;
@@ -49,19 +53,26 @@ with DomainMap2Like[A1,A2,B,D1,D2,D,This] {
  * @author dramage
  */
 trait MutableDomainMap2
-[@specialized A1, @specialized A2, @specialized B,
- D1<:IterableDomain[A1],D2<:IterableDomain[A2],D<:Product2Domain[A1,A2,D1,D2]]
+[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ T<:Product2DomainLike[A2,A1,D2,D1,D,T]]
 extends MutableDomainMap[(A1,A2),B,D]
-with DomainMap2[A1,A2,B,D1,D2,D]
-with MutableDomainMap2Like[A1,A2,B,D1,D2,D,MutableDomainMap2[A1,A2,B,D1,D2,D]];
+with DomainMap2[A1,A2,B,D1,D2,D,T]
+with MutableDomainMap2Like[A1,A2,B,D1,D2,D,T,MutableDomainMap2[A1,A2,B,D1,D2,D,T]];
 
 
 object MutableDomainMap2 {
   def apply
-  [@specialized A1, @specialized A2, @specialized B,
-   D1<:IterableDomain[A1],D2<:IterableDomain[A2], D<:Product2Domain[A1,A2,D1,D2]]
+  [A1, A2, B,
+   D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   D2<:IterableDomain[A2] with DomainLike[A2,D2],
+   D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+   T<:Product2DomainLike[A2,A1,D2,D1,D,T]]
   (domain : D, default : B, map : scala.collection.Map[(A1,A2),B] = new scala.collection.mutable.HashMap[(A1,A2),B]) =
-    new Impl[A1,A2,B,D1,D2,D](map, default, domain);
+    new Impl[A1,A2,B,D1,D2,D,T](map, default, domain);
 
 //  def apply[@specialized A1, @specialized A2, @specialized B]
 //  (values : ((A1,A2),B)*)(implicit default : DefaultValue[B])
@@ -81,10 +92,13 @@ object MutableDomainMap2 {
 //  }
 
   class Impl
-  [@specialized A1, @specialized A2, @specialized B,
-   D1<:IterableDomain[A1],D2<:IterableDomain[A2], D<:Product2Domain[A1,A2,D1,D2]]
+  [A1, A2, B,
+   D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   D2<:IterableDomain[A2] with DomainLike[A2,D2],
+   D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+   T<:Product2DomainLike[A2,A1,D2,D1,D,T]]
   (protected var map : scala.collection.Map[(A1,A2),B], val default : B, override val domain : D)
-  extends MutableDomainMap2[A1,A2,B,D1,D2,D] {
+  extends MutableDomainMap2[A1,A2,B,D1,D2,D,T] {
     override def apply(k1 : A1, k2 : A2) : B = {
       checkKey(k1,k2);
       map.getOrElse((k1,k2),default);
@@ -97,35 +111,42 @@ object MutableDomainMap2 {
   }
 
   implicit def canSliceTableFrom
-  [@specialized A1, @specialized A2, @specialized B,
-   D1<:IterableDomain[A1], D2<:IterableDomain[A2],
-   D<:Product2Domain[A1,A2,D1,D2]] =
+  [A1, A2, B,
+   D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   D2<:IterableDomain[A2] with DomainLike[A2,D2],
+   D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+   T<:Product2DomainLike[A2,A1,D2,D1,D,T]] =
   new DomainMap2CanSliceTableFrom
-  [MutableDomainMap2[A1,A2,B,D1,D2,D],A1,A2,B,D1,D2,D,
-   MutableDomainMap2SliceTable[A1,A2,B,D1,D2,D,MutableDomainMap2[A1,A2,B,D1,D2,D]]] {
-    override def apply(from : MutableDomainMap2[A1,A2,B,D1,D2,D], keys1 : Seq[A1], keys2 : Seq[A2]) =
-      new MutableDomainMap2SliceTable.FromKeySeqs[A1,A2,B,D1,D2,D,MutableDomainMap2[A1,A2,B,D1,D2,D]](from, keys1, keys2);
+  [MutableDomainMap2[A1,A2,B,D1,D2,D,T],A1,A2,B,D1,D2,D,T,
+   MutableDomainMap2SliceTable[A1,A2,B,D1,D2,D,T,MutableDomainMap2[A1,A2,B,D1,D2,D,T]]] {
+    override def apply(from : MutableDomainMap2[A1,A2,B,D1,D2,D,T], keys1 : Seq[A1], keys2 : Seq[A2]) =
+      new MutableDomainMap2SliceTable.FromKeySeqs[A1,A2,B,D1,D2,D,T,MutableDomainMap2[A1,A2,B,D1,D2,D,T]](from, keys1, keys2);
   }
 
   /** Slicing on double-valued maps gives a Matrix. */
   implicit def canSliceMatrixFrom
-  [@specialized A1, @specialized A2, D1<:IterableDomain[A1], D2<:IterableDomain[A2],
-   D<:Product2Domain[A1,A2,D1,D2]] =
+  [A1, A2,
+   D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   D2<:IterableDomain[A2] with DomainLike[A2,D2],
+   D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+   T<:Product2DomainLike[A2,A1,D2,D1,D,T]] =
   new DomainMap2CanSliceTableFrom
-  [MutableDomainMap2[A1,A2,Double,D1,D2,D],A1,A2,Double,D1,D2,D,
-   tensor.Matrix.SliceFromKeySeqs[A1,A2,D1,D2,D,MutableDomainMap2[A1,A2,Double,D1,D2,D]]] {
-    override def apply(from : MutableDomainMap2[A1,A2,Double,D1,D2,D], keys1 : Seq[A1], keys2 : Seq[A2]) =
-      new tensor.Matrix.SliceFromKeySeqs[A1,A2,D1,D2,D,MutableDomainMap2[A1,A2,Double,D1,D2,D]](from, keys1, keys2);
+  [MutableDomainMap2[A1,A2,Double,D1,D2,D,T],A1,A2,Double,D1,D2,D,T,
+   tensor.Matrix.SliceFromKeySeqs[A1,A2,D1,D2,D,T,MutableDomainMap2[A1,A2,Double,D1,D2,D,T]]] {
+    override def apply(from : MutableDomainMap2[A1,A2,Double,D1,D2,D,T], keys1 : Seq[A1], keys2 : Seq[A2]) =
+      new tensor.Matrix.SliceFromKeySeqs[A1,A2,D1,D2,D,T,MutableDomainMap2[A1,A2,Double,D1,D2,D,T]](from, keys1, keys2);
   }
 
   implicit def canTransposeFrom
-  [@specialized A2, @specialized A1, @specialized B,
-   D2<:IterableDomain[A2], D1<:IterableDomain[A1], ID<:Product2Domain[A1,A2,D1,D2]] =
+  [A2, A1, B,
+   D2<:IterableDomain[A2] with DomainLike[A2,D2],
+   D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+   D<:Product2DomainLike[A1,A2,D1,D2,T,D]] =
   new DomainMap2CanTransposeFrom
-  [MutableDomainMap2[A1,A2,B,D1,D2,ID],A1,A2,B,D1,D2,ID,
-   MutableDomainMap2Transpose[A2,A1,B,D2,D1,ID,Product2Domain[A2,A1,D2,D1],MutableDomainMap2[A1,A2,B,D1,D2,ID]]] {
-    override def apply(input : MutableDomainMap2[A1,A2,B,D1,D2,ID]) =
-      new MutableDomainMap2Transpose.Impl[A2,A1,B,D2,D1,ID,Product2Domain[A2,A1,D2,D1],MutableDomainMap2[A1,A2,B,D1,D2,ID]](
-        input, input.domain.transpose);
+  [MutableDomainMap2[A1,A2,B,D1,D2,D,T],A1,A2,B,D1,D2,D,T,
+   MutableDomainMap2Transpose[A2,A1,B,D2,D1,T,D,MutableDomainMap2[A1,A2,B,D1,D2,D,T]]] {
+    override def apply(input : MutableDomainMap2[A1,A2,B,D1,D2,D,T]) =
+      new MutableDomainMap2Transpose.Impl[A2,A1,B,D2,D1,T,D,MutableDomainMap2[A1,A2,B,D1,D2,D,T]](input);
   }
 }

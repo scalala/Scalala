@@ -30,8 +30,10 @@ import generic._;
  * @author dramage
  */
 trait MutablePartialDomainMapLike
-[@specialized A, @specialized B, D <: IterableDomain[A],
- ActiveDomain <: IterableDomain[A], Active <: MutableDomainMap[A,B,ActiveDomain],
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+ D <: IterableDomain[A] with DomainLike[A,D],
+ ActiveDomain <: IterableDomain[A] with DomainLike[A,ActiveDomain],
+ Active <: MutableDomainMap[A,B,ActiveDomain],
  +This<:MutablePartialDomainMap[A,B,D,ActiveDomain,Active]]
 extends MutableDomainMapLike[A,B,D,This]
 with PartialDomainMapLike[A,B,D,ActiveDomain,Active,This] {
@@ -52,8 +54,10 @@ with PartialDomainMapLike[A,B,D,ActiveDomain,Active,This] {
  * @author dramage
  */
 trait MutablePartialDomainMap
-[@specialized A, @specialized B, D <: IterableDomain[A],
- ActiveDomain <: IterableDomain[A], Active <: MutableDomainMap[A,B,ActiveDomain]]
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+ D <: IterableDomain[A] with DomainLike[A,D],
+ ActiveDomain <: IterableDomain[A] with DomainLike[A,ActiveDomain],
+ Active <: MutableDomainMap[A,B,ActiveDomain]]
 extends MutableDomainMap[A,B,D] with PartialDomainMap[A,B,D,ActiveDomain,Active]
 with MutablePartialDomainMapLike[A,B,D,ActiveDomain,Active,MutablePartialDomainMap[A,B,D,ActiveDomain,Active]];
 

@@ -28,7 +28,9 @@ import collection.domain._;
  *
  * @author dramage
  */
-trait TensorLike[@specialized A, D<:IterableDomain[A], +This<:Tensor[A,D]]
+trait TensorLike
+[@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D],
+ +This<:Tensor[A,D]]
 extends MutableDomainMapLike[A,Double,D,This] {
 
   //
@@ -110,7 +112,7 @@ extends MutableDomainMapLike[A,Double,D,This] {
     (this eq that) ||
     (that canEqual this) &&
     (this.domain == that.domain) &&
-    (domain.iterator.forall((k:A) => Math.abs(this(k) - that(k)) < tolerance));
+    (domain.iterator.forall((k:A) => math.abs(this(k) - that(k)) < tolerance));
   }
 
   /** Approximate equality using the default Tensor.TOLERANCE value. */
@@ -164,7 +166,7 @@ extends MutableDomainMapLike[A,Double,D,This] {
  *
  * @author dramage
  */
-trait Tensor[A,D<:IterableDomain[A]]
+trait Tensor[@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D]]
 extends MutableDomainMap[A,Double,D]
 with TensorLike[A,D,Tensor[A,D]];
 
@@ -174,8 +176,8 @@ object Tensor {
 
   /** A Tensor slice of a numeric MutableDomainMap. */
   trait SliceLike
-  [@specialized A1, D1<:IterableDomain[A1],
-   @specialized A2, D2<:IterableDomain[A2],
+  [@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   @specialized(Int,Long) A2, D2<:IterableDomain[A2] with DomainLike[A2,D2],
    +Coll <: MutableDomainMap[A1, Double, D1],
    +This <: Slice[A1, D1, A2, D2, Coll]]
   extends MutableDomainMapSliceLike[A1,D1,A2,D2,Double,Coll,This]
@@ -183,8 +185,8 @@ object Tensor {
 
   /** A Tensor slice of a numeric MutableDomainMap. */
   trait Slice
-  [@specialized A1, D1<:IterableDomain[A1],
-   @specialized A2, D2<:IterableDomain[A2],
+  [@specialized A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   @specialized A2, D2<:IterableDomain[A2] with DomainLike[A2,D2],
    +Coll <: MutableDomainMap[A1, Double, D1]]
   extends MutableDomainMapSlice[A1,D1,A2,D2,Double,Coll]
   with Tensor1[A2,D2]

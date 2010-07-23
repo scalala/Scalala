@@ -40,7 +40,7 @@ with VectorLike[This];
 class DenseVector(data : Array[Double])
 extends DenseMutableDomainSeq[Double](data)
 with Vector with DenseVectorLike[DenseVector] {
-  override def copy = new DenseVector(data.clone);
+//  override def copy = new DenseVector(data.clone);
 }
 
 object DenseVector {

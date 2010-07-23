@@ -28,7 +28,8 @@ import collection.domain.TableDomain;
  *
  * @author dramage
  */
-trait DenseMutableDomainTableLike[@specialized B, +This<:DenseMutableDomainTable[B]]
+trait DenseMutableDomainTableLike
+[@specialized(Int,Long,Float,Double,Boolean) B, +This<:DenseMutableDomainTable[B]]
 extends DenseMutableDomainMapLike[(Int,Int),B,TableDomain,This]
 with MutableDomainTableLike[B, This] {
   final def index(row : Int, col : Int) : Int = {
@@ -66,19 +67,18 @@ with MutableDomainTableLike[B, This] {
  *
  * @author dramage
  */
-class DenseMutableDomainTable[@specialized B]
+class DenseMutableDomainTable[@specialized(Int,Long,Float,Double,Boolean) B]
 (override val numRows : Int, override val numCols : Int, override val data : Array[B])
 extends DenseMutableDomainMap[(Int,Int),B,TableDomain] with MutableDomainTable[B]
 with DenseMutableDomainTableLike[B,DenseMutableDomainTable[B]] {
 
-  override def copy = new DenseMutableDomainTable(numRows, numCols, data.clone);
+  override val domain = TableDomain(numRows, numCols);
+
+  // override def copy = new DenseMutableDomainTable(numRows, numCols, data.clone);
 
   if (numRows * numCols != data.length)
-    throw new IllegalArgumentException("data.length must equal nRows*nCols");
+    throw new IllegalArgumentException("data.length must equal numRows*numCols");
 
   def this(numRows : Int, numCols : Int)(implicit cm : ClassManifest[B]) =
     this(numRows, numCols, new Array[B](numRows * numCols));
-
-  override def domain = TableDomain(numRows, numCols);
-
 }

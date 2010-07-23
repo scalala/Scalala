@@ -29,16 +29,19 @@ import generic._;
  * @author dramage
  */
 trait DomainMap2TransposeLike
-[@specialized A2, @specialized A1, @specialized B,
- D2<:IterableDomain[A2],D1<:IterableDomain[A1],
- ID<:Product2Domain[A1,A2,D1,D2], OD<:Product2Domain[A2,A1,D2,D1],
- +Coll <: DomainMap2[A1,A2,B,D1,D2,ID],
- +This <: DomainMap2Transpose[A2,A1,B,D2,D1,ID,OD,Coll]]
-extends DomainMapSliceLike[(A1,A2),ID,(A2,A1),OD,B,Coll,This]
-with DomainMap2Like[A2,A1,B,D2,D1,OD,This] {
+[@specialized(Int,Long) A2, @specialized(Int,Long) A1,
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+ D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ +Coll <: DomainMap2[A1,A2,B,D1,D2,D,T],
+ +This <: DomainMap2Transpose[A2,A1,B,D2,D1,T,D,Coll]]
+extends DomainMapSliceLike[(A1,A2),D,(A2,A1),T,B,Coll,This]
+with DomainMap2Like[A2,A1,B,D2,D1,T,D,This] {
 self =>
 
-  final override def lookup(tup : (A2,A1)) = tup.swap;
+  /* final */ override def lookup(tup : (A2,A1)) = tup.swap;
 
   override def apply(i : A2, j : A1) = underlying.apply(j, i);
 
@@ -49,24 +52,31 @@ self =>
  * Transposed view of an underlying DomainMap2.
  */
 trait DomainMap2Transpose
-[@specialized A2, @specialized A1, @specialized B,
- D2<:IterableDomain[A2],D1<:IterableDomain[A1],
- ID<:Product2Domain[A1,A2,D1,D2], OD<:Product2Domain[A2,A1,D2,D1],
- +Coll <: DomainMap2[A1,A2,B,D1,D2,ID]]
-extends DomainMapSlice[(A1,A2),ID,(A2,A1),OD,B,Coll]
-with DomainMap2[A2,A1,B,D2,D1,OD]
-with DomainMap2TransposeLike[A2,A1,B,D2,D1,ID,OD,Coll,DomainMap2Transpose[A2,A1,B,D2,D1,ID,OD,Coll]];
+[@specialized(Int,Long) A2, @specialized(Int,Long) A1,
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+ D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ +Coll <: DomainMap2[A1,A2,B,D1,D2,D,T]]
+extends DomainMapSlice[(A1,A2),D,(A2,A1),T,B,Coll]
+with DomainMap2[A2,A1,B,D2,D1,T,D]
+with DomainMap2TransposeLike[A2,A1,B,D2,D1,T,D,Coll,DomainMap2Transpose[A2,A1,B,D2,D1,T,D,Coll]];
 
 
 object DomainMap2Transpose {
   /** Default implementation. */
   class Impl
-  [@specialized A2, @specialized A1, @specialized B,
-   D2<:IterableDomain[A2], D1<:IterableDomain[A1],
-   ID<:Product2Domain[A1,A2,D1,D2], OD<:Product2Domain[A2,A1,D2,D1],
-   +Coll <: DomainMap2[A1,A2,B,D1,D2,ID]]
-  (override val underlying : Coll, override val domain : OD)
-  extends DomainMap2Transpose[A2,A1,B,D2,D1,ID,OD,Coll] {
-    override def copy = new Impl(underlying.copy, domain.copy);
+  [@specialized(Int,Long) A2, @specialized(Int,Long) A1,
+   @specialized(Int,Long,Float,Double,Boolean) B,
+   D2<:IterableDomain[A2] with DomainLike[A2,D2],
+   D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+   D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+   +Coll <: DomainMap2[A1,A2,B,D1,D2,D,T]]
+  (override val underlying : Coll)
+  extends DomainMap2Transpose[A2,A1,B,D2,D1,T,D,Coll] {
+    override val domain = underlying.domain.transpose;
+    // override def copy = new Impl[A2,A1,B,D2,D1,ID,OD,Coll](underlying.copy, domain.copy);
   }
 }

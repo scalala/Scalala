@@ -31,8 +31,10 @@ import generic._;
  * @author dramage
  */
 trait PartialDomainMapLike
-[@specialized A, @specialized B, D <: IterableDomain[A],
- ActiveDomain <: IterableDomain[A], Active <: DomainMap[A,B,ActiveDomain],
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+ D <: IterableDomain[A] with DomainLike[A,D],
+ ActiveDomain <: IterableDomain[A] with DomainLike[A,ActiveDomain],
+ Active <: DomainMap[A,B,ActiveDomain],
  +Repr<:PartialDomainMap[A,B,D,ActiveDomain,Active]]
 extends DomainMapLike[A,B,D,Repr] {
 self =>
@@ -55,10 +57,12 @@ self =>
  * @author dramage
  */
 trait PartialDomainMap
-[@specialized A, @specialized B, D<:IterableDomain[A],
- ActiveDomain<:IterableDomain[A], Active<:DomainMap[A,B,ActiveDomain]]
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+ D <: IterableDomain[A] with DomainLike[A,D],
+ ActiveDomain<:IterableDomain[A] with DomainLike[A,ActiveDomain],
+ Active<:DomainMap[A,B,ActiveDomain]]
 extends DomainMap[A,B,D]
-with PartialDomainMapLike[A, B, D, ActiveDomain, Active, PartialDomainMap[A,B,D,ActiveDomain,Active]];
+with PartialDomainMapLike[A,B,D,ActiveDomain,Active,PartialDomainMap[A,B,D,ActiveDomain,Active]];
 
 
 /**

@@ -30,7 +30,14 @@ import domain._;
  * @author dramage
  */
 trait DomainMap2CanTransposeFrom
-[-From, @specialized A1, @specialized A2, @specialized B,
- D1<:IterableDomain[A1], D2<:IterableDomain[A2], D<:Product2Domain[A1,A2,D1,D2], +To] {
+[-From,
+ @specialized(Int,Long) A1,
+ @specialized(Int,Long) A2,
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+ +To] {
   def apply(in : From) : To;
 }

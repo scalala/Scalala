@@ -29,10 +29,13 @@ import generic._;
  * @author dramage
  */
 trait DomainMap2Like
-[@specialized A1, @specialized A2, @specialized B,
- D1<:IterableDomain[A1],D2<:IterableDomain[A2],
- D<:Product2Domain[A1,A2,D1,D2],
- +This<:DomainMap2[A1,A2,B,D1,D2,D]]
+[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+ +This<:DomainMap2[A1,A2,B,D1,D2,D,T]]
 extends DomainMapLike[(A1,A2),B,D,This] {
   def checkKey(k1 : A1, k2 : A2) : Unit = {
     if (!domain._1.contains(k1) || !domain._2.contains(k2)) {
@@ -52,42 +55,49 @@ extends DomainMapLike[(A1,A2),B,D,This] {
 
   /** Slice a sub-DomainMap2 */
   def apply[That](i : Seq[A1], j : Seq[A2])
-  (implicit bf : DomainMap2CanSliceTableFrom[This,A1,A2,B,D1,D2,D,That]) : That =
+  (implicit bf : DomainMap2CanSliceTableFrom[This,A1,A2,B,D1,D2,D,T,That]) : That =
     bf.apply(repr, i, j);
 
   /** Transpose this DomainMap2. */
   def transpose[That]
-  (implicit bf : DomainMap2CanTransposeFrom[This,A1,A2,B,D1,D2,D,That]) : That =
+  (implicit bf : DomainMap2CanTransposeFrom[This,A1,A2,B,D1,D2,D,T,That]) : That =
     bf.apply(repr);
 }
 
 trait DomainMap2
-[@specialized A1, @specialized A2, @specialized B,
- D1<:IterableDomain[A1],D2<:IterableDomain[A2],
- D<:Product2Domain[A1,A2,D1,D2]]
+[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ T<:Product2DomainLike[A2,A1,D2,D1,D,T]]
 extends DomainMap[(A1,A2),B,D]
-with DomainMap2Like[A1,A2,B,D1,D2,D,DomainMap2[A1,A2,B,D1,D2,D]]
+with DomainMap2Like[A1,A2,B,D1,D2,D,T,DomainMap2[A1,A2,B,D1,D2,D,T]]
 
 object DomainMap2 {
   implicit def canSliceTableFrom
-  [@specialized A1, @specialized A2, @specialized B,
-   D1<:IterableDomain[A1], D2<:IterableDomain[A2],
-   D<:Product2Domain[A1,A2,D1,D2]] =
+  [A1, A2, B,
+   D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   D2<:IterableDomain[A2] with DomainLike[A2,D2],
+   D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+   T<:Product2DomainLike[A2,A1,D2,D1,D,T]] =
   new DomainMap2CanSliceTableFrom
-  [DomainMap2[A1,A2,B,D1,D2,D],A1,A2,B,D1,D2,D,
-   DomainMap2SliceTable[A1,A2,B,D1,D2,D,DomainMap2[A1,A2,B,D1,D2,D]]] {
-    override def apply(from : DomainMap2[A1,A2,B,D1,D2,D], keys1 : Seq[A1], keys2 : Seq[A2]) =
-      new DomainMap2SliceTable.FromKeySeqs[A1,A2,B,D1,D2,D,DomainMap2[A1,A2,B,D1,D2,D]](from, keys1, keys2);
+  [DomainMap2[A1,A2,B,D1,D2,D,T],A1,A2,B,D1,D2,D,T,
+   DomainMap2SliceTable[A1,A2,B,D1,D2,D,T,DomainMap2[A1,A2,B,D1,D2,D,T]]] {
+    override def apply(from : DomainMap2[A1,A2,B,D1,D2,D,T], keys1 : Seq[A1], keys2 : Seq[A2]) =
+      new DomainMap2SliceTable.FromKeySeqs[A1,A2,B,D1,D2,D,T,DomainMap2[A1,A2,B,D1,D2,D,T]](from, keys1, keys2);
   }
 
   implicit def canTransposeFrom
-  [@specialized A2, @specialized A1, @specialized B,
-   D2<:IterableDomain[A2], D1<:IterableDomain[A1], ID<:Product2Domain[A1,A2,D1,D2]] =
+  [A2, A1, B,
+   D2<:IterableDomain[A2] with DomainLike[A2,D2],
+   D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+   D<:Product2DomainLike[A1,A2,D1,D2,T,D]] =
   new DomainMap2CanTransposeFrom
-  [DomainMap2[A1,A2,B,D1,D2,ID],A1,A2,B,D1,D2,ID,
-   DomainMap2Transpose[A2,A1,B,D2,D1,ID,Product2Domain[A2,A1,D2,D1],DomainMap2[A1,A2,B,D1,D2,ID]]] {
-    override def apply(input : DomainMap2[A1,A2,B,D1,D2,ID]) =
-      new DomainMap2Transpose.Impl[A2,A1,B,D2,D1,ID,Product2Domain[A2,A1,D2,D1],DomainMap2[A1,A2,B,D1,D2,ID]](
-        input, input.domain.transpose);
+  [DomainMap2[A1,A2,B,D1,D2,D,T],A1,A2,B,D1,D2,D,T,
+   DomainMap2Transpose[A2,A1,B,D2,D1,T,D,DomainMap2[A1,A2,B,D1,D2,D,T]]] {
+    override def apply(input : DomainMap2[A1,A2,B,D1,D2,D,T]) =
+      new DomainMap2Transpose.Impl[A2,A1,B,D2,D1,T,D,DomainMap2[A1,A2,B,D1,D2,D,T]](input);
   }
 }

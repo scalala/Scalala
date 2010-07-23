@@ -35,19 +35,22 @@ with VectorLike[Vector];
 object Vector {
   /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
   trait SliceSeqLike
-  [A, D<:IterableDomain[A], +Coll <: MutableDomainMap[A,Double,D],
+  [@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D],
+   +Coll <: MutableDomainMap[A,Double,D],
    +This <: SliceSeq[A, D, Coll]]
   extends MutableDomainMapSliceSeqLike[A,D,Double,Coll,This]
   with VectorLike[This];
 
   /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
   trait SliceSeq
-  [A, D<:IterableDomain[A], +Coll <: MutableDomainMap[A,Double,D]]
+  [@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D],
+   +Coll <: MutableDomainMap[A,Double,D]]
   extends MutableDomainMapSliceSeq[A,D,Double,Coll]
   with Vector with SliceSeqLike[A,D,Coll,SliceSeq[A,D,Coll]];
 
   class SliceFromKeySeq
-  [@specialized A, D<:IterableDomain[A], +Coll<:MutableDomainMap[A, Double, D]]
+  [@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D],
+   +Coll <: MutableDomainMap[A,Double,D]]
   (underlying : Coll, keys : Seq[A])
   extends MutableDomainMapSliceSeq.FromKeySeq[A,D,Double,Coll](underlying, keys)
   with SliceSeq[A,D,Coll];

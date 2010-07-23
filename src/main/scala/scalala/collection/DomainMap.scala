@@ -30,7 +30,10 @@ import generic._;
  *
  * @author dramage
  */
-trait DomainMapLike[@specialized A, @specialized B, D<:IterableDomain[A], +Repr<:DomainMap[A,B,D]]
+trait DomainMapLike
+[@specialized(Int, Long) A,
+ @specialized(Int, Long, Float, Double, Boolean) B,
+ D<:IterableDomain[A] with DomainLike[A,D], +Repr<:DomainMap[A,B,D]]
 extends DomainFunction[A, B, D] {
 self =>
 
@@ -38,11 +41,11 @@ self =>
 
   def repr : Repr = this.asInstanceOf[Repr];
 
-  /**
-   * Creates a shallow copy of this domain map.  Inner value types are not copied,
-   * so this method is safest when both keys and values are immutable.
-   */
-  def copy : Repr;
+//  /**
+//   * Creates a new (empty) instance of the same type as this domain map,
+//   * optionally on a new domain.
+//   */
+//  def newInstance(domain : D = domain) : Repr;
 
   /**
    * Applies the given function to each element of the domain and
@@ -206,15 +209,14 @@ self =>
   // Sorting
   //
 
-  // TODO: scala bug prevents this from being called.
-//  /**
-//   * Returns a sorted view of the current map.  Equivalent to calling
-//   * <code>x(x.argsort)</code>.  Changes to the sorted view are written-through
-//   * to the underlying map.
-//   */
-//  def sorted[That]
-//  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, D, B, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
-//    this(this.argsort);
+  /**
+   * Returns a sorted view of the current map.  Equivalent to calling
+   * <code>x(x.argsort)</code>.  Changes to the sorted view are written-through
+   * to the underlying map.
+   */
+  def sorted[That]
+  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, D, B, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
+    this(this.argsort);
 
   /**
    * Returns the elements of this.domain ordered by their values in this map.
@@ -255,7 +257,10 @@ self =>
   }
 }
 
-trait DomainMap[@specialized A, @specialized B, D <: IterableDomain[A]]
+trait DomainMap
+[@specialized(Int,Long) A,
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ D<:IterableDomain[A] with DomainLike[A,D]]
 extends DomainMapLike[A, B, D, DomainMap[A, B, D]];
 
 //object DomainMapTypes {
@@ -279,13 +284,13 @@ extends DomainMapLike[A, B, D, DomainMap[A, B, D]];
 
 object DomainMap {
 
-  implicit def canViewFrom[A, B, D<:IterableDomain[A]] =
+  implicit def canViewFrom[A, B, D<:IterableDomain[A] with DomainLike[A,D]] =
   new DomainMapCanViewFrom[DomainMap[A,B,D],DomainMapView.IdentityView[A,B,D,DomainMap[A,B,D]]] {
     override def apply(from : DomainMap[A,B,D]) =
       new DomainMapView.IdentityViewImpl[A,B,D,DomainMap[A,B,D]](from);
   }
 
-  implicit def canMapValuesFrom[@specialized A,@specialized B,@specialized O,D<:IterableDomain[A]]
+  implicit def canMapValuesFrom[A, B, O, D<:IterableDomain[A] with DomainLike[A,D]]
   (implicit default : DefaultValue[O]) =
   new DomainMapCanMapValuesFrom[DomainMap[A,B,D],A,B,O,D,MutableDomainMap[A,O,D]] {
     override def apply(from : DomainMap[A,B,D], fn : (B=>O)) = {
@@ -295,13 +300,13 @@ object DomainMap {
     }
   }
 
-  implicit def canSliceFrom[@specialized A1, @specialized A2, D<:IterableDomain[A1], @specialized B] =
+  implicit def canSliceFrom[A1, A2, D<:IterableDomain[A1] with DomainLike[A1,D], B] =
   new DomainMapCanSliceFrom[DomainMap[A1,B,D], A1, D, A2, B, DomainMap[A2,B,SetDomain[A2]]] {
     override def apply(from : DomainMap[A1,B,D], keymap : scala.collection.Map[A2,A1]) =
       new DomainMapSlice.FromKeyMap[A1, D, A2, B, DomainMap[A1,B,D]](from, keymap);
   }
 
-  implicit def canSliceSeqFrom[@specialized A, D<:IterableDomain[A], @specialized B] =
+  implicit def canSliceSeqFrom[A, D<:IterableDomain[A] with DomainLike[A,D], B] =
   new DomainMapCanSliceSeqFrom[DomainMap[A,B,D], A, D, B, DomainSeq[B]] {
     override def apply(from : DomainMap[A,B,D], keys : Seq[A]) =
       new DomainMapSliceSeq.FromKeySeq[A,D,B,DomainMap[A,B,D]](from, keys);

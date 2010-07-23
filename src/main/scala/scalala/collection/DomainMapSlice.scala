@@ -31,9 +31,9 @@ import generic._;
  * @author dramage
  */
 trait DomainMapSliceLike
-[@specialized A1, D1<:IterableDomain[A1],
- @specialized A2, D2<:IterableDomain[A2],
- @specialized B, +Coll <: DomainMap[A1, B, D1],
+[@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ @specialized(Int,Long) A2, D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ @specialized(Int,Long,Float,Double,Boolean) B, +Coll <: DomainMap[A1, B, D1],
  +This <: DomainMapSlice[A1, D1, A2, D2, B, Coll]]
 extends DomainMapLike[A2,B,D2,This] {
 self =>
@@ -54,19 +54,20 @@ self =>
  * @author dramage
  */
 trait DomainMapSlice
-[@specialized A1, D1 <: IterableDomain[A1],
- @specialized A2, D2 <: IterableDomain[A2],
- @specialized B, +Coll <: DomainMap[A1, B, D1]]
+[@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ @specialized(Int,Long) A2, D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ @specialized(Int,Long,Float,Double,Boolean) B, +Coll <: DomainMap[A1, B, D1]]
 extends DomainMap[A2,B,D2]
 with DomainMapSliceLike[A1, D1, A2, D2, B, Coll, DomainMapSlice[A1, D1, A2, D2, B, Coll]];
 
 object DomainMapSlice {
   class FromKeyMap
-  [@specialized A1, D1<:IterableDomain[A1], @specialized A2,
-   @specialized B, +Coll<:DomainMap[A1, B, D1]]
+  [@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
+   @specialized(Int,Long) A2,
+   @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:DomainMap[A1, B, D1]]
   (override val underlying : Coll, keymap : scala.collection.Map[A2,A1])
   extends DomainMapSlice[A1, D1, A2, SetDomain[A2], B, Coll] {
     override def lookup(key : A2) = keymap(key);
-    override val domain = SetDomain(keymap.keySet);
+    override val domain = new SetDomain(keymap.keySet);
   }
 }

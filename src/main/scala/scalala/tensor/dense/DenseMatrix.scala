@@ -42,7 +42,7 @@ with MatrixLike[This];
 class DenseMatrix(numRows : Int, numCols : Int, data : Array[Double])
 extends DenseMutableDomainTable[Double](numRows, numCols, data)
 with Matrix with DenseMatrixLike[DenseMatrix] {
-  override def copy = new DenseMatrix(numRows, numCols, data.clone);
+//  override def copy = new DenseMatrix(numRows, numCols, data.clone);
 }
 
 object DenseMatrix {
