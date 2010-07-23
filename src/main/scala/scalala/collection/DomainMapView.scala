@@ -38,7 +38,11 @@ self =>
   /** The collection underlying this view. */
   def underlying: Coll;
 
+  /** Maps to underlying.domain */
   override def domain = underlying.domain;
+
+  /** Views of views should just return this (cast as This) */
+  def view = repr;
 }
 
 /**
@@ -100,8 +104,6 @@ object DomainMapView {
   extends DomainMapViewLike[A,B,D,Coll,This] {
     override def apply(key : A) =
       underlying.apply(key);
-
-    def view = repr;
   }
 
   trait IdentityView
