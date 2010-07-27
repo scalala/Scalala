@@ -347,11 +347,6 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
       offset += 1;
     }
   }
-
-
-
-
-
   
   /** Uses optimized implementations. */
   override def dot(other : Tensor1[Int]) : Double = other match {
@@ -501,3 +496,21 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
     return sum;
   }
 }
+
+object SparseVector {
+  def apply(size : Int)(default : Double) = {
+    val sv = new SparseVector(size, 0);
+    sv += default;
+    sv;
+  }
+
+  def apply(map : PartialMap[Int,Double]) = {
+    val sv = new SparseVector(map.domain.size, map.activeDomain.size);
+    sv.default = map.default;
+    for ((k,v) <- map) {
+      sv(k) = v;
+    }
+    sv;
+  }
+}
+
