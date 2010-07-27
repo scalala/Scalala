@@ -40,6 +40,15 @@ class SparseVectorTest extends scalala.library.Library with scalala.library.Rand
     }
   }
 
+  test("SparseVector:Default") {
+    val x = new SparseVector(10);
+    assertEquals(x.default, 0);
+    x *= 1;
+    assertEquals(x.default, 0);
+    x += 1;
+    assertEquals(math.abs(x.default - 1.0) < 1e-6, true);
+  }
+
   test("SparseVector:Dot") {
     val x = new SparseVector(10);
     val y = new SparseVector(10);

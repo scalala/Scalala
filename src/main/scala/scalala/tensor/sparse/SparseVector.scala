@@ -320,7 +320,7 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   }
 
   override def -=(c: Double) = {
-    default += c;
+    default -= c;
     var offset = 0;
     while(offset < used) {
       data(offset) -= c;
@@ -330,7 +330,7 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
 
 
   override def *=(c: Double) = {
-    default += c;
+    default *= c;
     var offset = 0;
     while(offset < used) {
       data(offset) *= c;
@@ -340,7 +340,7 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
 
 
   override def /=(c: Double) = {
-    default += c;
+    default /= c;
     var offset = 0;
     while(offset < used) {
       data(offset) /= c;
