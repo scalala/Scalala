@@ -21,8 +21,9 @@ package scalala;
 package tensor;
 package operators;
 
-import collection.{MergeableSet,ProductSet};
-import dense.{DenseVector,DenseMatrix};
+
+import dense.{DenseVector,DenseMatrix}
+import collection.{DomainException, MergeableSet, ProductSet};
 import library.Matrices;
 import library.LinearAlgebra;
 import TensorShapes._;
@@ -360,4 +361,5 @@ extends TensorReferenceOp[DenseMatrix,Shape2](a) {
 //    _C;
 //  }
 //}
+
 

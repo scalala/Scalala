@@ -20,7 +20,8 @@
 package scalala;
 package library;
 
-import tensor.operators.TensorSelfOp;
+import tensor.operators.TensorSelfOp
+import collection.DomainException;
 import tensor.operators.TensorShapes;
 import tensor.{Tensor,Vector,Matrix,DiagonalMatrix};
 import tensor.dense.{DenseVector,DenseMatrix};
@@ -191,6 +192,24 @@ trait Matrices extends Library with PartialMaps with Vectors {
     BlockMatrix((0 until blocks.length).map(row).toArray)
   }
   */
+
+  /* Efficient version of: M * v that uses a pre-allocated result vector. */
+  def matrixVectorProduct(M: DenseMatrix, v: DenseVector, result: DenseVector): Unit = {
+    if (M.cols != v.size) {
+      throw new DomainException("M.cols != v.size")
+    }
+    var i = 0
+    while (i < result.size) {
+      var j = 0
+      var s = 0d
+      while (j < M.cols) {
+        s += M(i, j) * v(j)
+        j += 1
+      }
+      result(i) = s;
+      i += 1;
+    }
+  }
 }
 
 /**
