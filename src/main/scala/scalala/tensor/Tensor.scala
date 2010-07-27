@@ -131,11 +131,26 @@ extends MutableDomainMapLike[A,Double,D,This] {
   // Collection level queries
   //
 
-  /** Returns the sum of the values in this map. */
-  def sum : Double = {
-    var sum = 0.0;
-    valuesIterator.foreach(v => sum += v);
-    return sum;
+  /** Returns a key associated with the largest value in the map. */
+  def argmax : A = {
+    if (!valuesIterator.hasNext) {
+      throw new UnsupportedOperationException("Empty tensor .max");
+    }
+    var max = valuesIterator.next;
+    var arg = keysIterator.next
+    foreach((k,v) => if (v > max) { max = v; arg = k; });
+    arg;
+  }
+
+  /** Returns a key associated with the smallest value in the map. */
+  def argmin : A = {
+    if (!valuesIterator.hasNext) {
+      throw new UnsupportedOperationException("Empty tensor .max");
+    }
+    var min = valuesIterator.next;
+    var arg = keysIterator.next
+    foreach((k,v) => if (v < min) { min = v; arg = k; });
+    arg;
   }
 
   /** Returns the max of the values in this map. */
