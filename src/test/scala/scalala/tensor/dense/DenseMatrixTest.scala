@@ -31,16 +31,38 @@ import org.junit.runner.RunWith
 class DenseMatrixTest extends FunSuite with Checkers {
 
   test("Slicing") {
-    val matrix = DenseMatrix(2,3)(0);
-    matrix((0 to 1), (1 to 2)) := 1;
-    matrix((0 to 1), (0 to 1)) += 4;
+    val m = DenseMatrix(2,3)(0);
+    m((0 to 1), (1 to 2)) := 1;
+    m((0 to 1), (0 to 1)) += 4;
 
-    assert(matrix.data.toList === List(4, 4, 5, 5, 1, 1));
+    assert(m.data.toList === List(4, 4, 5, 5, 1, 1));
   }
 
   test("Transpose") {
-    val matrix = DenseMatrix(2,3)(1,2,0,3,0,0);
-    assert(matrix.transpose === DenseMatrix(3,2)(1,0,0,2,3,0));
-    assert(matrix.transpose.isInstanceOf[Matrix]);
+    val m = DenseMatrix(2,3)(1,2,0,3,0,0);
+    assert(m.transpose === DenseMatrix(3,2)(1,0,0,2,3,0));
+    assert(m.transpose.isInstanceOf[Matrix]);
+  }
+
+  test("Min/Max") {
+    val m = DenseMatrix(2,3)(1,2,0,3,0,-1);
+    assert(m.argmin === (1,2));
+    assert(m.argmax === (1,1));
+    assert(m.min === -1);
+    assert(m.max === 3);
+  }
+
+  test("Map") {
+    val a : DenseMatrix = DenseMatrix(2,3)(1,2,0,3,0,0);
+    val m : DenseMatrix = a.mapValues(_ + 1);
+    assert(m.data.toList === List(2,3,1,4,1,1));
+  }
+
+  test("Tabulate") {
+    val m = DenseMatrix.tabulate(2,2)((i,j) => 1.0 * (i+1) * (j+2));
+    assert(m(0,0) === 2);
+    assert(m(0,1) === 3);
+    assert(m(1,0) === 4);
+    assert(m(1,1) === 6);
   }
 }

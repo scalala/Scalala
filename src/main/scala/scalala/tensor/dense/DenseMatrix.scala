@@ -20,6 +20,9 @@
 package scalala;
 package tensor.dense;
 
+import collection.domain.TableDomain;
+import collection.generic.DomainMapCanMapValuesFrom;
+
 import collection.dense.{DenseMutableDomainTableLike,DenseMutableDomainTable};
 import tensor.{MatrixLike,Matrix};
 
@@ -55,5 +58,23 @@ object DenseMatrix {
    */
   def apply(rows : Int, cols : Int)(values : Double*) = {
     new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => values(i % values.length)));
+  }
+
+  /** Tabulate a matrix from a function from row,col position to value. */
+  def tabulate(rows : Int, cols : Int)(fn : (Int, Int) => Double) = {
+    new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => fn(i % rows, i / rows)));
+  }
+
+  implicit object DenseMatrixCanMapValuesFrom
+  extends DomainMapCanMapValuesFrom[DenseMatrix,(Int,Int),Double,Double,TableDomain,DenseMatrix] {
+    override def apply(from : DenseMatrix, fn : (Double=>Double)) = {
+      val data = new Array[Double](from.data.length);
+      var i = 0;
+      while (i < data.length) {
+        data(i) = fn(from.data(i));
+        i += 1;
+      }
+      new DenseMatrix(from.numRows, from.numCols, data);
+    }
   }
 }
