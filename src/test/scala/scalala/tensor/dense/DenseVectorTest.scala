@@ -50,4 +50,23 @@ class DenseVectorTest extends FunSuite with Checkers {
     val b = DenseVector(5)(0.15951,0.83671,0.56002,0.57797,0.54450);
     assertClose(a dot b, .90249);
   }
+
+  test("Map") {
+    val a : DenseVector = DenseVector(5)(1,2,3,4,5);
+    val m : DenseVector = a.mapValues(_ + 1);
+    assert(m.data.toList === List(2,3,4,5,6));
+  }
+
+  test("Tabulate") {
+    val m = DenseVector.tabulate(5)(i => i + 1);
+    assert(m.data.toList === List(1,2,3,4,5));
+  }
+
+  test("Min/Max") {
+    val v = DenseVector(5)(2,0,3,2,-1);
+    assert(v.argmin === 4);
+    assert(v.argmax === 2);
+    assert(v.min === -1);
+    assert(v.max === 3);
+  }
 }

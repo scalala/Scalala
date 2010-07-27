@@ -20,6 +20,9 @@
 package scalala;
 package tensor.dense;
 
+import collection.domain.IndexDomain;
+import collection.generic.DomainMapCanMapValuesFrom;
+
 import collection.dense.{DenseMutableDomainSeqLike,DenseMutableDomainSeq};
 import tensor.{VectorLike,Vector};
 
@@ -51,4 +54,21 @@ object DenseVector {
    */
   def apply(size : Int)(values : Double*) =
     new DenseVector(Array.tabulate(size)(i => values(i % values.length)));
+
+  /** Tabulate a vector with the value at each offset given by the function. */
+  def tabulate(size : Int)(f : (Int => Double)) =
+    new DenseVector(Array.tabulate(size)(f));
+
+  implicit object DenseVectorCanMapValuesFrom
+  extends DomainMapCanMapValuesFrom[DenseVector,Int,Double,Double,IndexDomain,DenseVector] {
+    override def apply(from : DenseVector, fn : (Double=>Double)) = {
+      val data = new Array[Double](from.size);
+      var i = 0;
+      while (i < data.length) {
+        data(i) = fn(from.data(i));
+        i += 1;
+      }
+      new DenseVector(data);
+    }
+  }
 }
