@@ -67,6 +67,13 @@ extends TensorLike[A,D,This] {
     foreach((k,v) => sum += v * that(k));
     sum;
   }
+
+  /** Returns the sum of the values in this map. */
+  def sum : Double = {
+    var sum = 0.0;
+    valuesIterator.foreach(v => sum += v);
+    return sum;
+  }
 }
 
 /**
@@ -78,3 +85,12 @@ extends TensorLike[A,D,This] {
 trait Tensor1
 [@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D]]
 extends Tensor[A,D] with Tensor1Like[A,D,Tensor1[A,D]];
+
+
+object Tensor1 {
+//  implicit def canSliceFrom[A1, A2, D<:IterableDomain[A1] with DomainLike[A1,D]] =
+//  new DomainMapCanSliceFrom[Tensor1[A1,Double,D], A1, D, A2, Double, Tensor1[A1,Double,SetDomain[A2]]] {
+//    override def apply(from : Tensor1[A1,Double,D], keymap : scala.collection.Map[A2,A1]) =
+//      new MutableDomainMapSlice.FromKeyMap[A1, D, A2, B, MutableDomainMap[A1,B,D]](from, keymap);
+//  }
+}
