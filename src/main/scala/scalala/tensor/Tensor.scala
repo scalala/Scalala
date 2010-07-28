@@ -145,7 +145,7 @@ extends MutableDomainMapLike[A,Double,D,This] {
   /** Returns a key associated with the smallest value in the map. */
   def argmin : A = {
     if (!valuesIterator.hasNext) {
-      throw new UnsupportedOperationException("Empty tensor .max");
+      throw new UnsupportedOperationException("Empty tensor .min");
     }
     var min = valuesIterator.next;
     var arg = keysIterator.next
@@ -172,8 +172,6 @@ extends MutableDomainMapLike[A,Double,D,This] {
     valuesIterator.foreach(v => { if (v < min) min = v; })
     return min;
   }
-
-
 }
 
 /**

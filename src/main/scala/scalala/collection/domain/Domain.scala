@@ -80,6 +80,21 @@ object IterableDomain extends TraversableFactory[IterableDomain] {
     SetDomain.newBuilder;
 }
 
+//trait MutableDomainLike[@specialized(Int,Long) A, +This<:MutableDomainLike[A,This]]
+//extends IterableDomainLike[A,This] {
+//  /** Remove all elements from the domain. */
+//  def clear();
+//
+//  /** Add an element to the domain. */
+//  def += (item : A);
+//
+//  /** Remove an element from the domain. */
+//  def -= (item : A);
+//}
+//
+//trait MutableDomain[@specialized(Int,Long) A]
+//extends IterableDomain[A] with MutableDomainLike[A, MutableDomain[A]];
+
 /**
  * The domain of elements from a specific set.
  *

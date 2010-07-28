@@ -45,7 +45,27 @@ with PartialDomainMapLike[A,B,D,ActiveDomain,Active,This] {
     checkKey(key);
     active.update(key, value);
   }
-
+//
+//  /** Assigns the given value to all elements of this map. */
+//  override def :=(value : B) = {
+//    this.default = value;
+//    active.re
+//  }
+//
+//
+//  /** Assigns the corresponding value to each element of this map. */
+//  def :=(that : DomainMap[A,B,D]) = {
+//    checkDomain(that.domain);
+//    for (key <- keysIterator) update(key,that(key));
+//  }
+//
+//  /** Tranforms all key value pairs in this map by applying the given function. */
+//  def transform(f : (A,B)=>B) =
+//    for (key <- keysIterator) update(key,f(key,apply(key)));
+//
+//  /** Tranforms all values in this map by applying the given function. */
+//  def transformValues(f : B=>B) =
+//    for (key <- keysIterator) update(key,f(apply(key)));
 }
 
 /**
