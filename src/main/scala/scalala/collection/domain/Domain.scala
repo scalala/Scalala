@@ -105,6 +105,9 @@ extends IterableDomain[A]
 with GenericTraversableTemplate[A,SetDomain]
 with IterableDomainLike[A,SetDomain[A]] {
 
+  override def size =
+    set.size;
+
   override def companion : GenericCompanion[SetDomain] = SetDomain;
 
   override def copy = new SetDomain(Set() ++ set);
