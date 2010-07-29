@@ -51,6 +51,12 @@ extends DomainMapLike[A, B, D, Repr] {
     for (key <- keysIterator) update(key,that(key));
   }
 
+  /** Assigns the corresponding value to each element of this map. */
+  def :=[O](that : DomainMap[A,O,D])(implicit tf : (O=>B)) = {
+    checkDomain(that.domain);
+    for (key <- keysIterator) update(key,that(key));
+  }
+
   /** Tranforms all key value pairs in this map by applying the given function. */
   def transform(f : (A,B)=>B) =
     for (key <- keysIterator) update(key,f(key,apply(key)));
