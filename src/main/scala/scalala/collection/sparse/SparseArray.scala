@@ -57,11 +57,6 @@ class SparseArray[@specialized T:ClassManifest]
     this
   }
 
-  def get(x: Int) = {
-    val ind = findOffset(x)
-    if (ind < 0) None else Some(data(ind));
-  }
-
   def foreach[U](f: Function1[(Int,T),U]) {
     var i = 0;
     while(i < used) {
@@ -70,7 +65,7 @@ class SparseArray[@specialized T:ClassManifest]
     }
   }
 
-  final def iterator = (0 until used).iterator map { i => (index(i),data(i)) };
+  final def iterator = Iterator.range(0, used).map(i => (index(i),data(i)));
   def keysIterator = index.iterator.take(used);
   def valuesIterator = data.iterator.take(used);
 
@@ -155,18 +150,24 @@ class SparseArray[@specialized T:ClassManifest]
     if (offset >= 0) data(offset) else default;
   }
 
+  def get(i: Int) : Option[T] = {
+    val offset = findOffset(i);
+    if (offset >= 0) Some(data(offset)) else None;
+  }
+
   /**
    * Sets the given value at the given index if the value is not
    * equal to the current default.  The data and
    * index arrays will be grown to support the insertion if
    * necessary.  The growth schedule doubles the amount
    * of allocated memory at each allocation request up until
-   * the sparse vector contains 1024 iterator, at which point
+   * the sparse array contains 1024 values, at which point
    * the growth is additive: an additional n * 1024 spaces will
    * be allocated for n in 1,2,4,8,16.  The largest amount of
-   * space added to this vector will be an additional 16*1024*(8+4) =
-   * 196608 bytes, although more space is needed temporarily
-   * while moving to the new arrays.
+   * space added to this vector will be an additional 16*1024*(sizeof(T)+4),
+   * which is 196608 bytes at a type for a SparseVector[Double],
+   * although more space is needed temporarily while moving to the
+   * new arrays.
    */
   def update(i : Int, value : T) = {
     val offset = findOffset(i);
@@ -217,7 +218,7 @@ class SparseArray[@specialized T:ClassManifest]
     }
   }
 
-  /** Compacts the vector by removing all stored default values. */
+  /** Compacts the array by removing all stored default values. */
   def compact() {
     val nz = { // number of non-zeros
       var _nz = 0;
@@ -330,30 +331,30 @@ object SparseArray {
 
   /** Default value of type T as used by SparseArray. */
   object DefaultValue {
-    implicit val IntDefaultValue =
-      new DefaultValue[Int] { override def value = 0; }
+    implicit object IntDefaultValue extends DefaultValue[Int] {
+      override def value = 0; }
 
-    implicit val LongDefaultValue =
-      new DefaultValue[Long] { override def value = 0l; }
+    implicit object LongDefaultValue extends DefaultValue[Long] {
+      override def value = 0l; }
 
-    implicit val ShortDefaultValue =
-      new DefaultValue[Short] { override def value = 0.toShort; }
+    implicit object ShortDefaultValue extends DefaultValue[Short] {
+      override def value = 0.toShort; }
 
-    implicit val CharDefaultValue =
-      new DefaultValue[Char] { override def value = 0.toChar; }
+    implicit object CharDefaultValue extends DefaultValue[Char] {
+      override def value = 0.toChar; }
 
-    implicit val ByteDefaultValue =
-      new DefaultValue[Byte] { override def value = 0.toByte; }
+    implicit object ByteDefaultValue extends DefaultValue[Byte] {
+      override def value = 0.toByte; }
 
-    implicit val FloatDefaultValue =
-      new DefaultValue[Float] { override def value = 0.0f; }
+    implicit object FloatDefaultValue extends DefaultValue[Float] {
+      override def value = 0.0f; }
 
-    implicit val DoubleDefaultValue =
-      new DefaultValue[Double] { override def value = 0.0; }
+    implicit object DoubleDefaultValue extends DefaultValue[Double] {
+      override def value = 0.0; }
     
-    implicit val BooleanDefaultValue =
-      new DefaultValue[Boolean] { override def value = false; }
-    
+    implicit object BooleanDefaultValue extends DefaultValue[Boolean] {
+      override def value = false; }
+
     implicit def ObjectDefaultValue[T<:AnyRef] = new DefaultValue[T] {
       override def value : T = null.asInstanceOf[T];
     }
