@@ -38,6 +38,12 @@ extends DomainMapLike[Int, B, IndexDomain, Repr] {
   protected[this] def mkValueString(value : B) : String =
     value.toString;
 
+  def toList =
+    List.tabulate(size)(i => this(i));
+
+  def toArray(implicit m : ClassManifest[B]) =
+    Array.tabulate(size)(i => this(i));
+
   // TODO: improve this method to make it more Vector-like
   override def toString = {
     val rv = valuesIterator.take(10).map(mkValueString).mkString("\n");
