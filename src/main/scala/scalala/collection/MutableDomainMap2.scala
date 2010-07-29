@@ -45,6 +45,14 @@ with DomainMap2Like[A1,A2,B,D1,D2,D,T,This] {
   /** Fixed alias for update(i,j,value). */
   /* final */ override def update(pos : (A1,A2), value : B) : Unit =
     update(pos._1, pos._2, value);
+
+  /** Fixed alias for transform((k1,k2,v) => f((k1,k2),v)) */
+  /* final */ override def transform(f : ((A1,A2),B)=>B) =
+    transform((k1,k2,v) => f((k1,k2),v));
+
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  def transform(f : (A1,A2,B)=>B) =
+    for (key <- keysIterator) update(key,f(key._1,key._2,apply(key)));
 }
 
 /**

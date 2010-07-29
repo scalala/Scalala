@@ -38,7 +38,13 @@ with MutableDomainTableLike[B, This] {
   }
 
   final def unindex(index : Int) : (Int,Int) =
-    (index % numRows, index / numRows);
+    (rowIndex(index), colIndex(index));
+
+  final def rowIndex(index : Int) : Int =
+    (index % numRows);
+
+  final def colIndex(index : Int) : Int =
+    (index / numRows);
 
   override def apply(row : Int, col : Int) =
     data(index(row,col));
@@ -53,10 +59,10 @@ with MutableDomainTableLike[B, This] {
   }
 
   /** Tranforms all key value pairs in this map by applying the given function. */
-  override def transform(f : ((Int,Int),B)=>B) = {
+  override def transform(f : (Int,Int,B)=>B) = {
     var i = 0;
     while (i < data.length) {
-      data(i) = f(unindex(i),data(i));
+      data(i) = f(rowIndex(i),colIndex(i),data(i));
       i += 1;
     }
   }
