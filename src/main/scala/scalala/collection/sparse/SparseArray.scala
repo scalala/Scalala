@@ -30,43 +30,39 @@ import scala.collection.mutable._;
  * @author dlwh, dramage
  */
 class SparseArray[@specialized T:ClassManifest]
-(val length : Int, val default : T, initial : Int = 3) {
+(val length : Int, val default : T, initialSize : Int = 3) {
 
-  private var data = new Array[T](initial);
-  private var index = new Array[Int](initial);
+  private var data = new Array[T](initialSize);
+  private var index = new Array[Int](initialSize);
 
-  private var lastIndex = -1;
+  /** Number of elements in the array that have been used. */
+  private var used : Int = 0;
+
+  /** Last found offset. */
   private var lastOffset = -1;
-  final var used : Int = 0;
 
+  /** Index at last found offset. */
+  private var lastIndex = -1;
+
+  /** Returns the size of the array. */
   def size = used;
 
-  def -=(ind: Int) = {
-    val i = findOffset(ind);
-    if(i >= 0) {
-      System.arraycopy(index, i+1, index, i, used - i - 1);
-      System.arraycopy(data,  i+1, data,  i, used - i - 1);
-      used -= 1;
-    }
-
-    this
-  }
-
-  def +=(kv: (Int,T)) = {
-    this.update(kv._1,kv._2);
-    this
-  }
-
+  /** Applies the given function to each non-default element. */
   def foreach[U](f: Function1[(Int,T),U]) {
     var i = 0;
     while(i < used) {
-      f(index(i),data(i));
+      f(index(i), data(i));
       i += 1;
     }
   }
 
+  /** Iterator over used indexes and values */
   final def iterator = Iterator.range(0, used).map(i => (index(i),data(i)));
+
+  /** Used indexes. */
   def keysIterator = index.iterator.take(used);
+
+  /** Used values. */
   def valuesIterator = data.iterator.take(used);
 
   // Taken from Scalala
@@ -84,10 +80,8 @@ class SparseArray[@specialized T:ClassManifest]
    * negative and can be converted into an insertion point with ~rv.
    */
   private def findOffset(i : Int) : Int = {
-    if (i < 0)
-      throw new IndexOutOfBoundsException("index is negative (" + index + ")");
-    if (i >= length)
-      throw new IndexOutOfBoundsException("index >= length (" + index + " >= " + length + ")");
+    if (i < 0 || i >= length)
+      throw new IndexOutOfBoundsException("Index "+i+" out of bounds [0,"+size+")");
 
     if (i == lastIndex) {
       // previous element; don't need to update lastOffset
@@ -121,12 +115,7 @@ class SparseArray[@specialized T:ClassManifest]
       if(end > i)
         end = i;
 
-      // this assert is for debug only
-      //assert(begin >= 0 && end >= begin,
-      //       "Invalid range: "+begin+" to "+end);
-
       var mid = (end + begin) >> 1;
-
       while (begin <= end) {
         mid = (end + begin) >> 1;
         if (index(mid) < i)
@@ -139,7 +128,7 @@ class SparseArray[@specialized T:ClassManifest]
 
       // no match found, return insertion point
       if (i <= index(mid))
-        return ~mid;     // Insert here (before mid)
+        return ~mid;       // Insert here (before mid)
       else
         return ~(mid + 1); // Insert after mid
     }
@@ -153,6 +142,11 @@ class SparseArray[@specialized T:ClassManifest]
   def get(i: Int) : Option[T] = {
     val offset = findOffset(i);
     if (offset >= 0) Some(data(offset)) else None;
+  }
+
+  def getOrElse(i : Int, value : T) : T = {
+    val offset = findOffset(i);
+    if (offset >= 0) data(offset) else value;
   }
 
   /**
@@ -184,6 +178,7 @@ class SparseArray[@specialized T:ClassManifest]
       var newData = data;
 
       if (used > data.length) {
+        // expand array
         val newLength = {
           if (data.length < 8) { 8 }
           else if (data.length > 16*1024) { data.length + 16*1024 }
@@ -212,10 +207,15 @@ class SparseArray[@specialized T:ClassManifest]
       // record the insertion point
       found(i,insertPos);
 
-      // update pointers
+      // update pointers: this is a noop if we haven't expanded the arrays
       index = newIndex;
       data = newData;
     }
+  }
+
+  /** Clears this array, resetting to the initial size. */
+  def clear() {
+    use(new Array[Int](initialSize), new Array[T](initialSize), 0);
   }
 
   /** Compacts the array by removing all stored default values. */
@@ -252,28 +252,37 @@ class SparseArray[@specialized T:ClassManifest]
 
   /** Use the given index and data arrays, of which the first inUsed are valid. */
   private def use(inIndex : Array[Int], inData : Array[T], inUsed : Int) = {
-    if (inIndex == null || inData == null)
-      throw new IllegalArgumentException("Index and data must be non-null");
-    if (inIndex.length != inData.length)
-      throw new IllegalArgumentException("Index and data sizes do not match");
-    // I spend 7% of my time in this call. It's gotta go.
-    //if (inIndex.contains((x:Int) => x < 0 || x > size))
-    //  throw new IllegalArgumentException("Index array contains out-of-range index");
-    if (inIndex.length < inUsed)
-      throw new IllegalArgumentException("Used is greater than provided array");
-    // I spend 7% of my time in this call. It's gotta go. and this one.
-    //for (i <- 1 until used; if (inIndex(i-1) > inIndex(i))) {
-    //  throw new IllegalArgumentException("Input index is not sorted at "+i);
-    //}
-    //for (i <- 0 until used; if (inIndex(i) < 0)) {
-    //  throw new IllegalArgumentException("Input index is less than 0 at "+i);
-    //}
+    // these rep-checks are not needed because this method is private and all
+    // callers satisfy these invariants.
+//    if (inIndex == null || inData == null)
+//      throw new IllegalArgumentException("Index and data must be non-null");
+//    if (inIndex.length != inData.length)
+//      throw new IllegalArgumentException("Index and data sizes do not match");
+//    if (inIndex.length < inUsed)
+//      throw new IllegalArgumentException("Used is greater than provided array");
+//    if (inIndex(0) < 0 || inIndex(0) >= inUsed)
+//      throw new IllegalArgumentException("use inIndex out of range contains illegal offset @ 0");
+//    var i = 1;
+//    while (i < inUsed) {
+//      if (inIndex(i) < 0 || inIndex(i) >= inUsed || inIndex(i) < inIndex(i-1))
+//        throw new IllegalArgumentException("use inIndex out of range contains illegal offset @ "+i);
+//      i += 1;
+//    }
 
     data = inData;
     index = inIndex;
     used = inUsed;
     lastOffset = -1;
     lastIndex = -1;
+  }
+
+  /** Tranforms all values in this map by applying the given function. */
+  def transformValues(f : T=>T) = {
+    var i = 0;
+    while (i < used) {
+      data(i) = f(data(i));
+      i += 1;
+    }
   }
 
   override def hashCode = {
@@ -322,7 +331,7 @@ object SparseArray {
 
   def apply[T:ClassManifest:DefaultValue](length : Int = Int.MaxValue, initial : Int = 3) =
     new SparseArray[T](default = implicitly[DefaultValue[T]].value,
-                       length = length, initial = initial);
+                       length = length, initialSize = initial);
 
   /** Default value of type T as used by SparseArray. */
   trait DefaultValue[@specialized T] {
