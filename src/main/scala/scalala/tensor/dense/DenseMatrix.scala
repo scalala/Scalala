@@ -76,5 +76,15 @@ object DenseMatrix {
       }
       new DenseMatrix(from.numRows, from.numCols, data);
     }
+
+    override def apply(from : DenseMatrix, fn : (((Int,Int),Double)=>Double)) = {
+      val data = new Array[Double](from.data.length);
+      var i = 0;
+      while (i < data.length) {
+        data(i) = fn(from.unindex(i), from.data(i));
+        i += 1;
+      }
+      new DenseMatrix(from.numRows, from.numCols, data);
+    }
   }
 }

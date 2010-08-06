@@ -22,6 +22,7 @@ package collection;
 package numeric;
 
 import domain._;
+// import operators.{Shape,SelfOp};
 
 /**
  * A Mutable DomainMap with numeric values.
@@ -31,8 +32,19 @@ import domain._;
 trait NumericDomainMapLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
  D<:IterableDomain[A] with DomainLike[A,D],
- +This<:NumericDomainMap[A,B,D]]
+ +This<:NumericDomainMap[A,B,D] /* ,+Working<:MutableNumericDomainMap[A,B,D] */ ]
 extends DomainMapLike[A,B,D,This] {
+// with SelfOp[A,B,D,NumericDomainMap[A,B,D],MutableNumericDomainMap[A,B,D],Shape.DefaultShape] {
+//
+////  override def value : This = repr;
+//
+////  /** Return a new mutable copy of this map. */
+////  override def working : Working;
+//  override def working = {
+//    val m = MutableNumericDomainMap[A,B,D](this.domain, numeric.zero)(numeric);
+//    m := repr;
+//    m;
+//  }
 
   val numeric : Numeric[B];
 
@@ -91,4 +103,14 @@ extends DomainMapLike[A,B,D,This] {
 trait NumericDomainMap
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
  D<:IterableDomain[A] with DomainLike[A,D]]
-extends DomainMap[A,B,D] with NumericDomainMapLike[A,B,D,NumericDomainMap[A,B,D]]
+extends DomainMap[A,B,D]
+with NumericDomainMapLike[A,B,D,NumericDomainMap[A,B,D]/* ,MutableNumericDomainMap[A,B,D] */] {
+
+}
+
+object NumericDomainMap {
+  import tensor.dense.DenseVector;
+  val x = DenseVector(10)(0);
+  // val y = x + x;
+
+}

@@ -70,5 +70,15 @@ object DenseVector {
       }
       new DenseVector(data);
     }
+
+    override def apply(from : DenseVector, fn : ((Int,Double)=>Double)) = {
+      val data = new Array[Double](from.size);
+      var i = 0;
+      while (i < data.length) {
+        data(i) = fn(i, from.data(i));
+        i += 1;
+      }
+      new DenseVector(data);
+    }
   }
 }

@@ -115,3 +115,21 @@ trait MutableNumericDomainMap
  D<:IterableDomain[A] with DomainLike[A,D]]
 extends NumericDomainMap[A,B,D] with MutableDomainMap[A,B,D]
 with MutableNumericDomainMapLike[A,B,D,MutableNumericDomainMap[A,B,D]]
+
+object MutableNumericDomainMap {
+
+  def apply
+  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+   D <: IterableDomain[A] with DomainLike[A,D]]
+  (domain : D, default : B, map : scala.collection.Map[A,B] = scala.collection.mutable.Map[A,B]())
+  (implicit numeric : Numeric[B]) =
+    new Impl[A,B,D](map, default, domain)(numeric);
+
+  class Impl
+  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+   D <: IterableDomain[A] with DomainLike[A,D]]
+  (_map : scala.collection.Map[A,B], _default : B, _domain : D)
+  (implicit override val numeric : Numeric[B])
+  extends MutableDomainMap.Impl[A,B,D](_map, _default, _domain)
+  with MutableNumericDomainMap[A,B,D];
+}

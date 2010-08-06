@@ -32,4 +32,5 @@ import domain._;
 trait DomainMapCanMapValuesFrom
 [-From, @specialized A, @specialized B, @specialized O, D<:IterableDomain[A], +To] {
   def apply(from : From, fn : (B=>O)) : To;
+  def apply(from : From, fn : ((A,B)=>O)) : To;
 }

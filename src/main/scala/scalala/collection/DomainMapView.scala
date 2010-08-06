@@ -127,10 +127,10 @@ object DomainMapView {
    +This <: TransformView[A,B,O,D,Coll]]
   extends DomainMapViewLike[A,O,D,Coll,This] {
     /** Transform a value in the underlying map to a value in the view. */
-    def transform(value : B) : O;
+    def transform(key : A, value : B) : O;
 
     override def apply(key : A) =
-      transform(underlying.apply(key));
+      transform(key, underlying.apply(key));
   }
 
   trait TransformView
@@ -148,9 +148,9 @@ object DomainMapView {
   [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
    @specialized(Int,Long,Float,Double,Boolean) O,
    D<:IterableDomain[A] with DomainLike[A,D], +Coll <: DomainMap[A,B,D]]
-  (override val underlying : Coll, fn : (B=>O))
+  (override val underlying : Coll, fn : ((A,B)=>O))
   extends TransformView[A,B,O,D,Coll] {
-     override def transform(value : B) = fn(value);
+     override def transform(key : A, value : B) = fn(key, value);
   }
 
 //// TODO: not sure why this doesn't work
@@ -166,7 +166,11 @@ object DomainMapView {
   new DomainMapCanMapValuesFrom
   [TransformView[A,B1,B2,D,DomainMap[A,B1,D]],A,B2,B3,D,TransformView[A,B1,B3,D,DomainMap[A,B1,D]]] {
     override def apply(from : TransformView[A,B1,B2,D,DomainMap[A,B1,D]], fn : (B2=>B3)) =
-      new TransformImpl[A,B1,B3,D,DomainMap[A,B1,D]](from.underlying, from.transform _ andThen fn)
+      new TransformImpl[A,B1,B3,D,DomainMap[A,B1,D]](
+        from.underlying, ((k:A, v:B1) => fn(from.transform(k,v))));
+    override def apply(from : TransformView[A,B1,B2,D,DomainMap[A,B1,D]], fn : ((A,B2)=>B3)) =
+      new TransformImpl[A,B1,B3,D,DomainMap[A,B1,D]](
+        from.underlying, ((k:A, v:B1) => fn(k,from.transform(k,v))));
   }
 
   /** Override canMapValues on DomainMapView instances to construct a lazy view. */
@@ -175,6 +179,8 @@ object DomainMapView {
   new DomainMapCanMapValuesFrom
   [IdentityView[A,B1,D,DomainMap[A,B1,D]],A,B1,B2,D,TransformView[A,B1,B2,D,DomainMap[A,B1,D]]] {
     override def apply(from : IdentityView[A,B1,D,DomainMap[A,B1,D]], fn : (B1=>B2)) =
-      new TransformImpl[A,B1,B2,D,DomainMap[A,B1,D]](from.underlying, fn)
+      new TransformImpl[A,B1,B2,D,DomainMap[A,B1,D]](from.underlying, ((k:A,v:B1) => fn(v)));
+    override def apply(from : IdentityView[A,B1,D,DomainMap[A,B1,D]], fn : ((A,B1)=>B2)) =
+      new TransformImpl[A,B1,B2,D,DomainMap[A,B1,D]](from.underlying, fn);
   }
 }

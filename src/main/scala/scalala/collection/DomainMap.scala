@@ -147,6 +147,11 @@ self =>
   (implicit bf : DomainMapCanMapValuesFrom[Repr, A, B, O, D, That]) : That =
     bf.apply(repr, f);
 
+  /** Creates a new map containing a transformed view of this map. */
+  def mapValues[O,That](f : (A,B) => O)
+  (implicit bf : DomainMapCanMapValuesFrom[Repr, A, B, O, D, That]) : That =
+    bf.apply(repr, f);
+
   //
   // Slice construction
   //
@@ -160,7 +165,7 @@ self =>
     bf(repr, keys);
 
   /** Creates a view backed by the given keys, returning them as a sequence. */
-  def apply[That](keys : Iterable[A])
+  def apply[That](keys : Traversable[A])
   (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, D, B, That]) : That =
     bf(repr, keys.toIndexedSeq);
 
@@ -282,7 +287,26 @@ extends DomainMapLike[A, B, D, DomainMap[A, B, D]];
 //
 //}
 
-object DomainMap {
+//trait DomainMapCompanion[T[A,B,D<:IterableDomain[A] with DomainLike[A,D]] <: DomainMap[A,B,D]] {
+//
+//  type View[A,B,D<:IterableDomain[A] with DomainLike[A,D]] = DomainMapView[A,B,D,T[A,B,D]];
+//  type MapValues[A,B,O,D<:IterableDomain[A] with DomainLike[A,D]] = DomainMap[A,O,D];
+//
+//  implicit def canViewFrom[A,B,D<:IterableDomain[A] with DomainLike[A,D]] =
+//  new DomainMapCanViewFrom[T[A,B,D], View[A,B,D]] {
+//    override def apply(from : T[A,B,D]) =
+//      new DomainMapView.IdentityViewImpl[A,B,D,T[A,B,D]](from);
+//  }
+//}
+
+object DomainMap /* extends DomainMapCompanion[DomainMap] */ {
+
+  class Impl[A,B](values : Map[A,B]) extends DomainMap[A,B,SetDomain[A]] {
+    override val domain : SetDomain[A] = new SetDomain(values.keySet);
+    override def apply(k : A) = values(k);
+  }
+
+  def apply[A,B](values : (A,B)*) : DomainMap[A,B,SetDomain[A]] = new Impl(values.toMap);
 
   implicit def canViewFrom[A, B, D<:IterableDomain[A] with DomainLike[A,D]] =
   new DomainMapCanViewFrom[DomainMap[A,B,D],DomainMapView.IdentityView[A,B,D,DomainMap[A,B,D]]] {
@@ -296,6 +320,11 @@ object DomainMap {
     override def apply(from : DomainMap[A,B,D], fn : (B=>O)) = {
       val rv = MutableDomainMap[A,O,D](from.domain, default.value);
       from.foreach((k,v) => rv(k) = fn(v));
+      rv;
+    }
+    override def apply(from : DomainMap[A,B,D], fn : ((A,B)=>O)) = {
+      val rv = MutableDomainMap[A,O,D](from.domain, default.value);
+      from.foreach((k,v) => rv(k) = fn(k,v));
       rv;
     }
   }
