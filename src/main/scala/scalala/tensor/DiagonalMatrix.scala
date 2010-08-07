@@ -50,12 +50,22 @@ case class DiagonalMatrix(diagonal : Vector) extends Matrix {
   /**
   * Creates a tensor "like" this one, but with zeros everywhere.
   */
-  def like = new DiagonalMatrix(diagonal.like);
+  def like = {
+    val rv = dense.DenseMatrix(rows,cols)(0);
+    rv := this;
+    rv;
+  }
 
   /**
-  * Creates a vector "like" this one, but with zeros everywhere.
+  * Creates a matrix "like" this one, but with zeros everywhere.
   */
-  def matrixLike(rows:Int,cols:Int) = new DiagonalMatrix(diagonal.vectorLike(rows));
+  def matrixLike(rows:Int,cols:Int) = {
+    val rv = dense.DenseMatrix(rows,cols)(0);
+    for (i <- 0 until List(diagonal.size,rows,cols).min) {
+      rv(i,i) = diagonal(i);
+    }
+    rv;
+  }
 
   /**
   * Creates a vector "like" this one, but with zeros everywhere.
