@@ -50,14 +50,22 @@ extends (A => Boolean) {
 trait Domain[@specialized(Int,Long,Float,Double) A]
 extends DomainLike[A, Domain[A]];
 
-
 /**
- * Implementation trait for a domain that can be traversed.
+ * Implementation trait for a domain that can be traversed.  Default
+ * equality check returns true if this eq other or if this and other
+ * traverse the same elements in the same order.
  *
  * @author dramage
  */
 trait IterableDomainLike[@specialized(Int,Long) A, +This<:IterableDomainLike[A,This]]
-extends DomainLike[A,This] with IterableLike[A,This]
+extends DomainLike[A,This] with IterableLike[A,This] {
+  override def equals(other : Any) = other match {
+    case that : IterableDomain[_] =>
+      (this eq that) || (this.iterator zip that.iterator).forall(tup => tup._1 == tup._2);
+    case _ =>
+      false;
+  }
+}
 
 /**
  * A domain that can be traversed.
@@ -80,27 +88,12 @@ object IterableDomain extends TraversableFactory[IterableDomain] {
     SetDomain.newBuilder;
 }
 
-//trait MutableDomainLike[@specialized(Int,Long) A, +This<:MutableDomainLike[A,This]]
-//extends IterableDomainLike[A,This] {
-//  /** Remove all elements from the domain. */
-//  def clear();
-//
-//  /** Add an element to the domain. */
-//  def += (item : A);
-//
-//  /** Remove an element from the domain. */
-//  def -= (item : A);
-//}
-//
-//trait MutableDomain[@specialized(Int,Long) A]
-//extends IterableDomain[A] with MutableDomainLike[A, MutableDomain[A]];
-
 /**
  * The domain of elements from a specific set.
  *
  * @author dramage
  */
-class SetDomain[@specialized(Int,Long) A](set : scala.collection.Set[A])
+case class SetDomain[@specialized(Int,Long) A](set : scala.collection.Set[A])
 extends IterableDomain[A]
 with GenericTraversableTemplate[A,SetDomain]
 with IterableDomainLike[A,SetDomain[A]] {
@@ -117,6 +110,12 @@ with IterableDomainLike[A,SetDomain[A]] {
 
   override def contains(key : A) : Boolean =
     set.contains(key);
+
+  override def equals(other : Any) = other match {
+    case SetDomain(s) => this.set == s;
+    case that : Domain[_] => super.equals(that);
+    case _ => false;
+  }
 }
 
 object SetDomain extends TraversableFactory[SetDomain] {
@@ -142,6 +141,12 @@ extends IterableDomain[Int] with DomainLike[Int,IndexDomain] {
 
   override def iterator =
     Iterator.range(0, size);
+
+  override def equals(other : Any) = other match {
+    case IndexDomain(s) => this.size == s;
+    case that : Domain[_] => super.equals(that);
+    case _ => false;
+  }
 }
 
 trait Product2DomainLike
@@ -171,6 +176,14 @@ extends IterableDomain[(A1,A2)] with DomainLike[(A1,A2),This] {
   /** Defers to contains(tup._1, tup._2). */
   final override def contains(tup : (A1,A2)) =
     contains(tup._1, tup._2);
+
+  override def equals(other : Any) = other match {
+    case that : Product2Domain[_,_] =>
+      this._1 == that._1 && this._2 == that._2;
+    case base : Domain[_] =>
+      super.equals(base);
+    case _ => false;
+  }
 }
 
 /**
@@ -222,6 +235,12 @@ with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain]
 
   override def toString =
     "TableDomain("+numRows+","+numCols+")";
+
+  override def equals(other : Any) = other match {
+    case TableDomain(nr,nc) => this.numRows == nr && this.numCols == nc;
+    case that : Domain[_] => super.equals(that);
+    case _ => false;
+  }
 }
 
 /**
