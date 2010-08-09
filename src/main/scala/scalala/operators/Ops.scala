@@ -133,7 +133,9 @@ object CanAdd {
   (implicit op : NumericPlus[B,V2,RV], bf : DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,RV,That])
   extends CanAdd[DomainMap[A,B],DomainMap[A,V2],That] {
     def apply(a : DomainMap[A,B], b : DomainMap[A,V2]) = {
-      // TODO: this is not right because must also add values from b(k) and/or check domain?
+      if (a.domain != b.domain) {
+        throw new DomainException(this.getClass.getSimpleName + ": different domains");
+      }
       a.mapValues((k:A,v:B) => op(v,b(k)));
     }
   }
