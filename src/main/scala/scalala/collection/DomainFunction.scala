@@ -32,7 +32,7 @@ import domain._;
 trait DomainFunction
 [@specialized(Int,Long,Float,Double) A,
  @specialized(Int,Long,Float,Double,Boolean) +B,
- D <: Domain[A]]
+ +D <: Domain[A]]
 extends PartialFunction[A, B] {
   
   /** The domain over which this function is defined. */

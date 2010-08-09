@@ -41,5 +41,5 @@ with MutableDomainMap2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDo
 trait MutableDomainTable
 [@specialized(Int,Long,Float,Double,Boolean) B]
 extends DomainTable[B]
-with MutableDomainMap2[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain]
+with MutableDomainMap2[Int,Int,B]
 with MutableDomainTableLike[B,MutableDomainTable[B]];

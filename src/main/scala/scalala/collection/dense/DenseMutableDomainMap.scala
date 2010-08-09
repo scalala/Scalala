@@ -30,8 +30,8 @@ import domain.{DomainLike,IterableDomain};
  */
 trait DenseMutableDomainMapLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- D<:IterableDomain[A] with DomainLike[A,D],
- +This<:DenseMutableDomainMap[A,B,D]]
+ +D<:IterableDomain[A] with DomainLike[A,D],
+ +This<:DenseMutableDomainMap[A,B]]
 extends MutableDomainMapLike[A,B,D,This] {
   def data : Array[B];
 
@@ -60,7 +60,6 @@ extends MutableDomainMapLike[A,B,D,This] {
  * @author dramage
  */
 trait DenseMutableDomainMap
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- D<:IterableDomain[A] with DomainLike[A,D]]
-extends MutableDomainMap[A,B,D]
-with DenseMutableDomainMapLike[A,B,D,DenseMutableDomainMap[A,B,D]];
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
+extends MutableDomainMap[A,B]
+with DenseMutableDomainMapLike[A,B,IterableDomain[A],DenseMutableDomainMap[A,B]];

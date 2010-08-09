@@ -29,6 +29,6 @@ import domain._;
  * @author dramage
  */
 trait DomainMapCanSliceSeqFrom
-[-From, @specialized A, D<:IterableDomain[A], @specialized B, +To] {
+[-From, @specialized A, @specialized B, +To] {
   def apply(from : From, keys : Seq[A]) : To;
 }

@@ -30,8 +30,8 @@ import collection.domain._;
  * @author dramage
  */
 trait Tensor1Like
-[@specialized(Int,Long)A, D<:IterableDomain[A] with DomainLike[A,D],
- +This<:Tensor1[A,D]]
+[@specialized(Int,Long)A, +D<:IterableDomain[A] with DomainLike[A,D],
+ +This<:Tensor1[A]]
 extends TensorLike[A,D,This] {
   /** Returns the k-norm of this tensor.  Calls scalala.Scalala.norm(this). */
   def norm(n : Double) : Double = {
@@ -61,7 +61,7 @@ extends TensorLike[A,D,This] {
   }
 
   /** Returns the inner product of this tensor with another. */
-  def dot(that : Tensor1[A,D]) : Double = {
+  def dot(that : Tensor1[A]) : Double = {
     checkDomain(that.domain);
     var sum = 0.0;
     foreach((k,v) => sum += v * that(k));
@@ -82,9 +82,8 @@ extends TensorLike[A,D,This] {
  *
  * @author dramage
  */
-trait Tensor1
-[@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D]]
-extends Tensor[A,D] with Tensor1Like[A,D,Tensor1[A,D]];
+trait Tensor1[@specialized(Int,Long) A]
+extends Tensor[A] with Tensor1Like[A,IterableDomain[A],Tensor1[A]];
 
 
 object Tensor1 {

@@ -157,7 +157,7 @@ extends DomainSeqLike[B,Repr] with MutableDomainMapLike[Int,B,IndexDomain,Repr] 
  * MutableDomainMap that is also a DomainSeq.
  */
 trait MutableDomainSeq[@specialized(Int,Long,Float,Double,Boolean) B]
-extends DomainSeq[B] with MutableDomainMap[Int,B,IndexDomain]
+extends DomainSeq[B] with MutableDomainMap[Int,B]
 with MutableDomainSeqLike[B,MutableDomainSeq[B]];
 
 

@@ -27,7 +27,7 @@ import domain._;
 import org.scalatest.FunSuite;
 
 
-trait MutableNumericDomainMapTest[A,B,D<:IterableDomain[A] with DomainLike[A,D],M<:NumericDomainMap[A,B,D]]
-extends NumericDomainMapTest[A,B,D,M] with FunSuite {
+trait MutableNumericDomainMapTest[A,B,M<:NumericDomainMap[A,B]]
+extends NumericDomainMapTest[A,B,M] with FunSuite {
 
 }

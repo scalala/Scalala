@@ -33,10 +33,6 @@ trait DomainMap2CanSliceTableFrom
  @specialized(Int, Long) A1,
  @specialized(Int, Long) A2,
  @specialized(Int, Long, Float, Double, Boolean) B,
- D1<:IterableDomain[A1] with DomainLike[A1,D1],
- D2<:IterableDomain[A2] with DomainLike[A2,D2],
- D<:Product2DomainLike[A1,A2,D1,D2,T,D],
- T<:Product2DomainLike[A2,A1,D2,D1,D,T],
  +To] {
   def apply(from : From, keys1 : Seq[A1], keys2 : Seq[A2]) : To;
 }

@@ -31,7 +31,7 @@ import domain.{DomainLike,IterableDomain};
 trait SparseMutableDomainMapLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
  D<:IterableDomain[A] with DomainLike[A,D],
- +This<:SparseMutableDomainMap[A,B,D]]
+ +This<:SparseMutableDomainMap[A,B]]
 extends MutableDomainMapLike[A,B,D,This] {
   def data : SparseArray[B];
 
@@ -50,7 +50,6 @@ extends MutableDomainMapLike[A,B,D,This] {
  * @author dramage
  */
 trait SparseMutableDomainMap
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- D<:IterableDomain[A] with DomainLike[A,D]]
-extends MutableDomainMap[A,B,D]
-with SparseMutableDomainMapLike[A,B,D,SparseMutableDomainMap[A,B,D]];
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
+extends MutableDomainMap[A,B]
+with SparseMutableDomainMapLike[A,B,IterableDomain[A],SparseMutableDomainMap[A,B]];

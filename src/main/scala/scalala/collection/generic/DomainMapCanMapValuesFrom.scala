@@ -30,7 +30,7 @@ import domain._;
  * @author dramage
  */
 trait DomainMapCanMapValuesFrom
-[-From, @specialized A, @specialized B, @specialized O, D<:IterableDomain[A], +To] {
+[-From, @specialized A, @specialized B, @specialized O, +To] {
   def apply(from : From, fn : (B=>O)) : To;
   def apply(from : From, fn : ((A,B)=>O)) : To;
 }

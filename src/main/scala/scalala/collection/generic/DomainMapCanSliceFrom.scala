@@ -29,6 +29,6 @@ import domain._;
  * @author dramage
  */
 trait DomainMapCanSliceFrom
-[-From, @specialized A1, D1 <: IterableDomain[A1], @specialized A2, B, +To] {
+[-From, @specialized A1, @specialized A2, B, +To] {
   def apply(from : From, keymap : scala.collection.Map[A2,A1]) : To;
 }

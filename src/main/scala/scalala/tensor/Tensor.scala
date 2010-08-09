@@ -30,8 +30,8 @@ import collection.numeric._;
  * @author dramage
  */
 trait TensorLike
-[@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D],
- +This<:Tensor[A,D]]
+[@specialized(Int,Long) A, +D<:IterableDomain[A] with DomainLike[A,D],
+ +This<:Tensor[A]]
 extends MutableNumericDomainMapLike[A,Double,D,This] {
 
   override val numeric = Numeric.DoubleNumeric;
@@ -183,9 +183,9 @@ extends MutableNumericDomainMapLike[A,Double,D,This] {
  *
  * @author dramage
  */
-trait Tensor[@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D]]
-extends MutableNumericDomainMap[A,Double,D]
-with TensorLike[A,D,Tensor[A,D]];
+trait Tensor[@specialized(Int,Long) A]
+extends MutableNumericDomainMap[A,Double]
+with TensorLike[A,IterableDomain[A],Tensor[A]];
 
 object Tensor {
 //  /** Default tolerance value for element-wise equality. */

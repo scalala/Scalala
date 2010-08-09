@@ -31,8 +31,7 @@ import generic._;
  */
 trait MutableDomainMapLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- D <: IterableDomain[A] with DomainLike[A,D],
- +Repr<:MutableDomainMap[A,B,D]]
+ +D<:IterableDomain[A] with DomainLike[A,D], +Repr<:MutableDomainMap[A,B]]
 extends DomainMapLike[A, B, D, Repr] {
 
   /**
@@ -46,13 +45,13 @@ extends DomainMapLike[A, B, D, Repr] {
     for (key <- keysIterator) update(key,value);
 
   /** Assigns the corresponding value to each element of this map. */
-  def :=(that : DomainMap[A,B,D]) = {
+  def :=(that : DomainMap[A,B]) = {
     checkDomain(that.domain);
     for (key <- keysIterator) update(key,that(key));
   }
 
   /** Assigns the corresponding value to each element of this map. */
-  def :=[O](that : DomainMap[A,O,D])(implicit tf : (O=>B)) = {
+  def :=[O](that : DomainMap[A,O])(implicit tf : (O=>B)) = {
     checkDomain(that.domain);
     for (key <- keysIterator) update(key,that(key));
   }
@@ -72,23 +71,18 @@ extends DomainMapLike[A, B, D, Repr] {
  * @author dramage
  */
 trait MutableDomainMap
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- D <: IterableDomain[A] with DomainLike[A,D]]
-extends DomainMap[A,B,D] with MutableDomainMapLike[A,B,D,MutableDomainMap[A,B,D]];
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
+extends DomainMap[A,B] with MutableDomainMapLike[A,B,IterableDomain[A],MutableDomainMap[A,B]];
 
 object MutableDomainMap {
 
-  def apply
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
-   D <: IterableDomain[A] with DomainLike[A,D]]
-  (domain : D, default : B, map : scala.collection.Map[A,B] = scala.collection.mutable.Map[A,B]()) =
-    new Impl[A,B,D](map, default, domain);
+  def apply[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
+  (domain : IterableDomain[A], default : B, map : scala.collection.Map[A,B] = scala.collection.mutable.Map[A,B]()) =
+    new Impl[A,B](map, default, domain);
 
-  class Impl
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
-   D <: IterableDomain[A] with DomainLike[A,D]]
-  (protected var map : scala.collection.Map[A,B], val default : B, override val domain : D)
-  extends MutableDomainMap[A, B, D] {
+  class Impl[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
+  (protected var map : scala.collection.Map[A,B], val default : B, override val domain : IterableDomain[A])
+  extends MutableDomainMap[A, B] {
     override def apply(key : A) : B = {
       checkKey(key);
       map.getOrElse(key, default);
@@ -100,22 +94,22 @@ object MutableDomainMap {
     }
   }
 
-  implicit def canSliceFrom[A1, A2, D<:IterableDomain[A1] with DomainLike[A1,D], B] =
-  new DomainMapCanSliceFrom[MutableDomainMap[A1,B,D], A1, D, A2, B, MutableDomainMap[A2,B,SetDomain[A2]]] {
-    override def apply(from : MutableDomainMap[A1,B,D], keymap : scala.collection.Map[A2,A1]) =
-      new MutableDomainMapSlice.FromKeyMap[A1, D, A2, B, MutableDomainMap[A1,B,D]](from, keymap);
+  implicit def canSliceFrom[A1, A2, B] =
+  new DomainMapCanSliceFrom[MutableDomainMap[A1,B], A1, A2, B, MutableDomainMap[A2,B]] {
+    override def apply(from : MutableDomainMap[A1,B], keymap : scala.collection.Map[A2,A1]) =
+      new MutableDomainMapSlice.FromKeyMap[A1, A2, B, MutableDomainMap[A1,B]](from, keymap);
   }
 
-  implicit def canSliceSeqFrom[A, D<:IterableDomain[A] with DomainLike[A,D], B] =
-  new DomainMapCanSliceSeqFrom[MutableDomainMap[A,B,D], A, D, B, MutableDomainSeq[B]] {
-    override def apply(from : MutableDomainMap[A,B,D], keys : Seq[A]) =
-      new MutableDomainMapSliceSeq.FromKeySeq[A,D,B,MutableDomainMap[A,B,D]](from, keys);
+  implicit def canSliceSeqFrom[A, B] =
+  new DomainMapCanSliceSeqFrom[MutableDomainMap[A,B], A, B, MutableDomainSeq[B]] {
+    override def apply(from : MutableDomainMap[A,B], keys : Seq[A]) =
+      new MutableDomainMapSliceSeq.FromKeySeq[A,B,MutableDomainMap[A,B]](from, keys);
   }
 
   /** Slicing on a double-valued MutableDomainMap results in a Vector type. */
-  implicit def canSliceVectorFrom[A, D<:IterableDomain[A] with DomainLike[A,D]] =
-  new DomainMapCanSliceSeqFrom[MutableDomainMap[A,Double,D], A, D, Double, tensor.Vector] {
-    override def apply(from : MutableDomainMap[A,Double,D], keys : Seq[A]) =
-      new tensor.Vector.SliceFromKeySeq[A,D,MutableDomainMap[A,Double,D]](from, keys);
+  implicit def canSliceVectorFrom[A] =
+  new DomainMapCanSliceSeqFrom[MutableDomainMap[A,Double], A, Double, tensor.Vector] {
+    override def apply(from : MutableDomainMap[A,Double], keys : Seq[A]) =
+      new tensor.Vector.SliceFromKeySeq[A,MutableDomainMap[A,Double]](from, keys);
   }
 }

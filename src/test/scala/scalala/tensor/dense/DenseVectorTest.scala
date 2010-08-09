@@ -31,7 +31,7 @@ import org.scalatest.prop._;
 import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
-class DenseVectorTest extends MutableNumericDomainMapTest[Int,Double,IndexDomain,DenseVector] {
+class DenseVectorTest extends MutableNumericDomainMapTest[Int,Double,DenseVector] {
 
   val TOLERANCE = 1e-4;
   def assertClose(a : Double, b : Double) =

@@ -61,4 +61,4 @@ extends DomainMapLike[Int, B, IndexDomain, Repr] {
  * @author dramage
  */
 trait DomainSeq[@specialized(Int,Long,Float,Double,Boolean) B]
-extends DomainMap[Int,B,IndexDomain] with DomainSeqLike[B,DomainSeq[B]];
+extends DomainMap[Int,B] with DomainSeqLike[B,DomainSeq[B]];

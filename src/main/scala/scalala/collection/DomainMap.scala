@@ -33,7 +33,8 @@ import generic._;
 trait DomainMapLike
 [@specialized(Int, Long) A,
  @specialized(Int, Long, Float, Double, Boolean) B,
- D<:IterableDomain[A] with DomainLike[A,D], +Repr<:DomainMap[A,B,D]]
+ +D<:IterableDomain[A] with DomainLike[A,D],
+ +Repr<:DomainMap[A,B]]
 extends DomainFunction[A, B, D] {
 self =>
 
@@ -139,17 +140,17 @@ self =>
    * values matching the given filter criteria.
    */
   def filterValues[That](p: B => Boolean)
-  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, D, B, That]) : That =
+  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, B, That]) : That =
     apply(find(p));
 
   /** Creates a new map containing a transformed view of this map. */
   def mapValues[O,That](f : B => O)
-  (implicit bf : DomainMapCanMapValuesFrom[Repr, A, B, O, D, That]) : That =
+  (implicit bf : DomainMapCanMapValuesFrom[Repr, A, B, O, That]) : That =
     bf.apply(repr, f);
 
   /** Creates a new map containing a transformed view of this map. */
   def mapValues[O,That](f : (A,B) => O)
-  (implicit bf : DomainMapCanMapValuesFrom[Repr, A, B, O, D, That]) : That =
+  (implicit bf : DomainMapCanMapValuesFrom[Repr, A, B, O, That]) : That =
     bf.apply(repr, f);
 
   //
@@ -161,26 +162,26 @@ self =>
 
   /** Creates a view backed by the given keys, returning them as a sequence. */
   def apply[That](keys : A*)
-  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, D, B, That]) : That =
+  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, B, That]) : That =
     bf(repr, keys);
 
   /** Creates a view backed by the given keys, returning them as a sequence. */
   def apply[That](keys : Traversable[A])
-  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, D, B, That]) : That =
+  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, B, That]) : That =
     bf(repr, keys.toIndexedSeq);
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : (I,A)*)
-  (implicit bf : DomainMapCanSliceFrom[Repr, A, D, I, B, That]) : That =
+  (implicit bf : DomainMapCanSliceFrom[Repr, A, I, B, That]) : That =
     apply[I,That](Map() ++ keys);
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : Iterable[(I,A)])
-  (implicit bf : DomainMapCanSliceFrom[Repr, A, D, I, B, That]) : That =
+  (implicit bf : DomainMapCanSliceFrom[Repr, A, I, B, That]) : That =
     apply[I,That](Map() ++ keys);
 
   def apply[I,That](keys : scala.collection.Map[I,A])
-  (implicit bf : DomainMapCanSliceFrom[Repr, A, D, I, B, That]) : That =
+  (implicit bf : DomainMapCanSliceFrom[Repr, A, I, B, That]) : That =
     bf(repr, keys);
 
 
@@ -193,7 +194,7 @@ self =>
    * that each function returns the same value.
    */
   override def equals(other : Any) : Boolean = other match {
-    case that: DomainMap[A,B,_] =>
+    case that: DomainMap[A,B] =>
       (this eq that) ||
       (that canEqual this) &&
       (this.domain == that.domain) &&
@@ -203,7 +204,7 @@ self =>
 
   /** From recipe in "Programming in Scala" section 28.4. */
   def canEqual(other : Any) : Boolean = other match {
-    case that : DomainMap[_,_,_] => true;
+    case that : DomainMap[_,_] => true;
     case _ => false;
   }
 
@@ -220,7 +221,7 @@ self =>
    * to the underlying map.
    */
   def sorted[That]
-  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, D, B, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
+  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, B, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
     this(this.argsort);
 
   /**
@@ -264,9 +265,8 @@ self =>
 
 trait DomainMap
 [@specialized(Int,Long) A,
- @specialized(Int,Long,Float,Double,Boolean) B,
- D<:IterableDomain[A] with DomainLike[A,D]]
-extends DomainMapLike[A, B, D, DomainMap[A, B, D]];
+ @specialized(Int,Long,Float,Double,Boolean) B]
+extends DomainMapLike[A, B, IterableDomain[A], DomainMap[A, B]];
 
 //object DomainMapTypes {
 //   type From[A,B] = DomainMap[A,B,IterableDomain[A]];
@@ -301,44 +301,44 @@ extends DomainMapLike[A, B, D, DomainMap[A, B, D]];
 
 object DomainMap /* extends DomainMapCompanion[DomainMap] */ {
 
-  class Impl[A,B](values : Map[A,B]) extends DomainMap[A,B,SetDomain[A]] {
+  class Impl[A,B](values : Map[A,B]) extends DomainMap[A,B] {
     override val domain : SetDomain[A] = new SetDomain(values.keySet);
     override def apply(k : A) = values(k);
   }
 
-  def apply[A,B](values : (A,B)*) : DomainMap[A,B,SetDomain[A]] = new Impl(values.toMap);
+  def apply[A,B](values : (A,B)*) : DomainMap[A,B] = new Impl(values.toMap);
 
-  implicit def canViewFrom[A, B, D<:IterableDomain[A] with DomainLike[A,D]] =
-  new DomainMapCanViewFrom[DomainMap[A,B,D],DomainMapView.IdentityView[A,B,D,DomainMap[A,B,D]]] {
-    override def apply(from : DomainMap[A,B,D]) =
-      new DomainMapView.IdentityViewImpl[A,B,D,DomainMap[A,B,D]](from);
+  implicit def canViewFrom[A, B] =
+  new DomainMapCanViewFrom[DomainMap[A,B],DomainMapView.IdentityView[A,B,DomainMap[A,B]]] {
+    override def apply(from : DomainMap[A,B]) =
+      new DomainMapView.IdentityViewImpl[A,B,DomainMap[A,B]](from);
   }
 
-  implicit def canMapValuesFrom[A, B, O, D<:IterableDomain[A] with DomainLike[A,D]]
+  implicit def canMapValuesFrom[A, B, O]
   (implicit default : DefaultValue[O]) =
-  new DomainMapCanMapValuesFrom[DomainMap[A,B,D],A,B,O,D,MutableDomainMap[A,O,D]] {
-    override def apply(from : DomainMap[A,B,D], fn : (B=>O)) = {
-      val rv = MutableDomainMap[A,O,D](from.domain, default.value);
+  new DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,O,MutableDomainMap[A,O]] {
+    override def apply(from : DomainMap[A,B], fn : (B=>O)) = {
+      val rv = MutableDomainMap[A,O](from.domain, default.value);
       from.foreach((k,v) => rv(k) = fn(v));
       rv;
     }
-    override def apply(from : DomainMap[A,B,D], fn : ((A,B)=>O)) = {
-      val rv = MutableDomainMap[A,O,D](from.domain, default.value);
+    override def apply(from : DomainMap[A,B], fn : ((A,B)=>O)) = {
+      val rv = MutableDomainMap[A,O](from.domain, default.value);
       from.foreach((k,v) => rv(k) = fn(k,v));
       rv;
     }
   }
 
-  implicit def canSliceFrom[A1, A2, D<:IterableDomain[A1] with DomainLike[A1,D], B] =
-  new DomainMapCanSliceFrom[DomainMap[A1,B,D], A1, D, A2, B, DomainMap[A2,B,SetDomain[A2]]] {
-    override def apply(from : DomainMap[A1,B,D], keymap : scala.collection.Map[A2,A1]) =
-      new DomainMapSlice.FromKeyMap[A1, D, A2, B, DomainMap[A1,B,D]](from, keymap);
+  implicit def canSliceFrom[A1, A2, B] =
+  new DomainMapCanSliceFrom[DomainMap[A1,B], A1, A2, B, DomainMap[A2,B]] {
+    override def apply(from : DomainMap[A1,B], keymap : scala.collection.Map[A2,A1]) =
+      new DomainMapSlice.FromKeyMap[A1, A2, B, DomainMap[A1,B]](from, keymap);
   }
 
-  implicit def canSliceSeqFrom[A, D<:IterableDomain[A] with DomainLike[A,D], B] =
-  new DomainMapCanSliceSeqFrom[DomainMap[A,B,D], A, D, B, DomainSeq[B]] {
-    override def apply(from : DomainMap[A,B,D], keys : Seq[A]) =
-      new DomainMapSliceSeq.FromKeySeq[A,D,B,DomainMap[A,B,D]](from, keys);
+  implicit def canSliceSeqFrom[A, B] =
+  new DomainMapCanSliceSeqFrom[DomainMap[A,B], A, B, DomainSeq[B]] {
+    override def apply(from : DomainMap[A,B], keys : Seq[A]) =
+      new DomainMapSliceSeq.FromKeySeq[A,B,DomainMap[A,B]](from, keys);
   }
 
 }

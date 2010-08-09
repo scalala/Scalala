@@ -84,5 +84,5 @@ extends DomainMap2Like[Int, Int, B, IndexDomain, IndexDomain, TableDomain, Table
  * @author dramage
  */
 trait DomainTable[@specialized(Int,Long,Float,Double,Boolean) B]
-extends DomainMap2[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain]
+extends DomainMap2[Int,Int,B]
 with DomainTableLike[B, DomainTable[B]];

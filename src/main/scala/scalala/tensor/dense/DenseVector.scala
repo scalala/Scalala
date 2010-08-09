@@ -60,7 +60,7 @@ object DenseVector {
     new DenseVector(Array.tabulate(size)(f));
 
   implicit object DenseVectorCanMapValuesFrom
-  extends DomainMapCanMapValuesFrom[DenseVector,Int,Double,Double,IndexDomain,DenseVector] {
+  extends DomainMapCanMapValuesFrom[DenseVector,Int,Double,Double,DenseVector] {
     override def apply(from : DenseVector, fn : (Double=>Double)) = {
       val data = new Array[Double](from.size);
       var i = 0;

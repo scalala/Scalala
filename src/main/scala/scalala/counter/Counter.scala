@@ -34,7 +34,7 @@ import collection.numeric._;
 trait CounterLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
  +This <: Counter[A,B]]
-extends MutableNumericDomainMapLike[A,B,IterableDomain[A],This]
+extends MutableNumericDomainMapLike[A,B,SetDomain[A],This]
 {
   def default : B;
 
@@ -49,8 +49,7 @@ extends MutableNumericDomainMapLike[A,B,IterableDomain[A],This]
 
 trait Counter
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
-extends MutableNumericDomainMap[A,B,IterableDomain[A]]
-   with CounterLike[A,B,Counter[A,B]];
+extends MutableNumericDomainMap[A,B] with CounterLike[A,B,Counter[A,B]];
 
 class MapCounter
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B:scalala.collection.numeric.Numeric]

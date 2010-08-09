@@ -81,15 +81,6 @@ extends BinaryOp[Map[K,V1],Map[K,V2],Map[K,RV]] {
 trait CanAdd[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanAdd {
-//  //
-//  // Scalars
-//  //
-//
-//  implicit def canAddCommutative[A,B,That](implicit op : CanAdd[B,A,That]) =
-//    new CanAddCommutative[A,B,That];
-//
-//  class CanAddCommutative[+A,+B,-That](implicit op : CanAdd[B,A,That])
-//  extends CommutativeOp[A,B,That](op) with CanAdd[A,B,That];
 
   //
   // Arrays
@@ -133,15 +124,15 @@ object CanAdd {
   // 
 
   implicit def canAddDomainMap
-  [A,B,V2,RV,D<:IterableDomain[A] with DomainLike[A,D],That]
-  (implicit op : NumericPlus[B,V2,RV], bf : DomainMapCanMapValuesFrom[DomainMap[A,B,D],A,B,RV,D,That]) =
-    new CanAddDomainMap[A,B,V2,RV,D,That]();
+  [A,B,V2,RV,That]
+  (implicit op : NumericPlus[B,V2,RV], bf : DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,RV,That]) =
+    new CanAddDomainMap[A,B,V2,RV,That]();
 
   class CanAddDomainMap
-  [A,B,V2,RV,D<:IterableDomain[A] with DomainLike[A,D],That]
-  (implicit op : NumericPlus[B,V2,RV], bf : DomainMapCanMapValuesFrom[DomainMap[A,B,D],A,B,RV,D,That])
-  extends CanAdd[DomainMap[A,B,D],DomainMap[A,V2,D],That] {
-    def apply(a : DomainMap[A,B,D], b : DomainMap[A,V2,D]) = {
+  [A,B,V2,RV,That]
+  (implicit op : NumericPlus[B,V2,RV], bf : DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,RV,That])
+  extends CanAdd[DomainMap[A,B],DomainMap[A,V2],That] {
+    def apply(a : DomainMap[A,B], b : DomainMap[A,V2]) = {
       // TODO: this is not right because must also add values from b(k) and/or check domain?
       a.mapValues((k:A,v:B) => op(v,b(k)));
     }
@@ -583,9 +574,13 @@ object RowTensorOps {
   implicit def canModuloRows[A,B,That](implicit op : CanModulo[A,B,That])
   = new RowBinaryOp[A,B,That] with CanModulo[RowTensorOps[A],RowTensorOps[B],RowTensorOps[That]];
 
-  // TODO: add wrapped conversions
+  // TODO: add remaining wrapped conversions
 }
 
+/**
+ * Specialized RowTensorOps support for RowTensors that have mutable
+ * underlying collections.
+ */
 trait MutableRowTensorOps[+A]
 extends RowTensorOps[A] with MutableNumericCollectionOps[RowTensorOps[A]] {
 }
@@ -594,7 +589,7 @@ object MutableRowTensorOps {
   def apply[This](v : This) : MutableRowTensorOps[This] =
     new MutableRowTensorOps[This] { override def column = v; }
 
-  // TODO: add wrapped conversions
+  // TODO: add all wrapped conversions
 }
 
 /**
@@ -613,13 +608,15 @@ trait MatrixOps[+A] extends NumericCollectionOps[A] {
 // Enriched types
 // 
 
-/** Provides basic operator support for numeric arrays. */
-class RichNumericArray[V:ClassManifest](override val repr : Array[V])
+/** Numeric operator support for numeric arrays. @author dramage */
+class RichNumericArrayVector[V:ClassManifest](override val repr : Array[V])
 extends MutableColumnTensorOps[Array[V]];
 
-class RichNumericMatrix[V:ClassManifest](override val repr : Array[Array[V]])
+/** Numeric operator support for Array[Array] matrix. @author dramage */
+class RichNumericArrayMatrix[V:ClassManifest](override val repr : Array[Array[V]])
 extends MatrixOps[Array[Array[V]]];
 
+/** Numeric operator support for solo scalars. @author dramage */
 class RichScalar[@specialized(Int,Long,Float,Double) A](val scalar : A) {
   /** Commutative: defer to scalar + b. */
   def :+[B,That](b : B)(implicit op : CanAdd[B,A,That]) = op(b,scalar);
@@ -643,29 +640,30 @@ class RichScalar[@specialized(Int,Long,Float,Double) A](val scalar : A) {
   final def -[B,That](b : B)(implicit op : CanSubtract[A,B,That]) = this.:-(b);
 }
 
+/** Numeric operator support for scala maps. @athor dramage */
 class RichNumericMap[K,V](override val repr : Map[K,V])
 extends NumericCollectionOps[Map[K,V]];
 
-class RichNumericDomainMap[A,V,D<:IterableDomain[A] with DomainLike[A,D],M<:DomainMap[A,V,D] with DomainMapLike[A,V,D,M]]
+class RichNumericDomainMap[A,V,M<:DomainMap[A,V]]
 (override val repr : M)
 extends NumericCollectionOps[M];
 
 object Implicits {
 
-  implicit def richNumericArray[V:ClassManifest](value : Array[V]) =
-    new RichNumericArray(value);
-
   implicit def richScalar[@specialized(Int,Long,Float,Double) V](value : V) =
     new RichScalar(value);
 
-  implicit def richNumericMatrix[V:ClassManifest](value : Array[Array[V]]) =
-    new RichNumericMatrix(value);
+  implicit def richNumericArrayVector[V:ClassManifest](value : Array[V]) =
+    new RichNumericArrayVector(value);
+
+  implicit def richNumericArrayMatrix[V:ClassManifest](value : Array[Array[V]]) =
+    new RichNumericArrayMatrix(value);
 
   implicit def richNumericMap[K,V](value : Map[K,V]) =
     new RichNumericMap[K,V](value);
 
-  implicit def richNumericDomainMap[A,D<:IterableDomain[A] with DomainLike[A,D],V](value : DomainMap[A,V,D]) =
-    new RichNumericDomainMap[A,V,D,DomainMap[A,V,D]](value);
+  implicit def richNumericDomainMap[A,V](value : DomainMap[A,V]) =
+    new RichNumericDomainMap[A,V,DomainMap[A,V]](value);
 
   def main(args : Array[String]) {
     val x = Array(1,2,3,4);

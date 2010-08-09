@@ -32,12 +32,12 @@ import generic._;
 trait MutableDomainMap2SliceTableLike
 [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
  @specialized(Int,Long,Float,Double,Boolean) B,
- D1<:IterableDomain[A1] with DomainLike[A1,D1],
- D2<:IterableDomain[A2] with DomainLike[A2,D2],
- D<:Product2DomainLike[A1,A2,D1,D2,T,D],
- T<:Product2DomainLike[A2,A1,D2,D1,D,T],
- +Coll<:MutableDomainMap2[A1,A2,B,D1,D2,D,T],
- +This<:MutableDomainMap2SliceTable[A1,A2,B,D1,D2,D,T,Coll]]
+ +D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ +D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+ +Coll<:MutableDomainMap2[A1,A2,B],
+ +This<:MutableDomainMap2SliceTable[A1,A2,B,Coll]]
 extends DomainMap2SliceTableLike[A1,A2,B,D1,D2,D,T,Coll,This]
 with MutableDomainTableLike[B,This] {
 
@@ -54,26 +54,18 @@ with MutableDomainTableLike[B,This] {
 trait MutableDomainMap2SliceTable
 [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
  @specialized(Int,Long,Float,Double,Boolean) B,
- D1<:IterableDomain[A1] with DomainLike[A1,D1],
- D2<:IterableDomain[A2] with DomainLike[A2,D2],
- D<:Product2DomainLike[A1,A2,D1,D2,T,D],
- T<:Product2DomainLike[A2,A1,D2,D1,D,T],
- +Coll<:MutableDomainMap2[A1,A2,B,D1,D2,D,T]]
+ +Coll<:MutableDomainMap2[A1,A2,B]]
 extends MutableDomainTable[B]
-with DomainMap2SliceTable[A1,A2,B,D1,D2,D,T,Coll]
-with MutableDomainMap2SliceTableLike[A1,A2,B,D1,D2,D,T,Coll,MutableDomainMap2SliceTable[A1,A2,B,D1,D2,D,T,Coll]];
+with DomainMap2SliceTable[A1,A2,B,Coll]
+with MutableDomainMap2SliceTableLike[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Coll,MutableDomainMap2SliceTable[A1,A2,B,Coll]];
 
 object MutableDomainMap2SliceTable {
   class FromKeySeqs
   [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
    @specialized(Int,Long,Float,Double,Boolean) B,
-   D1<:IterableDomain[A1] with DomainLike[A1,D1],
-   D2<:IterableDomain[A2] with DomainLike[A2,D2],
-   D<:Product2DomainLike[A1,A2,D1,D2,T,D],
-   T<:Product2DomainLike[A2,A1,D2,D1,D,T],
-   +Coll<:MutableDomainMap2[A1,A2,B,D1,D2,D,T]]
+   +Coll<:MutableDomainMap2[A1,A2,B]]
   (override val underlying : Coll, val keys1 : Seq[A1], val keys2 : Seq[A2])
-  extends MutableDomainMap2SliceTable[A1,A2,B,D1,D2,D,T,Coll] {
+  extends MutableDomainMap2SliceTable[A1,A2,B,Coll] {
     override def lookup1(i : Int) = keys1(i);
     override def lookup2(j : Int) = keys2(j);
 

@@ -30,9 +30,10 @@ import generic._;
  * @author dramage
  */
 trait MutableDomainMapSliceSeqLike
-[@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:MutableDomainMap[A1, B, D1],
- +This <: MutableDomainMapSliceSeq[A1, D1, B, Coll]]
+[@specialized(Int,Long) A1, +D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ +Coll<:MutableDomainMap[A1,B],
+ +This<:MutableDomainMapSliceSeq[A1,B,Coll]]
 extends MutableDomainMapSliceLike[A1, D1, Int, IndexDomain, B, Coll, This]
 with DomainMapSliceSeqLike[A1, D1, B, Coll, This]
 with MutableDomainSeqLike[B, This];
@@ -41,18 +42,18 @@ with MutableDomainSeqLike[B, This];
  * DomainSeq like view of an underlying MutableDomainMap.
  */
 trait MutableDomainMapSliceSeq
-[@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:MutableDomainMap[A1, B, D1]]
-extends MutableDomainMapSlice[A1,D1,Int,IndexDomain,B,Coll]
-with DomainMapSliceSeq[A1,D1,B,Coll]
-with MutableDomainSeq[B]
-with MutableDomainMapSliceSeqLike[A1, D1, B, Coll, MutableDomainMapSliceSeq[A1, D1, B, Coll]];
+[@specialized(Int,Long) A1, @specialized(Int,Long,Float,Double,Boolean) B,
+ +Coll<:MutableDomainMap[A1, B]]
+extends MutableDomainMapSlice[A1,Int,B,Coll]
+with DomainMapSliceSeq[A1,B,Coll] with MutableDomainSeq[B]
+with MutableDomainMapSliceSeqLike[A1, IterableDomain[A1], B, Coll, MutableDomainMapSliceSeq[A1, B, Coll]];
 
 object MutableDomainMapSliceSeq {
   class FromKeySeq
-  [@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
-   @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:MutableDomainMap[A1, B, D1]]
+  [@specialized(Int,Long) A1,
+   @specialized(Int,Long,Float,Double,Boolean) B,
+   +Coll<:MutableDomainMap[A1, B]]
   (underlying : Coll, keys : Seq[A1])
-  extends DomainMapSliceSeq.FromKeySeq[A1,D1,B,Coll](underlying, keys)
-  with MutableDomainMapSliceSeq[A1,D1,B,Coll];
+  extends DomainMapSliceSeq.FromKeySeq[A1,B,Coll](underlying, keys)
+  with MutableDomainMapSliceSeq[A1,B,Coll];
 }

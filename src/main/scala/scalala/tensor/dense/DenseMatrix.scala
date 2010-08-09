@@ -66,7 +66,7 @@ object DenseMatrix {
   }
 
   implicit object DenseMatrixCanMapValuesFrom
-  extends DomainMapCanMapValuesFrom[DenseMatrix,(Int,Int),Double,Double,TableDomain,DenseMatrix] {
+  extends DomainMapCanMapValuesFrom[DenseMatrix,(Int,Int),Double,Double,DenseMatrix] {
     override def apply(from : DenseMatrix, fn : (Double=>Double)) = {
       val data = new Array[Double](from.data.length);
       var i = 0;

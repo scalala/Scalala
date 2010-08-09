@@ -31,8 +31,7 @@ import domain._;
  */
 trait NumericDomainMapLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
- D<:IterableDomain[A] with DomainLike[A,D],
- +This<:NumericDomainMap[A,B,D] /* ,+Working<:MutableNumericDomainMap[A,B,D] */ ]
+ +D<:IterableDomain[A] with DomainLike[A,D], +This<:NumericDomainMap[A,B]]
 extends DomainMapLike[A,B,D,This] {
 // with SelfOp[A,B,D,NumericDomainMap[A,B,D],MutableNumericDomainMap[A,B,D],Shape.DefaultShape] {
 //
@@ -101,10 +100,9 @@ extends DomainMapLike[A,B,D,This] {
  * @author dramage
  */
 trait NumericDomainMap
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
- D<:IterableDomain[A] with DomainLike[A,D]]
-extends DomainMap[A,B,D]
-with NumericDomainMapLike[A,B,D,NumericDomainMap[A,B,D]/* ,MutableNumericDomainMap[A,B,D] */] {
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
+extends DomainMap[A,B]
+with NumericDomainMapLike[A,B,IterableDomain[A],NumericDomainMap[A,B]] {
 
 }
 

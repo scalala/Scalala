@@ -146,8 +146,8 @@ extends IterableDomain[Int] with DomainLike[Int,IndexDomain] {
 
 trait Product2DomainLike
 [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
- D1 <: IterableDomain[A1] with DomainLike[A1,D1],
- D2 <: IterableDomain[A2] with DomainLike[A2,D2],
+ +D1 <: IterableDomain[A1] with DomainLike[A1,D1],
+ +D2 <: IterableDomain[A2] with DomainLike[A2,D2],
  +Transpose <: Product2DomainLike[A2,A1,D2,D1,This,Transpose],
  +This <: Product2DomainLike[A1,A2,D1,D2,Transpose,This]]
 extends IterableDomain[(A1,A2)] with DomainLike[(A1,A2),This] {
@@ -178,22 +178,28 @@ extends IterableDomain[(A1,A2)] with DomainLike[(A1,A2),This] {
  *
  * @author dramage
  */
-class Product2Domain
-[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
- D1 <: IterableDomain[A1] with DomainLike[A1,D1],
- D2 <: IterableDomain[A2] with DomainLike[A2,D2]]
-(override val _1 : D1, override val _2 : D2)
-extends Product2[D1,D2]
-with Product2DomainLike[A1,A2,D1,D2,Product2Domain[A2,A1,D2,D1],Product2Domain[A1,A2,D1,D2]] {
+trait Product2Domain
+[@specialized(Int,Long) A1, @specialized(Int,Long) A2]
+extends Product2[IterableDomain[A1],IterableDomain[A2]]
+with Product2DomainLike[A1,A2,IterableDomain[A1],IterableDomain[A2],Product2Domain[A2,A1],Product2Domain[A1,A2]] {
 
   def copy =
-    new Product2Domain[A1,A2,D1,D2](_1.copy,_2.copy);
+    Product2Domain[A1,A2](_1.copy,_2.copy);
 
   def transpose =
-    new Product2Domain[A2,A1,D2,D1](_2,_1);
+    Product2Domain[A2,A1](_2,_1);
 
   override def toString =
     "Product2Domain("+_1.toString+","+_2.toString+")";
+}
+
+object Product2Domain {
+  def apply[A1,A2](d1 : IterableDomain[A1], d2 : IterableDomain[A2])
+  : Product2Domain[A1,A2] = new Impl(d1,d2);
+
+  class Impl[@specialized(Int,Long) A1, @specialized(Int,Long) A2]
+  (override val _1 : IterableDomain[A1], override val _2 : IterableDomain[A2])
+  extends Product2Domain[A1,A2];
 }
 
 /**
@@ -202,7 +208,7 @@ with Product2DomainLike[A1,A2,D1,D2,Product2Domain[A2,A1,D2,D1],Product2Domain[A
  * @author dramage
  */
 case class TableDomain(numRows : Int, numCols : Int)
-extends Product2[IndexDomain,IndexDomain]
+extends Product2[IndexDomain,IndexDomain] with Product2Domain[Int,Int]
 with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain] {
 
   override val _1 : IndexDomain = IndexDomain(numRows);

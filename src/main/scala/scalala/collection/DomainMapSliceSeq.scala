@@ -30,9 +30,9 @@ import generic._;
  * @author dramage
  */
 trait DomainMapSliceSeqLike
-[@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D],
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:DomainMap[A, B, D],
- +This <: DomainMapSliceSeq[A, D, B, Coll]]
+[@specialized(Int,Long) A, +D<:IterableDomain[A] with DomainLike[A,D],
+ @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:DomainMap[A,B],
+ +This<:DomainMapSliceSeq[A,B,Coll]]
 extends DomainMapSliceLike[A, D, Int, IndexDomain, B, Coll, This]
 with DomainSeqLike[B, This];
 
@@ -42,17 +42,17 @@ with DomainSeqLike[B, This];
  * @author dramage
  */
 trait DomainMapSliceSeq
-[@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D],
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:DomainMap[A, B, D]]
-extends DomainMapSlice[A,D,Int,IndexDomain,B,Coll] with DomainSeq[B]
-with DomainMapSliceSeqLike[A, D, B, Coll, DomainMapSliceSeq[A, D, B, Coll]];
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+ +Coll<:DomainMap[A, B]]
+extends DomainMapSlice[A,Int,B,Coll] with DomainSeq[B]
+with DomainMapSliceSeqLike[A, IterableDomain[A], B, Coll, DomainMapSliceSeq[A, B, Coll]];
 
 object DomainMapSliceSeq {
   class FromKeySeq
-  [@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D],
-   @specialized(Int,Long,Float,Double,Boolean) B, +Coll <: DomainMap[A, B, D]]
+  [@specialized(Int,Long) A,  @specialized(Int,Long,Float,Double,Boolean) B,
+   +Coll <: DomainMap[A, B]]
   (override val underlying : Coll, keys : Seq[A])
-  extends DomainMapSliceSeq[A, D, B, Coll] {
+  extends DomainMapSliceSeq[A, B, Coll] {
     override def lookup(key : Int) = keys(key);
     override val domain = IndexDomain(keys.length);
   }

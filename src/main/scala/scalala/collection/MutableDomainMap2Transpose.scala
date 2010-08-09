@@ -31,12 +31,12 @@ import generic._;
 trait MutableDomainMap2TransposeLike
 [@specialized(Int,Long) A2, @specialized(Int,Long) A1,
  @specialized(Int,Long,Float,Double,Boolean) B,
- D2<:IterableDomain[A2] with DomainLike[A2,D2],
- D1<:IterableDomain[A1] with DomainLike[A1,D1],
- T<:Product2DomainLike[A2,A1,D2,D1,D,T],
- D<:Product2DomainLike[A1,A2,D1,D2,T,D],
- +Coll <: MutableDomainMap2[A1,A2,B,D1,D2,D,T],
- +This <: MutableDomainMap2Transpose[A2,A1,B,D2,D1,T,D,Coll]]
+ +D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ +D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+ +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ +Coll<:MutableDomainMap2[A1,A2,B],
+ +This<:MutableDomainMap2Transpose[A2,A1,B,Coll]]
 extends DomainMap2TransposeLike[A2,A1,B,D2,D1,T,D,Coll,This]
 with MutableDomainMapSliceLike[(A1,A2),D,(A2,A1),T,B,Coll,This]
 with MutableDomainMap2Like[A2,A1,B,D2,D1,T,D,This] {
@@ -54,15 +54,11 @@ self =>
 trait MutableDomainMap2Transpose
 [@specialized(Int,Long) A2, @specialized(Int,Long) A1,
  @specialized(Int,Long,Float,Double,Boolean) B,
- D2<:IterableDomain[A2] with DomainLike[A2,D2],
- D1<:IterableDomain[A1] with DomainLike[A1,D1],
- T<:Product2DomainLike[A2,A1,D2,D1,D,T],
- D<:Product2DomainLike[A1,A2,D1,D2,T,D],
- +Coll <: MutableDomainMap2[A1,A2,B,D1,D2,D,T]]
-extends DomainMap2Transpose[A2,A1,B,D2,D1,T,D,Coll]
-with MutableDomainMapSlice[(A1,A2),D,(A2,A1),T,B,Coll]
-with MutableDomainMap2[A2,A1,B,D2,D1,T,D]
-with MutableDomainMap2TransposeLike[A2,A1,B,D2,D1,T,D,Coll,MutableDomainMap2Transpose[A2,A1,B,D2,D1,T,D,Coll]];
+ +Coll <: MutableDomainMap2[A1,A2,B]]
+extends DomainMap2Transpose[A2,A1,B,Coll]
+with MutableDomainMapSlice[(A1,A2),(A2,A1),B,Coll]
+with MutableDomainMap2[A2,A1,B]
+with MutableDomainMap2TransposeLike[A2,A1,B,IterableDomain[A2],IterableDomain[A1],Product2Domain[A2,A1],Product2Domain[A1,A2],Coll,MutableDomainMap2Transpose[A2,A1,B,Coll]];
 
 
 object MutableDomainMap2Transpose {
@@ -70,12 +66,8 @@ object MutableDomainMap2Transpose {
   class Impl
   [@specialized(Int,Long) A2, @specialized(Int,Long) A1,
    @specialized(Int,Long,Float,Double,Boolean) B,
-   D2<:IterableDomain[A2] with DomainLike[A2,D2],
-   D1<:IterableDomain[A1] with DomainLike[A1,D1],
-   T<:Product2DomainLike[A2,A1,D2,D1,D,T],
-   D<:Product2DomainLike[A1,A2,D1,D2,T,D],
-   +Coll <: MutableDomainMap2[A1,A2,B,D1,D2,D,T]]
+   +Coll <: MutableDomainMap2[A1,A2,B]]
   (override val underlying : Coll)
-  extends DomainMap2Transpose.Impl[A2,A1,B,D2,D1,T,D,Coll](underlying)
-  with MutableDomainMap2Transpose[A2,A1,B,D2,D1,T,D,Coll];
+  extends DomainMap2Transpose.Impl[A2,A1,B,Coll](underlying)
+  with MutableDomainMap2Transpose[A2,A1,B,Coll];
 }

@@ -64,7 +64,7 @@ with MutableDomainSeqLike[B,This] {
  */
 class DenseMutableDomainSeq
 [@specialized(Int,Long,Float,Double,Boolean) B](override val data : Array[B])
-extends DenseMutableDomainMap[Int,B,IndexDomain] with MutableDomainSeq[B]
+extends DenseMutableDomainMap[Int,B] with MutableDomainSeq[B]
 with DenseMutableDomainSeqLike[B, DenseMutableDomainSeq[B]] {
   // override def copy = new DenseMutableDomainSeq(data.clone);
 }

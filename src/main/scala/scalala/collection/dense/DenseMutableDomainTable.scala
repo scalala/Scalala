@@ -75,7 +75,7 @@ with MutableDomainTableLike[B, This] {
  */
 class DenseMutableDomainTable[@specialized(Int,Long,Float,Double,Boolean) B]
 (override val numRows : Int, override val numCols : Int, override val data : Array[B])
-extends DenseMutableDomainMap[(Int,Int),B,TableDomain] with MutableDomainTable[B]
+extends DenseMutableDomainMap[(Int,Int),B] with MutableDomainTable[B]
 with DenseMutableDomainTableLike[B,DenseMutableDomainTable[B]] {
 
   override val domain = TableDomain(numRows, numCols);
