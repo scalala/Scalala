@@ -2,8 +2,20 @@
 package scalala;
 package operators;
 
-/** Returns the zero value for the given type. */
-trait NumericZero[@specialized(Int,Short,Long,Float,Double,Boolean) V] {
+/** Marker trait for scalar values. @author dramage */
+trait Scalar[@specialized(Int,Short,Long,Float,Double,Boolean) V];
+
+object Scalar {
+  implicit object ScalarI extends Scalar[Int];
+  implicit object ScalarS extends Scalar[Short];
+  implicit object ScalarL extends Scalar[Long];
+  implicit object scalarF extends Scalar[Float];
+  implicit object scalarD extends Scalar[Double];
+  implicit object scalarB extends Scalar[Boolean];
+}
+
+/** Returns the zero value for the given type. @author dramage */
+trait NumericZero[@specialized(Int,Short,Long,Float,Double,Boolean) V] extends Scalar[V] {
   def value : V;
 }
 
@@ -68,11 +80,47 @@ object NumericPlus {
   implicit object NumericPlusII extends NumericPlus[Int,Int,Int]
   { def apply(a : Int, b : Int) = a + b; }
 
+  implicit object NumericPlusIL extends NumericPlus[Int,Long,Long]
+  { def apply(a : Int, b : Long) = a + b; }
+
+  implicit object NumericPlusIF extends NumericPlus[Int,Float,Float]
+  { def apply(a : Int, b : Float) = a + b; }
+
   implicit object NumericPlusID extends NumericPlus[Int,Double,Double]
   { def apply(a : Int, b : Double) = a + b; }
 
+  implicit object NumericPlusLI extends NumericPlus[Long,Int,Long]
+  { def apply(a : Long, b : Int) = a + b; }
+
+  implicit object NumericPlusLL extends NumericPlus[Long,Long,Long]
+  { def apply(a : Long, b : Long) = a + b; }
+
+  implicit object NumericPlusLF extends NumericPlus[Long,Float,Double]
+  { def apply(a : Long, b : Float) = a + b; }
+
+  implicit object NumericPlusLD extends NumericPlus[Long,Double,Double]
+  { def apply(a : Long, b : Double) = a + b; }
+
+  implicit object NumericPlusFI extends NumericPlus[Float,Int,Float]
+  { def apply(a : Float, b : Int) = a + b; }
+
+  implicit object NumericPlusFL extends NumericPlus[Float,Long,Double]
+  { def apply(a : Float, b : Long) = a + b; }
+
+  implicit object NumericPlusFF extends NumericPlus[Float,Float,Float]
+  { def apply(a : Float, b : Float) = a + b; }
+
+  implicit object NumericPlusFD extends NumericPlus[Float,Double,Double]
+  { def apply(a : Float, b : Double) = a + b; }
+
   implicit object NumericPlusDI extends NumericPlus[Double,Int,Double]
   { def apply(a : Double, b : Int) = a + b; }
+
+  implicit object NumericPlusDL extends NumericPlus[Double,Long,Double]
+  { def apply(a : Double, b : Long) = a + b; }
+
+  implicit object NumericPlusDF extends NumericPlus[Double,Float,Double]
+  { def apply(a : Double, b : Float) = a + b; }
 
   implicit object NumericPlusDD extends NumericPlus[Double,Double,Double]
   { def apply(a : Double, b : Double) = a + b; }
