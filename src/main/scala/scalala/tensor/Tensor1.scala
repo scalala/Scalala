@@ -67,13 +67,6 @@ extends TensorLike[A,D,This] {
     foreach((k,v) => sum += v * that(k));
     sum;
   }
-
-  /** Returns the sum of the values in this map. */
-  def sum : Double = {
-    var sum = 0.0;
-    valuesIterator.foreach(v => sum += v);
-    return sum;
-  }
 }
 
 /**

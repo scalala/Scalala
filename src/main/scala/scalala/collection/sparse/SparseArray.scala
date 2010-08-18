@@ -65,6 +65,12 @@ class SparseArray[@specialized T:ClassManifest]
   /** Used values. */
   def valuesIterator = data.iterator.take(used);
 
+  /** A copy of the keys in this array. */
+  def keysArray : Array[Int] = index.take(used);
+
+  /** A copy of the values in this array. */
+  def valuesArray : Array[T] = data.take(used);
+
   // Taken from Scalala
 
   /** Records that the given index was found at this.index(offset). */

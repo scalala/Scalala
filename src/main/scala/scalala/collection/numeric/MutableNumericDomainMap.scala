@@ -32,7 +32,9 @@ trait MutableNumericDomainMapLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
  +D<:IterableDomain[A] with DomainLike[A,D],
  +This<:MutableNumericDomainMap[A,B]]
-extends NumericDomainMapLike[A,B,D,This] with MutableDomainMapLike[A,B,D,This] {
+extends NumericDomainMapLike[A,B,D,This]
+with MutableDomainMapLike[A,B,D,This]
+with operators.MutableNumericCollectionOps[This] {
 
   //
   // Scalar updates.

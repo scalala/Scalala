@@ -153,6 +153,14 @@ self =>
   (implicit bf : DomainMapCanMapValuesFrom[Repr, A, B, O, That]) : That =
     bf.apply(repr, f);
 
+  /**
+   * Creates a new DomainMap over the same domain using the given value
+   * function to create each return value in the map.
+   */
+  def join[V2,RV,That](m : DomainMap[A,V2])(fn : (A,B,V2) => RV)
+  (implicit bf : DomainMapCanJoinWith[Repr, DomainMap[A,V2], A, B, V2, RV, That]) : That =
+    bf.apply(repr, m, fn);
+
   //
   // Slice construction
   //
@@ -325,6 +333,18 @@ object DomainMap /* extends DomainMapCompanion[DomainMap] */ {
     override def apply(from : DomainMap[A,B], fn : ((A,B)=>O)) = {
       val rv = MutableDomainMap[A,O](from.domain, default.value);
       from.foreach((k,v) => rv(k) = fn(k,v));
+      rv;
+    }
+  }
+
+  implicit def canJoinFrom[K, V1, V2, RV](implicit default : DefaultValue[RV]) =
+  new DomainMapCanJoinWith[DomainMap[K,V1], DomainMap[K,V2], K, V1, V2, RV, DomainMap[K,RV]] {
+    override def apply(a : DomainMap[K,V1], b : DomainMap[K,V2], fn : (K,V1,V2)=>RV) = {
+      if (a.domain != b.domain) {
+        throw new DomainException("Mismatched domains on join");
+      }
+      val rv = MutableDomainMap[K,RV](a.domain, default.value);
+      for (k <- rv.domain) { rv(k) = fn(k,a(k),b(k)); }
       rv;
     }
   }

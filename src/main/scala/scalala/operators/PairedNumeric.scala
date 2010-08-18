@@ -3,7 +3,7 @@ package scalala;
 package operators;
 
 /** Marker trait for scalar values. @author dramage */
-trait Scalar[@specialized(Int,Short,Long,Float,Double,Boolean) V];
+trait Scalar[V];
 
 object Scalar {
   implicit object ScalarI extends Scalar[Int];
@@ -39,23 +39,23 @@ object NumericZero {
   { def value = false; }
 }
 
-trait NumericNegation[@specialized(Int,Short,Long,Float,Double,Boolean) V]
+trait NumericNeg[@specialized(Int,Short,Long,Float,Double,Boolean) V]
 extends (V => V);
 
-object NumericNegation {
-  implicit object NumericNegationInt extends NumericNegation[Int]
+object NumericNeg {
+  implicit object NumericNegInt extends NumericNeg[Int]
   { def apply(value : Int) = -value; }
 
-  implicit object NumericNegationShort extends NumericNegation[Short]
+  implicit object NumericNegShort extends NumericNeg[Short]
   { def apply(value : Short) = (-value).toShort; }
 
-  implicit object NumericNegationLong extends NumericNegation[Long]
+  implicit object NumericNegLong extends NumericNeg[Long]
   { def apply(value : Long) = -value; }
 
-  implicit object NumericNegationFloat extends NumericNegation[Float]
+  implicit object NumericNegFloat extends NumericNeg[Float]
   { def apply(value : Float) = -value; }
 
-  implicit object NumericNegationDouble extends NumericNegation[Double]
+  implicit object NumericNegDouble extends NumericNeg[Double]
   { def apply(value : Double) = -value; }
 }
 
@@ -74,123 +74,123 @@ trait PairedNumeric
 extends Function2[A,B,X];
 
 /** Computes A+B. @author dramage */
-trait NumericPlus[A,B,X] extends PairedNumeric[A,B,X];
+trait NumericAdd[A,B,X] extends PairedNumeric[A,B,X];
 
-object NumericPlus {
-  implicit object NumericPlusII extends NumericPlus[Int,Int,Int]
+object NumericAdd {
+  implicit object NumericAddII extends NumericAdd[Int,Int,Int]
   { def apply(a : Int, b : Int) = a + b; }
 
-  implicit object NumericPlusIL extends NumericPlus[Int,Long,Long]
+  implicit object NumericAddIL extends NumericAdd[Int,Long,Long]
   { def apply(a : Int, b : Long) = a + b; }
 
-  implicit object NumericPlusIF extends NumericPlus[Int,Float,Float]
+  implicit object NumericAddIF extends NumericAdd[Int,Float,Float]
   { def apply(a : Int, b : Float) = a + b; }
 
-  implicit object NumericPlusID extends NumericPlus[Int,Double,Double]
+  implicit object NumericAddID extends NumericAdd[Int,Double,Double]
   { def apply(a : Int, b : Double) = a + b; }
 
-  implicit object NumericPlusLI extends NumericPlus[Long,Int,Long]
+  implicit object NumericAddLI extends NumericAdd[Long,Int,Long]
   { def apply(a : Long, b : Int) = a + b; }
 
-  implicit object NumericPlusLL extends NumericPlus[Long,Long,Long]
+  implicit object NumericAddLL extends NumericAdd[Long,Long,Long]
   { def apply(a : Long, b : Long) = a + b; }
 
-  implicit object NumericPlusLF extends NumericPlus[Long,Float,Double]
+  implicit object NumericAddLF extends NumericAdd[Long,Float,Double]
   { def apply(a : Long, b : Float) = a + b; }
 
-  implicit object NumericPlusLD extends NumericPlus[Long,Double,Double]
+  implicit object NumericAddLD extends NumericAdd[Long,Double,Double]
   { def apply(a : Long, b : Double) = a + b; }
 
-  implicit object NumericPlusFI extends NumericPlus[Float,Int,Float]
+  implicit object NumericAddFI extends NumericAdd[Float,Int,Float]
   { def apply(a : Float, b : Int) = a + b; }
 
-  implicit object NumericPlusFL extends NumericPlus[Float,Long,Double]
+  implicit object NumericAddFL extends NumericAdd[Float,Long,Double]
   { def apply(a : Float, b : Long) = a + b; }
 
-  implicit object NumericPlusFF extends NumericPlus[Float,Float,Float]
+  implicit object NumericAddFF extends NumericAdd[Float,Float,Float]
   { def apply(a : Float, b : Float) = a + b; }
 
-  implicit object NumericPlusFD extends NumericPlus[Float,Double,Double]
+  implicit object NumericAddFD extends NumericAdd[Float,Double,Double]
   { def apply(a : Float, b : Double) = a + b; }
 
-  implicit object NumericPlusDI extends NumericPlus[Double,Int,Double]
+  implicit object NumericAddDI extends NumericAdd[Double,Int,Double]
   { def apply(a : Double, b : Int) = a + b; }
 
-  implicit object NumericPlusDL extends NumericPlus[Double,Long,Double]
+  implicit object NumericAddDL extends NumericAdd[Double,Long,Double]
   { def apply(a : Double, b : Long) = a + b; }
 
-  implicit object NumericPlusDF extends NumericPlus[Double,Float,Double]
+  implicit object NumericAddDF extends NumericAdd[Double,Float,Double]
   { def apply(a : Double, b : Float) = a + b; }
 
-  implicit object NumericPlusDD extends NumericPlus[Double,Double,Double]
+  implicit object NumericAddDD extends NumericAdd[Double,Double,Double]
   { def apply(a : Double, b : Double) = a + b; }
 }
 
 /** Computes A-B. @author dramage */
-trait NumericMinus[A,B,X] extends PairedNumeric[A,B,X];
+trait NumericSub[A,B,X] extends PairedNumeric[A,B,X];
 
-object NumericMinus {
-  implicit object NumericMinusII extends NumericMinus[Int,Int,Int]
+object NumericSub {
+  implicit object NumericSubII extends NumericSub[Int,Int,Int]
   { def apply(a : Int, b : Int) = a - b; }
 
-  implicit object NumericMinusID extends NumericMinus[Int,Double,Double]
+  implicit object NumericSubID extends NumericSub[Int,Double,Double]
   { def apply(a : Int, b : Double) = a - b; }
 
-  implicit object NumericMinusDI extends NumericMinus[Double,Int,Double]
+  implicit object NumericSubDI extends NumericSub[Double,Int,Double]
   { def apply(a : Double, b : Int) = a - b; }
 
-  implicit object NumericMinusDD extends NumericMinus[Double,Double,Double]
+  implicit object NumericSubDD extends NumericSub[Double,Double,Double]
   { def apply(a : Double, b : Double) = a - b; }
 }
 
 /** Computes A*B. @author dramage */
-trait NumericTimes[A,B,X] extends PairedNumeric[A,B,X];
+trait NumericMul[A,B,X] extends PairedNumeric[A,B,X];
 
-object NumericTimes {
-  implicit object NumericTimesII extends NumericTimes[Int,Int,Int]
+object NumericMul {
+  implicit object NumericMulII extends NumericMul[Int,Int,Int]
   { def apply(a : Int, b : Int) = a * b; }
 
-  implicit object NumericTimesID extends NumericTimes[Int,Double,Double]
+  implicit object NumericMulID extends NumericMul[Int,Double,Double]
   { def apply(a : Int, b : Double) = a * b; }
 
-  implicit object NumericTimesDI extends NumericTimes[Double,Int,Double]
+  implicit object NumericMulDI extends NumericMul[Double,Int,Double]
   { def apply(a : Double, b : Int) = a * b; }
 
-  implicit object NumericTimesDD extends NumericTimes[Double,Double,Double]
+  implicit object NumericMulDD extends NumericMul[Double,Double,Double]
   { def apply(a : Double, b : Double) = a * b; }
 }
 
 /** Computes A/B. @author dramage */
-trait NumericDivide[A,B,X] extends PairedNumeric[A,B,X];
+trait NumericDiv[A,B,X] extends PairedNumeric[A,B,X];
 
-object NumericDivide {
-  implicit object NumericDivideII extends NumericDivide[Int,Int,Int]
+object NumericDiv {
+  implicit object NumericDivII extends NumericDiv[Int,Int,Int]
   { def apply(a : Int, b : Int) = a / b; }
 
-  implicit object NumericDivideID extends NumericDivide[Int,Double,Double]
+  implicit object NumericDivID extends NumericDiv[Int,Double,Double]
   { def apply(a : Int, b : Double) = a / b; }
 
-  implicit object NumericDivideDI extends NumericDivide[Double,Int,Double]
+  implicit object NumericDivDI extends NumericDiv[Double,Int,Double]
   { def apply(a : Double, b : Int) = a / b; }
 
-  implicit object NumericDivideDD extends NumericDivide[Double,Double,Double]
+  implicit object NumericDivDD extends NumericDiv[Double,Double,Double]
   { def apply(a : Double, b : Double) = a / b; }
 }
 
 /** Computes A%B. @author dramage */
-trait NumericModulo[A,B,X] extends PairedNumeric[A,B,X];
+trait NumericMod[A,B,X] extends PairedNumeric[A,B,X];
 
-object NumericModulo {
-  implicit object NumericModuloII extends NumericModulo[Int,Int,Int]
+object NumericMod {
+  implicit object NumericModII extends NumericMod[Int,Int,Int]
   { def apply(a : Int, b : Int) = a % b; }
 
-  implicit object NumericModuloID extends NumericModulo[Int,Double,Double]
+  implicit object NumericModID extends NumericMod[Int,Double,Double]
   { def apply(a : Int, b : Double) = a % b; }
 
-  implicit object NumericModuloDI extends NumericModulo[Double,Int,Double]
+  implicit object NumericModDI extends NumericMod[Double,Int,Double]
   { def apply(a : Double, b : Int) = a % b; }
 
-  implicit object NumericModuloDD extends NumericModulo[Double,Double,Double]
+  implicit object NumericModDD extends NumericMod[Double,Double,Double]
   { def apply(a : Double, b : Double) = a % b; }
 }
 
@@ -198,16 +198,16 @@ object NumericModulo {
 trait NumericPow[A,B,X] extends PairedNumeric[A,B,X];
 
 object NumericPow {
-  implicit object NumericPowII extends NumericModulo[Int,Int,Double]
+  implicit object NumericPowII extends NumericMod[Int,Int,Double]
   { def apply(a : Int, b : Int) = math.pow(a,b); }
 
-  implicit object NumericPowID extends NumericModulo[Int,Double,Double]
+  implicit object NumericPowID extends NumericMod[Int,Double,Double]
   { def apply(a : Int, b : Double) = math.pow(a,b); }
 
-  implicit object NumericPowDI extends NumericModulo[Double,Int,Double]
+  implicit object NumericPowDI extends NumericMod[Double,Int,Double]
   { def apply(a : Double, b : Int) = math.pow(a,b); }
 
-  implicit object NumericPowDD extends NumericModulo[Double,Double,Double]
+  implicit object NumericPowDD extends NumericMod[Double,Double,Double]
   { def apply(a : Double, b : Double) = math.pow(a,b); }
 }
 

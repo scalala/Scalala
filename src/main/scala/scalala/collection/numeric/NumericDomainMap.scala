@@ -22,7 +22,6 @@ package collection;
 package numeric;
 
 import domain._;
-// import operators.{Shape,SelfOp};
 
 /**
  * A Mutable DomainMap with numeric values.
@@ -32,18 +31,8 @@ import domain._;
 trait NumericDomainMapLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
  +D<:IterableDomain[A] with DomainLike[A,D], +This<:NumericDomainMap[A,B]]
-extends DomainMapLike[A,B,D,This] {
-// with SelfOp[A,B,D,NumericDomainMap[A,B,D],MutableNumericDomainMap[A,B,D],Shape.DefaultShape] {
-//
-////  override def value : This = repr;
-//
-////  /** Return a new mutable copy of this map. */
-////  override def working : Working;
-//  override def working = {
-//    val m = MutableNumericDomainMap[A,B,D](this.domain, numeric.zero)(numeric);
-//    m := repr;
-//    m;
-//  }
+extends DomainMapLike[A,B,D,This] 
+with operators.NumericCollectionOps[This] {
 
   val numeric : Numeric[B];
 
@@ -91,6 +80,13 @@ extends DomainMapLike[A,B,D,This] {
     var min = valuesIterator.next;
     valuesIterator.foreach(v => { if (numeric.<(v,min)) min = v; })
     return min;
+  }
+
+  /** Returns the sum of the values in this map. */
+  def sum : B = {
+    var sum = numeric.zero;
+    valuesIterator.foreach(v => sum = numeric.+(sum,v));
+    return sum;
   }
 }
 
