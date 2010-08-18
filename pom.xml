@@ -169,6 +169,7 @@
           <args>
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
+            <arg>-Yinline</arg>
             <arg>-no-specialization</arg><!-- temporary workaround for 2.8.0-SNAPSHOT bugs -->
           </args>
           <jvmArgs>
