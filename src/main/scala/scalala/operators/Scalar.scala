@@ -23,6 +23,7 @@ package operators;
 
 /**
  * Marker trait for scalar values.
+ *
  * @author dramage
  */
 trait Scalar[@specialized(Int,Short,Long,Float,Double,Boolean) V] {
