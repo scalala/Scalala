@@ -1,3 +1,22 @@
+/*
+ * Distributed as part of Scalala, a linear algebra library.
+ *
+ * Copyright (C) 2008- Daniel Ramage
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
+ */
 
 package scalala;
 package operators;
@@ -9,24 +28,79 @@ import collection.domain.{DomainException};
 import collection.generic.DomainMapCanMapValuesFrom;
 
 //
+// Basic data creation
+//
+
+///**
+// * Construction delegate for creating a new "0" valued numeric collection of
+// * type That from a template instance of type A.
+// */
+//trait CanCreateZeroFrom[-A, +That] {
+//  def apply(value : A) : That;
+//}
+
+//
 // Unary operations
 //
 
-trait UnaryOp[-A, +That] {
-  def apply(value : A) : That;
-}
+trait UnaryOp[@specialized(Int,Short,Long,Float,Double) -A, +That]
+extends (A => That);
 
 /** Construction delegate for -A */
-trait CanNeg[-A,+That] extends UnaryOp[A,That];
+trait CanNeg[-A, +That]
+extends UnaryOp[A,That];
 
 object CanNeg {
-  implicit def CanNegArray[V](implicit m : ClassManifest[V], n : NumericNeg[V])
-  : CanNeg[Array[V],Array[V]] = new CanNegArray[V];
+  //
+  // Base numeric types
+  //
 
-  class CanNegArray[V](implicit m : ClassManifest[V], n : NumericNeg[V])
-  extends CanNeg[Array[V],Array[V]] {
+  implicit object CanNegI extends CanNeg[Int,Int]
+  { def apply(value : Int) = -value; }
+
+  implicit object CanNegS extends CanNeg[Short,Short]
+  { def apply(value : Short) = (-value).toShort; }
+
+  implicit object CanNegL extends CanNeg[Long,Long]
+  { def apply(value : Long) = -value; }
+
+  implicit object CanNegF extends CanNeg[Float,Float]
+  { def apply(value : Float) = -value; }
+
+  implicit object CanNegD extends CanNeg[Double,Double]
+  { def apply(value : Double) = -value; }
+
+  //
+  // Built-in tuple types
+  //
+
+  implicit def CanNegTuple2[A,RA,B,RB](nA : CanNeg[A,RA], nB : CanNeg[B,RB])
+  : CanNeg[(A,B),(RA,RB)] = new CanNeg[(A,B),(RA,RB)] {
+    def apply(value : (A,B)) = (nA(value._1), nB(value._2));
+  }
+
+  implicit def CanNegTuple3[A,RA,B,RB,C,RC](nA : CanNeg[A,RA], nB : CanNeg[B,RB], nC : CanNeg[C,RC])
+  : CanNeg[(A,B,C),(RA,RB,RC)] = new CanNeg[(A,B,C),(RA,RB,RC)] {
+    def apply(value : (A,B,C)) = (nA(value._1), nB(value._2), nC(value._3));
+  }
+
+  //
+  // Built-in collection types
+  // 
+
+  implicit def CanNegArray[V,RV](implicit m : ClassManifest[RV], n : CanNeg[V,RV])
+  : CanNeg[Array[V],Array[RV]] = new CanNegArray[V,RV];
+
+  class CanNegArray[V,RV](implicit m : ClassManifest[RV], n : CanNeg[V,RV])
+  extends CanNeg[Array[V],Array[RV]] {
     def apply(value : Array[V]) = value.map(n);
   }
+
+  implicit object CanNegArrayI extends CanNegArray[Int,Int];
+  implicit object CanNegArrayS extends CanNegArray[Short,Short];
+  implicit object CanNegArrayL extends CanNegArray[Long,Long];
+  implicit object CanNegArrayF extends CanNegArray[Float,Float];
+  implicit object CanNegArrayD extends CanNegArray[Double,Double];
 }
 
 //
@@ -39,7 +113,7 @@ trait BinaryOp[-A, -B, +That] {
 }
 
 /** Base class for BinaryOp on a pair of arrays. @author dramage */
-class ArrayArrayOp[V1,V2,RV](implicit m : ClassManifest[RV], op : PairedNumeric[V1,V2,RV])
+class ArrayArrayOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV])
 extends BinaryOp[Array[V1],Array[V2],Array[RV]] {
   override def apply(a : Array[V1], b : Array[V2]) = {
     if (a.length != b.length) {
@@ -57,7 +131,7 @@ extends BinaryOp[Array[V1],Array[V2],Array[RV]] {
 
 /** Base class for Array (op) Scalar. */
 class ArrayScalarOp[V1,V2,RV]
-(implicit m : ClassManifest[RV], op : PairedNumeric[V1,V2,RV], s : Scalar[V2])
+(implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], s : Scalar[V2])
 extends BinaryOp[Array[V1],V2,Array[RV]] {
   override def apply(a : Array[V1], b : V2) = {
     val rv = new Array[RV](a.length);
@@ -72,7 +146,7 @@ extends BinaryOp[Array[V1],V2,Array[RV]] {
 
 /** Base class for Scalar (op) Array. */
 class ScalarArrayOp[V1,V2,RV]
-(implicit m : ClassManifest[RV], op : PairedNumeric[V1,V2,RV], s : Scalar[V1])
+(implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], s : Scalar[V1])
 extends BinaryOp[V1,Array[V2],Array[RV]] {
   override def apply(a : V1, b : Array[V2]) = {
     val rv = new Array[RV](b.length);
@@ -86,27 +160,77 @@ extends BinaryOp[V1,Array[V2],Array[RV]] {
 }
 
 /** Base class for BinaryOp on a pair of scala maps. @author dramage */
-class MapMapOp[K,V1,V2,RV](implicit op : PairedNumeric[V1,V2,RV])
+class MapMapOp[K,V1,V2,RV](implicit op : BinaryOp[V1,V2,RV])
 extends BinaryOp[Map[K,V1],Map[K,V2],Map[K,RV]] {
   def apply(a : Map[K,V1], b : Map[K,V2]) =
     (a.keySet ++ b.keySet).map(k => (k,op(a(k),b(k)))).toMap;
 }
 
 
-
 /** Construction delegate for A :+ B. @author dramage */
 trait CanAdd[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanAdd {
+  //
+  // Primitives
+  //
+
+  implicit object CanAddII extends CanAdd[Int,Int,Int]
+  { def apply(a : Int, b : Int) = a + b; }
+
+  implicit object CanAddIL extends CanAdd[Int,Long,Long]
+  { def apply(a : Int, b : Long) = a + b; }
+
+  implicit object CanAddIF extends CanAdd[Int,Float,Float]
+  { def apply(a : Int, b : Float) = a + b; }
+
+  implicit object CanAddID extends CanAdd[Int,Double,Double]
+  { def apply(a : Int, b : Double) = a + b; }
+
+  implicit object CanAddLI extends CanAdd[Long,Int,Long]
+  { def apply(a : Long, b : Int) = a + b; }
+
+  implicit object CanAddLL extends CanAdd[Long,Long,Long]
+  { def apply(a : Long, b : Long) = a + b; }
+
+  implicit object CanAddLF extends CanAdd[Long,Float,Double]
+  { def apply(a : Long, b : Float) = a + b; }
+
+  implicit object CanAddLD extends CanAdd[Long,Double,Double]
+  { def apply(a : Long, b : Double) = a + b; }
+
+  implicit object CanAddFI extends CanAdd[Float,Int,Float]
+  { def apply(a : Float, b : Int) = a + b; }
+
+  implicit object CanAddFL extends CanAdd[Float,Long,Double]
+  { def apply(a : Float, b : Long) = a + b; }
+
+  implicit object CanAddFF extends CanAdd[Float,Float,Float]
+  { def apply(a : Float, b : Float) = a + b; }
+
+  implicit object CanAddFD extends CanAdd[Float,Double,Double]
+  { def apply(a : Float, b : Double) = a + b; }
+
+  implicit object CanAddDI extends CanAdd[Double,Int,Double]
+  { def apply(a : Double, b : Int) = a + b; }
+
+  implicit object CanAddDL extends CanAdd[Double,Long,Double]
+  { def apply(a : Double, b : Long) = a + b; }
+
+  implicit object CanAddDF extends CanAdd[Double,Float,Double]
+  { def apply(a : Double, b : Float) = a + b; }
+
+  implicit object CanAddDD extends CanAdd[Double,Double,Double]
+  { def apply(a : Double, b : Double) = a + b; }
 
   //
   // Arrays
   //
 
-  implicit def canAddArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericAdd[V1,V2,RV])
+  implicit def canAddArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanAdd[V1,V2,RV])
   = new CanAddArrayArray[V1,V2,RV];
 
-  class CanAddArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericAdd[V1,V2,RV])
+  class CanAddArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanAdd[V1,V2,RV])
   extends ArrayArrayOp[V1,V2,RV] with CanAdd[Array[V1],Array[V2],Array[RV]];
 
   implicit object CanAddArrayArrayII extends CanAddArrayArray[Int,Int,Int];
@@ -114,10 +238,10 @@ object CanAdd {
   implicit object CanAddArrayArrayDI extends CanAddArrayArray[Double,Int,Double];
   implicit object CanAddArrayArrayID extends CanAddArrayArray[Int,Double,Double];
 
-  implicit def canAddArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericAdd[V1,V2,RV], s : Scalar[V2])
+  implicit def canAddArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanAdd[V1,V2,RV], s : Scalar[V2])
   = new CanAddArrayScalar[V1,V2,RV];
 
-  class CanAddArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericAdd[V1,V2,RV], s : Scalar[V2])
+  class CanAddArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanAdd[V1,V2,RV], s : Scalar[V2])
   extends ArrayScalarOp[V1,V2,RV] with CanAdd[Array[V1],V2,Array[RV]];
 
   implicit object CanAddArrayScalarII extends CanAddArrayScalar[Int,Int,Int];
@@ -129,44 +253,99 @@ object CanAdd {
   // Scala Maps
   //
 
-  implicit def canAddMap[K,V1,V2,RV](implicit op : NumericAdd[V1,V2,RV]) =
+  implicit def canAddMap[K,V1,V2,RV](implicit op : CanAdd[V1,V2,RV]) =
     new CanAddMap[K,V1,V2,RV];
 
-  class CanAddMap[K,V1,V2,RV](implicit op : NumericAdd[V1,V2,RV])
+  class CanAddMap[K,V1,V2,RV](implicit op : CanAdd[V1,V2,RV])
   extends MapMapOp[K,V1,V2,RV] with CanAdd[Map[K,V1],Map[K,V2],Map[K,RV]];
 
 
-  //
-  // Domain Maps
-  // 
-
-  implicit def canAddDomainMap
-  [A,B,V2,RV,That]
-  (implicit op : NumericAdd[B,V2,RV], bf : DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,RV,That]) =
-    new CanAddDomainMap[A,B,V2,RV,That]();
-
-  class CanAddDomainMap
-  [A,B,V2,RV,That]
-  (implicit op : NumericAdd[B,V2,RV], bf : DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,RV,That])
-  extends CanAdd[DomainMap[A,B],DomainMap[A,V2],That] {
-    def apply(a : DomainMap[A,B], b : DomainMap[A,V2]) = {
-      if (a.domain != b.domain) {
-        throw new DomainException(this.getClass.getSimpleName + ": different domains");
-      }
-      a.mapValues((k:A,v:B) => op(v,b(k)));
-    }
-  }
-
+//  //
+//  // Domain Maps
+//  //
+//
+//  implicit def canAddDomainMap
+//  [A,B,V2,RV,That]
+//  (implicit op : NumericAdd[B,V2,RV], bf : DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,RV,That]) =
+//    new CanAddDomainMap[A,B,V2,RV,That]();
+//
+//  class CanAddDomainMap
+//  [A,B,V2,RV,That]
+//  (implicit op : NumericAdd[B,V2,RV], bf : DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,RV,That])
+//  extends CanAdd[DomainMap[A,B],DomainMap[A,V2],That] {
+//    def apply(a : DomainMap[A,B], b : DomainMap[A,V2]) = {
+//      if (a.domain != b.domain) {
+//        throw new DomainException(this.getClass.getSimpleName + ": different domains");
+//      }
+//      a.mapValues((k:A,v:B) => op(v,b(k)));
+//    }
+//  }
 }
 
 /** Construction delegate for A :- B. @author dramage */
 trait CanSub[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanSub {
-  implicit def CanSubArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericSub[V1,V2,RV])
+  //
+  // Primitives
+  //
+
+  implicit object CanSubII extends CanSub[Int,Int,Int]
+  { def apply(a : Int, b : Int) = a - b; }
+
+  implicit object CanSubIL extends CanSub[Int,Long,Long]
+  { def apply(a : Int, b : Long) = a - b; }
+
+  implicit object CanSubIF extends CanSub[Int,Float,Float]
+  { def apply(a : Int, b : Float) = a - b; }
+
+  implicit object CanSubID extends CanSub[Int,Double,Double]
+  { def apply(a : Int, b : Double) = a - b; }
+
+  implicit object CanSubLI extends CanSub[Long,Int,Long]
+  { def apply(a : Long, b : Int) = a - b; }
+
+  implicit object CanSubLL extends CanSub[Long,Long,Long]
+  { def apply(a : Long, b : Long) = a - b; }
+
+  implicit object CanSubLF extends CanSub[Long,Float,Double]
+  { def apply(a : Long, b : Float) = a - b; }
+
+  implicit object CanSubLD extends CanSub[Long,Double,Double]
+  { def apply(a : Long, b : Double) = a - b; }
+
+  implicit object CanSubFI extends CanSub[Float,Int,Float]
+  { def apply(a : Float, b : Int) = a - b; }
+
+  implicit object CanSubFL extends CanSub[Float,Long,Double]
+  { def apply(a : Float, b : Long) = a - b; }
+
+  implicit object CanSubFF extends CanSub[Float,Float,Float]
+  { def apply(a : Float, b : Float) = a - b; }
+
+  implicit object CanSubFD extends CanSub[Float,Double,Double]
+  { def apply(a : Float, b : Double) = a - b; }
+
+  implicit object CanSubDI extends CanSub[Double,Int,Double]
+  { def apply(a : Double, b : Int) = a - b; }
+
+  implicit object CanSubDL extends CanSub[Double,Long,Double]
+  { def apply(a : Double, b : Long) = a - b; }
+
+  implicit object CanSubDF extends CanSub[Double,Float,Double]
+  { def apply(a : Double, b : Float) = a - b; }
+
+  implicit object CanSubDD extends CanSub[Double,Double,Double]
+  { def apply(a : Double, b : Double) = a - b; }
+
+  //
+  // Arrays
+  //
+
+  implicit def CanSubArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanSub[V1,V2,RV])
   = new CanSubArrayArray[V1,V2,RV];
 
-  class CanSubArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericSub[V1,V2,RV])
+  class CanSubArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanSub[V1,V2,RV])
   extends ArrayArrayOp[V1,V2,RV] with CanSub[Array[V1],Array[V2],Array[RV]];
 
   implicit object CanSubArrayArrayII extends CanSubArrayArray[Int,Int,Int];
@@ -174,10 +353,10 @@ object CanSub {
   implicit object CanSubArrayArrayDI extends CanSubArrayArray[Double,Int,Double];
   implicit object CanSubArrayArrayID extends CanSubArrayArray[Int,Double,Double];
 
-  implicit def CanSubArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericSub[V1,V2,RV], s : Scalar[V2])
+  implicit def CanSubArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanSub[V1,V2,RV], s : Scalar[V2])
   = new CanSubArrayScalar[V1,V2,RV];
 
-  class CanSubArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericSub[V1,V2,RV], s : Scalar[V2])
+  class CanSubArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanSub[V1,V2,RV], s : Scalar[V2])
   extends ArrayScalarOp[V1,V2,RV] with CanSub[Array[V1],V2,Array[RV]];
 
   implicit object CanSubArrayScalarII extends CanSubArrayScalar[Int,Int,Int];
@@ -185,10 +364,10 @@ object CanSub {
   implicit object CanSubArrayScalarDI extends CanSubArrayScalar[Double,Int,Double];
   implicit object CanSubArrayScalarID extends CanSubArrayScalar[Int,Double,Double];
 
-  implicit def mkScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericSub[V1,V2,RV], s : Scalar[V1])
+  implicit def mkScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanSub[V1,V2,RV], s : Scalar[V1])
   = new ScalarArray[V1,V2,RV];
 
-  class ScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericSub[V1,V2,RV], s : Scalar[V1])
+  class ScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanSub[V1,V2,RV], s : Scalar[V1])
   extends ScalarArrayOp[V1,V2,RV] with CanSub[V1,Array[V2],Array[RV]];
 
   implicit object ScalarArrayII extends ScalarArray[Int,Int,Int];
@@ -201,10 +380,66 @@ object CanSub {
 trait CanMul[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMul {
-  implicit def CanMulArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMul[V1,V2,RV])
+  //
+  // Primitives
+  //
+
+  implicit object CanMulII extends CanMul[Int,Int,Int]
+  { def apply(a : Int, b : Int) = a * b; }
+
+  implicit object CanMulIL extends CanMul[Int,Long,Long]
+  { def apply(a : Int, b : Long) = a * b; }
+
+  implicit object CanMulIF extends CanMul[Int,Float,Float]
+  { def apply(a : Int, b : Float) = a * b; }
+
+  implicit object CanMulID extends CanMul[Int,Double,Double]
+  { def apply(a : Int, b : Double) = a * b; }
+
+  implicit object CanMulLI extends CanMul[Long,Int,Long]
+  { def apply(a : Long, b : Int) = a * b; }
+
+  implicit object CanMulLL extends CanMul[Long,Long,Long]
+  { def apply(a : Long, b : Long) = a * b; }
+
+  implicit object CanMulLF extends CanMul[Long,Float,Double]
+  { def apply(a : Long, b : Float) = a * b; }
+
+  implicit object CanMulLD extends CanMul[Long,Double,Double]
+  { def apply(a : Long, b : Double) = a * b; }
+
+  implicit object CanMulFI extends CanMul[Float,Int,Float]
+  { def apply(a : Float, b : Int) = a * b; }
+
+  implicit object CanMulFL extends CanMul[Float,Long,Double]
+  { def apply(a : Float, b : Long) = a * b; }
+
+  implicit object CanMulFF extends CanMul[Float,Float,Float]
+  { def apply(a : Float, b : Float) = a * b; }
+
+  implicit object CanMulFD extends CanMul[Float,Double,Double]
+  { def apply(a : Float, b : Double) = a * b; }
+
+  implicit object CanMulDI extends CanMul[Double,Int,Double]
+  { def apply(a : Double, b : Int) = a * b; }
+
+  implicit object CanMulDL extends CanMul[Double,Long,Double]
+  { def apply(a : Double, b : Long) = a * b; }
+
+  implicit object CanMulDF extends CanMul[Double,Float,Double]
+  { def apply(a : Double, b : Float) = a * b; }
+
+  implicit object CanMulDD extends CanMul[Double,Double,Double]
+  { def apply(a : Double, b : Double) = a * b; }
+
+  //
+  // Arrays
+  //
+
+  implicit def CanMulArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMul[V1,V2,RV])
   = new CanMulArrayArray[V1,V2,RV];
 
-  class CanMulArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMul[V1,V2,RV])
+  class CanMulArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMul[V1,V2,RV])
   extends ArrayArrayOp[V1,V2,RV] with CanMul[Array[V1],Array[V2],Array[RV]];
 
   implicit object CanMulArrayArrayII extends CanMulArrayArray[Int,Int,Int];
@@ -212,10 +447,10 @@ object CanMul {
   implicit object CanMulArrayArrayDI extends CanMulArrayArray[Double,Int,Double];
   implicit object CanMulArrayArrayID extends CanMulArrayArray[Int,Double,Double];
 
-  implicit def CanMulArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMul[V1,V2,RV], s : Scalar[V2])
+  implicit def CanMulArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMul[V1,V2,RV], s : Scalar[V2])
   = new CanMulArrayScalar[V1,V2,RV];
 
-  class CanMulArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMul[V1,V2,RV], s : Scalar[V2])
+  class CanMulArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMul[V1,V2,RV], s : Scalar[V2])
   extends ArrayScalarOp[V1,V2,RV] with CanMul[Array[V1],V2,Array[RV]];
 
   implicit object CanMulArrayScalarII extends CanMulArrayScalar[Int,Int,Int];
@@ -229,10 +464,66 @@ object CanMul {
 trait CanDiv[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanDiv {
-  implicit def CanDivArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericDiv[V1,V2,RV])
+  //
+  // Primitives
+  //
+
+  implicit object CanDivII extends CanDiv[Int,Int,Int]
+  { def apply(a : Int, b : Int) = a / b; }
+
+  implicit object CanDivIL extends CanDiv[Int,Long,Long]
+  { def apply(a : Int, b : Long) = a / b; }
+
+  implicit object CanDivIF extends CanDiv[Int,Float,Float]
+  { def apply(a : Int, b : Float) = a / b; }
+
+  implicit object CanDivID extends CanDiv[Int,Double,Double]
+  { def apply(a : Int, b : Double) = a / b; }
+
+  implicit object CanDivLI extends CanDiv[Long,Int,Long]
+  { def apply(a : Long, b : Int) = a / b; }
+
+  implicit object CanDivLL extends CanDiv[Long,Long,Long]
+  { def apply(a : Long, b : Long) = a / b; }
+
+  implicit object CanDivLF extends CanDiv[Long,Float,Double]
+  { def apply(a : Long, b : Float) = a / b; }
+
+  implicit object CanDivLD extends CanDiv[Long,Double,Double]
+  { def apply(a : Long, b : Double) = a / b; }
+
+  implicit object CanDivFI extends CanDiv[Float,Int,Float]
+  { def apply(a : Float, b : Int) = a / b; }
+
+  implicit object CanDivFL extends CanDiv[Float,Long,Double]
+  { def apply(a : Float, b : Long) = a / b; }
+
+  implicit object CanDivFF extends CanDiv[Float,Float,Float]
+  { def apply(a : Float, b : Float) = a / b; }
+
+  implicit object CanDivFD extends CanDiv[Float,Double,Double]
+  { def apply(a : Float, b : Double) = a / b; }
+
+  implicit object CanDivDI extends CanDiv[Double,Int,Double]
+  { def apply(a : Double, b : Int) = a / b; }
+
+  implicit object CanDivDL extends CanDiv[Double,Long,Double]
+  { def apply(a : Double, b : Long) = a / b; }
+
+  implicit object CanDivDF extends CanDiv[Double,Float,Double]
+  { def apply(a : Double, b : Float) = a / b; }
+
+  implicit object CanDivDD extends CanDiv[Double,Double,Double]
+  { def apply(a : Double, b : Double) = a / b; }
+
+  //
+  // Arrays
+  //
+
+  implicit def CanDivArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanDiv[V1,V2,RV])
   = new CanDivArrayArray[V1,V2,RV];
 
-  class CanDivArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericDiv[V1,V2,RV])
+  class CanDivArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanDiv[V1,V2,RV])
   extends ArrayArrayOp[V1,V2,RV] with CanDiv[Array[V1],Array[V2],Array[RV]];
 
   implicit object CanDivArrayArrayII extends CanDivArrayArray[Int,Int,Int];
@@ -240,10 +531,10 @@ object CanDiv {
   implicit object CanDivArrayArrayDI extends CanDivArrayArray[Double,Int,Double];
   implicit object CanDivArrayArrayID extends CanDivArrayArray[Int,Double,Double];
 
-  implicit def CanDivArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericDiv[V1,V2,RV], s : Scalar[V2])
+  implicit def CanDivArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanDiv[V1,V2,RV], s : Scalar[V2])
   = new CanDivArrayScalar[V1,V2,RV];
 
-  class CanDivArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericDiv[V1,V2,RV], s : Scalar[V2])
+  class CanDivArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanDiv[V1,V2,RV], s : Scalar[V2])
   extends ArrayScalarOp[V1,V2,RV] with CanDiv[Array[V1],V2,Array[RV]];
 
   implicit object CanDivArrayScalarII extends CanDivArrayScalar[Int,Int,Int];
@@ -251,10 +542,10 @@ object CanDiv {
   implicit object CanDivArrayScalarDI extends CanDivArrayScalar[Double,Int,Double];
   implicit object CanDivArrayScalarID extends CanDivArrayScalar[Int,Double,Double];
 
-  implicit def mkScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericDiv[V1,V2,RV], s : Scalar[V1])
+  implicit def mkScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanDiv[V1,V2,RV], s : Scalar[V1])
   = new ScalarArray[V1,V2,RV];
 
-  class ScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericDiv[V1,V2,RV], s : Scalar[V1])
+  class ScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanDiv[V1,V2,RV], s : Scalar[V1])
   extends ScalarArrayOp[V1,V2,RV] with CanDiv[V1,Array[V2],Array[RV]];
 
   implicit object ScalarArrayII extends ScalarArray[Int,Int,Int];
@@ -267,10 +558,66 @@ object CanDiv {
 trait CanMod[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMod {
-  implicit def ArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMod[V1,V2,RV])
+  //
+  // Primitives
+  //
+
+  implicit object CanModII extends CanMod[Int,Int,Int]
+  { def apply(a : Int, b : Int) = a % b; }
+
+  implicit object CanModIL extends CanMod[Int,Long,Long]
+  { def apply(a : Int, b : Long) = a % b; }
+
+  implicit object CanModIF extends CanMod[Int,Float,Float]
+  { def apply(a : Int, b : Float) = a % b; }
+
+  implicit object CanModID extends CanMod[Int,Double,Double]
+  { def apply(a : Int, b : Double) = a % b; }
+
+  implicit object CanModLI extends CanMod[Long,Int,Long]
+  { def apply(a : Long, b : Int) = a % b; }
+
+  implicit object CanModLL extends CanMod[Long,Long,Long]
+  { def apply(a : Long, b : Long) = a % b; }
+
+  implicit object CanModLF extends CanMod[Long,Float,Double]
+  { def apply(a : Long, b : Float) = a % b; }
+
+  implicit object CanModLD extends CanMod[Long,Double,Double]
+  { def apply(a : Long, b : Double) = a % b; }
+
+  implicit object CanModFI extends CanMod[Float,Int,Float]
+  { def apply(a : Float, b : Int) = a % b; }
+
+  implicit object CanModFL extends CanMod[Float,Long,Double]
+  { def apply(a : Float, b : Long) = a % b; }
+
+  implicit object CanModFF extends CanMod[Float,Float,Float]
+  { def apply(a : Float, b : Float) = a % b; }
+
+  implicit object CanModFD extends CanMod[Float,Double,Double]
+  { def apply(a : Float, b : Double) = a % b; }
+
+  implicit object CanModDI extends CanMod[Double,Int,Double]
+  { def apply(a : Double, b : Int) = a % b; }
+
+  implicit object CanModDL extends CanMod[Double,Long,Double]
+  { def apply(a : Double, b : Long) = a % b; }
+
+  implicit object CanModDF extends CanMod[Double,Float,Double]
+  { def apply(a : Double, b : Float) = a % b; }
+
+  implicit object CanModDD extends CanMod[Double,Double,Double]
+  { def apply(a : Double, b : Double) = a % b; }
+
+  //
+  // Arrays
+  //
+
+  implicit def ArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMod[V1,V2,RV])
   = new ArrayArray[V1,V2,RV];
 
-  class ArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMod[V1,V2,RV])
+  class ArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMod[V1,V2,RV])
   extends ArrayArrayOp[V1,V2,RV] with CanMod[Array[V1],Array[V2],Array[RV]];
 
   implicit object ArrayArrayII extends ArrayArray[Int,Int,Int];
@@ -278,10 +625,10 @@ object CanMod {
   implicit object ArrayArrayDI extends ArrayArray[Double,Int,Double];
   implicit object ArrayArrayID extends ArrayArray[Int,Double,Double];
 
-  implicit def ArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMod[V1,V2,RV], s : Scalar[V2])
+  implicit def ArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMod[V1,V2,RV], s : Scalar[V2])
   = new ArrayScalar[V1,V2,RV];
 
-  class ArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMod[V1,V2,RV], s : Scalar[V2])
+  class ArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMod[V1,V2,RV], s : Scalar[V2])
   extends ArrayScalarOp[V1,V2,RV] with CanMod[Array[V1],V2,Array[RV]];
 
   implicit object ArrayScalarII extends ArrayScalar[Int,Int,Int];
@@ -289,10 +636,10 @@ object CanMod {
   implicit object ArrayScalarDI extends ArrayScalar[Double,Int,Double];
   implicit object ArrayScalarID extends ArrayScalar[Int,Double,Double];
 
-  implicit def mkScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMod[V1,V2,RV], s : Scalar[V1])
+  implicit def mkScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMod[V1,V2,RV], s : Scalar[V1])
   = new ScalarArray[V1,V2,RV];
 
-  class ScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : NumericMod[V1,V2,RV], s : Scalar[V1])
+  class ScalarArray[V1,V2,RV](implicit m : ClassManifest[RV], op : CanMod[V1,V2,RV], s : Scalar[V1])
   extends ScalarArrayOp[V1,V2,RV] with CanMod[V1,Array[V2],Array[RV]];
 
   implicit object ScalarArrayII extends ScalarArray[Int,Int,Int];
@@ -301,83 +648,26 @@ object CanMod {
   implicit object ScalarArrayID extends ScalarArray[Int,Double,Double];
 }
 
+/** Construction delegate for A :^ B. @author dramage */
+trait CanPow[-A,-B,+That] extends BinaryOp[A,B,That];
+
 /** Construction delegate for A :< B. @author dramage */
 trait CanLT[-A,-B,+That] extends BinaryOp[A,B,That];
-
-object CanLT {
-  implicit def ArrayArray[V1,V2](implicit op : NumericLT[V1,V2])
-  = new ArrayArray[V1,V2];
-
-  class ArrayArray[V1,V2](implicit op : NumericLT[V1,V2])
-  extends ArrayArrayOp[V1,V2,Boolean] with CanLT[Array[V1],Array[V2],Array[Boolean]];
-
-  implicit object ArrayArrayII extends ArrayArray[Int,Int];
-  implicit object ArrayArrayDD extends ArrayArray[Double,Double];
-  implicit object ArrayArrayDI extends ArrayArray[Double,Int];
-  implicit object ArrayArrayID extends ArrayArray[Int,Double];
-
-  implicit def ArrayScalar[V1,V2](implicit op : NumericLT[V1,V2], s : Scalar[V2])
-  = new ArrayScalar[V1,V2];
-
-  class ArrayScalar[V1,V2](implicit op : NumericLT[V1,V2], s : Scalar[V2])
-  extends ArrayScalarOp[V1,V2,Boolean] with CanLT[Array[V1],V2,Array[Boolean]];
-
-  implicit object ArrayScalarII extends ArrayScalar[Int,Int];
-  implicit object ArrayScalarDD extends ArrayScalar[Double,Double];
-  implicit object ArrayScalarDI extends ArrayScalar[Double,Int];
-  implicit object ArrayScalarID extends ArrayScalar[Int,Double];
-
-  implicit def ScalarArray[V1,V2](implicit op : NumericLT[V1,V2], s : Scalar[V1])
-  = new ScalarArray[V1,V2];
-
-  class ScalarArray[V1,V2](implicit op : NumericLT[V1,V2], s : Scalar[V1])
-  extends ScalarArrayOp[V1,V2,Boolean] with CanLT[V1,Array[V2],Array[Boolean]];
-
-  implicit object ScalarArrayII extends ScalarArray[Int,Int];
-  implicit object ScalarArrayDD extends ScalarArray[Double,Double];
-  implicit object ScalarArrayDI extends ScalarArray[Double,Int];
-  implicit object ScalarArrayID extends ScalarArray[Int,Double];
-}
 
 /** Construction delegate for A :<= B. @author dramage */
 trait CanLTE[-A,-B,+That] extends BinaryOp[A,B,That];
 
-object CanLTE {
-  implicit def ArrayArray[V1,V2](implicit op : NumericLTE[V1,V2])
-  = new ArrayArray[V1,V2];
+/** Construction delegate for A :> B. @author dramage */
+trait CanGT[-A,-B,+That] extends BinaryOp[A,B,That];
 
-  class ArrayArray[V1,V2](implicit op : NumericLTE[V1,V2])
-  extends ArrayArrayOp[V1,V2,Boolean] with CanLTE[Array[V1],Array[V2],Array[Boolean]];
+/** Construction delegate for A :>= B. @author dramage */
+trait CanGTE[-A,-B,+That] extends BinaryOp[A,B,That];
 
-  implicit object ArrayArrayII extends ArrayArray[Int,Int];
-  implicit object ArrayArrayDD extends ArrayArray[Double,Double];
-  implicit object ArrayArrayDI extends ArrayArray[Double,Int];
-  implicit object ArrayArrayID extends ArrayArray[Int,Double];
+/** Construction delegate for A :== B. @author dramage */
+trait CanEQ[-A,-B,+That] extends BinaryOp[A,B,That];
 
-  implicit def ArrayScalar[V1,V2](implicit op : NumericLTE[V1,V2], s : Scalar[V2])
-  = new ArrayScalar[V1,V2];
-
-  class ArrayScalar[V1,V2](implicit op : NumericLTE[V1,V2], s : Scalar[V2])
-  extends ArrayScalarOp[V1,V2,Boolean] with CanLTE[Array[V1],V2,Array[Boolean]];
-
-  implicit object ArrayScalarII extends ArrayScalar[Int,Int];
-  implicit object ArrayScalarDD extends ArrayScalar[Double,Double];
-  implicit object ArrayScalarDI extends ArrayScalar[Double,Int];
-  implicit object ArrayScalarID extends ArrayScalar[Int,Double];
-
-  implicit def ScalarArray[V1,V2](implicit op : NumericLTE[V1,V2], s : Scalar[V1])
-  = new ScalarArray[V1,V2];
-
-  class ScalarArray[V1,V2](implicit op : NumericLTE[V1,V2], s : Scalar[V1])
-  extends ScalarArrayOp[V1,V2,Boolean] with CanLTE[V1,Array[V2],Array[Boolean]];
-
-  implicit object ScalarArrayII extends ScalarArray[Int,Int];
-  implicit object ScalarArrayDD extends ScalarArray[Double,Double];
-  implicit object ScalarArrayDI extends ScalarArray[Double,Int];
-  implicit object ScalarArrayID extends ScalarArray[Int,Double];
-}
-
-
+/** Construction delegate for A :!= B. @author dramage */
+trait CanNE[-A,-B,+That] extends BinaryOp[A,B,That];
 
 
 trait NumericCollectionOps[+This] {
@@ -405,23 +695,8 @@ trait NumericCollectionOps[+This] {
   /** Final alias for this.:-(b) */
   final def -[B,That](b : B)(implicit op : CanSub[This,B,That]) = this.:-(b);
 
-  // TODO: add :^ :> :>= :==
+  // TODO: add :^ :< :<= :> :>= :== :!=
 }
-
-//
-//trait NumericCollectionSuite[DM[A,B]<:DomainMap[A,B]] {
-//  // def canNeg[That](implicit neg : NumericNeg) : CanNeg[This,That] =
-//  def canAdd[K,V1,V2,RV](implicit op : NumericAdd[V1,V2,RV]) : CanAdd[DM[K,V1],DM[K,V2],DM[K,RV]]
-//  = new CanAdd[DM[K,V1],DM[K,V2],DM[K,RV]] {
-//    override def apply(a : DM[K,V1], b : DM[K,V2]) =
-//      (a join b)((a : K, v1 : V1, v2 : V2) => op(v1,v2));
-//  }
-//
-////  def canSub[B,That] : CanSub[This,B,That];
-////  def canMul[B,That] : CanMul[This,B,That];
-////  def canDiv[B,That] : CanDiv[This,B,That];
-////  def canMod[B,That] : CanMod[This,B,That];
-//}
 
 
 /** Operation that updates A using B. @author dramage */
@@ -430,7 +705,7 @@ trait BinaryUpdateOp[-A,-B] {
 }
 
 /** Base class for BinaryUpdateOp on a pair of arrays. @author dramage */
-class ArrayArrayUpdateOp[V1,V2](implicit op : PairedNumeric[V1,V2,V1])
+class ArrayArrayUpdateOp[V1,V2](implicit op : BinaryOp[V1,V2,V1])
 extends BinaryUpdateOp[Array[V1],Array[V2]] {
   def apply(a : Array[V1], b : Array[V2]) = {
     if (a.length != b.length) {
@@ -445,7 +720,7 @@ extends BinaryUpdateOp[Array[V1],Array[V2]] {
 }
 
 /** Base class for BinaryUpdateOp on a pair of arrays. @author dramage */
-class ArrayScalarUpdateOp[V1,B](implicit op : PairedNumeric[V1,B,V1], sb : Scalar[B])
+class ArrayScalarUpdateOp[V1,B](implicit op : BinaryOp[V1,B,V1], sb : Scalar[B])
 extends BinaryUpdateOp[Array[V1],B] {
   def apply(a : Array[V1], b : B) = {
     var i = 0;
@@ -482,7 +757,6 @@ object CanAssignInto {
   (implicit fn : V2=>V1, s1 : Scalar[V1], s2 : Scalar[V2])
   = new IntoArrayArray[V1,V2];
 
-  /** This class takes NumericZero to ensure it applies only to base types and not vectors. */
   class IntoArrayArray
   [@specialized(Int,Long,Float,Double) V1,
    @specialized(Int,Long,Float,Double) V2]
@@ -532,38 +806,20 @@ object CanAssignInto {
 trait CanAddInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanAddInto {
-  implicit def mkIntoArrayInnerArrayInner[A,B](implicit op : CanAddInto[A,B])
-  = new IntoArrayInnerArrayInner[A,B];
-
-  class IntoArrayInnerArrayInner[A,B](implicit op : CanAddInto[A,B])
-  extends CanAddInto[Array[A],Array[B]] {
-    override def apply(a : Array[A], b : Array[B]) = {
-      if (a.length != b.length) {
-        throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
-      }
-      var i = 0;
-      while (i < a.length) {
-        op(a(i), b(i));
-        i += 1;
-      }
-      i;
-    }
-  }
-
-  implicit def mkIntoArrayArray[V1,V2](implicit op : NumericAdd[V1,V2,V1])
+  implicit def mkIntoArrayArray[V1,V2](implicit op : CanAdd[V1,V2,V1])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : NumericAdd[V1,V2,V1])
+  class IntoArrayArray[V1,V2](implicit op : CanAdd[V1,V2,V1])
   extends ArrayArrayUpdateOp[V1,V2] with CanAddInto[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
   implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : NumericAdd[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : CanAdd[V1,B,V1], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : NumericAdd[V1,B,V1], sb : Scalar[B])
+  class IntoArrayScalar[V1,B](implicit op : CanAdd[V1,B,V1], sb : Scalar[B])
   extends ArrayScalarUpdateOp[V1,B] with CanAddInto[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
@@ -575,20 +831,20 @@ object CanAddInto {
 trait CanSubInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanSubInto {
-  implicit def mkIntoArrayArray[V1,V2](implicit op : NumericSub[V1,V2,V1])
+  implicit def mkIntoArrayArray[V1,V2](implicit op : CanSub[V1,V2,V1])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : NumericSub[V1,V2,V1])
+  class IntoArrayArray[V1,V2](implicit op : CanSub[V1,V2,V1])
   extends ArrayArrayUpdateOp[V1,V2] with CanSubInto[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
   implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : NumericSub[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : CanSub[V1,B,V1], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : NumericSub[V1,B,V1], sb : Scalar[B])
+  class IntoArrayScalar[V1,B](implicit op : CanSub[V1,B,V1], sb : Scalar[B])
   extends ArrayScalarUpdateOp[V1,B] with CanSubInto[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
@@ -600,20 +856,20 @@ object CanSubInto {
 trait CanMulInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanMulInto {
-  implicit def mkIntoArrayArray[V1,V2](implicit op : NumericMul[V1,V2,V1])
+  implicit def mkIntoArrayArray[V1,V2](implicit op : CanMul[V1,V2,V1])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : NumericMul[V1,V2,V1])
+  class IntoArrayArray[V1,V2](implicit op : CanMul[V1,V2,V1])
   extends ArrayArrayUpdateOp[V1,V2] with CanMulInto[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
   implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : NumericMul[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : CanMul[V1,B,V1], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : NumericMul[V1,B,V1], sb : Scalar[B])
+  class IntoArrayScalar[V1,B](implicit op : CanMul[V1,B,V1], sb : Scalar[B])
   extends ArrayScalarUpdateOp[V1,B] with CanMulInto[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
@@ -625,20 +881,20 @@ object CanMulInto {
 trait CanDivInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanDivInto {
-  implicit def mkIntoArrayArray[V1,V2](implicit op : NumericDiv[V1,V2,V1])
+  implicit def mkIntoArrayArray[V1,V2](implicit op : CanDiv[V1,V2,V1])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : NumericDiv[V1,V2,V1])
+  class IntoArrayArray[V1,V2](implicit op : CanDiv[V1,V2,V1])
   extends ArrayArrayUpdateOp[V1,V2] with CanDivInto[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
   implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : NumericDiv[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : CanDiv[V1,B,V1], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : NumericDiv[V1,B,V1], sb : Scalar[B])
+  class IntoArrayScalar[V1,B](implicit op : CanDiv[V1,B,V1], sb : Scalar[B])
   extends ArrayScalarUpdateOp[V1,B] with CanDivInto[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
@@ -650,20 +906,20 @@ object CanDivInto {
 trait CanModInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanModInto {
-  implicit def mkIntoArrayArray[V1,V2](implicit op : NumericMod[V1,V2,V1])
+  implicit def mkIntoArrayArray[V1,V2](implicit op : CanMod[V1,V2,V1])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : NumericMod[V1,V2,V1])
+  class IntoArrayArray[V1,V2](implicit op : CanMod[V1,V2,V1])
   extends ArrayArrayUpdateOp[V1,V2] with CanModInto[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
   implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : NumericMod[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : CanMod[V1,B,V1], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : NumericMod[V1,B,V1], sb : Scalar[B])
+  class IntoArrayScalar[V1,B](implicit op : CanMod[V1,B,V1], sb : Scalar[B])
   extends ArrayScalarUpdateOp[V1,B] with CanModInto[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
@@ -706,10 +962,10 @@ trait MutableNumericCollectionOps[+This] extends NumericCollectionOps[This] {
 trait CanMulOuter[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulOuter {
-  implicit def CanMulOuterArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], mul : NumericMul[V1,V2,RV])
+  implicit def CanMulOuterArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV])
   = new CanMulOuterArrayArray[V1,V2,RV];
 
-  class CanMulOuterArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], mul : NumericMul[V1,V2,RV])
+  class CanMulOuterArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV])
   extends CanMulOuter[Array[V1],Array[V2],Array[Array[RV]]] {
     override def apply(a : Array[V1], b : Array[V2]) = {
       if (a.length != b.length) {
@@ -730,16 +986,16 @@ trait CanMulMatrixBy[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulMatrixBy {
   implicit def CanMulArrayMatrixByArray[V1,V2,RV]
-  (implicit m : ClassManifest[RV], mul : NumericMul[V1,V2,RV],
-   add : NumericAdd[RV,RV,RV], zero : NumericZero[RV]) =
+  (implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV],
+   add : CanAdd[RV,RV,RV], srv : Scalar[RV]) =
      new CanMulArrayMatrixByArray[V1,V2,RV];
 
   class CanMulArrayMatrixByArray[V1,V2,RV]
-  (implicit m : ClassManifest[RV], mul : NumericMul[V1,V2,RV],
-   add : NumericAdd[RV,RV,RV], zero : NumericZero[RV])
+  (implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV],
+   add : CanAdd[RV,RV,RV], srv : Scalar[RV])
   extends CanMulMatrixBy[Array[Array[V1]],Array[V2],Array[RV]] {
     override def apply(a : Array[Array[V1]], b : Array[V2]) = {
-      val rv = Array.fill(a.length)(zero.value);
+      val rv = Array.fill(a.length)(srv.zero);
       var i = 0;
       while (i < rv.length) {
         val row = a(i);
@@ -764,13 +1020,13 @@ object CanMulMatrixBy {
 
   
   implicit def CanMulArrayMatrixByArrayMatrix[V1,V2,RV]
-  (implicit m : ClassManifest[RV], mul : NumericMul[V1,V2,RV],
-   add : NumericAdd[RV,RV,RV], zero : NumericZero[RV]) =
+  (implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV],
+   add : CanAdd[RV,RV,RV], srv : Scalar[RV]) =
      new CanMulArrayMatrixByArrayMatrix[V1,V2,RV];
 
   class CanMulArrayMatrixByArrayMatrix[V1,V2,RV]
-  (implicit m : ClassManifest[RV], mul : NumericMul[V1,V2,RV],
-   add : NumericAdd[RV,RV,RV], zero : NumericZero[RV])
+  (implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV],
+   add : CanAdd[RV,RV,RV], srv : Scalar[RV])
   extends CanMulMatrixBy[Array[Array[V1]],Array[Array[V2]],Array[Array[RV]]] {
     override def apply(a : Array[Array[V1]], b : Array[Array[V2]]) = {
       val numRows = a.length;
@@ -778,7 +1034,7 @@ object CanMulMatrixBy {
       val numInner = b.length;
 
       Array.tabulate(numRows, numCols){(i,j) =>
-        var rv = zero.value;
+        var rv = srv.zero;
         var k = 0;
         while (k < numInner) {
           rv = add(rv, mul(a(i)(k),b(k)(j)));
@@ -827,18 +1083,18 @@ trait CanMulRowBy[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulRowBy {
   implicit def CanMulRowArrayByArray[V1,V2,RV]
-  (implicit mul : NumericMul[V1,V2,RV], add : NumericAdd[RV,RV,RV], zero : NumericZero[RV])
+  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], srv : Scalar[RV])
   = new CanMulRowArrayByArray[V1,V2,RV];
 
   /** Array inner product */
   class CanMulRowArrayByArray[V1,V2,RV]
-  (implicit mul : NumericMul[V1,V2,RV], add : NumericAdd[RV,RV,RV], zero : NumericZero[RV])
+  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], srv : Scalar[RV])
   extends CanMulRowBy[Array[V1],Array[V2],RV] {
     override def apply(a : Array[V1], b : Array[V2]) = {
       if (a.length != b.length) {
         throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
       }
-      var rv = zero.value;
+      var rv = srv.zero;
       var i = 0;
       while (i < a.length) {
         rv = add(rv, mul(a(i),b(i)));
@@ -854,17 +1110,17 @@ object CanMulRowBy {
   implicit object CanMulRowArrayByArrayID extends CanMulRowArrayByArray[Int,Double,Double];
 
   implicit def CanMulRowArrayByArrayMatrix[V1,V2,RV]
-  (implicit m : ClassManifest[RV], mul : NumericMul[V1,V2,RV],
-   add : NumericAdd[RV,RV,RV], zero : NumericZero[RV]) =
+  (implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV],
+   add : CanAdd[RV,RV,RV], srv : Scalar[RV]) =
      new CanMulRowArrayByArrayMatrix[V1,V2,RV];
 
   /** Array matrix by array matrix */
   class CanMulRowArrayByArrayMatrix[V1,V2,RV]
-  (implicit m : ClassManifest[RV], mul : NumericMul[V1,V2,RV],
-   add : NumericAdd[RV,RV,RV], zero : NumericZero[RV])
+  (implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV],
+   add : CanAdd[RV,RV,RV], srv : Scalar[RV])
   extends CanMulRowBy[Array[V1],Array[Array[V2]],MutableRowTensorOps[Array[RV]]] {
     override def apply(a : Array[V1], b : Array[Array[V2]]) = {
-      val rv = Array.fill(b.length)(zero.value);
+      val rv = Array.fill(b.length)(srv.zero);
       var i = 0;
       while (i < rv.length) {
         var j = 0;
@@ -976,8 +1232,15 @@ extends MutableColumnTensorOps[Array[V]];
 class RichNumericArrayMatrix[V:ClassManifest](override val repr : Array[Array[V]])
 extends MatrixOps[Array[Array[V]]];
 
-/** Numeric operator support for solo scalars. @author dramage */
-class RichScalar[@specialized(Int,Long,Float,Double) A](val scalar : A) {
+/**
+ * Numeric operator support for solo scalars.  Note: we do not support
+ * raw "+" to avoid ambiguity with the any2String implicit that comes built
+ * in with scala and is used for string concatenation.  Use :+ instead.
+ * Similarly, use ":-" instead of "-", which we exclude for consistency.
+ *
+ * @author dramage
+ */
+class RichScalar[@specialized(Int,Long,Float,Double) A:Scalar](val scalar : A) {
   /** Commutative: defer to scalar + b. */
   def :+[B,That](b : B)(implicit op : CanAdd[B,A,That]) = op(b,scalar);
 
@@ -992,12 +1255,6 @@ class RichScalar[@specialized(Int,Long,Float,Double) A](val scalar : A) {
 
   /** Not commutative: need special implementation of scala % b. */
   def :%[B,That](b : B)(implicit op : CanMod[A,B,That]) = op(scalar,b);
-
-  /** Final alias for this.:+(b) */
-  final def +[B,That](b : B)(implicit op : CanAdd[B,A,That]) = this.:+(b);
-
-  /** Final alias for this.:-(b) */
-  final def -[B,That](b : B)(implicit op : CanSub[A,B,That]) = this.:-(b);
 }
 
 /** Numeric operator support for scala maps. @athor dramage */
@@ -1009,8 +1266,7 @@ class RichNumericDomainMap[A,V,M<:DomainMap[A,V]]
 extends NumericCollectionOps[M];
 
 object Implicits {
-
-  implicit def richScalar[@specialized(Int,Long,Float,Double) V](value : V) =
+  implicit def richScalar[@specialized(Int,Long,Float,Double) V:Scalar](value : V) =
     new RichScalar(value);
 
   implicit def richNumericArrayVector[V:ClassManifest](value : Array[V]) =
@@ -1024,14 +1280,19 @@ object Implicits {
 
   implicit def richNumericDomainMap[A,V](value : DomainMap[A,V]) =
     new RichNumericDomainMap[A,V,DomainMap[A,V]](value);
+}
+
+object OpsTest {
+  import Implicits._;
 
   def main(args : Array[String]) {
     val x = Array(1,2,3,4);
     val y = Array(-2,-3,-4,-5);
     println(x mkString(" "));
+    println(x :/ 2.0 mkString(" "));
     println((-x) mkString(" "));
-    println((x + 1) mkString(" "));
-    println((1 + x) mkString(" "));
+    println((x :+ 1) mkString(" "));
+    println((1 :+ x) mkString(" "));
     println((x + y) mkString(" "));
     println((x - y) mkString(" "));
 
@@ -1049,7 +1310,7 @@ object Implicits {
 
     println(Map("a"->1,"b"->2) + Map("a"->1,"b"->2));
 
-    println(DomainMap("a"->1,"b"->2,"c"->3) + DomainMap("a"->1,"b"->2,"c"->3));
+    // println(DomainMap("a"->1,"b"->2,"c"->3) + DomainMap("a"->1,"b"->2,"c"->3));
 
     println(x.t :+ y.t);
     println(x.t * y);
