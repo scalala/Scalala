@@ -51,6 +51,21 @@ trait Counter
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
 extends MutableNumericDomainMap[A,B] with CounterLike[A,B,Counter[A,B]];
 
+object Counter {
+  def count[@specialized X](values : Iterator[X]) : Counter[X,Int] = {
+    val rv = MapCounter[X,Int]();
+    for (value <- values) {
+      rv(value) += 1;
+    }
+    rv;
+  }
+}
+
+//class OpenAddressCounter
+//[@specialized(Int,Long) A:ClassManifest, @speicalized(Int,Long,Float,Double) B:scala.collection.numeric.Numeric:ClassManifest] {
+//
+//}
+
 class MapCounter
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B:scalala.collection.numeric.Numeric]
 (val map : scala.collection.mutable.Map[A,B] = new scala.collection.mutable.HashMap[A,B])

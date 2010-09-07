@@ -30,13 +30,16 @@ import scala.collection.mutable._;
  * @author dlwh, dramage
  */
 class SparseArray[@specialized T:ClassManifest]
-(val length : Int, val default : T, initialSize : Int = 3) {
+(val length : Int, initialSize : Int = 3)(val default : T) {
 
-  private var data = new Array[T](initialSize);
-  private var index = new Array[Int](initialSize);
+  /** Data array.  Only the first this.used elements are valid. */
+  protected var data = new Array[T](initialSize);
+
+  /** Index array.  Only the first this.used elements are valid. */
+  protected var index = new Array[Int](initialSize);
 
   /** Number of elements in the array that have been used. */
-  private var used : Int = 0;
+  protected var used : Int = 0;
 
   /** Last found offset. */
   private var lastOffset = -1;
@@ -335,9 +338,21 @@ class SparseArray[@specialized T:ClassManifest]
 
 object SparseArray {
 
-  def apply[T:ClassManifest:DefaultValue](length : Int = Int.MaxValue, initial : Int = 3) =
-    new SparseArray[T](default = implicitly[DefaultValue[T]].value,
-                       length = length, initialSize = initial);
+  def apply[@specialized T:ClassManifest:DefaultValue](length : Int, initialSize : Int = 3) =
+    new SparseArray[T](length = length, initialSize = initialSize)(implicitly[DefaultValue[T]].value);
+
+  def tabulate[@specialized T:ClassManifest:DefaultValue](length : Int, initialSize : Int = 3)(fn : (Int => T)) = {
+    val rv = SparseArray[T](length = length, initialSize = initialSize);
+    var i = 0;
+    while (i < length) {
+      val v = fn(i);
+      if (v != rv.default) {
+        rv(i) = v;
+      }
+      i += 1;
+    }
+    rv;
+  }
 
   /** Default value of type T as used by SparseArray. */
   trait DefaultValue[@specialized T] {

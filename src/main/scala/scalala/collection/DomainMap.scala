@@ -116,17 +116,6 @@ self =>
   /** Returns the keys for which the value returns true. */
   def find(p : B => Boolean) : Iterable[A] =
     domain.filter(this andThen p);
-
-//  def zip[I,O](other : DomainMap[A,I,D], compose : (B,I) => O = ((q:B,r:I)=>(q,r))) : DomainMap[A,O,D] = {
-//    null;
-//  }
-
-//  /**
-//   * Constructs a view of this map on which calls to mapValues are
-//   * chained together and lazily evaluated.
-//   */
-//  def view : DomainMapView[A,B,D,Repr] =
-//    new DomainMapView.IdentityViewImpl[A,B,D,Repr](repr);
   
   /**
    * Constructs a view of this map on which calls to mapValues are
@@ -181,17 +170,77 @@ self =>
   /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : (I,A)*)
   (implicit bf : DomainMapCanSliceFrom[Repr, A, I, B, That]) : That =
-    apply[I,That](Map() ++ keys);
+    apply[I,That](keys.toMap);
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : Iterable[(I,A)])
   (implicit bf : DomainMapCanSliceFrom[Repr, A, I, B, That]) : That =
-    apply[I,That](Map() ++ keys);
+    apply[I,That](keys.toMap);
 
   def apply[I,That](keys : scala.collection.Map[I,A])
   (implicit bf : DomainMapCanSliceFrom[Repr, A, I, B, That]) : That =
     bf(repr, keys);
 
+  //
+  // Sorting
+  //
+
+  /**
+   * Returns a sorted view of the current map.  Equivalent to calling
+   * <code>x(x.argsort)</code>.  Changes to the sorted view are written-through
+   * to the underlying map.
+   */
+  def sorted[That](implicit bf : DomainMapCanSliceSeqFrom[Repr, A, B, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
+    this(this.argsort);
+
+  /**
+   * Returns the elements of this.domain ordered by their values in this map.
+   * Currently this method is not particularly efficient, as it creates several
+   * in-memory arrays the size of the domain.
+   */
+  def argsort(implicit cm : ClassManifest[A], ord : Ordering[B]) : Array[A] =
+    domain.toArray.sortWith((i:A, j:A) => ord.lt(this(i), this(j)));
+
+  //
+  // Conversions
+  //
+
+  /** Returns an ordering over the domain based on the values in this map. */
+  def asOrdering(implicit ord : Ordering[B]) : Ordering[A] = {
+    val map = this;
+    new Ordering[A] {
+      override def compare(a : A, b : A) = ord.compare(map(a), map(b));
+    }
+  }
+
+  /** Returns an unmodifiable Map-like view of this DomainMap. */
+  def asMap : scala.collection.Map[A,B] = new scala.collection.Map[A,B] {
+    override def keysIterator = self.keysIterator;
+    override def valuesIterator = self.valuesIterator;
+    override def contains(key : A) = self.isDefinedAt(key);
+    override def apply(key : A) = self.apply(key);
+    override def iterator = self.iterator;
+    override def get(key : A) =
+      if (self.isDefinedAt(key)) Some(self.apply(key)) else None;
+    override def - (key : A) =
+      throw new UnsupportedOperationException("asMap view of DomainMap is unmodifiable: use toMap");
+    override def + [B1>:B](kv : (A,B1)): scala.collection.Map[A,B1] =
+      throw new UnsupportedOperationException("asMap view of DomainMap is unmodifiable: use toMap");
+  }
+
+  def toMap : Map[A,B] =
+    this.iterator.toMap;
+
+  // TODO: provide better toString
+  override def toString = {
+    val iter = iterator;
+    val rv = iter.take(10).mkString("\n");
+    if (iter.hasNext) {
+      rv + "...\n";
+    } else {
+      rv;
+    }
+  }
 
   //
   // Equality
@@ -218,57 +267,6 @@ self =>
 
   override def hashCode() =
     domain.hashCode + valuesIterator.foldLeft(1)((hash,v) => 41 * hash + v.hashCode);
-
-  //
-  // Sorting
-  //
-
-  /**
-   * Returns a sorted view of the current map.  Equivalent to calling
-   * <code>x(x.argsort)</code>.  Changes to the sorted view are written-through
-   * to the underlying map.
-   */
-  def sorted[That]
-  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, B, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
-    this(this.argsort);
-
-  /**
-   * Returns the elements of this.domain ordered by their values in this map.
-   * Currently this method is not particularly efficient, as it creates several
-   * in-memory arrays the size of the domain.
-   *
-   * TODO: a faster implementation based on Sorting.quickSort using the
-   * new versions of scala 2.8.0.
-   */
-  def argsort(implicit cm : ClassManifest[A], ord : Ordering[B]) : Array[A] = {
-    domain.toArray.sortWith((i:A, j:A) => ord.lt(this(i), this(j)));
-//    val index = domain.toArray;
-//    scala.util.Sorting.quickSort(index)(this.asOrdering);
-//    return index;
-  }
-
-  //
-  // Conversions
-  //
-
-  /** Returns an ordering over the domain based on the values in this map. */
-  def asOrdering(implicit ord : Ordering[B]) : Ordering[A] = {
-    val map = this;
-    new Ordering[A] {
-      override def compare(a : A, b : A) = ord.compare(map(a), map(b));
-    }
-  }
-
-  // TODO: provide better toString
-  override def toString = {
-    val iter = iterator;
-    val rv = iter.take(10).mkString("\n");
-    if (iter.hasNext) {
-      rv + "...\n";
-    } else {
-      rv;
-    }
-  }
 }
 
 trait DomainMap
