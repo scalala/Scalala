@@ -20,8 +20,6 @@
 package scalala;
 package library;
 
-import scala.collection.mutable.ArrayBuffer;
-
 import scalala.generic.{Tensor1,Tensor2};
 
 import plotting._;
@@ -33,7 +31,7 @@ import plotting._;
  *
  * @author dramage
  */
-trait Plotting extends Library {
+trait Plotting {
   import plotting._;
 
   /** Returns the default figure set. */
@@ -383,8 +381,8 @@ trait Plotting extends Library {
     val dataset = XYZDataset(
       items = items,
       name = if (name == null) "Series "+series else name,
-      x = (k : (Int,Int)) => k._1 + offset._1,
-      y = (k : (Int,Int)) => k._2 + offset._2,
+      x = (k : (Int,Int)) => k._2 + offset._2,
+      y = (k : (Int,Int)) => k._1 + offset._1,
       z = (k : (Int,Int)) => mt.get(img, k._1, k._2),
       label = (k : (Int,Int)) => if (labels != null && labels.isDefinedAt(k)) labels(k) else null,
       tip = (k : (Int,Int)) => if (tips != null && tips.isDefinedAt(k)) tips(k) else null

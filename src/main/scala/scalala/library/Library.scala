@@ -77,6 +77,10 @@ trait Library {
   def mean[V,That](value : V)(implicit mean : CanMean[V,That]) : That =
     mean(value);
 
+  /** Take the n-norm of the given tensor. */
+  def norm[V](value : V, n : Double)(implicit norm : CanNorm[V]) : Double =
+    norm(value, n);
+
   //
   // Constructors
   //

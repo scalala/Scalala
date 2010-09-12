@@ -56,6 +56,10 @@ extends PaintScale {
  * Color graident code from http://www.mbeckler.org/heatMap/heatMap.html
  */
 object PaintScale {
+
+  implicit def paintScaleFromRange(vLowerUpper : (Double,Double)) : PaintScale =
+    StaticPaintScale(vLowerUpper._1, vLowerUpper._2);
+
   /** Produces a gradient using the University of Minnesota's school colors, from maroon (low) to gold (high) */
   lazy val MaroonToGold = createGradient(new Color(0xA0, 0x00, 0x00), new Color(0xFF, 0xFF, 0x00), 256);
 

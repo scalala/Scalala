@@ -32,7 +32,7 @@ trait NumericDomainMapLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
  +D<:IterableDomain[A] with DomainLike[A,D], +This<:NumericDomainMap[A,B]]
 extends DomainMapLike[A,B,D,This] 
-with operators.NumericCollectionOps[This] {
+with operators.NumericOps[This] {
 
   val numeric : Numeric[B];
 

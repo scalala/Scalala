@@ -34,7 +34,7 @@ trait MutableNumericDomainMapLike
  +This<:MutableNumericDomainMap[A,B]]
 extends NumericDomainMapLike[A,B,D,This]
 with MutableDomainMapLike[A,B,D,This]
-with operators.MutableNumericCollectionOps[This] {
+with operators.MutableNumericOps[This] {
 
   //
   // Scalar updates.

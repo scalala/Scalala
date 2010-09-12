@@ -22,6 +22,7 @@ package scalala;
 package generic;
 
 import scalala.collection.domain.DomainException;
+import scalala.collection.sparse.{SparseArray};
 
 /**
  * Operation that updates A using B.
@@ -32,7 +33,11 @@ trait BinaryUpdateOp[-A,-B] {
   def apply(a : A, b : B) : Unit;
 }
 
-/** Base class for BinaryUpdateOp on a pair of arrays. @author dramage */
+/**
+ * Base class for BinaryUpdateOp on a pair of arrays.
+ *
+ * @author dramage
+ */
 class ArrayArrayUpdateOp[V1,V2](implicit op : BinaryOp[V1,V2,V1])
 extends BinaryUpdateOp[Array[V1],Array[V2]] {
   def apply(a : Array[V1], b : Array[V2]) = {
@@ -47,7 +52,11 @@ extends BinaryUpdateOp[Array[V1],Array[V2]] {
   }
 }
 
-/** Base class for BinaryUpdateOp on a pair of arrays. @author dramage */
+/**
+ * Base class for BinaryUpdateOp on a pair of arrays.
+ *
+ * @author dramage
+ */
 class ArrayScalarUpdateOp[V1,B](implicit op : BinaryOp[V1,B,V1], sb : Scalar[B])
 extends BinaryUpdateOp[Array[V1],B] {
   def apply(a : Array[V1], b : B) = {
@@ -57,6 +66,101 @@ extends BinaryUpdateOp[Array[V1],B] {
       i += 1;
     }
   }
+}
+
+/**
+ * Base class for updating a SparseArray by another SparseArray.  Considers
+ * only non-zeros in the left operand.  Base class of MulInto.
+ *
+ * @author dramage
+ */
+class SparseArraySparseArrayUpdateLeftNZOp[V1,V2](implicit op : BinaryOp[V1,V2,V1])
+extends BinaryUpdateOp[SparseArray[V1],SparseArray[V2]] {
+  def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
+    var aO = 0;
+    var bO = 0;
+    while (aO < a.activeLength && bO < b.activeLength) {
+      val aI = a.indexAt(aO);
+      val bI = b.indexAt(bO);
+      if (aI < bI) {
+        a(aI) = op(a.valueAt(aO), b.default);
+        aO += 1;
+      } else if (bI < aI) {
+        bO += 1;
+      } else {
+        a(aI) = op(a.valueAt(aO), b.valueAt(bO));
+        aO += 1;
+        bO += 1;
+      }
+    }
+  }
+}
+
+/**
+ * Base class for updating a SparseArray by another SparseArray.  Considers
+ * only non-zeros in the left operand.  Base class of AddInto.
+ *
+ * @author dramage
+ */
+class SparseArraySparseArrayUpdateEitherNZOp[V1,V2](implicit op : BinaryOp[V1,V2,V1])
+extends BinaryUpdateOp[SparseArray[V1],SparseArray[V2]] {
+  def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
+    var aO = 0;
+    var bO = 0;
+    while (aO < a.activeLength && bO < b.activeLength) {
+      val aI = a.indexAt(aO);
+      val bI = b.indexAt(bO);
+      if (aI < bI) {
+        a(aI) = op(a.valueAt(aO), b.default);
+        aO += 1;
+      } else if (bI < aI) {
+        a(bI) = op(a.default, b.valueAt(bO));
+        bO += 1;
+      } else {
+        a(aI) = op(a.valueAt(aO), b.valueAt(bO));
+        aO += 1;
+        bO += 1;
+      }
+    }
+  }
+}
+
+/**
+ * Base class for updating a SparseArray by another SparseArray.  Considers
+ * all values.  Base class of DivInto.
+ *
+ * @author dramage
+ */
+class SparseArraySparseArrayUpdateAllOp[V1,V2](implicit op : BinaryOp[V1,V2,V1])
+extends BinaryUpdateOp[SparseArray[V1],SparseArray[V2]] {
+  def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
+
+    /** Optimization: use OuterOp if the default value is itself default */
+    if (try { op(a.default, b.default) == a.default } catch { case _ => false; }) {
+      (new SparseArraySparseArrayUpdateEitherNZOp[V1,V2]).apply(a,b);
+    } else {
+      var i = 0;
+      while (i < a.length) {
+        a(i) = op(a(i),b(i));
+        i += 1;
+      }
+    }
+  }
+}
+
+class SparseArrayScalarUpdateOp[V1,B](implicit op : BinaryOp[V1,B,V1], sb : Scalar[B])
+extends BinaryUpdateOp[SparseArray[V1],B] {
+  def apply(a : SparseArray[V1], b : B) =
+    a.transform(v => op(v, b));
 }
 
 /** Mutation delegate for A := B. @author dramage */
@@ -134,125 +238,265 @@ object CanAssignInto {
 trait CanAddInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanAddInto {
-  implicit def mkIntoArrayArray[V1,V2](implicit op : CanAdd[V1,V2,V1])
+  type Op[A,B] = CanAdd[A,B,A];
+  type UpdateOp[A,B] = CanAddInto[A,B];
+  type SparseArraySparseArrayBase[A,B] = SparseArraySparseArrayUpdateEitherNZOp[A,B];
+
+  //
+  // Below is copy-and-pasted between companion objects
+  //
+
+  implicit def mkIntoArrayArray[V1,V2](implicit op : Op[V1,V2])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : CanAdd[V1,V2,V1])
-  extends ArrayArrayUpdateOp[V1,V2] with CanAddInto[Array[V1],Array[V2]];
+  class IntoArrayArray[V1,V2](implicit op : Op[V1,V2])
+  extends ArrayArrayUpdateOp[V1,V2] with UpdateOp[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
-  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
+  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : CanAdd[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : CanAdd[V1,B,V1], sb : Scalar[B])
-  extends ArrayScalarUpdateOp[V1,B] with CanAddInto[Array[V1],B];
+  class IntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends ArrayScalarUpdateOp[V1,B] with UpdateOp[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
-  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
   implicit object IntoArrayScalarDI extends IntoArrayScalar[Double,Int];
+  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
+
+  implicit def mkIntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  = new IntoSparseArraySparseArray;
+
+  class IntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  extends SparseArraySparseArrayBase[V1,V2] with UpdateOp[SparseArray[V1],SparseArray[V2]];
+
+  implicit object IntoSparseArraySparseArrayII extends IntoSparseArraySparseArray[Int,Int];
+  implicit object IntoSparseArraySparseArrayDD extends IntoSparseArraySparseArray[Double,Double];
+  implicit object IntoSparseArraySparseArrayDI extends IntoSparseArraySparseArray[Double,Int];
+
+  implicit def mkIntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  = new IntoSparseArrayScalar[V1,B];
+
+  class IntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends SparseArrayScalarUpdateOp[V1,B] with UpdateOp[SparseArray[V1],B];
+
+  implicit object IntoSparseArrayScalarII extends IntoSparseArrayScalar[Int,Int];
+  implicit object IntoSparseArrayScalarDI extends IntoSparseArrayScalar[Double,Int];
+  implicit object IntoSparseArrayScalarDD extends IntoSparseArrayScalar[Double,Double];
 }
 
 /** Mutation delegate for A :-= B. @author dramage */
 trait CanSubInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanSubInto {
-  implicit def mkIntoArrayArray[V1,V2](implicit op : CanSub[V1,V2,V1])
+  type Op[A,B] = CanSub[A,B,A];
+  type UpdateOp[A,B] = CanSubInto[A,B];
+  type SparseArraySparseArrayBase[A,B] = SparseArraySparseArrayUpdateEitherNZOp[A,B];
+
+  //
+  // Below is copy-and-pasted between companion objects
+  //
+
+  implicit def mkIntoArrayArray[V1,V2](implicit op : Op[V1,V2])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : CanSub[V1,V2,V1])
-  extends ArrayArrayUpdateOp[V1,V2] with CanSubInto[Array[V1],Array[V2]];
+  class IntoArrayArray[V1,V2](implicit op : Op[V1,V2])
+  extends ArrayArrayUpdateOp[V1,V2] with UpdateOp[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
-  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
+  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : CanSub[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : CanSub[V1,B,V1], sb : Scalar[B])
-  extends ArrayScalarUpdateOp[V1,B] with CanSubInto[Array[V1],B];
+  class IntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends ArrayScalarUpdateOp[V1,B] with UpdateOp[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
-  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
   implicit object IntoArrayScalarDI extends IntoArrayScalar[Double,Int];
+  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
+
+  implicit def mkIntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  = new IntoSparseArraySparseArray;
+
+  class IntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  extends SparseArraySparseArrayBase[V1,V2] with UpdateOp[SparseArray[V1],SparseArray[V2]];
+
+  implicit object IntoSparseArraySparseArrayII extends IntoSparseArraySparseArray[Int,Int];
+  implicit object IntoSparseArraySparseArrayDD extends IntoSparseArraySparseArray[Double,Double];
+  implicit object IntoSparseArraySparseArrayDI extends IntoSparseArraySparseArray[Double,Int];
+
+  implicit def mkIntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  = new IntoSparseArrayScalar[V1,B];
+
+  class IntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends SparseArrayScalarUpdateOp[V1,B] with UpdateOp[SparseArray[V1],B];
+
+  implicit object IntoSparseArrayScalarII extends IntoSparseArrayScalar[Int,Int];
+  implicit object IntoSparseArrayScalarDI extends IntoSparseArrayScalar[Double,Int];
+  implicit object IntoSparseArrayScalarDD extends IntoSparseArrayScalar[Double,Double];
 }
 
 /** Mutation delegate for A :*= B. @author dramage */
 trait CanMulInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanMulInto {
-  implicit def mkIntoArrayArray[V1,V2](implicit op : CanMul[V1,V2,V1])
+  type Op[A,B] = CanMul[A,B,A];
+  type UpdateOp[A,B] = CanMulInto[A,B];
+  type SparseArraySparseArrayBase[A,B] = SparseArraySparseArrayUpdateLeftNZOp[A,B];
+
+  //
+  // Below is copy-and-pasted between companion objects
+  //
+
+  implicit def mkIntoArrayArray[V1,V2](implicit op : Op[V1,V2])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : CanMul[V1,V2,V1])
-  extends ArrayArrayUpdateOp[V1,V2] with CanMulInto[Array[V1],Array[V2]];
+  class IntoArrayArray[V1,V2](implicit op : Op[V1,V2])
+  extends ArrayArrayUpdateOp[V1,V2] with UpdateOp[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
-  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
+  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : CanMul[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : CanMul[V1,B,V1], sb : Scalar[B])
-  extends ArrayScalarUpdateOp[V1,B] with CanMulInto[Array[V1],B];
+  class IntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends ArrayScalarUpdateOp[V1,B] with UpdateOp[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
-  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
   implicit object IntoArrayScalarDI extends IntoArrayScalar[Double,Int];
+  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
+
+  implicit def mkIntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  = new IntoSparseArraySparseArray;
+
+  class IntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  extends SparseArraySparseArrayBase[V1,V2] with UpdateOp[SparseArray[V1],SparseArray[V2]];
+
+  implicit object IntoSparseArraySparseArrayII extends IntoSparseArraySparseArray[Int,Int];
+  implicit object IntoSparseArraySparseArrayDD extends IntoSparseArraySparseArray[Double,Double];
+  implicit object IntoSparseArraySparseArrayDI extends IntoSparseArraySparseArray[Double,Int];
+
+  implicit def mkIntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  = new IntoSparseArrayScalar[V1,B];
+
+  class IntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends SparseArrayScalarUpdateOp[V1,B] with UpdateOp[SparseArray[V1],B];
+
+  implicit object IntoSparseArrayScalarII extends IntoSparseArrayScalar[Int,Int];
+  implicit object IntoSparseArrayScalarDI extends IntoSparseArrayScalar[Double,Int];
+  implicit object IntoSparseArrayScalarDD extends IntoSparseArrayScalar[Double,Double];
 }
 
 /** Mutation delegate for A :/= B. @author dramage */
 trait CanDivInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanDivInto {
-  implicit def mkIntoArrayArray[V1,V2](implicit op : CanDiv[V1,V2,V1])
+  type Op[A,B] = CanDiv[A,B,A];
+  type UpdateOp[A,B] = CanDivInto[A,B];
+  type SparseArraySparseArrayBase[A,B] = SparseArraySparseArrayUpdateAllOp[A,B];
+
+  //
+  // Below is copy-and-pasted between companion objects
+  //
+
+  implicit def mkIntoArrayArray[V1,V2](implicit op : Op[V1,V2])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : CanDiv[V1,V2,V1])
-  extends ArrayArrayUpdateOp[V1,V2] with CanDivInto[Array[V1],Array[V2]];
+  class IntoArrayArray[V1,V2](implicit op : Op[V1,V2])
+  extends ArrayArrayUpdateOp[V1,V2] with UpdateOp[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
-  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
+  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : CanDiv[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : CanDiv[V1,B,V1], sb : Scalar[B])
-  extends ArrayScalarUpdateOp[V1,B] with CanDivInto[Array[V1],B];
+  class IntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends ArrayScalarUpdateOp[V1,B] with UpdateOp[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
-  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
   implicit object IntoArrayScalarDI extends IntoArrayScalar[Double,Int];
+  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
+
+  implicit def mkIntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  = new IntoSparseArraySparseArray;
+
+  class IntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  extends SparseArraySparseArrayBase[V1,V2] with UpdateOp[SparseArray[V1],SparseArray[V2]];
+
+  implicit object IntoSparseArraySparseArrayII extends IntoSparseArraySparseArray[Int,Int];
+  implicit object IntoSparseArraySparseArrayDD extends IntoSparseArraySparseArray[Double,Double];
+  implicit object IntoSparseArraySparseArrayDI extends IntoSparseArraySparseArray[Double,Int];
+
+  implicit def mkIntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  = new IntoSparseArrayScalar[V1,B];
+
+  class IntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends SparseArrayScalarUpdateOp[V1,B] with UpdateOp[SparseArray[V1],B];
+
+  implicit object IntoSparseArrayScalarII extends IntoSparseArrayScalar[Int,Int];
+  implicit object IntoSparseArrayScalarDI extends IntoSparseArrayScalar[Double,Int];
+  implicit object IntoSparseArrayScalarDD extends IntoSparseArrayScalar[Double,Double];
 }
 
 /** Mutation delegate for A :/= B. @author dramage */
 trait CanModInto[-A,-B] extends BinaryUpdateOp[A,B];
 
 object CanModInto {
-  implicit def mkIntoArrayArray[V1,V2](implicit op : CanMod[V1,V2,V1])
+  type Op[A,B] = CanMod[A,B,A];
+  type UpdateOp[A,B] = CanModInto[A,B];
+  type SparseArraySparseArrayBase[A,B] = SparseArraySparseArrayUpdateAllOp[A,B];
+
+  //
+  // Below is copy-and-pasted between companion objects
+  //
+
+  implicit def mkIntoArrayArray[V1,V2](implicit op : Op[V1,V2])
   = new IntoArrayArray[V1,V2];
 
-  class IntoArrayArray[V1,V2](implicit op : CanMod[V1,V2,V1])
-  extends ArrayArrayUpdateOp[V1,V2] with CanModInto[Array[V1],Array[V2]];
+  class IntoArrayArray[V1,V2](implicit op : Op[V1,V2])
+  extends ArrayArrayUpdateOp[V1,V2] with UpdateOp[Array[V1],Array[V2]];
 
   implicit object IntoArrayArrayII extends IntoArrayArray[Int,Int];
-  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
   implicit object IntoArrayArrayDI extends IntoArrayArray[Double,Int];
+  implicit object IntoArrayArrayDD extends IntoArrayArray[Double,Double];
 
-  implicit def mkIntoArrayScalar[V1,B](implicit op : CanMod[V1,B,V1], sb : Scalar[B])
+  implicit def mkIntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
   = new IntoArrayScalar[V1,B];
 
-  class IntoArrayScalar[V1,B](implicit op : CanMod[V1,B,V1], sb : Scalar[B])
-  extends ArrayScalarUpdateOp[V1,B] with CanModInto[Array[V1],B];
+  class IntoArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends ArrayScalarUpdateOp[V1,B] with UpdateOp[Array[V1],B];
 
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
-  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
   implicit object IntoArrayScalarDI extends IntoArrayScalar[Double,Int];
+  implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
+
+  implicit def mkIntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  = new IntoSparseArraySparseArray;
+
+  class IntoSparseArraySparseArray[V1,V2](implicit op : Op[V1,V2])
+  extends SparseArraySparseArrayBase[V1,V2] with UpdateOp[SparseArray[V1],SparseArray[V2]];
+
+  implicit object IntoSparseArraySparseArrayII extends IntoSparseArraySparseArray[Int,Int];
+  implicit object IntoSparseArraySparseArrayDD extends IntoSparseArraySparseArray[Double,Double];
+  implicit object IntoSparseArraySparseArrayDI extends IntoSparseArraySparseArray[Double,Int];
+
+  implicit def mkIntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  = new IntoSparseArrayScalar[V1,B];
+
+  class IntoSparseArrayScalar[V1,B](implicit op : Op[V1,B], sb : Scalar[B])
+  extends SparseArrayScalarUpdateOp[V1,B] with UpdateOp[SparseArray[V1],B];
+
+  implicit object IntoSparseArrayScalarII extends IntoSparseArrayScalar[Int,Int];
+  implicit object IntoSparseArrayScalarDI extends IntoSparseArrayScalar[Double,Int];
+  implicit object IntoSparseArrayScalarDD extends IntoSparseArrayScalar[Double,Double];
 }
 
 /** Mutation delegate for A :^= B. @author dramage */

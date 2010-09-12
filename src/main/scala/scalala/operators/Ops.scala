@@ -23,8 +23,9 @@ package operators;
 
 import generic._;
 import scalala.collection.domain.DomainException;
+import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
-trait NumericCollectionOps[+This] {
+trait NumericOps[+This] {
   def repr : This;
 
   def unary_-[That](implicit op : CanNeg[This,That]) : That = op(repr);
@@ -53,15 +54,12 @@ trait NumericCollectionOps[+This] {
 
   def :!=[B,That](b : B)(implicit op : CanNe[This,B,That]) = op(repr,b);
 
-  /** Final alias for this.:+(b) */
-  final def +[B,That](b : B)(implicit op : CanAdd[This,B,That]) = this.:+(b);
-
-  /** Final alias for this.:-(b) */
-  final def -[B,That](b : B)(implicit op : CanSub[This,B,That]) = this.:-(b);
+  /** Final alias for :+ as a workaround for arrays. */
+  final def :+:[B,That](b : B)(implicit op : CanAdd[This,B,That]) = this.:+(b);
 }
 
 
-trait MutableNumericCollectionOps[+This] extends NumericCollectionOps[This] {
+trait MutableNumericOps[+This] extends NumericOps[This] {
   def repr : This;
 
   def :=[B](b : B)(implicit op : CanAssignInto[This,B]) = op(repr,b);
@@ -77,12 +75,6 @@ trait MutableNumericCollectionOps[+This] extends NumericCollectionOps[This] {
   def :%=[B](b : B)(implicit op : CanModInto[This,B]) = op(repr,b);
 
   def :^=[B](b : B)(implicit op : CanPowInto[This,B]) = op(repr,b);
-
-  /** Final alias for this.:+=(b) */
-  final def +=[B](b : B)(implicit op : CanAddInto[This,B]) = this.:+=(b);
-
-  /** Final alias for this.:-=(b) */
-  final def -=[B](b : B)(implicit op : CanSubInto[This,B]) = this.:-=(b);
 }
 
 //
@@ -184,13 +176,13 @@ object CanMulMatrixBy {
 }
 
 /**
- * Secialized NumericCollectionOps with shaped operations taking A is a column.
+ * Secialized NumericOps with shaped operations taking A is a column.
  * Note that columns are the default shape, so this trait simply extends
- * NumericCollectionOps[A].
+ * NumericOps[A].
  *
  * @author dramage
  */
-trait ColumnTensorOps[+A] extends NumericCollectionOps[A] {
+trait ColumnTensorOps[+A] extends NumericOps[A] {
   def *[B,RV](b : RowTensorOps[B])(implicit op : CanMulOuter[A,B,RV]) : RV =
     op(repr,b.column);
 
@@ -205,7 +197,7 @@ trait ColumnTensorOps[+A] extends NumericCollectionOps[A] {
  *
  * @author dramage
  */
-trait MutableColumnTensorOps[+A] extends ColumnTensorOps[A] with MutableNumericCollectionOps[A] {
+trait MutableColumnTensorOps[+A] extends ColumnTensorOps[A] with MutableNumericOps[A] {
   override def t : MutableRowTensorOps[A] = MutableRowTensorOps(repr);
 }
 
@@ -214,6 +206,10 @@ trait MutableColumnTensorOps[+A] extends ColumnTensorOps[A] with MutableNumericC
 trait CanMulRowBy[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulRowBy {
+  //
+  // Array * Array
+  //
+
   implicit def CanMulRowArrayByArray[V1,V2,RV]
   (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], srv : Scalar[RV])
   = new CanMulRowArrayByArray[V1,V2,RV];
@@ -240,6 +236,82 @@ object CanMulRowBy {
   implicit object CanMulRowArrayByArrayDD extends CanMulRowArrayByArray[Double,Double,Double];
   implicit object CanMulRowArrayByArrayDI extends CanMulRowArrayByArray[Double,Int,Double];
   implicit object CanMulRowArrayByArrayID extends CanMulRowArrayByArray[Int,Double,Double];
+
+  //
+  // SparseArray * SparseArray
+  //
+
+  implicit def CanMulRowSparseArrayBySparseArray[V1,V2,RV]
+  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], srv : Scalar[RV])
+  = new CanMulRowSparseArrayBySparseArray[V1,V2,RV];
+
+  /** Array inner product */
+  class CanMulRowSparseArrayBySparseArray[V1,V2,RV]
+  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], srv : Scalar[RV])
+  extends CanMulRowBy[SparseArray[V1],SparseArray[V2],RV] {
+    override def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+      if (a.length != b.length) {
+        throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+      }
+      var rv = srv.zero;
+      var aO = 0;
+      var bO = 0;
+      while (aO < a.activeLength && bO < b.activeLength) {
+        val aI = a.indexAt(aO);
+        val bI = b.indexAt(bO);
+        if (aI < bI) {
+          aO += 1;
+        } else if (bI < aI) {
+          bO += 1;
+        } else {
+          rv = add(rv, mul(a.valueAt(aO), b.valueAt(bO)));
+          aO += 1;
+          bO += 1;
+        }
+      }
+      rv;
+    }
+  }
+
+  implicit object CanMulRowSparseArrayBySparseArrayII extends CanMulRowSparseArrayBySparseArray[Int,Int,Int];
+  implicit object CanMulRowSparseArrayBySparseArrayDD extends CanMulRowSparseArrayBySparseArray[Double,Double,Double];
+  implicit object CanMulRowSparseArrayBySparseArrayDI extends CanMulRowSparseArrayBySparseArray[Double,Int,Double];
+  implicit object CanMulRowSparseArrayBySparseArrayID extends CanMulRowSparseArrayBySparseArray[Int,Double,Double];
+
+  //
+  // SparseArray * Array
+  //
+
+  implicit def CanMulRowSparseArrayByArray[V1,V2,RV]
+  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], srv : Scalar[RV])
+  = new CanMulRowSparseArrayByArray[V1,V2,RV];
+
+  /** Array inner product */
+  class CanMulRowSparseArrayByArray[V1,V2,RV]
+  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], srv : Scalar[RV])
+  extends CanMulRowBy[SparseArray[V1],Array[V2],RV] {
+    override def apply(a : SparseArray[V1], b : Array[V2]) = {
+      if (a.length != b.length) {
+        throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+      }
+      var rv = srv.zero;
+      var o = 0;
+      while (o < a.activeLength) {
+        rv = add(rv, mul(a.valueAt(o), b(a.indexAt(o))));
+        o += 1;
+      }
+      rv;
+    }
+  }
+
+  implicit object CanMulRowSparseArrayByArrayII extends CanMulRowSparseArrayByArray[Int,Int,Int];
+  implicit object CanMulRowSparseArrayByArrayDD extends CanMulRowSparseArrayByArray[Double,Double,Double];
+  implicit object CanMulRowSparseArrayByArrayDI extends CanMulRowSparseArrayByArray[Double,Int,Double];
+  implicit object CanMulRowSparseArrayByArrayID extends CanMulRowSparseArrayByArray[Int,Double,Double];
+
+  //
+  // Array * Array[Array]
+  //
 
   implicit def CanMulRowArrayByArrayMatrix[V1,V2,RV]
   (implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV],
@@ -273,19 +345,19 @@ object CanMulRowBy {
 }
 
 /*
- * Secialized NumericCollectionOps with shaped operations taking A is a row.
+ * Secialized NumericOps with shaped operations taking A is a row.
  * Note that there is an inherent asymmetry between ColumnTensorOps and
  * RowTensorOps: because tensors are assumed to be columns until reshaped
- * (e.g. by calling .t), that class extends NumericCollectionOps[A].  This
+ * (e.g. by calling .t), that class extends NumericOps[A].  This
  * class, by contrast, must preserve the fact that the base numeric operations
  * like plus must honor the row shape, and that the return result should also
- * be a row.  Hence this class extends NumericCollectionOps[RowTensorOps[A]]
+ * be a row.  Hence this class extends NumericOps[RowTensorOps[A]]
  * and provides implicit magic in the companion object to wrap the
  * corresponding construction delegates.
  *
  * @author dramage
  */
-trait RowTensorOps[+A] extends NumericCollectionOps[RowTensorOps[A]] {
+trait RowTensorOps[+A] extends NumericOps[RowTensorOps[A]] {
   override def repr : RowTensorOps[A] = this;
 
   def column : A;
@@ -349,7 +421,7 @@ object RowTensorOps {
  * underlying collections.
  */
 trait MutableRowTensorOps[+A]
-extends RowTensorOps[A] with MutableNumericCollectionOps[RowTensorOps[A]] {
+extends RowTensorOps[A] with MutableNumericOps[RowTensorOps[A]] {
 }
 
 object MutableRowTensorOps {
@@ -363,7 +435,7 @@ object MutableRowTensorOps {
  * Provides matrix-like operations for two dimensional collections.
  * @author dramage
  */
-trait MatrixOps[+A] extends NumericCollectionOps[A] {
+trait MatrixOps[+A] extends NumericOps[A] {
   def *[B,That](b : B)(implicit op : CanMulMatrixBy[A,B,That]) =
     op.apply(repr,b);
 }
@@ -383,6 +455,9 @@ extends MutableColumnTensorOps[Array[V]];
 class RichArrayMatrix[V:ClassManifest](override val repr : Array[Array[V]])
 extends MatrixOps[Array[Array[V]]];
 
+class RichSparseArrayVector[V:ClassManifest:DefaultArrayValue](override val repr : SparseArray[V])
+extends MutableColumnTensorOps[SparseArray[V]];
+
 /**
  * Numeric operator support for solo scalars.  Note: we do not support
  * raw "+" to avoid ambiguity with the any2String implicit that comes built
@@ -391,41 +466,26 @@ extends MatrixOps[Array[Array[V]]];
  *
  * @author dramage
  */
-class RichScalar[@specialized(Int,Long,Float,Double) A:Scalar](val scalar : A) {
-  /** Commutative: defer to scalar + b. */
-  def :+[B,That](b : B)(implicit op : CanAdd[B,A,That]) = op(b,scalar);
-
-  /** Not commutative: need special implementation of scalar - b. */
-  def :-[B,That](b : B)(implicit op : CanSub[A,B,That]) = op(scalar,b);
-
-  /** Commutative: defer to scalar * b. */
-  def :*[B,That](b : B)(implicit op : CanMul[B,A,That]) = op(b,scalar);
-
-  /** Not commutative: need special implementation of scala / b. */
-  def :/[B,That](b : B)(implicit op : CanDiv[A,B,That]) = op(scalar,b);
-
-  /** Not commutative: need special implementation of scala % b. */
-  def :%[B,That](b : B)(implicit op : CanMod[A,B,That]) = op(scalar,b);
-
-  // TODO: Add :^
-}
+class RichScalar[@specialized(Int,Long,Float,Double) A:Scalar]
+(override val repr : A)
+extends NumericOps[A];
 
 class RichTuple2[@specialized A, @specialized B]
 (override val repr : (A,B))
-extends NumericCollectionOps[(A,B)];
+extends NumericOps[(A,B)];
 
 class RichTuple3[@specialized A, @specialized B, @specialized C]
 (override val repr : (A,B,C))
-extends NumericCollectionOps[(A,B,C)];
+extends NumericOps[(A,B,C)];
 
 class RichTuple4[@specialized A, @specialized B, @specialized C, @specialized D]
 (override val repr : (A,B,C,D))
-extends NumericCollectionOps[(A,B,C,D)];
+extends NumericOps[(A,B,C,D)];
 
 
 /** Numeric operator support for scala maps. @athor dramage */
 class RichMap[K,V](override val repr : Map[K,V])
-extends NumericCollectionOps[Map[K,V]];
+extends NumericOps[Map[K,V]];
 
 object Implicits {
   implicit def richScalar[@specialized(Int,Long,Float,Double) V:Scalar](value : V) =
@@ -442,6 +502,9 @@ object Implicits {
 
   implicit def richArrayVector[V:ClassManifest](value : Array[V]) =
     new RichArrayVector(value);
+
+  implicit def richSparseArrayVector[V:ClassManifest:DefaultArrayValue](value : SparseArray[V]) =
+    new RichSparseArrayVector(value);
 
   implicit def richArrayMatrix[V:ClassManifest](value : Array[Array[V]]) =
     new RichArrayMatrix(value);
@@ -461,8 +524,8 @@ object OpsTest {
     println((-x) mkString(" "));
     println((x :+ 1) mkString(" "));
     println((1 :+ x) mkString(" "));
-    println((x + y) mkString(" "));
-    println((x - y) mkString(" "));
+    println((x :+ y) mkString(" "));
+    println((x :- y) mkString(" "));
 
     x :+= y;  println(x mkString(" "));
     x :-= y;  println(x mkString(" "));
@@ -476,7 +539,7 @@ object OpsTest {
     println((Array(1.0,2.0,3.0) :% Array(2,2,2)) mkString(" "));
     println((Array(1,2,3) :% Array(.5,.5,.5)) mkString(" "));
 
-    println(Map("a"->1,"b"->2) + Map("a"->1,"b"->2));
+    println(Map("a"->1,"b"->2) :+ Map("a"->1,"b"->2));
 
     // println(DomainMap("a"->1,"b"->2,"c"->3) + DomainMap("a"->1,"b"->2,"c"->3));
 

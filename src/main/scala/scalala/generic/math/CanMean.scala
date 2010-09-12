@@ -48,6 +48,18 @@ trait LowPriorityCanMean {
 }
 
 object CanMean { // extends LowPriorityCanMean {
+  implicit object ArrayMeanD extends CanMean[Array[Double],Double] {
+    def apply(values : Array[Double]) = {
+      var sum = 0.0;
+      var i = 0;
+      while (i < values.length) {
+        sum += values(i);
+        i += 1;
+      }
+      sum / values.length;
+    }
+  }
+
   /** Computes the mean by starting with zero, adding into it, and dividing into it. */
   implicit def ZeroInto[V,RV](implicit zero : CanZero[V,RV], addInto : CanAddInto[RV,V], divInto : CanDivInto[RV,Int])
   : CanMean[Traversable[V],RV] = new CanMean[Traversable[V],RV] {

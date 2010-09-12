@@ -22,6 +22,7 @@ package scalala;
 package generic;
 
 import scalala.collection.domain.DomainException;
+import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
 //
 // Binary operations
@@ -36,7 +37,51 @@ trait BinaryOp[-A, -B, +That] {
   def apply(a : A, b : B) : That;
 }
 
-/** Base class for BinaryOp on a pair of arrays. @author dramage */
+
+/**
+ * Base class for Array (op) Scalar.
+ *
+ * @author dramage
+ */
+class ArrayScalarOp[V1,V2,RV]
+(implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], s : Scalar[V2])
+extends BinaryOp[Array[V1],V2,Array[RV]] {
+  override def apply(a : Array[V1], b : V2) = {
+    val rv = new Array[RV](a.length);
+    var i = 0;
+    while (i < rv.length) {
+      rv(i) = op(a(i),b);
+      i += 1;
+    }
+    rv;
+  }
+}
+
+/**
+ * Base class for Scalar (op) Array.
+ * 
+ * @author dramage
+ */
+class ScalarArrayOp[V1,V2,RV]
+(implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], s : Scalar[V1])
+extends BinaryOp[V1,Array[V2],Array[RV]] {
+  override def apply(a : V1, b : Array[V2]) = {
+    val rv = new Array[RV](b.length);
+    var i = 0;
+    while (i < rv.length) {
+      rv(i) = op(a,b(i));
+      i += 1;
+    }
+    rv;
+  }
+}
+
+
+/**
+ * Base class for BinaryOp on a pair of arrays.
+ *
+ * @author dramage
+ */
 class ArrayArrayOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV])
 extends BinaryOp[Array[V1],Array[V2],Array[RV]] {
   override def apply(a : Array[V1], b : Array[V2]) = {
@@ -53,35 +98,234 @@ extends BinaryOp[Array[V1],Array[V2],Array[RV]] {
   }
 }
 
-/** Base class for Array (op) Scalar. */
-class ArrayScalarOp[V1,V2,RV]
-(implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], s : Scalar[V2])
-extends BinaryOp[Array[V1],V2,Array[RV]] {
-  override def apply(a : Array[V1], b : V2) = {
+
+/**
+ * Base class for SparseArray (op) Scalar.
+ *
+ * @autor dramage
+ */
+class SparseArrayScalarOp[V1,V2,RV]
+(implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], s : Scalar[V2], dav : DefaultArrayValue[RV])
+extends BinaryOp[SparseArray[V1],V2,SparseArray[RV]] {
+  override def apply(a : SparseArray[V1], b : V2) =
+    a.map(v => op(v, b));
+}
+
+/**
+ * Base class for Scalar (op) SparseArray.
+ * 
+ * @author dramage
+ */
+class ScalarSparseArrayOp[V1,V2,RV]
+(implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], s : Scalar[V1], dav : DefaultArrayValue[RV])
+extends BinaryOp[V1,SparseArray[V2],SparseArray[RV]] {
+  override def apply(a : V1, b : SparseArray[V2]) =
+    b.map(v => op(a, v));
+}
+
+/**
+ * Operation on values that are non-zero in both arguments.  Base class
+ * for Mul.
+ *
+ * @author dramage
+ */
+class SparseArraySparseArrayBothNZOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], dv : DefaultArrayValue[RV])
+extends BinaryOp[SparseArray[V1],SparseArray[V2],SparseArray[RV]] {
+  def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
+    val rv = new SparseArray[RV](a.length);
+    var aO = 0;
+    var bO = 0;
+    while (aO < a.activeLength && bO < b.activeLength) {
+      val aI = a.indexAt(aO);
+      val bI = b.indexAt(bO);
+      if (aI < bI) {
+        aO += 1;
+      } else if (bI < aI) {
+        bO += 1;
+      } else {
+        rv(aI) = op(a.valueAt(aO), b.valueAt(bO));
+        aO += 1;
+        bO += 1;
+      }
+    }
+    rv;
+  }
+}
+
+/**
+ * Operation on values that are non-zero in at least one argument.  Base class
+ * for e.g. Add.
+ *
+ * @author dramage
+ */
+class SparseArraySparseArrayEitherNZOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], dv : DefaultArrayValue[RV])
+extends BinaryOp[SparseArray[V1],SparseArray[V2],SparseArray[RV]] {
+  def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
+    val rv = new SparseArray[RV](a.length, scala.math.max(a.activeLength,b.activeLength));
+    var aO = 0;
+    var bO = 0;
+    while (aO < a.activeLength && bO < b.activeLength) {
+      val aI = a.indexAt(aO);
+      val bI = b.indexAt(bO);
+      if (aI < bI) {
+        rv(aI) = op(a.valueAt(aO), b.default);
+        aO += 1;
+      } else if (bI < aI) {
+        rv(bI) = op(a.default, b.valueAt(bO));
+        bO += 1;
+      } else {
+        rv(aI) = op(a.valueAt(aO), b.valueAt(bO));
+        aO += 1;
+        bO += 1;
+      }
+    }
+    rv;
+  }
+}
+
+/**
+ * Operation on all pairs of values, possibly making the output a regular dense
+ * Array.
+ *
+ * @author dramage
+ */
+class SparseArraySparseArrayAllOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], dv : DefaultArrayValue[RV])
+extends BinaryOp[SparseArray[V1],SparseArray[V2],SparseArray[RV]] {
+  def apply(a : SparseArray[V1], b : SparseArray[V2]) : SparseArray[RV] = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
+    val rv = new SparseArray[RV](a.length);
+
+    /** Optimization: use OuterOp if the default value is itself default */
+    if (try { op(a.default, b.default) == rv.default } catch { case _ => false; }) {
+      return (new SparseArraySparseArrayEitherNZOp[V1,V2,RV]).apply(a,b);
+    } else {
+      var i = 0;
+      while (i < rv.length) {
+        rv(i) = op(a(i),b(i));
+        i += 1;
+      }
+      rv;
+    }
+  }
+}
+
+/**
+ * Operation on values that are non-zero in both arguments, like mul.
+ * Output is sparse.
+ *
+ * @author dramage
+ */
+class SparseArrayArrayInnerOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], dv : DefaultArrayValue[RV])
+extends BinaryOp[SparseArray[V1],Array[V2],SparseArray[RV]] {
+  def apply(a : SparseArray[V1], b : Array[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
+    val rv = new SparseArray[RV](a.length, a.activeLength);
+    var o = 0;
+    while (o < a.activeLength) {
+      val i = a.indexAt(o);
+      rv(i) = op(a.valueAt(o), b(i));
+      o += 1;
+    }
+    rv;
+  }
+}
+
+/**
+ * Operation that need to see all values, like add.  Output is dense.
+ *
+ * @author dramage
+ */
+class SparseArrayArrayAllToArrayOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], dv : DefaultArrayValue[RV])
+extends BinaryOp[SparseArray[V1],Array[V2],Array[RV]] {
+  def apply(a : SparseArray[V1], b : Array[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
     val rv = new Array[RV](a.length);
     var i = 0;
-    while (i < rv.length) {
-      rv(i) = op(a(i),b);
+    while (i < a.length) {
+      rv(i) = op(a(i), b(i));
+      i += 1;
+    }
+    rv;
+  }
+}
+/**
+ * Operation that need to see all values, like add.  Output is dense.
+ *
+ * @author dramage
+ */
+class SparseArrayArrayAllToSparseArrayOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], dv : DefaultArrayValue[RV])
+extends BinaryOp[SparseArray[V1],Array[V2],SparseArray[RV]] {
+  def apply(a : SparseArray[V1], b : Array[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
+    val rv = new SparseArray[RV](a.length, a.activeLength);
+    var i = 0;
+    while (i < a.length) {
+      rv(i) = op(a(i), b(i));
       i += 1;
     }
     rv;
   }
 }
 
-/** Base class for Scalar (op) Array. */
-class ScalarArrayOp[V1,V2,RV]
-(implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], s : Scalar[V1])
-extends BinaryOp[V1,Array[V2],Array[RV]] {
-  override def apply(a : V1, b : Array[V2]) = {
+/**
+ * Operation on values that are non-zero in both arguments, like mul.
+ * Output is sparse.
+ *
+ * @author dramage
+ */
+class ArraySparseArrayInnerOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], dv : DefaultArrayValue[RV])
+extends BinaryOp[Array[V1],SparseArray[V2],SparseArray[RV]] {
+  def apply(a : Array[V1], b : SparseArray[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
+    val rv = new SparseArray[RV](b.length, b.activeLength);
+    var o = 0;
+    while (o < b.activeLength) {
+      val i = b.indexAt(o);
+      rv(i) = op(a(i), b.valueAt(o));
+      o += 1;
+    }
+    rv;
+  }
+}
+
+/**
+ * Operation that need to see all values, like plus.  Output is dense.
+ *
+ * @author dramage
+ */
+class ArraySparseArrayAllOp[V1,V2,RV](implicit m : ClassManifest[RV], op : BinaryOp[V1,V2,RV], dv : DefaultArrayValue[RV])
+extends BinaryOp[Array[V1],SparseArray[V2],Array[RV]] {
+  def apply(a : Array[V1], b : SparseArray[V2]) = {
+    if (a.length != b.length) {
+      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+    }
     val rv = new Array[RV](b.length);
     var i = 0;
-    while (i < rv.length) {
-      rv(i) = op(a,b(i));
+    while (i < a.length) {
+      rv(i) = op(a(i), b(i));
       i += 1;
     }
     rv;
   }
 }
+
+
 
 /** Base class for BinaryOp on a pair of scala maps. @author dramage */
 class MapMapOp[K,V1,V2,RV](implicit op : BinaryOp[V1,V2,RV])
@@ -118,6 +362,11 @@ trait CanAdd[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanAdd {
   type Op[A,B,That] = CanAdd[A,B,That]
+  type SparseArraySparseArrayBase[A,B,That] = SparseArraySparseArrayEitherNZOp[A,B,That];
+  type SparseArrayArrayBase[A,B,That] = SparseArrayArrayAllToArrayOp[A,B,That];
+  type ArraySparseArrayBase[A,B,That] = ArraySparseArrayAllOp[A,B,That];
+  type SparseArrayArrayOutput[A] = Array[A];
+  type ArraySparseArrayOutput[A] = Array[A];
 
   //
   // Primitives
@@ -215,6 +464,65 @@ object CanAdd {
   implicit object OpScalarArrayID extends OpScalarArray[Int,Double,Double];
 
   //
+  // Sparse arrays
+  //
+
+  implicit def opSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArraySparseArray[V1,V2,RV];
+
+  class OpSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArraySparseArrayBase[V1,V2,RV] with Op[SparseArray[V1],SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpSparseArraySparseArrayII extends OpSparseArraySparseArray[Int,Int,Int];
+  implicit object OpSparseArraySparseArrayID extends OpSparseArraySparseArray[Int,Double,Double];
+  implicit object OpSparseArraySparseArrayDI extends OpSparseArraySparseArray[Double,Int,Double];
+  implicit object OpSparseArraySparseArrayDD extends OpSparseArraySparseArray[Double,Double,Double];
+
+  implicit def opSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayScalar[V1,V2,RV];
+
+  class OpSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  extends SparseArrayScalarOp[V1,V2,RV] with Op[SparseArray[V1],V2,SparseArray[RV]];
+
+  implicit object OpSparseArrayScalarII extends OpSparseArrayScalar[Int,Int,Int];
+  implicit object OpSparseArrayScalarDD extends OpSparseArrayScalar[Double,Double,Double];
+  implicit object OpSparseArrayScalarDI extends OpSparseArrayScalar[Double,Int,Double];
+  implicit object OpSparseArrayScalarID extends OpSparseArrayScalar[Int,Double,Double];
+
+  implicit def opScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  = new OpScalarSparseArray[V1,V2,RV];
+
+  class OpScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  extends ScalarSparseArrayOp[V1,V2,RV] with Op[V1,SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpScalarSparseArrayII extends OpScalarSparseArray[Int,Int,Int];
+  implicit object OpScalarSparseArrayDD extends OpScalarSparseArray[Double,Double,Double];
+  implicit object OpScalarSparseArrayDI extends OpScalarSparseArray[Double,Int,Double];
+  implicit object OpScalarSparseArrayID extends OpScalarSparseArray[Int,Double,Double];
+
+  implicit def opSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayArray[V1,V2,RV];
+
+  class OpSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArrayArrayBase[V1,V2,RV] with Op[SparseArray[V1],Array[V2],SparseArrayArrayOutput[RV]];
+
+  implicit object OpSparseArrayArrayII extends OpSparseArrayArray[Int,Int,Int];
+  implicit object OpSparseArrayArrayID extends OpSparseArrayArray[Int,Double,Double];
+  implicit object OpSparseArrayArrayDI extends OpSparseArrayArray[Double,Int,Double];
+  implicit object OpSparseArrayArrayDD extends OpSparseArrayArray[Double,Double,Double];
+
+  implicit def opArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpArraySparseArray[V1,V2,RV];
+
+  class OpArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends ArraySparseArrayBase[V1,V2,RV] with Op[Array[V1],SparseArray[V2],ArraySparseArrayOutput[RV]];
+
+  implicit object OpArraySparseArrayII extends OpArraySparseArray[Int,Int,Int];
+  implicit object OpArraySparseArrayID extends OpArraySparseArray[Int,Double,Double];
+  implicit object OpArraySparseArrayDI extends OpArraySparseArray[Double,Int,Double];
+  implicit object OpArraySparseArrayDD extends OpArraySparseArray[Double,Double,Double];
+
+  //
   // Tuples
   //
 
@@ -261,7 +569,12 @@ object CanAdd {
 trait CanSub[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanSub {
- type Op[A,B,That] = CanSub[A,B,That]
+  type Op[A,B,That] = CanSub[A,B,That]
+  type SparseArraySparseArrayBase[A,B,That] = SparseArraySparseArrayEitherNZOp[A,B,That];
+  type SparseArrayArrayBase[A,B,That] = SparseArrayArrayAllToArrayOp[A,B,That];
+  type ArraySparseArrayBase[A,B,That] = ArraySparseArrayAllOp[A,B,That];
+  type SparseArrayArrayOutput[A] = Array[A];
+  type ArraySparseArrayOutput[A] = Array[A];
 
   //
   // Primitives
@@ -359,6 +672,65 @@ object CanSub {
   implicit object OpScalarArrayID extends OpScalarArray[Int,Double,Double];
 
   //
+  // Sparse arrays
+  //
+
+  implicit def opSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArraySparseArray[V1,V2,RV];
+
+  class OpSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArraySparseArrayBase[V1,V2,RV] with Op[SparseArray[V1],SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpSparseArraySparseArrayII extends OpSparseArraySparseArray[Int,Int,Int];
+  implicit object OpSparseArraySparseArrayID extends OpSparseArraySparseArray[Int,Double,Double];
+  implicit object OpSparseArraySparseArrayDI extends OpSparseArraySparseArray[Double,Int,Double];
+  implicit object OpSparseArraySparseArrayDD extends OpSparseArraySparseArray[Double,Double,Double];
+
+  implicit def opSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayScalar[V1,V2,RV];
+
+  class OpSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  extends SparseArrayScalarOp[V1,V2,RV] with Op[SparseArray[V1],V2,SparseArray[RV]];
+
+  implicit object OpSparseArrayScalarII extends OpSparseArrayScalar[Int,Int,Int];
+  implicit object OpSparseArrayScalarDD extends OpSparseArrayScalar[Double,Double,Double];
+  implicit object OpSparseArrayScalarDI extends OpSparseArrayScalar[Double,Int,Double];
+  implicit object OpSparseArrayScalarID extends OpSparseArrayScalar[Int,Double,Double];
+
+  implicit def opScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  = new OpScalarSparseArray[V1,V2,RV];
+
+  class OpScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  extends ScalarSparseArrayOp[V1,V2,RV] with Op[V1,SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpScalarSparseArrayII extends OpScalarSparseArray[Int,Int,Int];
+  implicit object OpScalarSparseArrayDD extends OpScalarSparseArray[Double,Double,Double];
+  implicit object OpScalarSparseArrayDI extends OpScalarSparseArray[Double,Int,Double];
+  implicit object OpScalarSparseArrayID extends OpScalarSparseArray[Int,Double,Double];
+
+  implicit def opSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayArray[V1,V2,RV];
+
+  class OpSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArrayArrayBase[V1,V2,RV] with Op[SparseArray[V1],Array[V2],SparseArrayArrayOutput[RV]];
+
+  implicit object OpSparseArrayArrayII extends OpSparseArrayArray[Int,Int,Int];
+  implicit object OpSparseArrayArrayID extends OpSparseArrayArray[Int,Double,Double];
+  implicit object OpSparseArrayArrayDI extends OpSparseArrayArray[Double,Int,Double];
+  implicit object OpSparseArrayArrayDD extends OpSparseArrayArray[Double,Double,Double];
+
+  implicit def opArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpArraySparseArray[V1,V2,RV];
+
+  class OpArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends ArraySparseArrayBase[V1,V2,RV] with Op[Array[V1],SparseArray[V2],ArraySparseArrayOutput[RV]];
+
+  implicit object OpArraySparseArrayII extends OpArraySparseArray[Int,Int,Int];
+  implicit object OpArraySparseArrayID extends OpArraySparseArray[Int,Double,Double];
+  implicit object OpArraySparseArrayDI extends OpArraySparseArray[Double,Int,Double];
+  implicit object OpArraySparseArrayDD extends OpArraySparseArray[Double,Double,Double];
+
+  //
   // Tuples
   //
 
@@ -405,7 +777,12 @@ object CanSub {
 trait CanMul[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMul {
- type Op[A,B,That] = CanMul[A,B,That]
+  type Op[A,B,That] = CanMul[A,B,That]
+  type SparseArraySparseArrayBase[A,B,That] = SparseArraySparseArrayBothNZOp[A,B,That];
+  type SparseArrayArrayBase[A,B,That] = SparseArrayArrayInnerOp[A,B,That];
+  type ArraySparseArrayBase[A,B,That] = ArraySparseArrayInnerOp[A,B,That];
+  type SparseArrayArrayOutput[A] = SparseArray[A];
+  type ArraySparseArrayOutput[A] = SparseArray[A];
 
   //
   // Primitives
@@ -503,6 +880,65 @@ object CanMul {
   implicit object OpScalarArrayID extends OpScalarArray[Int,Double,Double];
 
   //
+  // Sparse arrays
+  //
+
+  implicit def opSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArraySparseArray[V1,V2,RV];
+
+  class OpSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArraySparseArrayBase[V1,V2,RV] with Op[SparseArray[V1],SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpSparseArraySparseArrayII extends OpSparseArraySparseArray[Int,Int,Int];
+  implicit object OpSparseArraySparseArrayID extends OpSparseArraySparseArray[Int,Double,Double];
+  implicit object OpSparseArraySparseArrayDI extends OpSparseArraySparseArray[Double,Int,Double];
+  implicit object OpSparseArraySparseArrayDD extends OpSparseArraySparseArray[Double,Double,Double];
+
+  implicit def opSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayScalar[V1,V2,RV];
+
+  class OpSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  extends SparseArrayScalarOp[V1,V2,RV] with Op[SparseArray[V1],V2,SparseArray[RV]];
+
+  implicit object OpSparseArrayScalarII extends OpSparseArrayScalar[Int,Int,Int];
+  implicit object OpSparseArrayScalarDD extends OpSparseArrayScalar[Double,Double,Double];
+  implicit object OpSparseArrayScalarDI extends OpSparseArrayScalar[Double,Int,Double];
+  implicit object OpSparseArrayScalarID extends OpSparseArrayScalar[Int,Double,Double];
+
+  implicit def opScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  = new OpScalarSparseArray[V1,V2,RV];
+
+  class OpScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  extends ScalarSparseArrayOp[V1,V2,RV] with Op[V1,SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpScalarSparseArrayII extends OpScalarSparseArray[Int,Int,Int];
+  implicit object OpScalarSparseArrayDD extends OpScalarSparseArray[Double,Double,Double];
+  implicit object OpScalarSparseArrayDI extends OpScalarSparseArray[Double,Int,Double];
+  implicit object OpScalarSparseArrayID extends OpScalarSparseArray[Int,Double,Double];
+
+  implicit def opSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayArray[V1,V2,RV];
+
+  class OpSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArrayArrayBase[V1,V2,RV] with Op[SparseArray[V1],Array[V2],SparseArrayArrayOutput[RV]];
+
+  implicit object OpSparseArrayArrayII extends OpSparseArrayArray[Int,Int,Int];
+  implicit object OpSparseArrayArrayID extends OpSparseArrayArray[Int,Double,Double];
+  implicit object OpSparseArrayArrayDI extends OpSparseArrayArray[Double,Int,Double];
+  implicit object OpSparseArrayArrayDD extends OpSparseArrayArray[Double,Double,Double];
+
+  implicit def opArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpArraySparseArray[V1,V2,RV];
+
+  class OpArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends ArraySparseArrayBase[V1,V2,RV] with Op[Array[V1],SparseArray[V2],ArraySparseArrayOutput[RV]];
+
+  implicit object OpArraySparseArrayII extends OpArraySparseArray[Int,Int,Int];
+  implicit object OpArraySparseArrayID extends OpArraySparseArray[Int,Double,Double];
+  implicit object OpArraySparseArrayDI extends OpArraySparseArray[Double,Int,Double];
+  implicit object OpArraySparseArrayDD extends OpArraySparseArray[Double,Double,Double];
+
+  //
   // Tuples
   //
 
@@ -550,7 +986,12 @@ object CanMul {
 trait CanDiv[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanDiv {
- type Op[A,B,That] = CanDiv[A,B,That]
+  type Op[A,B,That] = CanDiv[A,B,That]
+  type SparseArraySparseArrayBase[A,B,That] = SparseArraySparseArrayAllOp[A,B,That];
+  type SparseArrayArrayBase[A,B,That] = SparseArrayArrayAllToSparseArrayOp[A,B,That];
+  type ArraySparseArrayBase[A,B,That] = ArraySparseArrayAllOp[A,B,That];
+  type SparseArrayArrayOutput[A] = SparseArray[A];
+  type ArraySparseArrayOutput[A] = Array[A];
 
   //
   // Primitives
@@ -648,6 +1089,65 @@ object CanDiv {
   implicit object OpScalarArrayID extends OpScalarArray[Int,Double,Double];
 
   //
+  // Sparse arrays
+  //
+
+  implicit def opSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArraySparseArray[V1,V2,RV];
+
+  class OpSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArraySparseArrayBase[V1,V2,RV] with Op[SparseArray[V1],SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpSparseArraySparseArrayII extends OpSparseArraySparseArray[Int,Int,Int];
+  implicit object OpSparseArraySparseArrayID extends OpSparseArraySparseArray[Int,Double,Double];
+  implicit object OpSparseArraySparseArrayDI extends OpSparseArraySparseArray[Double,Int,Double];
+  implicit object OpSparseArraySparseArrayDD extends OpSparseArraySparseArray[Double,Double,Double];
+
+  implicit def opSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayScalar[V1,V2,RV];
+
+  class OpSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  extends SparseArrayScalarOp[V1,V2,RV] with Op[SparseArray[V1],V2,SparseArray[RV]];
+
+  implicit object OpSparseArrayScalarII extends OpSparseArrayScalar[Int,Int,Int];
+  implicit object OpSparseArrayScalarDD extends OpSparseArrayScalar[Double,Double,Double];
+  implicit object OpSparseArrayScalarDI extends OpSparseArrayScalar[Double,Int,Double];
+  implicit object OpSparseArrayScalarID extends OpSparseArrayScalar[Int,Double,Double];
+
+  implicit def opScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  = new OpScalarSparseArray[V1,V2,RV];
+
+  class OpScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  extends ScalarSparseArrayOp[V1,V2,RV] with Op[V1,SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpScalarSparseArrayII extends OpScalarSparseArray[Int,Int,Int];
+  implicit object OpScalarSparseArrayDD extends OpScalarSparseArray[Double,Double,Double];
+  implicit object OpScalarSparseArrayDI extends OpScalarSparseArray[Double,Int,Double];
+  implicit object OpScalarSparseArrayID extends OpScalarSparseArray[Int,Double,Double];
+
+  implicit def opSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayArray[V1,V2,RV];
+
+  class OpSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArrayArrayBase[V1,V2,RV] with Op[SparseArray[V1],Array[V2],SparseArrayArrayOutput[RV]];
+
+  implicit object OpSparseArrayArrayII extends OpSparseArrayArray[Int,Int,Int];
+  implicit object OpSparseArrayArrayID extends OpSparseArrayArray[Int,Double,Double];
+  implicit object OpSparseArrayArrayDI extends OpSparseArrayArray[Double,Int,Double];
+  implicit object OpSparseArrayArrayDD extends OpSparseArrayArray[Double,Double,Double];
+
+  implicit def opArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpArraySparseArray[V1,V2,RV];
+
+  class OpArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends ArraySparseArrayBase[V1,V2,RV] with Op[Array[V1],SparseArray[V2],ArraySparseArrayOutput[RV]];
+
+  implicit object OpArraySparseArrayII extends OpArraySparseArray[Int,Int,Int];
+  implicit object OpArraySparseArrayID extends OpArraySparseArray[Int,Double,Double];
+  implicit object OpArraySparseArrayDI extends OpArraySparseArray[Double,Int,Double];
+  implicit object OpArraySparseArrayDD extends OpArraySparseArray[Double,Double,Double];
+
+  //
   // Tuples
   //
 
@@ -694,7 +1194,12 @@ object CanDiv {
 trait CanMod[-A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMod {
- type Op[A,B,That] = CanMod[A,B,That]
+  type Op[A,B,That] = CanMod[A,B,That]
+  type SparseArraySparseArrayBase[A,B,That] = SparseArraySparseArrayAllOp[A,B,That];
+  type SparseArrayArrayBase[A,B,That] = SparseArrayArrayAllToSparseArrayOp[A,B,That];
+  type ArraySparseArrayBase[A,B,That] = ArraySparseArrayAllOp[A,B,That];
+  type SparseArrayArrayOutput[A] = SparseArray[A];
+  type ArraySparseArrayOutput[A] = Array[A];
 
   //
   // Primitives
@@ -790,6 +1295,65 @@ object CanMod {
   implicit object OpScalarArrayDD extends OpScalarArray[Double,Double,Double];
   implicit object OpScalarArrayDI extends OpScalarArray[Double,Int,Double];
   implicit object OpScalarArrayID extends OpScalarArray[Int,Double,Double];
+
+  //
+  // Sparse arrays
+  //
+
+  implicit def opSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArraySparseArray[V1,V2,RV];
+
+  class OpSparseArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArraySparseArrayBase[V1,V2,RV] with Op[SparseArray[V1],SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpSparseArraySparseArrayII extends OpSparseArraySparseArray[Int,Int,Int];
+  implicit object OpSparseArraySparseArrayID extends OpSparseArraySparseArray[Int,Double,Double];
+  implicit object OpSparseArraySparseArrayDI extends OpSparseArraySparseArray[Double,Int,Double];
+  implicit object OpSparseArraySparseArrayDD extends OpSparseArraySparseArray[Double,Double,Double];
+
+  implicit def opSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayScalar[V1,V2,RV];
+
+  class OpSparseArrayScalar[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V2], dv : DefaultArrayValue[RV])
+  extends SparseArrayScalarOp[V1,V2,RV] with Op[SparseArray[V1],V2,SparseArray[RV]];
+
+  implicit object OpSparseArrayScalarII extends OpSparseArrayScalar[Int,Int,Int];
+  implicit object OpSparseArrayScalarDD extends OpSparseArrayScalar[Double,Double,Double];
+  implicit object OpSparseArrayScalarDI extends OpSparseArrayScalar[Double,Int,Double];
+  implicit object OpSparseArrayScalarID extends OpSparseArrayScalar[Int,Double,Double];
+
+  implicit def opScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  = new OpScalarSparseArray[V1,V2,RV];
+
+  class OpScalarSparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], s : Scalar[V1], dv : DefaultArrayValue[RV])
+  extends ScalarSparseArrayOp[V1,V2,RV] with Op[V1,SparseArray[V2],SparseArray[RV]];
+
+  implicit object OpScalarSparseArrayII extends OpScalarSparseArray[Int,Int,Int];
+  implicit object OpScalarSparseArrayDD extends OpScalarSparseArray[Double,Double,Double];
+  implicit object OpScalarSparseArrayDI extends OpScalarSparseArray[Double,Int,Double];
+  implicit object OpScalarSparseArrayID extends OpScalarSparseArray[Int,Double,Double];
+
+  implicit def opSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpSparseArrayArray[V1,V2,RV];
+
+  class OpSparseArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends SparseArrayArrayBase[V1,V2,RV] with Op[SparseArray[V1],Array[V2],SparseArrayArrayOutput[RV]];
+
+  implicit object OpSparseArrayArrayII extends OpSparseArrayArray[Int,Int,Int];
+  implicit object OpSparseArrayArrayID extends OpSparseArrayArray[Int,Double,Double];
+  implicit object OpSparseArrayArrayDI extends OpSparseArrayArray[Double,Int,Double];
+  implicit object OpSparseArrayArrayDD extends OpSparseArrayArray[Double,Double,Double];
+
+  implicit def opArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  = new OpArraySparseArray[V1,V2,RV];
+
+  class OpArraySparseArray[V1,V2,RV](implicit m : ClassManifest[RV], op : Op[V1,V2,RV], dv : DefaultArrayValue[RV])
+  extends ArraySparseArrayBase[V1,V2,RV] with Op[Array[V1],SparseArray[V2],ArraySparseArrayOutput[RV]];
+
+  implicit object OpArraySparseArrayII extends OpArraySparseArray[Int,Int,Int];
+  implicit object OpArraySparseArrayID extends OpArraySparseArray[Int,Double,Double];
+  implicit object OpArraySparseArrayDI extends OpArraySparseArray[Double,Int,Double];
+  implicit object OpArraySparseArrayDD extends OpArraySparseArray[Double,Double,Double];
 
   //
   // Tuples

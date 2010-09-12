@@ -1,5 +1,3 @@
-package scalala.collection.sparse;
-
 /*
  Copyright 2009 David Hall, Daniel Ramage
  
@@ -16,68 +14,72 @@ package scalala.collection.sparse;
  limitations under the License. 
 */
 
+package scalala.collection.sparse;
+
 import scala.collection.generic._;
 import scala.reflect.ClassManifest;
 import scala.collection.mutable._;
 
 /**
- * Treats an array as a sparse array.  Logarithmic access time.
+ * <p>Nearly-drop-in replacement for Array[T](length) that does not represent
+ * default array values.  Internally, the SparseArray data structure
+ * stores an array of indexes in packed, sorted order, and a
+ * corresponding packed array of values.  Updates are linear in
+ * the number of non-zero array elements, while accesses are
+ * logarithmic.  This class is not threadsafe.</p>
+ *
+ * <p>Note that the DefaultArrayValue must be constant reference -- no
+ * clever tricks like creating new instances of type T are supported
+ * by the nature of the way this map works - i.e., otherwise iterating
+ * over all the values (possibly to mutate them) would cause the sparse
+ * array to become dense.</p>
  *
  * @param length The virtual length of the array.
- * @param default The default value of elements not in the sparse array.
- * @param initial The initial length of the sparse data structures.
+ * @param initialActiveLength The initial length of the sparse data structures.
  *
  * @author dlwh, dramage
  */
-class SparseArray[@specialized T:ClassManifest]
-(val length : Int, initialSize : Int = 3)(val default : T) {
+final class SparseArray[@specialized T:ClassManifest:DefaultArrayValue]
+(val length : Int, initialActiveLength : Int = 3) {
+
+  /** Default value when key in range but no value found. */
+  final val default = implicitly[DefaultArrayValue[T]].value;
 
   /** Data array.  Only the first this.used elements are valid. */
-  protected var data = new Array[T](initialSize);
+  final protected var data = new Array[T](initialActiveLength);
 
   /** Index array.  Only the first this.used elements are valid. */
-  protected var index = new Array[Int](initialSize);
+  final protected var index = new Array[Int](initialActiveLength);
 
   /** Number of elements in the array that have been used. */
-  protected var used : Int = 0;
+  final protected var used : Int = 0;
 
   /** Last found offset. */
-  private var lastOffset = -1;
+  final private var lastOffset = -1;
 
   /** Index at last found offset. */
-  private var lastIndex = -1;
-
-  /** Returns the size of the array. */
-  def size = used;
-
-  /** Applies the given function to each non-default element. */
-  def foreach[U](f: Function1[(Int,T),U]) {
-    var i = 0;
-    while(i < used) {
-      f(index(i), data(i));
-      i += 1;
-    }
-  }
+  final private var lastIndex = -1;
 
   /** Iterator over used indexes and values */
-  final def iterator = Iterator.range(0, used).map(i => (index(i),data(i)));
+  def iterator = Iterator.range(0, used).map(i => (index(i),data(i)));
 
   /** Used indexes. */
-  def keysIterator = index.iterator.take(used);
+  def indexIterator = index.iterator.take(used);
 
   /** Used values. */
-  def valuesIterator = data.iterator.take(used);
+  def valueIterator = data.iterator.take(used);
+
+  /** Key value pairs of non-default entries. */
+  def activeIterator = indexIterator zip valueIterator;
 
   /** A copy of the keys in this array. */
-  def keysArray : Array[Int] = index.take(used);
+  def indexArray : Array[Int] = index.take(used);
 
   /** A copy of the values in this array. */
-  def valuesArray : Array[T] = data.take(used);
-
-  // Taken from Scalala
+  def valueArray : Array[T] = data.take(used);
 
   /** Records that the given index was found at this.index(offset). */
-  final private def found(index : Int, offset : Int) : Int = {
+  private def found(index : Int, offset : Int) : Int = {
     lastOffset = offset;
     lastIndex = index;
     return offset;
@@ -90,7 +92,7 @@ class SparseArray[@specialized T:ClassManifest]
    */
   private def findOffset(i : Int) : Int = {
     if (i < 0 || i >= length)
-      throw new IndexOutOfBoundsException("Index "+i+" out of bounds [0,"+size+")");
+      throw new IndexOutOfBoundsException("Index "+i+" out of bounds [0,"+used+")");
 
     if (i == lastIndex) {
       // previous element; don't need to update lastOffset
@@ -99,23 +101,21 @@ class SparseArray[@specialized T:ClassManifest]
       // empty list; do nothing
       return -1;
     } else {
-      // regular binary search
+      // regular binary search from begin to end (inclusive)
       var begin = 0;
       var end = used - 1;
 
       // narrow the search if we have a previous reference
-      if (lastIndex >= 0 && lastOffset >= 0) {
-        if (i < lastIndex) {
-          // in range preceding last request
-          end = lastOffset;
-        } else {
-          // in range following last request
-          begin = lastOffset;
+      if (i < lastIndex) {
+        // in range preceding last request
+        end = lastOffset;
+      } else if (lastIndex >= 0) {
+        // in range following last request
+        begin = lastOffset;
 
-          if (begin + 1 <= end && index(begin + 1) == i) {
-            // special case: successor of last request
-            return found(i, begin + 1);
-          }
+        if (begin + 1 <= end && index(begin + 1) == i) {
+          // special case: successor of last request
+          return found(i, begin + 1);
         }
       }
 
@@ -158,6 +158,21 @@ class SparseArray[@specialized T:ClassManifest]
     if (offset >= 0) data(offset) else value;
   }
 
+  /** Returns the size of the array. */
+  def activeLength = used;
+
+  /** Returns the index of the item stored at the given offset. */
+  def indexAt(offset : Int) : Int = {
+    if (offset > used) throw new ArrayIndexOutOfBoundsException();
+    index(offset);
+  }
+
+  /** Returns the value of the item stored at the given offset. */
+  def valueAt(offset : Int) : T = {
+    if (offset > used) throw new ArrayIndexOutOfBoundsException();
+    data(offset);
+  }
+
   /**
    * Sets the given value at the given index if the value is not
    * equal to the current default.  The data and
@@ -177,7 +192,7 @@ class SparseArray[@specialized T:ClassManifest]
     if (offset >= 0) {
       // found at offset
       data(offset) = value;
-    } else if (value != null) {
+    } else if (value != default) {
       // need to insert at position -(offset+1)
       val insertPos = ~offset;
 
@@ -188,7 +203,7 @@ class SparseArray[@specialized T:ClassManifest]
 
       if (used > data.length) {
         // expand array
-        val newLength = {
+        val newLength = math.min(length, {
           if (data.length < 8) { 8 }
           else if (data.length > 16*1024) { data.length + 16*1024 }
           else if (data.length > 8*1024)  { data.length +  8*1024 }
@@ -196,7 +211,7 @@ class SparseArray[@specialized T:ClassManifest]
           else if (data.length > 2*1024)  { data.length +  2*1024 }
           else if (data.length > 1*1024)  { data.length +  1*1024 }
           else { data.length * 2 }
-        }
+        });
 
         // copy existing data into new arrays
         newIndex = new Array[Int](newLength);
@@ -224,7 +239,7 @@ class SparseArray[@specialized T:ClassManifest]
 
   /** Clears this array, resetting to the initial size. */
   def clear() {
-    use(new Array[Int](initialSize), new Array[T](initialSize), 0);
+    use(new Array[Int](initialActiveLength), new Array[T](initialActiveLength), 0);
   }
 
   /** Compacts the array by removing all stored default values. */
@@ -261,22 +276,8 @@ class SparseArray[@specialized T:ClassManifest]
 
   /** Use the given index and data arrays, of which the first inUsed are valid. */
   private def use(inIndex : Array[Int], inData : Array[T], inUsed : Int) = {
-    // these rep-checks are not needed because this method is private and all
-    // callers satisfy these invariants.
-//    if (inIndex == null || inData == null)
-//      throw new IllegalArgumentException("Index and data must be non-null");
-//    if (inIndex.length != inData.length)
-//      throw new IllegalArgumentException("Index and data sizes do not match");
-//    if (inIndex.length < inUsed)
-//      throw new IllegalArgumentException("Used is greater than provided array");
-//    if (inIndex(0) < 0 || inIndex(0) >= inUsed)
-//      throw new IllegalArgumentException("use inIndex out of range contains illegal offset @ 0");
-//    var i = 1;
-//    while (i < inUsed) {
-//      if (inIndex(i) < 0 || inIndex(i) >= inUsed || inIndex(i) < inIndex(i-1))
-//        throw new IllegalArgumentException("use inIndex out of range contains illegal offset @ "+i);
-//      i += 1;
-//    }
+    // no need to rep-check since method is private and all callers satisfy
+    // these invariants.
 
     data = inData;
     index = inIndex;
@@ -285,14 +286,127 @@ class SparseArray[@specialized T:ClassManifest]
     lastIndex = -1;
   }
 
-  /** Tranforms all values in this map by applying the given function. */
-  def transformValues(f : T=>T) = {
-    var i = 0;
+  private def checkrep() {
+    if (index == null || data == null)
+      throw new IllegalArgumentException("Index and data must be non-null");
+    if (index.length != data.length)
+      throw new IllegalArgumentException("Index and data sizes do not match");
+    if (index.length < used)
+      throw new IllegalArgumentException("Used is greater than provided array");
+    if (index(0) < 0 || index(0) >= used)
+      throw new IllegalArgumentException("use inIndex out of range contains illegal offset @ 0");
+    var i = 1;
     while (i < used) {
-      data(i) = f(data(i));
+      if (index(i) < 0 || index(i) >= used || index(i) < index(i-1))
+        throw new IllegalArgumentException("use inIndex out of range contains illegal offset @ "+i);
       i += 1;
     }
   }
+
+  /**
+   * Maps all values.  If f(default) != default, then the result will not
+   * be inefficiently dense.
+   */
+  def map[B:ClassManifest:DefaultArrayValue](f : T=>B) : SparseArray[B] = {
+    val rv = new SparseArray[B](length);
+    val mappedDefault = f(default);
+    if (mappedDefault == rv.default) {
+      val newIndex = new Array[Int](used);
+      val newData = new Array[B](used);
+      var i = 0;
+      while (i < used) {
+        newIndex(i) = index(i);
+        newData(i) = f(data(i));
+        i += 1;
+      }
+      rv.use(newIndex, newData, used);
+    } else {
+      val newIndex = Array.range(0, length);
+      val newData = new Array[B](length);
+      var i = 0;
+      var o = 0;
+      while (i < used) {
+        while (o < index(i)) {
+          newData(o) = mappedDefault;
+          o += 1;
+        }
+        newData(o) = f(data(i));
+        o += 1;
+        i += 1;
+      }
+      while (o < length) {
+        newData(o) = mappedDefault;
+        o += 1;
+      }
+      rv.use(newIndex, newData, length);
+    }
+    rv;
+  }
+
+  /**
+   * Tranforms all elements this array by applying the given function. If
+   * f(default) == default, then only updates non-default values.  Otherwise,
+   * the map essentially becomes dense -- not so efficient an operation!
+   */
+  def transform(f : T=>T) = {
+    val newDefault = f(default);
+    if (newDefault == default) {
+      var i = 0;
+      while (i < used) {
+        data(i) = f(data(i));
+        i += 1;
+      }
+    } else {
+      val newIndex = Array.range(0, length);
+      val newData = new Array[T](length);
+      var i = 0;
+      var o = 0;
+      while (i < used) {
+        while (o < index(i)) {
+          newData(o) = newDefault;
+          o += 1;
+        }
+        newData(o) = f(data(i));
+        o += 1;
+        i += 1;
+      }
+      while (o < length) {
+        newData(o) = newDefault;
+        o += 1;
+      }
+      use(newIndex, newData, length);
+    }
+  }
+
+  /** Applies the given function to each non-default element. */
+  def foreachActive[U](f: ((Int,T) => U)) {
+    var i = 0;
+    while(i < used) {
+      f(index(i), data(i));
+      i += 1;
+    }
+  }
+
+  /** Applies the given function to each non-default element. */
+  def foreachActive[U](f: T => U) {
+    var i = 0;
+    while(i < used) {
+      f(data(i));
+      i += 1;
+    }
+  }
+
+  def toArray =
+    Array.tabulate(length)(apply);
+
+  def toList =
+    List.tabulate(length)(apply);
+
+  def toIndexedSeq =
+    List.tabulate(length)(apply);
+
+  def toMap =
+    (indexIterator zip valueIterator).toMap;
 
   override def hashCode = {
     var rv = 0;
@@ -337,12 +451,51 @@ class SparseArray[@specialized T:ClassManifest]
 }
 
 object SparseArray {
+  def apply[@specialized T:ClassManifest:DefaultArrayValue](values : T*) = {
+    val rv = new SparseArray[T](values.length);
+    var i = 0;
+    for (v <- values) {
+      rv(i) = v;
+      i += 1;
+    }
+    rv.compact;
+    rv;
+  }
 
-  def apply[@specialized T:ClassManifest:DefaultValue](length : Int, initialSize : Int = 3) =
-    new SparseArray[T](length = length, initialSize = initialSize)(implicitly[DefaultValue[T]].value);
+  /**
+   * Creates a SparseArray filled with the given value.  The value function
+   * is called once initially to test if the returned value is equal to the
+   * DefaultArrayValue - if so, an empty SparseArray with initialActiveLength
+   * non-zero entries is returned.  Otherwise, an inefficient "dense"
+   * SparseArray is returned.
+   *
+   * @author dramage
+   */
+  def fill[@specialized T:ClassManifest:DefaultArrayValue](length : Int, initialActiveLength : Int = 3)(value : =>T) : SparseArray[T] = {
+    if (value != implicitly[DefaultArrayValue[T]].value) {
+      val rv = new SparseArray[T](length = length, initialActiveLength = length);
+      var i = 0;
+      while (i < length) {
+        rv(i) = value;
+        i += 1;
+      }
+      rv;
+    } else {
+      new SparseArray[T](length = length, initialActiveLength = length);
+    }
+  }
 
-  def tabulate[@specialized T:ClassManifest:DefaultValue](length : Int, initialSize : Int = 3)(fn : (Int => T)) = {
-    val rv = SparseArray[T](length = length, initialSize = initialSize);
+  def tabulate[@specialized T:ClassManifest:DefaultArrayValue](length : Int)(values : (Int,T)*) = {
+    val rv = new SparseArray[T](length = length, initialActiveLength = values.length);
+    for ((k,v) <- values) {
+      rv(k) = v;
+    }
+    rv.compact;
+    rv;
+  }
+
+  def tabulate[@specialized T:ClassManifest:DefaultArrayValue](length : Int, initialActiveLength : Int = 3)(fn : (Int => T)) = {
+    val rv = new SparseArray[T](length = length, initialActiveLength = initialActiveLength);
     var i = 0;
     while (i < length) {
       val v = fn(i);
@@ -351,43 +504,44 @@ object SparseArray {
       }
       i += 1;
     }
+    rv.compact;
     rv;
-  }
-
-  /** Default value of type T as used by SparseArray. */
-  trait DefaultValue[@specialized T] {
-    def value : T;
-  }
-
-  /** Default value of type T as used by SparseArray. */
-  object DefaultValue {
-    implicit object IntDefaultValue extends DefaultValue[Int] {
-      override def value = 0; }
-
-    implicit object LongDefaultValue extends DefaultValue[Long] {
-      override def value = 0l; }
-
-    implicit object ShortDefaultValue extends DefaultValue[Short] {
-      override def value = 0.toShort; }
-
-    implicit object CharDefaultValue extends DefaultValue[Char] {
-      override def value = 0.toChar; }
-
-    implicit object ByteDefaultValue extends DefaultValue[Byte] {
-      override def value = 0.toByte; }
-
-    implicit object FloatDefaultValue extends DefaultValue[Float] {
-      override def value = 0.0f; }
-
-    implicit object DoubleDefaultValue extends DefaultValue[Double] {
-      override def value = 0.0; }
-    
-    implicit object BooleanDefaultValue extends DefaultValue[Boolean] {
-      override def value = false; }
-
-    implicit def ObjectDefaultValue[T<:AnyRef] = new DefaultValue[T] {
-      override def value : T = null.asInstanceOf[T];
-    }
   }
 }
 
+
+/** Default value of type T as used by SparseArray. */
+trait DefaultArrayValue[@specialized T] {
+  def value : T;
+}
+
+/** Default value of type T as used by SparseArray. */
+object DefaultArrayValue {
+  implicit object IntDefaultArrayValue extends DefaultArrayValue[Int] {
+    override def value = 0; }
+
+  implicit object LongDefaultArrayValue extends DefaultArrayValue[Long] {
+    override def value = 0l; }
+
+  implicit object ShortDefaultArrayValue extends DefaultArrayValue[Short] {
+    override def value = 0.toShort; }
+
+  implicit object CharDefaultArrayValue extends DefaultArrayValue[Char] {
+    override def value = 0.toChar; }
+
+  implicit object ByteDefaultArrayValue extends DefaultArrayValue[Byte] {
+    override def value = 0.toByte; }
+
+  implicit object FloatDefaultArrayValue extends DefaultArrayValue[Float] {
+    override def value = 0.0f; }
+
+  implicit object DoubleDefaultArrayValue extends DefaultArrayValue[Double] {
+    override def value = 0.0; }
+
+  implicit object BooleanDefaultArrayValue extends DefaultArrayValue[Boolean] {
+    override def value = false; }
+
+  implicit def ObjectDefaultArrayValue[T<:AnyRef] = new DefaultArrayValue[T] {
+    override def value : T = null.asInstanceOf[T];
+  }
+}

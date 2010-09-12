@@ -21,6 +21,8 @@
 package scalala;
 package generic;
 
+import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
+
 /**
  * Base trait for Unary operations from A=>B.
  *
@@ -78,6 +80,24 @@ object CanZero {
   implicit object OpArrayL extends OpArray[Long,Long];
   implicit object OpArrayF extends OpArray[Float,Float];
   implicit object OpArrayD extends OpArray[Double,Double];
+
+  //
+  // SparseArrays
+  //
+
+  implicit def opSparseArray[V,RV](implicit m : ClassManifest[RV], op : Op[V,RV], dv : DefaultArrayValue[RV])
+    = new OpSparseArray[V,RV];
+
+  class OpSparseArray[V,RV](implicit m : ClassManifest[RV], op : Op[V,RV], dv : DefaultArrayValue[RV])
+  extends Op[SparseArray[V],SparseArray[RV]] {
+    def apply(value : SparseArray[V]) = value.map(op);
+  }
+
+  implicit object OpSparseArrayI extends OpSparseArray[Int,Int];
+  implicit object OpSparseArrayS extends OpSparseArray[Short,Short];
+  implicit object OpSparseArrayL extends OpSparseArray[Long,Long];
+  implicit object OpSparseArrayF extends OpSparseArray[Float,Float];
+  implicit object OpSparseArrayD extends OpSparseArray[Double,Double];
 
   //
   // Tuples
@@ -152,6 +172,24 @@ object CanNeg {
   implicit object OpArrayL extends OpArray[Long,Long];
   implicit object OpArrayF extends OpArray[Float,Float];
   implicit object OpArrayD extends OpArray[Double,Double];
+
+  //
+  // SparseArrays
+  //
+
+  implicit def opSparseArray[V,RV](implicit m : ClassManifest[RV], op : Op[V,RV], dv : DefaultArrayValue[RV])
+    = new OpSparseArray[V,RV];
+
+  class OpSparseArray[V,RV](implicit m : ClassManifest[RV], op : Op[V,RV], dv : DefaultArrayValue[RV])
+  extends Op[SparseArray[V],SparseArray[RV]] {
+    def apply(value : SparseArray[V]) = value.map(op);
+  }
+
+  implicit object OpSparseArrayI extends OpSparseArray[Int,Int];
+  implicit object OpSparseArrayS extends OpSparseArray[Short,Short];
+  implicit object OpSparseArrayL extends OpSparseArray[Long,Long];
+  implicit object OpSparseArrayF extends OpSparseArray[Float,Float];
+  implicit object OpSparseArrayD extends OpSparseArray[Double,Double];
 
   //
   // Tuples

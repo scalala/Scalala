@@ -66,7 +66,7 @@ class Figure(figures : Figures) {
 
   /** The Swing frame for this plot */
   lazy val frame : JFrame = {
-    val f = new JFrame("Figure "+(figures.number(this)+1));
+    val f = new JFrame("Figure "+(figures.number(this)));
     f.setSize(600,400);
     f.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
     f.setLayout(new java.awt.BorderLayout());

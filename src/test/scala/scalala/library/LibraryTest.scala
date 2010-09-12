@@ -28,19 +28,33 @@ import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
 class LibraryTest extends FunSuite with Checkers {
-  test("log") {
+  test("Log") {
     assert(Library.log(2.8) === 1.0296194171811581);
     assert(Library.log(1) === 0);
     assert(Library.log(Array(1,2,3,4)).toList === List(0.0, 0.6931471805599453, 1.0986122886681098, 1.3862943611198906))
   }
 
-  test("mean") {
+  test("Mean") {
     // assert(Library.mean(List(1,2,3,4)) === ((1+2+3+4) / 4));
     assert(Library.mean(List(Array(0,2),Array(2,4))).toList === List(1,3));
     assert(Library.mean(List(Array(1.0,3.0),Array(2.0,4.0))).toList === List(1.5,3.5));
   }
 
-  test("exp") {
+  test("Exp") {
     assert(Library.exp(Array(1,2,3,4)).toList === List(1,2,3,4).map(_.toDouble).map(math.exp));
+  }
+
+  test("Tensor:Norm") {
+    def assertEquals(a : Double, b : Double, t : Double) =
+      if (math.abs(a - b) > t) throw new AssertionError;
+
+    val v = Array(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
+    assertEquals(Library.norm(v,1), 3.6577, 1e-4);
+    assertEquals(Library.norm(v,2), 2.0915, 1e-4);
+    assertEquals(Library.norm(v,3), 1.8405, 1e-4);
+    assertEquals(Library.norm(v,4), 1.7541, 1e-4);
+    assertEquals(Library.norm(v,5), 1.7146, 1e-4);
+    assertEquals(Library.norm(v,6), 1.6940, 1e-4);
+    assertEquals(Library.norm(v,Double.PositiveInfinity), 1.6656, 1e-4);
   }
 }
