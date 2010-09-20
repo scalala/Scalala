@@ -44,9 +44,9 @@ final class DenseSeqTensor(val dims: Seq[Int], data: Array[Double])
       unroll(dims);
     }
 
-    override def contains(ind: Seq[Int]) = {
-      ind.length == dims.length && (0 until ind.length).forall { i => ind(i) == dims(i) }
-    }
+   override def contains(ind: Seq[Int]) = {
+     ind.length == dims.length && (dims zip ind forall { case (d,i) => (0 <= i && i < d)})
+   }
 
   }
 
