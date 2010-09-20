@@ -38,7 +38,12 @@ sealed trait PaintScale;
  * @author dramage
  */
 case class StaticPaintScale(lower : Double, upper : Double, gradient : Array[Color] = PaintScale.BlueToRed)
-extends PaintScale;
+extends PaintScale {
+  def color(value : Double) = {
+    val index = gradient.length * (value - lower) / (upper - lower);
+    gradient(math.min(gradient.length-1, math.max(0, index.toInt)));
+  }
+}
 
 /**
  * Specifes a gradient, and returns a StaticPaintScale when a lower and upper

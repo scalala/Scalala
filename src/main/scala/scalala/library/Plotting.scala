@@ -132,7 +132,8 @@ trait Plotting {
    * @param labels Optional mouse-over tooltips for points.
    * @param tips Optional mouse-over tooltips for points.
    *
-   * TODO: compiler bug prevents labels and tips from being provided
+   * TODO: compiler bug stops K from being inferred with default values of null
+   * for labels and tips.
    */
   def plot[K,X,XV,Y,YV,T]
   (x : X, y : Y, style : Char = '-',
@@ -214,51 +215,77 @@ trait Plotting {
     xyplot.refresh();
   }
 
-//  /**
-//   * Displays a scatter plot of x versus y, each point drawn at the given
-//   * size and mapped with the given color.
-//   */
-//  def scatter(x : Vector, y : Vector, s : Vector, c : Vector)(implicit xyplot : XYPlot = _figures.figure.plot) {
-//    assert(x.size == y.size);
-//    assert(y.size == s.size, y.size + " != " + s.size);
-//    assert(s.size == c.size, s.size + " != " + c.size);
-//
-//    val dataset = Dataset(x,y,s,c);
-//    val series = xyplot.nextSeries;
-//    xyplot.plot.setDataset(series, dataset);
-//
-//    val gradient = Gradients.GRADIENT_BLUE_TO_RED;
-//
-//    val paintscale = new org.jfree.chart.renderer.PaintScale {
-//      override def getLowerBound = 0.0;
-//      override def getUpperBound = 1.0;
-//      override def getPaint(value : Double) = {
-//        val index = gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound);
-//        gradient(math.min(gradient.length-1, math.max(0, index.toInt)));
-//      }
-//    }
-//
-//    // set the renderer
-//    import java.awt.Graphics2D;
-//    import java.awt.geom.Rectangle2D;
-//    import org.jfree.data.xy.XYDataset;
-//    import org.jfree.ui.RectangleEdge;
-//    import org.jfree.chart.axis.ValueAxis;
-//    import org.jfree.chart.renderer.xy.AbstractXYItemRenderer;
-//    import org.jfree.chart.renderer.xy.XYBubbleRenderer;
-//    import org.jfree.chart.renderer.xy.XYItemRendererState;
-//
-//    val renderer = new XYBubbleRenderer(XYBubbleRenderer.SCALE_ON_DOMAIN_AXIS) {;
-//      val stroke = new java.awt.BasicStroke(0f);
-//      override def getItemPaint(series : Int, item : Int) : java.awt.Paint = {
-//        paintscale.getPaint(c(item));
-//      }
-//      override def getItemStroke(series : Int, item : Int) = stroke;
-//    }
-//
-//    xyplot.plot.setRenderer(series, renderer);
-//    xyplot.refresh;
-//  }
+  /**
+   * Displays a scatter plot of x versus y, each point drawn at the given
+   * size and mapped with the given color.
+   */
+  def scatter[K,X,XV,Y,YV,S,SV,C,CV,T]
+  (x : X, y : Y, size : S, color : C,
+   labels : PartialFunction[K,String],
+   tips : PartialFunction[K,String],
+   paintScale : PaintScale = DynamicPaintScale(),
+   name : String = null)
+  (implicit xyplot : XYPlot = figures.figure.plot,
+   xt : Tensor1[X,K,XV], yt : Tensor1[Y,K,YV], st : Tensor1[S,K,SV], ct : Tensor1[C,K,CV],
+   xv : XV => Number, yv : YV => Number, sv : SV => Double, cv : CV => Double) : Unit = {
+
+    val series = xyplot.nextSeries;
+
+    val domain = xt.domain(x);
+    require(domain == yt.domain(y), "x and y must have same domain");
+
+    val items = domain.toIndexedSeq;
+
+    // initialize dataset
+    val dataset = XYZDataset(
+      items = items,
+      name = if (name == null) "Series "+series else name,
+      x = (k : K) => xv(xt.get(x,k)),
+      y = (k : K) => yv(yt.get(y,k)),
+      z = (k : K) => sv(st.get(size,k)),
+      label = (k : K) => if (labels != null && labels.isDefinedAt(k)) labels(k) else null,
+      tip = (k : K) => if (tips != null && tips.isDefinedAt(k)) tips(k) else null
+    );
+
+    val staticScale : StaticPaintScale = paintScale match {
+      case static : StaticPaintScale =>
+        static;
+
+      case dynamic : DynamicPaintScale => {
+        val values = items.view.map(item => cv(ct.get(color, item)));
+        dynamic(lower = values.min, upper = values.max);
+      }
+    }
+
+    // initialize the series renderer
+    import org.jfree.chart.renderer.xy.XYBubbleRenderer;
+    val renderer = new XYBubbleRenderer(XYBubbleRenderer.SCALE_ON_DOMAIN_AXIS) {;
+      val stroke = new java.awt.BasicStroke(0f);
+      override def getItemPaint(series : Int, item : Int) : java.awt.Paint =
+        staticScale.color(cv(ct.get(color,items(item))));
+      override def getItemStroke(series : Int, item : Int) = stroke;
+    }
+
+    val tooltipGenerator = new org.jfree.chart.labels.XYToolTipGenerator() {
+      override def generateToolTip(dataset : org.jfree.data.xy.XYDataset, series : Int, item : Int) : String = {
+        dataset.asInstanceOf[XYZDataset[_]].getTip(0, item);
+      }
+    }
+    renderer.setSeriesToolTipGenerator(series, tooltipGenerator);
+
+    val labelGenerator = new org.jfree.chart.labels.BubbleXYItemLabelGenerator() {
+      override def generateLabel(dataset : org.jfree.data.xy.XYDataset, series : Int, item : Int) : String = {
+        dataset.asInstanceOf[XYZDataset[_]].getLabel(0, item);
+      }
+    }
+    renderer.setSeriesItemLabelGenerator(series, labelGenerator);
+    renderer.setSeriesItemLabelsVisible(series, labels != null);
+
+    // add dataset and renderer to plot
+    xyplot.plot.setDataset(series, dataset);
+    xyplot.plot.setRenderer(series, renderer);
+    xyplot.refresh();
+  }
 
 //  /** An XY stacked area chart. */
 //  def stacked(x : Vector, y : Seq[Vector], names : Seq[String])(implicit xyplot : XYPlot = _figures.figure.plot) {
@@ -426,10 +453,7 @@ trait Plotting {
     val paintScale = new org.jfree.chart.renderer.PaintScale {
       override def getLowerBound = staticScale.lower;
       override def getUpperBound = staticScale.upper;
-      override def getPaint(value : Double) = {
-        val index = staticScale.gradient.length * (value - getLowerBound) / (getUpperBound - getLowerBound);
-        staticScale.gradient(math.min(staticScale.gradient.length-1, math.max(0, index.toInt)));
-      }
+      override def getPaint(value : Double) = staticScale.color(value);
     }
 
     renderer.setPaintScale(paintScale);
