@@ -68,18 +68,25 @@ trait Library {
   // Collection level operations
   //
 
+  /** Take the exp of the given value. */
   def exp[V,That](value : V)(implicit exp : CanExp[V,That]) : That =
     exp(value);
 
+  /** Take the log of the given value. */
   def log[V,That](value : V)(implicit log : CanLog[V,That]) : That =
     log(value);
 
+  /** Take the n-norm of the given values. */
   def mean[V,That](value : V)(implicit mean : CanMean[V,That]) : That =
     mean(value);
 
-  /** Take the n-norm of the given tensor. */
+  /** Take the n-norm of the given value. */
   def norm[V](value : V, n : Double)(implicit norm : CanNorm[V]) : Double =
     norm(value, n);
+
+  /** Take the sqrt of the given value. */
+  def sqrt[V,That](value : V)(implicit sqrt : CanSqrt[V,That]) : That =
+    sqrt(value);
 
   //
   // Constructors
