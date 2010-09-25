@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <properties>
-    <scala.version>2.8.0</scala.version>
+    <scala.version>2.8.1.RC1</scala.version>
   </properties>
 
   <groupId>org.scalanlp</groupId>
@@ -83,11 +83,6 @@
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
     </dependency>
-    <dependency> <!-- some numerical routines -->
-      <groupId>mtj</groupId>
-      <artifactId>mtj</artifactId>
-      <version>0.9.9</version>
-    </dependency>
     <dependency> <!-- plotting -->
       <groupId>jfree</groupId>
       <artifactId>jcommon</artifactId>
@@ -103,11 +98,6 @@
       <artifactId>xmlgraphics-commons</artifactId>
       <version>1.3.1</version>
     </dependency>
-    <dependency> <!-- sparse data structures with primitive types -->
-      <groupId>fastutil</groupId>
-      <artifactId>fastutil</artifactId>
-      <version>5.1.5</version>
-    </dependency>
     <dependency> <!-- pdf support -->
       <groupId>com.lowagie</groupId>
       <artifactId>itext</artifactId>
@@ -116,7 +106,7 @@
 
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_${scala.version}</artifactId>
+      <artifactId>scalacheck_2.8.0</artifactId>
       <version>1.7</version>
     </dependency>
     <dependency>
