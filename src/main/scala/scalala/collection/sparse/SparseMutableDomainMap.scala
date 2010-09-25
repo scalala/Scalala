@@ -24,24 +24,33 @@ package sparse;
 import domain.{DomainLike,IterableDomain};
 
 /**
- * Implementation trait for a MutableDomainMap backed by a dense array of values.
+ * Implementation trait for a MutableDomainMap backed by a sparse array of values.
  *
  * @author dramage
  */
 trait SparseMutableDomainMapLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- D<:IterableDomain[A] with DomainLike[A,D],
+ +D<:IterableDomain[A] with DomainLike[A,D],
  +This<:SparseMutableDomainMap[A,B]]
 extends MutableDomainMapLike[A,B,D,This] {
   def data : SparseArray[B];
 
-  var default : B;
-
   /** Assigns the given value to all elements of this map. */
   override def :=(value : B) = {
-    default = value;
-    data.clear();
+    if (value == data.default) {
+      data.clear;
+    } else {
+      var i = 0;
+      while (i < data.length) {
+        data(i) = value;
+        i += 1;
+      }
+    }
   }
+
+  /** Tranforms all values in this map by applying the given function. */
+  override def transformValues(f : B=>B) =
+    data.transform(f);
 }
 
 /**

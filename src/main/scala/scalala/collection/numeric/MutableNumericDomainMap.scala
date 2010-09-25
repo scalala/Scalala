@@ -119,14 +119,12 @@ with MutableNumericDomainMapLike[A,B,IterableDomain[A],MutableNumericDomainMap[A
 
 object MutableNumericDomainMap {
 
-  def apply
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
+  def apply[A, B]
   (domain : IterableDomain[A], default : B, map : scala.collection.Map[A,B] = scala.collection.mutable.Map[A,B]())
   (implicit numeric : Numeric[B]) =
     new Impl[A,B](map, default, domain)(numeric);
 
-  class Impl
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
+  class Impl[A, B]
   (_map : scala.collection.Map[A,B], _default : B, _domain : IterableDomain[A])
   (implicit override val numeric : Numeric[B])
   extends MutableDomainMap.Impl[A,B](_map, _default, _domain)

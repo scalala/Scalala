@@ -162,10 +162,10 @@ with MutableDomainSeqLike[B,MutableDomainSeq[B]];
 
 
 object MutableDomainSeq {
-  def apply[@specialized B](size : Int)(implicit mf : ClassManifest[B]) =
+  def apply[B](size : Int)(implicit mf : ClassManifest[B]) =
     new Impl(new Array[B](size));
 
-  class Impl[@specialized B](values : Array[B])
+  class Impl[B](values : Array[B])
   extends MutableDomainSeq[B] {
     override def apply(key : Int) = values(key);
 

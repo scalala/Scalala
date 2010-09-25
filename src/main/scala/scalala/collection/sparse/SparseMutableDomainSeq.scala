@@ -23,49 +23,40 @@ package sparse;
 
 import domain.IndexDomain;
 
-///**
-// * Implementation trait for a DomainSeq backed by a sparse array.
-// *
-// * @author dramage
-// */
-//trait SparseMutableDomainSeqLike
-//[@specialized(Int,Long,Float,Double,Boolean) B, +This<:SparseMutableDomainSeq[B]]
-//extends SparseMutableDomainMapLike[Int,B,IndexDomain,This]
-//with MutableDomainSeqLike[B,This] {
-//  override def size = data.length;
-//  override val domain = IndexDomain(data.length);
-//
-//  override def apply(key : Int) = {
-//    checkKey(key);
-//    data.getOrElse(key, default);
-//  }
-//
-//  override def update(key : Int, value : B) = {
-//    checkKey(key);
-//    data(key) = value;
-//  }
-//
-//  /** Specialized assignment operator using System.arraycopy for speed. */
-//  def :=(that : SparseMutableDomainSeq[B]) {
-//    checkDomain(that.domain);
-//
-//  }
-//
-//  /** Tranforms all values in this map by applying the given function. */
-//  override def transformValues(f : B=>B) = {
-//    default = f(default);
-//    data.transformValues(f);
-//  }
-//}
-//
-///**
-// * A DomainSeq backed by a sparse array.
-// *
-// * @author dramage
-// */
-//class SparseMutableDomainSeq
-//[@specialized(Int,Long,Float,Double,Boolean) B](override val data : Array[B])
-//extends SparseMutableDomainMap[Int,B,IndexDomain] with MutableDomainSeq[B]
-//with SparseMutableDomainSeqLike[B, SparseMutableDomainSeq[B]] {
-//  // override def copy = new DenseMutableDomainSeq(data.clone);
-//}
+/**
+ * Implementation trait for a DomainSeq backed by a dense array.
+ *
+ * @author dramage
+ */
+trait SparseMutableDomainSeqLike
+[@specialized(Int,Long,Float,Double,Boolean) B, +This<:SparseMutableDomainSeq[B]]
+extends SparseMutableDomainMapLike[Int,B,IndexDomain,This]
+with MutableDomainSeqLike[B,This] {
+  override def size = data.length;
+  override val domain = IndexDomain(data.length);
+
+  override def apply(key : Int) =
+    data(key);
+
+  override def update(key : Int, value : B) =
+    data(key) = value;
+
+  /** Specialized assignment operator using System.arraycopy for speed. */
+  def :=(that : SparseMutableDomainSeq[B]) {
+    checkDomain(that.domain);
+    System.arraycopy(that.data, 0, this.data, 0, data.length);
+  }
+}
+
+/**
+ * A DomainSeq backed by a Sparse array.
+ *
+ * @author dramage
+ */
+class SparseMutableDomainSeq
+[@specialized(Int,Long,Float,Double,Boolean) B](override val data : SparseArray[B])
+extends SparseMutableDomainMap[Int,B] with MutableDomainSeq[B]
+with SparseMutableDomainSeqLike[B, SparseMutableDomainSeq[B]] {
+  // override def copy = new SparseMutableDomainSeq(data.clone);
+}
+

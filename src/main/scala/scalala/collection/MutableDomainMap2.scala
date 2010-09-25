@@ -116,9 +116,9 @@ object MutableDomainMap2 {
   implicit def canSliceMatrixFrom[A1, A2] =
   new DomainMap2CanSliceTableFrom
   [MutableDomainMap2[A1,A2,Double],A1,A2,Double,
-   tensor.Matrix.SliceFromKeySeqs[A1,A2,MutableDomainMap2[A1,A2,Double]]] {
+   tensor.Matrix.SliceFromKeySeqs[A1,A2,Double,MutableDomainMap2[A1,A2,Double]]] {
     override def apply(from : MutableDomainMap2[A1,A2,Double], keys1 : Seq[A1], keys2 : Seq[A2]) =
-      new tensor.Matrix.SliceFromKeySeqs[A1,A2,MutableDomainMap2[A1,A2,Double]](from, keys1, keys2);
+      new tensor.Matrix.SliceFromKeySeqs[A1,A2,Double,MutableDomainMap2[A1,A2,Double]](from, keys1, keys2);
   }
 
   implicit def canTransposeFrom[A2, A1, B] =

@@ -49,10 +49,7 @@ with DomainMapSliceSeq[A1,B,Coll] with MutableDomainSeq[B]
 with MutableDomainMapSliceSeqLike[A1, IterableDomain[A1], B, Coll, MutableDomainMapSliceSeq[A1, B, Coll]];
 
 object MutableDomainMapSliceSeq {
-  class FromKeySeq
-  [@specialized(Int,Long) A1,
-   @specialized(Int,Long,Float,Double,Boolean) B,
-   +Coll<:MutableDomainMap[A1, B]]
+  class FromKeySeq[A1, B, +Coll<:MutableDomainMap[A1, B]]
   (underlying : Coll, keys : Seq[A1])
   extends DomainMapSliceSeq.FromKeySeq[A1,B,Coll](underlying, keys)
   with MutableDomainMapSliceSeq[A1,B,Coll];

@@ -20,9 +20,9 @@
 package scalala;
 package tensor;
 
-import collection._;
-import collection.domain._;
-import collection.numeric._;
+import scalala.generic._;
+import scalala.collection._;
+import scalala.collection.domain._;
 
 /**
  * A Tensor is a Double-valued MutableDomainMap.
@@ -30,11 +30,74 @@ import collection.numeric._;
  * @author dramage
  */
 trait TensorLike
-[@specialized(Int,Long) A, +D<:IterableDomain[A] with DomainLike[A,D],
- +This<:Tensor[A]]
-extends MutableNumericDomainMapLike[A,Double,D,This] {
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
+ +D<:IterableDomain[A] with DomainLike[A,D],
+ +This<:Tensor[A,B]]
+extends MutableDomainMapLike[A,B,D,This] with operators.NumericOps[This] {
 
-  override val numeric = Numeric.DoubleNumeric;
+  /** Provides information about the underlying scalar value type B. */
+  val scalar : Scalar[B];
+
+  /** Applies the given function to all non-zero values (and possibly some zeros). */
+  def foreachNonZero[U](fn : (B=>U)) =
+    this.valuesIterator.foreach(fn);
+
+  /** Applies the given function to all non-zero values (and possibly some zeros). */
+  def foreachNonZero[U](fn : ((A,B)=>U)) =
+    this.iterator.foreach(fn.tupled);
+
+  //
+  // Collection level queries
+  //
+
+  /** Returns a key associated with the largest value in the map. */
+  def argmax : A = {
+    if (!valuesIterator.hasNext) {
+      throw new UnsupportedOperationException("Empty .max");
+    }
+    var max = valuesIterator.next;
+    var arg = keysIterator.next
+    foreach((k,v) => if (scalar.>(v, max)) { max = v; arg = k; });
+    arg;
+  }
+
+  /** Returns a key associated with the smallest value in the map. */
+  def argmin : A = {
+    if (!valuesIterator.hasNext) {
+      throw new UnsupportedOperationException("Empty .min");
+    }
+    var min = valuesIterator.next;
+    var arg = keysIterator.next
+    foreach((k,v) => if (scalar.<(v,min)) { min = v; arg = k; });
+    arg;
+  }
+
+  /** Returns the max of the values in this map. */
+  def max : B = {
+    if (!valuesIterator.hasNext) {
+      throw new UnsupportedOperationException("Empty .max");
+    }
+    var max = valuesIterator.next;
+    valuesIterator.foreach(v => { if (scalar.>(v,max)) max = v; })
+    return max;
+  }
+
+  /** Returns the min of the values in this map. */
+  def min : B = {
+    if (!valuesIterator.hasNext) {
+      throw new UnsupportedOperationException("Empty .min");
+    }
+    var min = valuesIterator.next;
+    valuesIterator.foreach(v => { if (scalar.<(v,min)) min = v; })
+    return min;
+  }
+
+  /** Returns the sum of the values in this map. */
+  def sum : B = {
+    var sum = scalar.zero;
+    valuesIterator.foreach(v => sum = scalar.+(sum,v));
+    return sum;
+  }
 
 //
 //  //
@@ -130,52 +193,6 @@ extends MutableNumericDomainMapLike[A,Double,D,This] {
 //  /** Returns !(this.=~=(that)) */
 //  def !~= (that : DomainMap[A,Double,D]) : Boolean =
 //    ! this.=~=(that);
-//
-//  //
-//  // Collection level queries
-//  //
-//
-//  /** Returns a key associated with the largest value in the map. */
-//  def argmax : A = {
-//    if (!valuesIterator.hasNext) {
-//      throw new UnsupportedOperationException("Empty tensor .max");
-//    }
-//    var max = valuesIterator.next;
-//    var arg = keysIterator.next
-//    foreach((k,v) => if (v > max) { max = v; arg = k; });
-//    arg;
-//  }
-//
-//  /** Returns a key associated with the smallest value in the map. */
-//  def argmin : A = {
-//    if (!valuesIterator.hasNext) {
-//      throw new UnsupportedOperationException("Empty tensor .min");
-//    }
-//    var min = valuesIterator.next;
-//    var arg = keysIterator.next
-//    foreach((k,v) => if (v < min) { min = v; arg = k; });
-//    arg;
-//  }
-//
-//  /** Returns the max of the values in this map. */
-//  def max : Double = {
-//    if (!valuesIterator.hasNext) {
-//      throw new UnsupportedOperationException("Empty tensor .max");
-//    }
-//    var max = Double.NegativeInfinity;
-//    valuesIterator.foreach(v => { if (v > max) max = v; })
-//    return max;
-//  }
-//
-//  /** Returns the min of the values in this map. */
-//  def min : Double = {
-//    if (!valuesIterator.hasNext) {
-//      throw new UnsupportedOperationException("Empty tensor .min");
-//    }
-//    var min = Double.PositiveInfinity;
-//    valuesIterator.foreach(v => { if (v < min) min = v; })
-//    return min;
-//  }
 }
 
 /**
@@ -183,11 +200,24 @@ extends MutableNumericDomainMapLike[A,Double,D,This] {
  *
  * @author dramage
  */
-trait Tensor[@specialized(Int,Long) A]
-extends MutableNumericDomainMap[A,Double]
-with TensorLike[A,IterableDomain[A],Tensor[A]];
+trait Tensor[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
+extends DomainMap[A,B]
+with MutableDomainMap[A,B] with TensorLike[A,B,IterableDomain[A],Tensor[A,B]];
 
 object Tensor {
+
+  type T[A,B] = Tensor[A,B];
+
+//  class OpAdd[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R]
+//  (implicit op : CanAdd[A,B,R], scalar : Scalar[R])
+//  extends CanAdd[T[A,B],T[A,C],T[A,R]] {
+//    def apply(a : T[A,B], b : T[A,C]) = {
+//      a.
+//    }
+//  }
+
+
+}
 //  /** Default tolerance value for element-wise equality. */
 //  val TOLERANCE = 1e-8;
 
@@ -226,5 +256,3 @@ object Tensor {
 //    override def apply(from : DomainMap[A,B,D], keys : Seq[A]) =
 //      new DomainMapSliceSeq.FromKeySeq[A,D,B,DomainMap[A,B,D]](from, keys);
 //  }
-
-}

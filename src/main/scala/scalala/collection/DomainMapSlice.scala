@@ -60,9 +60,7 @@ extends DomainMap[A2,B]
 with DomainMapSliceLike[A1, IterableDomain[A1], A2, IterableDomain[A2], B, Coll, DomainMapSlice[A1, A2, B, Coll]];
 
 object DomainMapSlice {
-  class FromKeyMap
-  [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
-   @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:DomainMap[A1, B]]
+  class FromKeyMap[A1, A2, B, +Coll<:DomainMap[A1, B]]
   (override val underlying : Coll, keymap : scala.collection.Map[A2,A1])
   extends DomainMapSlice[A1, A2, B, Coll] {
     override def lookup(key : A2) = keymap(key);

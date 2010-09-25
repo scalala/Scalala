@@ -18,13 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
-package tensor.dense;
+package tensor;
+package dense;
 
+import generic.Scalar;
 import collection.domain.TableDomain;
 import collection.generic.DomainMapCanMapValuesFrom;
 
 import collection.dense.{DenseMutableDomainTableLike,DenseMutableDomainTable};
-import tensor.{MatrixLike,Matrix};
 
 /**
  * A DenseMatrix is backed by an array of doubles, with each column
@@ -32,19 +33,10 @@ import tensor.{MatrixLike,Matrix};
  *
  * @author dramage
  */
-trait DenseMatrixLike[+This<:DenseMatrix]
-extends DenseMutableDomainTableLike[Double,This]
-with MatrixLike[This];
-
-/**
- * A DenseMatrix is backed by an array of doubles, with each column
- * stored before the next column begins.
- *
- * @author dramage
- */
-class DenseMatrix(numRows : Int, numCols : Int, data : Array[Double])
-extends DenseMutableDomainTable[Double](numRows, numCols, data)
-with Matrix with DenseMatrixLike[DenseMatrix] {
+class DenseMatrix[B](numRows : Int, numCols : Int, data : Array[B])
+(implicit override val scalar : Scalar[B])
+extends DenseMutableDomainTable[B](numRows, numCols, data) with DenseMutableDomainTableLike[B,DenseMatrix[B]]
+with Matrix[B] with MatrixLike[B,DenseMatrix[B]] {
 //  override def copy = new DenseMatrix(numRows, numCols, data.clone);
 }
 
@@ -56,29 +48,33 @@ object DenseMatrix {
    * is read in order to populate the matrix, filling up column 0 before
    * column 1, before column 2 ...
    */
-  def apply(rows : Int, cols : Int)(values : Double*) = {
+  def apply[B:Scalar:ClassManifest](rows : Int, cols : Int)(values : B*) = {
     new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => values(i % values.length)));
   }
 
   /** Tabulate a matrix from a function from row,col position to value. */
-  def tabulate(rows : Int, cols : Int)(fn : (Int, Int) => Double) = {
+  def tabulate[B:Scalar:ClassManifest](rows : Int, cols : Int)(fn : (Int, Int) => B) = {
     new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => fn(i % rows, i / rows)));
   }
 
-  implicit object DenseMatrixCanMapValuesFrom
-  extends DomainMapCanMapValuesFrom[DenseMatrix,(Int,Int),Double,Double,DenseMatrix] {
-    override def apply(from : DenseMatrix, fn : (Double=>Double)) = {
-      val data = new Array[Double](from.data.length);
+  //
+  // Capabilities
+  //
+
+  class DenseMatrixCanMapValuesFrom[@specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
+  extends DomainMapCanMapValuesFrom[DenseMatrix[B],(Int,Int),B,R,DenseMatrix[R]] {
+    override def apply(from : DenseMatrix[B], fn : (B=>R)) = {
+      val data = new Array[R](from.data.length);
       var i = 0;
       while (i < data.length) {
         data(i) = fn(from.data(i));
         i += 1;
       }
-      new DenseMatrix(from.numRows, from.numCols, data);
+      new DenseMatrix[R](from.numRows, from.numCols, data);
     }
 
-    override def apply(from : DenseMatrix, fn : (((Int,Int),Double)=>Double)) = {
-      val data = new Array[Double](from.data.length);
+    override def apply(from : DenseMatrix[B], fn : (((Int,Int),B)=>R)) = {
+      val data = new Array[R](from.data.length);
       var i = 0;
       while (i < data.length) {
         data(i) = fn(from.unindex(i), from.data(i));
@@ -87,4 +83,11 @@ object DenseMatrix {
       new DenseMatrix(from.numRows, from.numCols, data);
     }
   }
+
+  implicit def mkDenseMatrixCanMapValuesFrom[B,R:ClassManifest:Scalar] =
+    new DenseMatrixCanMapValuesFrom[B,R];
+  
+  implicit object DenseMatrixCanMapValuesFromDD extends DenseMatrixCanMapValuesFrom[Double,Double];
+  implicit object DenseMatrixCanMapValuesFromII extends DenseMatrixCanMapValuesFrom[Int,Int];
+  implicit object DenseMatrixCanMapValuesFromID extends DenseMatrixCanMapValuesFrom[Int,Double];
 }

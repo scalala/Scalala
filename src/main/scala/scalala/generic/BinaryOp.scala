@@ -33,7 +33,7 @@ import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
  * 
  * @author dramage
  */
-trait BinaryOp[-A, -B, +That] {
+trait BinaryOp[@specialized -A, @specialized -B, +That] {
   def apply(a : A, b : B) : That;
 }
 

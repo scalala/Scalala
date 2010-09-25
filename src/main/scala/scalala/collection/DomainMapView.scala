@@ -113,9 +113,7 @@ object DomainMapView {
   with IdentityViewLike[A,B,IterableDomain[A],Coll,IdentityView[A,B,Coll]];
 
   /** Returns an unmodified view of the given DomainMap. */
-  class IdentityViewImpl
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
-   +Coll <: DomainMap[A,B]]
+  class IdentityViewImpl[A, B, +Coll <: DomainMap[A,B]]
   (override val underlying : Coll)
   extends IdentityView[A,B,Coll];
 
@@ -143,9 +141,7 @@ object DomainMapView {
    * Returns an unmodified view of the given DomainMap with
    * values transformed by the given function.
    */
-  class TransformImpl
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
-   @specialized(Int,Long,Float,Double,Boolean) O, +Coll <: DomainMap[A,B]]
+  class TransformImpl[A, B, O, +Coll <: DomainMap[A,B]]
   (override val underlying : Coll, fn : ((A,B)=>O))
   extends TransformView[A,B,O,Coll] {
      override def transform(key : A, value : B) = fn(key, value);

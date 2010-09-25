@@ -20,7 +20,7 @@
 package scalala;
 package library;
 
-import scalala.generic.{Tensor1,Tensor2};
+import generic.collection.{CanViewAsTensor1,CanViewAsTensor2};
 
 import plotting._;
 
@@ -135,31 +135,31 @@ trait Plotting {
    * TODO: compiler bug stops K from being inferred with default values of null
    * for labels and tips.
    */
-  def plot[K,X,XV,Y,YV,T]
-  (x : X, y : Y, style : Char = '-',
-   name : String = null)
+  def plot[K,X,XV,Y,YV]
+  (x : X, y : Y, style : Char = '-', name : String = null)
 //   labels : PartialFunction[K,String] = null,
 //   tips : PartialFunction[K,String] = null)
   (implicit xyplot : XYPlot = figures.figure.plot,
-   xt : Tensor1[X,K,XV], yt : Tensor1[Y,K,YV],
-   xv : XV => Number, yv : YV => Number) : Unit = {
+   xtv : CanViewAsTensor1[X,K,XV], ytv : CanViewAsTensor1[Y,K,YV]) : Unit = {
 
     val labels : PartialFunction[K,String] = null;
     val tips : PartialFunction[K,String] = null;
 
     val series = xyplot.nextSeries;
 
-    val domain = xt.domain(x);
-    require(domain == yt.domain(y), "x and y must have same domain");
+    val xt = xtv(x);
+    val yt = ytv(y);
 
-    val items = domain.toIndexedSeq;
+    require(xt.domain == yt.domain, "x and y must have same domain");
+
+    val items = xt.domain.toIndexedSeq;
 
     // initialize dataset
     val dataset = XYDataset(
       items = items,
       name = if (name == null) "Series "+series else name,
-      x = (k : K) => xv(xt.get(x,k)),
-      y = (k : K) => yv(yt.get(y,k)),
+      x = (k : K) => xt.scalar.toDouble(xt(k)),
+      y = (k : K) => yt.scalar.toDouble(yt(k)),
       label = (k : K) => if (labels != null && labels.isDefinedAt(k)) labels(k) else null,
       tip = (k : K) => if (tips != null && tips.isDefinedAt(k)) tips(k) else null
     );
@@ -219,30 +219,30 @@ trait Plotting {
    * Displays a scatter plot of x versus y, each point drawn at the given
    * size and mapped with the given color.
    */
-  def scatter[K,X,XV,Y,YV,S,SV,C,CV,T]
+  def scatter[K,X,XV,Y,YV,S,SV,C,CV]
   (x : X, y : Y, size : S, color : C,
    labels : PartialFunction[K,String],
    tips : PartialFunction[K,String],
    paintScale : PaintScale = DynamicPaintScale(),
    name : String = null)
   (implicit xyplot : XYPlot = figures.figure.plot,
-   xt : Tensor1[X,K,XV], yt : Tensor1[Y,K,YV], st : Tensor1[S,K,SV], ct : Tensor1[C,K,CV],
-   xv : XV => Number, yv : YV => Number, sv : SV => Double, cv : CV => Double) : Unit = {
+   xtv : CanViewAsTensor1[X,K,XV], ytv : CanViewAsTensor1[Y,K,YV], stv : CanViewAsTensor1[S,K,SV], ctv : CanViewAsTensor1[C,K,CV])
+  : Unit = {
 
     val series = xyplot.nextSeries;
 
-    val domain = xt.domain(x);
-    require(domain == yt.domain(y), "x and y must have same domain");
+    val (xt,yt,st,ct) = (xtv(x), ytv(y), stv(size), ctv(color));
+    require(xt.domain == yt.domain, "x and y must have same domain");
 
-    val items = domain.toIndexedSeq;
+    val items = xt.domain.toIndexedSeq;
 
     // initialize dataset
     val dataset = XYZDataset(
       items = items,
       name = if (name == null) "Series "+series else name,
-      x = (k : K) => xv(xt.get(x,k)),
-      y = (k : K) => yv(yt.get(y,k)),
-      z = (k : K) => sv(st.get(size,k)),
+      x = (k : K) => xt.scalar.toDouble(xt(k)),
+      y = (k : K) => yt.scalar.toDouble(yt(k)),
+      z = (k : K) => st.scalar.toDouble(st(k)),
       label = (k : K) => if (labels != null && labels.isDefinedAt(k)) labels(k) else null,
       tip = (k : K) => if (tips != null && tips.isDefinedAt(k)) tips(k) else null
     );
@@ -252,7 +252,7 @@ trait Plotting {
         static;
 
       case dynamic : DynamicPaintScale => {
-        val values = items.view.map(item => cv(ct.get(color, item)));
+        val values = items.view.map(item => ct.scalar.toDouble(ct(item)));
         dynamic(lower = values.min, upper = values.max);
       }
     }
@@ -262,7 +262,7 @@ trait Plotting {
     val renderer = new XYBubbleRenderer(XYBubbleRenderer.SCALE_ON_DOMAIN_AXIS) {;
       val stroke = new java.awt.BasicStroke(0f);
       override def getItemPaint(series : Int, item : Int) : java.awt.Paint =
-        staticScale.color(cv(ct.get(color,items(item))));
+        staticScale.color(ct.scalar.toDouble(ct(items(item))));
       override def getItemStroke(series : Int, item : Int) = stroke;
     }
 
@@ -318,18 +318,18 @@ trait Plotting {
 
   /** Plots a histogram of the given data into the given number of bins */
   def hist[D,K,V](data : D, bins : HistogramBins = 10, name : String = "Histogram")
-  (implicit xyplot : XYPlot = plot,
-   td : Tensor1[D,K,V], cv : V=>Double) : Unit = {
+  (implicit xyplot : XYPlot = plot, dtv : CanViewAsTensor1[D,K,V]) : Unit = {
+    val dt = dtv(data);
+    implicit def dvToDouble(v : V) = dt.scalar.toDouble(v);
+
     val binner : StaticHistogramBins = bins match {
       case static : StaticHistogramBins => static;
       case dynamic : DynamicHistogramBins =>
-        val min = td.valuesIterator(data).map(cv).min;
-        val max = td.valuesIterator(data).map(cv).max;
-        dynamic(min, max);
+        dynamic(dt.min, dt.max);
     }
 
     val counts = new Array[Int](binner.splits.length + 1);
-    for (value <- td.valuesIterator(data)) {
+    for (value <- dt.valuesIterator) {
       counts(binner.bin(value)) += 1;
     }
 
@@ -383,7 +383,7 @@ trait Plotting {
    * @param labels Labels for some subset of the data points
    * @param tips Tooltip popups for some subset of the data points
    */
-  def image[M,V,T]
+  def image[M,V]
   (img : M,
    scale : PaintScale = DynamicPaintScale(),
    showScale : Boolean = true,
@@ -392,13 +392,15 @@ trait Plotting {
    labels : PartialFunction[(Int,Int), String] = null,
    tips : PartialFunction[(Int,Int), String] = null)
   (implicit xyplot : XYPlot = figures.figure.plot,
-   mt : Tensor2[M,Int,Int,V], vv : V => Number) {
+   mtv : CanViewAsTensor2[M,Int,Int,V]) {
 
     import org.jfree.chart.axis.NumberAxis;
 
+    val mt = mtv(img);
+
     val series = xyplot.nextSeries;
 
-    val domain = mt.domain(img);
+    val domain = mt.domain;
     val (minx,maxx) = (domain._1.min, domain._1.max);
     val (miny,maxy) = (domain._2.min, domain._2.max);
 
@@ -410,7 +412,7 @@ trait Plotting {
       name = if (name == null) "Series "+series else name,
       x = (k : (Int,Int)) => k._2 + offset._2,
       y = (k : (Int,Int)) => k._1 + offset._1,
-      z = (k : (Int,Int)) => mt.get(img, k._1, k._2),
+      z = (k : (Int,Int)) => mt.scalar.toDouble(mt(k._1, k._2)),
       label = (k : (Int,Int)) => if (labels != null && labels.isDefinedAt(k)) labels(k) else null,
       tip = (k : (Int,Int)) => if (tips != null && tips.isDefinedAt(k)) tips(k) else null
     );
@@ -445,7 +447,7 @@ trait Plotting {
         static;
 
       case dynamic : DynamicPaintScale => {
-        val values = items.view.map(item => mt.get(img, item._1, item._2).doubleValue);
+        val values = items.view.map(item => mt.scalar.toDouble(mt(item._1, item._2)));
         dynamic(lower = values.min, upper = values.max);
       }
     }

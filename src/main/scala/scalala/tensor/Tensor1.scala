@@ -20,6 +20,8 @@
 package scalala;
 package tensor;
 
+import generic.{Scalar,CanAdd,CanMul};
+
 import collection._;
 import collection.domain._;
 
@@ -30,41 +32,35 @@ import collection.domain._;
  * @author dramage
  */
 trait Tensor1Like
-[@specialized(Int,Long)A, +D<:IterableDomain[A] with DomainLike[A,D],
- +This<:Tensor1[A]]
-extends TensorLike[A,D,This] {
-  /** Returns the k-norm of this tensor.  Calls scalala.Scalala.norm(this). */
+[@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B,
+ +D<:IterableDomain[A] with DomainLike[A,D], +This<:Tensor1[A,B]]
+extends TensorLike[A,B,D,This] {
+  /** Returns the k-norm of this tensor. */
   def norm(n : Double) : Double = {
     if (n == 1) {
       var sum = 0.0;
-      valuesIterator.foreach(v => sum += math.abs(v));
+      foreachNonZero(v => sum += scalar.norm(v));
       return sum;
     } else if (n == 2) {
       var sum = 0.0;
-      valuesIterator.foreach(v => sum += v * v);
+      foreachNonZero(v => { val nn = scalar.norm(v); sum += nn * nn });
       return math.sqrt(sum);
-    } else if (n % 2 == 0) {
-      var sum = 0.0;
-      valuesIterator.foreach(v => sum += math.pow(v,n));
-      return math.pow(sum, 1.0 / n);
-    } else if (n % 2 == 1) {
-      var sum = 0.0;
-      valuesIterator.foreach(v => sum += math.pow(math.abs(v),n));
-      return math.pow(sum, 1.0 / n);
     } else if (n == Double.PositiveInfinity) {
       var max = Double.NegativeInfinity;
-      valuesIterator.foreach(v => { val av = math.abs(v); if (av > max) max = av; });
+      valuesIterator.foreach(v => { val nn = scalar.norm(v); if (nn > max) max = nn; });
       return max;
     } else {
-      throw new UnsupportedOperationException();
+      var sum = 0.0;
+      foreachNonZero(v => { val nn = scalar.norm(v); sum += math.pow(nn,n); });
+      return math.pow(sum, 1.0 / n);
     }
   }
 
   /** Returns the inner product of this tensor with another. */
-  def dot(that : Tensor1[A]) : Double = {
+  def dot[C,R](that : Tensor1[A,C])(implicit mul : CanMul[B,C,R], add : CanAdd[R,R,R], scalar : Scalar[R]) : R = {
     checkDomain(that.domain);
-    var sum = 0.0;
-    foreach((k,v) => sum += v * that(k));
+    var sum = scalar.zero;
+    foreachNonZero((k,v) => sum = add(sum, mul(v, that(k))));
     sum;
   }
 }
@@ -75,8 +71,8 @@ extends TensorLike[A,D,This] {
  *
  * @author dramage
  */
-trait Tensor1[@specialized(Int,Long) A]
-extends Tensor[A] with Tensor1Like[A,IterableDomain[A],Tensor1[A]];
+trait Tensor1[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
+extends Tensor[A,B] with Tensor1Like[A,B,IterableDomain[A],Tensor1[A,B]];
 
 
 object Tensor1 {

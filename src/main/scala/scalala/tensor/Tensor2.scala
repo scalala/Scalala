@@ -30,14 +30,15 @@ import collection.domain._;
  * @author dramage
  */
 trait Tensor2Like
-[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
+[@specialized(Int) A1, @specialized(Int) A2,
+ @specialized(Int,Long,Float,Double) B,
  +D1<:IterableDomain[A1] with DomainLike[A1,D1],
  +D2<:IterableDomain[A2] with DomainLike[A2,D2],
  +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
  +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
- +This<:Tensor2[A1,A2]]
-extends TensorLike[(A1,A2),D,This]
-with MutableDomainMap2Like[A1,A2,Double,D1,D2,D,T,This] {
+ +This<:Tensor2[A1,A2,B]]
+extends TensorLike[(A1,A2),B,D,This]
+with MutableDomainMap2Like[A1,A2,B,D1,D2,D,T,This] {
 }
 
 /**
@@ -46,29 +47,32 @@ with MutableDomainMap2Like[A1,A2,Double,D1,D2,D,T,This] {
  * @author dramage
  */
 trait Tensor2
-[@specialized(Int,Long) A1, @specialized(Int,Long) A2]
-extends Tensor[(A1,A2)]
-with MutableDomainMap2[A1,A2,Double]
-with Tensor2Like[A1,A2,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Tensor2[A1,A2]];
+[@specialized(Int) A1, @specialized(Int) A2, @specialized(Int,Long,Float,Double) B]
+extends Tensor[(A1,A2),B]
+with MutableDomainMap2[A1,A2,B]
+with Tensor2Like[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Tensor2[A1,A2,B]];
 
 
 object Tensor2 {
   /** A transpose of any Tensor2 is a Tensor2. */
   trait TransposeLike
-  [@specialized(Int,Long) A2, @specialized(Int,Long) A1,
+  [@specialized(Int) A2, @specialized(Int) A1,
+   @specialized(Int,Long,Float,Double) B,
    +D2<:IterableDomain[A2] with DomainLike[A2,D2],
    +D1<:IterableDomain[A1] with DomainLike[A1,D1],
    +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
    +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
-   +Coll<:Tensor2[A1,A2],
-   +This<:Transpose[A2,A1,Coll]]
-  extends MutableDomainMap2TransposeLike[A2,A1,Double,D2,D1,T,D,Coll,This]
-  with Tensor2Like[A2,A1,D2,D1,T,D,This];
+   +Coll<:Tensor2[A1,A2,B],
+   +This<:Transpose[A2,A1,B,Coll]]
+  extends MutableDomainMap2TransposeLike[A2,A1,B,D2,D1,T,D,Coll,This]
+  with Tensor2Like[A2,A1,B,D2,D1,T,D,This];
 
   /** A transpose of any Tensor2 is a Tensor2. */
   trait Transpose
-  [@specialized(Int,Long) A2, @specialized(Int,Long) A1, +Coll <: Tensor2[A1,A2]]
-  extends MutableDomainMap2Transpose[A2,A1,Double,Coll]
-  with Tensor2[A2,A1]
-  with TransposeLike[A2,A1,IterableDomain[A2],IterableDomain[A1],Product2Domain[A2,A1],Product2Domain[A1,A2],Coll,Transpose[A2,A1,Coll]];
+  [@specialized(Int) A2, @specialized(Int) A1,
+   @specialized(Int,Long,Float,Double) B,
+   +Coll <: Tensor2[A1,A2,B]]
+  extends MutableDomainMap2Transpose[A2,A1,B,Coll]
+  with Tensor2[A2,A1,B]
+  with TransposeLike[A2,A1,B,IterableDomain[A2],IterableDomain[A1],Product2Domain[A2,A1],Product2Domain[A1,A2],Coll,Transpose[A2,A1,B,Coll]];
 }

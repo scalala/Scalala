@@ -56,10 +56,7 @@ with MutableDomainMapSliceLike[A1, IterableDomain[A1], A2, IterableDomain[A2], B
 
 
 object MutableDomainMapSlice {
-  class FromKeyMap
-  [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
-   @specialized(Int,Long,Float,Double,Boolean) B,
-   +Coll<:MutableDomainMap[A1, B]]
+  class FromKeyMap[A1, A2, B, +Coll<:MutableDomainMap[A1, B]]
   (underlying : Coll, keymap : scala.collection.Map[A2,A1])
   extends DomainMapSlice.FromKeyMap[A1,A2,B,Coll](underlying, keymap)
   with MutableDomainMapSlice[A1,A2,B,Coll];

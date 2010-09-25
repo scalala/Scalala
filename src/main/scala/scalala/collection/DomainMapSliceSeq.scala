@@ -48,9 +48,7 @@ extends DomainMapSlice[A,Int,B,Coll] with DomainSeq[B]
 with DomainMapSliceSeqLike[A, IterableDomain[A], B, Coll, DomainMapSliceSeq[A, B, Coll]];
 
 object DomainMapSliceSeq {
-  class FromKeySeq
-  [@specialized(Int,Long) A,  @specialized(Int,Long,Float,Double,Boolean) B,
-   +Coll <: DomainMap[A, B]]
+  class FromKeySeq[A, B, +Coll <: DomainMap[A, B]]
   (override val underlying : Coll, keys : Seq[A])
   extends DomainMapSliceSeq[A, B, Coll] {
     override def lookup(key : Int) = keys(key);

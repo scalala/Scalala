@@ -68,10 +68,7 @@ with DomainMap2SliceTableLike[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Prod
 
 
 object DomainMap2SliceTable {
-  class FromKeySeqs
-  [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
-   @specialized(Int,Long,Float,Double,Boolean) B,
-   +Coll<:DomainMap2[A1,A2,B]]
+  class FromKeySeqs[A1, A2, B, +Coll<:DomainMap2[A1,A2,B]]
   (override val underlying : Coll, val keys1 : Seq[A1], val keys2 : Seq[A2])
   extends DomainMap2SliceTable[A1, A2, B, Coll] {
     override def lookup1(i : Int) = keys1(i);

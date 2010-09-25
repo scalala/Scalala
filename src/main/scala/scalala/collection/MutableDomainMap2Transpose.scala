@@ -63,10 +63,7 @@ with MutableDomainMap2TransposeLike[A2,A1,B,IterableDomain[A2],IterableDomain[A1
 
 object MutableDomainMap2Transpose {
   /** Default implementation. */
-  class Impl
-  [@specialized(Int,Long) A2, @specialized(Int,Long) A1,
-   @specialized(Int,Long,Float,Double,Boolean) B,
-   +Coll <: MutableDomainMap2[A1,A2,B]]
+  class Impl[A2, A1, B, +Coll <: MutableDomainMap2[A1,A2,B]]
   (override val underlying : Coll)
   extends DomainMap2Transpose.Impl[A2,A1,B,Coll](underlying)
   with MutableDomainMap2Transpose[A2,A1,B,Coll];

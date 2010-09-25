@@ -37,13 +37,17 @@ trait CanMapValues[-From, @specialized A, @specialized B, +To] {
 object CanMapValues {
   type Op[From,A,B,To] = CanMapValues[From,A,B,To];
 
-  implicit def opScalar[@specialized A:Scalar, @specialized B] =
-    new OpScalar[A,B];
+  //
+  // Scalars
+  //
 
   class OpScalar[@specialized A:Scalar, @specialized B]
   extends Op[A,A,B,B] {
     def apply(from : A, fn : (A=>B)) = fn(from);
   }
+
+  implicit def opScalar[@specialized A:Scalar, @specialized B] =
+    new OpScalar[A,B];
 
   implicit object OpScalarII extends OpScalar[Int,Int];
   implicit object OpScalarSS extends OpScalar[Short,Short];
@@ -55,13 +59,17 @@ object CanMapValues {
   implicit object OpScalarLD extends OpScalar[Long,Double];
   implicit object OpScalarFD extends OpScalar[Float,Double];
 
-  implicit def opArray[@specialized A, @specialized B:ClassManifest] =
-    new OpArray[A,B];
+  //
+  // Arrays
+  //
 
   class OpArray[@specialized A, @specialized B:ClassManifest]
   extends Op[Array[A],A,B,Array[B]] {
     def apply(from : Array[A], fn : (A=>B)) = from.map(fn);
   }
+
+  implicit def opArray[@specialized A, @specialized B:ClassManifest] =
+    new OpArray[A,B];
 
   implicit object OpArrayII extends OpArray[Int,Int];
   implicit object OpArraySS extends OpArray[Short,Short];
@@ -72,6 +80,11 @@ object CanMapValues {
   implicit object OpArraySD extends OpArray[Short,Double];
   implicit object OpArrayLD extends OpArray[Long,Double];
   implicit object OpArrayFD extends OpArray[Float,Double];
+
+
+  //
+  // Scala maps
+  //
 
   implicit def opMap[A, B, O, That](implicit bf : scala.collection.generic.CanBuildFrom[scala.collection.Map[A,B], (A,O), That]) =
     new OpMap[A,B,O,That];

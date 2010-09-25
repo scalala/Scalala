@@ -19,38 +19,39 @@
  */
 package scalala;
 package tensor;
-package dense;
+package sparse;
 
 import generic.Scalar;
 
+import collection.{MutableDomainSeq,MutableDomainSeqLike};
 import collection.generic.DomainMapCanMapValuesFrom;
+import collection.sparse.{SparseMutableDomainSeq,SparseMutableDomainSeqLike};
 
-import collection.dense.{DenseMutableDomainSeqLike,DenseMutableDomainSeq};
+import collection.sparse.{SparseArray,DefaultArrayValue};
 
 /**
  * A DenseVector is backed by an array of doubles.
  *
  * @author dramage
  */
-class DenseVector[B](data : Array[B])
+class SparseVector[B](data : SparseArray[B])
 (implicit override val scalar : Scalar[B])
-extends DenseMutableDomainSeq[B](data) with DenseMutableDomainSeqLike[B,DenseVector[B]]
-with Vector[B] with VectorLike[B,DenseVector[B]] {
-//  override def copy = new DenseVector(data.clone);
+extends SparseMutableDomainSeq[B](data) with SparseMutableDomainSeqLike[B,SparseVector[B]]
+with Vector[B] with VectorLike[B,SparseVector[B]] {
+  override def foreachNonZero[U](fn : (B=>U)) =
+    data.foreachActive(fn);
+
+  override def foreachNonZero[U](fn : ((Int,B)=>U)) =
+    data.foreachActive(fn);
 }
 
-object DenseVector {
-  /**
-   * Static constructor that creates a dense vector of the given size
-   * initialized by elements from the given values list (looping if
-   * necessary).
-   */
-  def apply[B:Scalar:ClassManifest](size : Int)(values : B*) =
-    new DenseVector(Array.tabulate(size)(i => values(i % values.length)));
+object SparseVector {
+  def apply[B:Scalar:ClassManifest:DefaultArrayValue](size : Int)(values : (Int,B)*) =
+    new SparseVector(SparseArray.create(size)(values :_*));
 
   /** Tabulate a vector with the value at each offset given by the function. */
-  def tabulate[B:Scalar:ClassManifest](size : Int)(f : (Int => B)) =
-    new DenseVector(Array.tabulate(size)(f));
+  def tabulate[B:Scalar:ClassManifest:DefaultArrayValue](size : Int)(f : (Int => B)) =
+    new SparseVector(SparseArray.tabulate(size)(f));
 
 //  implicit object DenseVectorCanMapValuesFrom
 //  extends DomainMapCanMapValuesFrom[DenseVector,Int,Double,Double,DenseVector] {

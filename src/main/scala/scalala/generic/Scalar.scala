@@ -22,30 +22,142 @@ package scalala;
 package generic;
 
 /**
- * Marker trait for scalar values.
+ * Marker trait for scalar values.  Scalars must be immutable.
  *
  * @author dramage
  */
-trait Scalar[@specialized(Int,Short,Long,Float,Double,Boolean) V] {
+trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
   def zero : V;
+
+  def one : V;
+
+  def ==(a : V, b : V) : Boolean;
+
+  def !=(a : V, b : V) : Boolean;
+
+  def >(a : V, b : V) : Boolean;
+
+  def >=(a : V, b : V) : Boolean;
+
+  def <(a : V, b : V) : Boolean;
+
+  def <=(a : V, b : V) : Boolean;
+
+  def +(a : V, b : V) : V;
+
+  def -(a : V, b : V) : V;
+
+  def *(a : V, b : V) : V;
+
+  def /(a : V, b : V) : V;
+
+  /** Returns the norm of this value, the absolute value as a Double. */
+  def norm(a : V) : Double;
+
+  /** Returns this value as a Double.  May throw UnsupportedOperationException. */
+  def toDouble(a : V) : Double;
 }
 
 object Scalar {
-  implicit object ScalarI extends Scalar[Int]
-  { def zero = 0; }
+  implicit object ScalarI extends Scalar[Int] {
+    def zero = 0;
+    def one = 1;
+    def ==(a : Int, b : Int) = a == b;
+    def !=(a : Int, b : Int) = a != b;
+    def >(a : Int, b : Int) = a > b;
+    def >=(a : Int, b : Int) = a >= b;
+    def <(a : Int, b : Int) = a < b;
+    def <=(a : Int, b : Int) = a <= b;
+    def +(a : Int, b : Int) = a + b;
+    def -(a : Int, b : Int) = a - b;
+    def *(a : Int, b : Int) = a * b;
+    def /(a : Int, b : Int) = a / b;
+    def norm(a : Int) = if (a < 0) -a else a;
+    def toDouble(a : Int) = a;
+  }
 
-  implicit object ScalarS extends Scalar[Short]
-  { def zero = 0.asInstanceOf[Short]; }
+  implicit object ScalarS extends Scalar[Short] {
+    def zero = 0.asInstanceOf[Short];
+    def one = 1.asInstanceOf[Short];
+    def ==(a : Short, b : Short) = a == b;
+    def !=(a : Short, b : Short) = a != b;
+    def >(a : Short, b : Short) = a > b;
+    def >=(a : Short, b : Short) = a >= b;
+    def <(a : Short, b : Short) = a < b;
+    def <=(a : Short, b : Short) = a <= b;
+    def +(a : Short, b : Short) = (a + b).asInstanceOf[Short];
+    def -(a : Short, b : Short) = (a - b).asInstanceOf[Short];
+    def *(a : Short, b : Short) = (a * b).asInstanceOf[Short];
+    def /(a : Short, b : Short) = (a / b).asInstanceOf[Short];
+    def norm(a : Short) = if (a < 0) -a else a;
+    def toDouble(a : Short) = a;
+  }
 
-  implicit object ScalarL extends Scalar[Long]
-  { def zero = 0l; }
+  implicit object ScalarL extends Scalar[Long] {
+    def zero = 0l;
+    def one = 1l;
+    def ==(a : Long, b : Long) = a == b;
+    def !=(a : Long, b : Long) = a != b;
+    def >(a : Long, b : Long) = a > b;
+    def >=(a : Long, b : Long) = a >= b;
+    def <(a : Long, b : Long) = a < b;
+    def <=(a : Long, b : Long) = a <= b;
+    def +(a : Long, b : Long) = a + b;
+    def -(a : Long, b : Long) = a - b;
+    def *(a : Long, b : Long) = a * b;
+    def /(a : Long, b : Long) = a / b;
+    def norm(a : Long) = if (a < 0) -a else a;
+    def toDouble(a : Long) = a;
+  }
 
-  implicit object scalarF extends Scalar[Float]
-  { def zero = 0.0f; }
+  implicit object scalarF extends Scalar[Float] {
+    def zero = 0.0f;
+    def one = 1.0f;
+    def ==(a : Float, b : Float) = a == b;
+    def !=(a : Float, b : Float) = a != b;
+    def >(a : Float, b : Float) = a > b;
+    def >=(a : Float, b : Float) = a >= b;
+    def <(a : Float, b : Float) = a < b;
+    def <=(a : Float, b : Float) = a <= b;
+    def +(a : Float, b : Float) = a + b;
+    def -(a : Float, b : Float) = a - b;
+    def *(a : Float, b : Float) = a * b;
+    def /(a : Float, b : Float) = a / b;
+    def norm(a : Float) = if (a < 0) -a else a;
+    def toDouble(a : Float) = a;
+  }
 
-  implicit object scalarD extends Scalar[Double]
-  { def zero = 0.0; }
+  implicit object scalarD extends Scalar[Double] {
+    def zero = 0.0;
+    def one = 1.0;
+    def ==(a : Double, b : Double) = a == b;
+    def !=(a : Double, b : Double) = a != b;
+    def >(a : Double, b : Double) = a > b;
+    def >=(a : Double, b : Double) = a >= b;
+    def <(a : Double, b : Double) = a < b;
+    def <=(a : Double, b : Double) = a <= b;
+    def +(a : Double, b : Double) = a + b;
+    def -(a : Double, b : Double) = a - b;
+    def *(a : Double, b : Double) = a * b;
+    def /(a : Double, b : Double) = a / b;
+    def norm(a : Double) = if (a < 0) -a else a;
+    def toDouble(a : Double) = a;
+  }
 
-  implicit object scalarB extends Scalar[Boolean]
-  { def zero = false; }
+  implicit object scalarB extends Scalar[Boolean] {
+    def zero = false;
+    def one = true;
+    def ==(a : Boolean, b : Boolean) = a == b;
+    def !=(a : Boolean, b : Boolean) = a != b;
+    def >(a : Boolean, b : Boolean) = a > b;
+    def >=(a : Boolean, b : Boolean) = a >= b;
+    def <(a : Boolean, b : Boolean) = a < b;
+    def <=(a : Boolean, b : Boolean) = a <= b;
+    def +(a : Boolean, b : Boolean) = throw new UnsupportedOperationException();
+    def -(a : Boolean, b : Boolean) = throw new UnsupportedOperationException();
+    def *(a : Boolean, b : Boolean) = throw new UnsupportedOperationException();
+    def /(a : Boolean, b : Boolean) = throw new UnsupportedOperationException();
+    def norm(a : Boolean) = if (a) 1.0 else 0.0;
+    def toDouble(a : Boolean) = if (a) 1.0 else 0.0;
+  }
 }

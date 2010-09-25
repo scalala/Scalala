@@ -21,7 +21,7 @@ package scalala;
 package library;
 package plotting;
 
-import scalala.generic.Tensor1;
+import scalala.generic.collection.CanViewAsTensor1;
 
 /**
  * Bins for a histogram.  These can be implicitly constructed from:
@@ -73,8 +73,8 @@ object HistogramBins {
   implicit def fromNumber(number : Int) : HistogramBins =
     DynamicHistogramBins(number);
 
-  implicit def fromSplits[S,K,V](splits : S)(implicit t : Tensor1[S,K,V], v : V=>Double) : HistogramBins =
-    StaticHistogramBins(t.domain(splits).map(d => v(t.get(splits, d))).toArray);
+//  implicit def fromSplits[S,K,V](splits : S)(implicit tt : CanViewAsTensor1[S,K,V], v : V=>Double) : HistogramBins =
+//    StaticHistogramBins(t.domain(splits).map(d => v(t.get(splits, d))).toArray);
 
   implicit def fromRange(minMaxCount : (Double,Double,Int)) : HistogramBins =
     DynamicHistogramBins(minMaxCount._3)(minMaxCount._1, minMaxCount._2);

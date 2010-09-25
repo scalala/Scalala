@@ -22,38 +22,19 @@ package scalala;
 package generic;
 package math;
 
+import collection.CanViewAsTensor1;
+
 /**
- * Construction delegate for double(From).
+ * Construction delegate for getting the norm of a value of type From.
  *
  * @author dramage
  */
 trait CanNorm[-From] extends ((From,Double)=>Double);
 
 object CanNorm {
-
-  implicit def Tensor1Norm[T,K,V](implicit tt : Tensor1[T,K,V], cv : V=>Double)
+  implicit def mkTensor1Norm[T](implicit tt : CanViewAsTensor1[T,_,_])
   : CanNorm[T] = new CanNorm[T] {
-    def apply(t : T, n : Double) : Double = {
-      var norm = 0.0;
-
-      if (n == 1.0) {
-        tt.foreachNonZeroValue(t) { (v : V) => norm += scala.math.abs(v) }
-      } else if (n == 2.0) {
-        tt.foreachNonZeroValue(t) { (v : V) => norm += (v * v) }
-        norm = scala.math.sqrt(norm);
-      } else if (n % 2 == 0) {
-        tt.foreachNonZeroValue(t) { (v : V) => norm += scala.math.pow(v, n) }
-        norm = scala.math.pow(norm, 1.0 / n);
-      } else if (n == Double.PositiveInfinity) {
-        tt.foreachNonZeroValue(t) { (v : V) => norm = scala.math.max(norm, scala.math.abs(v)); }
-      } else if (n > 0) {
-        tt.foreachNonZeroValue(t) { (v : V) => norm += scala.math.pow(scala.math.abs(v), n) }
-        norm = scala.math.pow(norm, 1.0 / n);
-      } else {
-        throw new UnsupportedOperationException();
-      }
-
-      norm;
-    }
+    def apply(t : T, n : Double) : Double =
+      tt(t).norm(n);
   }
 }

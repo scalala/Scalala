@@ -20,7 +20,7 @@
 package scalala;
 package library;
 
-import scalala.counter.MapCounter;
+import scalala.counter.HashMapCounter;
 
 import scalala.generic._;
 import scalala.generic.math._;
@@ -93,17 +93,8 @@ trait Library {
   //
 
   /** Counts the given items. */
-  def count[X](items : Traversable[X]) : MapCounter[X,Int] = {
-    val c = MapCounter[X,Int]();
-    for (item <- items) {
-      c(item) += 1;
-    }
-    c;
-  }
-
-  /** Counts the given items. */
-  def count[X](items : Iterator[X]) : MapCounter[X,Int] = {
-    val c = MapCounter[X,Int]();
+  def count[X](items : TraversableOnce[X]) : HashMapCounter[X,Int] = {
+    val c = HashMapCounter[X,Int]();
     for (item <- items) {
       c(item) += 1;
     }

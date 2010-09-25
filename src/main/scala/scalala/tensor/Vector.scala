@@ -20,36 +20,44 @@
 package scalala;
 package tensor;
 
+import generic.Scalar;
 import collection._;
 import collection.domain._;
 
-trait VectorLike[+This<:Vector]
-extends MutableDomainSeqLike[Double,This]
-with Tensor1Like[Int,IndexDomain,This];
+trait VectorLike[@specialized(Int,Long,Float,Double) B, +This<:Vector[B]]
+extends MutableDomainSeqLike[B,This]
+with Tensor1Like[Int,B,IndexDomain,This];
 
-trait Vector
-extends MutableDomainSeq[Double]
-with Tensor1[Int]
-with VectorLike[Vector];
+trait Vector[@specialized(Int,Long,Float,Double) B]
+extends MutableDomainSeq[B]
+with Tensor1[Int,B]
+with VectorLike[B,Vector[B]];
 
 object Vector {
   /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
   trait SliceSeqLike
-  [@specialized(Int,Long) A, D<:IterableDomain[A] with DomainLike[A,D],
-   +Coll <: MutableDomainMap[A,Double],
-   +This <: SliceSeq[A, Coll]]
-  extends MutableDomainMapSliceSeqLike[A,D,Double,Coll,This]
-  with VectorLike[This];
+  [@specialized(Int,Long) A,
+   @specialized(Int,Long,Float,Double) B,
+   D<:IterableDomain[A] with DomainLike[A,D],
+   +Coll <: MutableDomainMap[A,B],
+   +This <: SliceSeq[A, B, Coll]]
+  extends MutableDomainMapSliceSeqLike[A,D,B,Coll,This]
+  with VectorLike[B,This];
 
   /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
   trait SliceSeq
-  [@specialized(Int,Long) A, +Coll <: MutableDomainMap[A,Double]]
-  extends MutableDomainMapSliceSeq[A,Double,Coll]
-  with Vector with SliceSeqLike[A,IterableDomain[A],Coll,SliceSeq[A,Coll]];
+  [@specialized(Int,Long) A,
+   @specialized(Int,Long,Float,Double) B,
+   +Coll <: MutableDomainMap[A,B]]
+  extends MutableDomainMapSliceSeq[A,B,Coll]
+  with Vector[B] with SliceSeqLike[A,B,IterableDomain[A],Coll,SliceSeq[A,B,Coll]];
 
   class SliceFromKeySeq
-  [@specialized(Int,Long) A, +Coll <: MutableDomainMap[A,Double]]
+  [@specialized(Int,Long) A,
+   @specialized(Int,Long,Float,Double) B,
+   +Coll <: MutableDomainMap[A,B]]
   (underlying : Coll, keys : Seq[A])
-  extends MutableDomainMapSliceSeq.FromKeySeq[A,Double,Coll](underlying, keys)
-  with SliceSeq[A,Coll];
+  (implicit override val scalar : Scalar[B])
+  extends MutableDomainMapSliceSeq.FromKeySeq[A,B,Coll](underlying, keys)
+  with SliceSeq[A,B,Coll];
 }

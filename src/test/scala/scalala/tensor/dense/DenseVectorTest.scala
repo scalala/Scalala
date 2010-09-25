@@ -21,9 +21,6 @@ package scalala;
 package tensor;
 package dense;
 
-import collection.numeric.MutableNumericDomainMapTest;
-import collection.domain.IndexDomain;
-
 import org.scalacheck._
 import org.scalatest._;
 import org.scalatest.junit._;
@@ -31,16 +28,20 @@ import org.scalatest.prop._;
 import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
-class DenseVectorTest extends MutableNumericDomainMapTest[Int,Double,DenseVector] {
+class DenseVectorTest extends FunSuite with Checkers {
 
   val TOLERANCE = 1e-4;
   def assertClose(a : Double, b : Double) =
     assert(math.abs(a - b) < TOLERANCE);
 
-  override def createExample = DenseVector(5)(2,0,3,2,-1);
-  override def exampleMinMax = (-1,3);
-  override def exampleArgMinArgMax = (4,2);
-  
+  test("Min/Max") {
+    val v = DenseVector(5)(2,0,3,2,-1);
+    assert(v.argmin === 4);
+    assert(v.argmax === 2);
+    assert(v.min === -1);
+    assert(v.max === 3);
+  }
+
   test("Norm") {
     val v = DenseVector(5)(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
     assertClose(v.norm(1), 3.6577);

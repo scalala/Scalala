@@ -62,10 +62,7 @@ with DomainMap2TransposeLike[A2,A1,B,IterableDomain[A2],IterableDomain[A1],Produ
 
 object DomainMap2Transpose {
   /** Default implementation. */
-  class Impl
-  [@specialized(Int,Long) A2, @specialized(Int,Long) A1,
-   @specialized(Int,Long,Float,Double,Boolean) B,
-   +Coll <: DomainMap2[A1,A2,B]]
+  class Impl[A2, A1, B, +Coll <: DomainMap2[A1,A2,B]]
   (override val underlying : Coll)
   extends DomainMap2Transpose[A2,A1,B,Coll] {
     override val domain = underlying.domain.transpose;

@@ -17,51 +17,37 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-
 package scalala;
 package generic;
+package collection;
 
-import scalala.collection.domain._;
-import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
+import scalala.collection.sparse.SparseArray;
+
+import tensor.Tensor1;
+import tensor.dense.DenseVector;
+import tensor.sparse.SparseVector;
 
 /**
- * Marker trait for tensors indexed by a single key.
+ * View something as a Tensor1.
  *
  * @author dramage
  */
-trait Tensor1[Coll, @specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) +V] {
-  def zero(from : Coll) : Coll;
-
-  def domain(coll : Coll) : IterableDomain[K];
-
-  def get(coll : Coll, key : K) : V;
-
-  /** Applies the given function to all non-zero values. */
-  def foreachNonZeroValue[U](coll : Coll)(fn : (V=>U));
-
-  def valuesIterator(coll : Coll) : Iterator[V] =
-    domain(coll).iterator.map(k => get(coll, k));
+trait CanViewAsTensor1[-From,K,V] {
+  def apply(from : From) : Tensor1[K,V];
 }
 
-object Tensor1 {
-  implicit def arrayTensor1[@specialized V:ClassManifest:Scalar] =
-    new ArrayTensor1[V]();
+object CanViewAsTensor1 {
+  //
+  // View arrays
+  //
 
-  class ArrayTensor1[@specialized V:ClassManifest:Scalar] extends Tensor1[Array[V],Int,V] {
-    def zero(from : Array[V]) = {
-      val zero = implicitly[Scalar[V]].zero;
-      Array.fill(from.length)(zero);
-    }
-
-    def domain(coll : Array[V]) =
-      IndexDomain(coll.length);
-
-    def get(coll : Array[V], key : Int) =
-      coll(key);
-
-    def foreachNonZeroValue[U](coll : Array[V])(fn : (V=>U)) =
-      coll.foreach(fn);
+  class ArrayTensor1[V:ClassManifest:Scalar]
+  extends CanViewAsTensor1[Array[V],Int,V] {
+    def apply(from : Array[V]) = new DenseVector[V](from);
   }
+
+  implicit def mkArrayTensor1[V:ClassManifest:Scalar] =
+    new ArrayTensor1[V]();
 
   implicit object ArrayI extends ArrayTensor1[Int];
   implicit object ArrayS extends ArrayTensor1[Short];
@@ -70,19 +56,17 @@ object Tensor1 {
   implicit object ArrayD extends ArrayTensor1[Double];
   implicit object ArrayB extends ArrayTensor1[Boolean];
 
-  class SparseArrayTensor1[@specialized V:ClassManifest:Scalar:DefaultArrayValue] extends Tensor1[SparseArray[V],Int,V] {
-    def zero(from : SparseArray[V]) =
-      SparseArray.fill(from.length, from.activeLength)(implicitly[Scalar[V]].zero);
+  //
+  // View sparse arrays
+  //
 
-    def domain(coll : SparseArray[V]) =
-      IndexDomain(coll.length);
-
-    def get(coll : SparseArray[V], key : Int) =
-      coll(key);
-    
-    def foreachNonZeroValue[U](coll : SparseArray[V])(fn : (V=>U)) =
-      coll.foreachActive(fn);
+  class SparseArrayTensor1[V:ClassManifest:Scalar]
+  extends CanViewAsTensor1[SparseArray[V],Int,V] {
+    def apply(from : SparseArray[V]) = new SparseVector[V](from);
   }
+
+  implicit def mkSparseArrayTensor1[V:ClassManifest:Scalar] =
+    new SparseArrayTensor1[V]();
 
   implicit object SparseArrayI extends SparseArrayTensor1[Int];
   implicit object SparseArrayS extends SparseArrayTensor1[Short];
@@ -90,4 +74,16 @@ object Tensor1 {
   implicit object SparseArrayF extends SparseArrayTensor1[Float];
   implicit object SparseArrayD extends SparseArrayTensor1[Double];
   implicit object SparseArrayB extends SparseArrayTensor1[Boolean];
+
+  //
+  // View pre-constructed Tensor1 instances
+  //
+
+  class Tensor1Tensor1[K,V:Scalar]
+  extends CanViewAsTensor1[Tensor1[K,V],K,V] {
+    def apply(from : Tensor1[K,V]) = from;
+  }
+
+  implicit def mkTensor1Tensor1[K,V:Scalar] =
+    new Tensor1Tensor1[K,V]();
 }

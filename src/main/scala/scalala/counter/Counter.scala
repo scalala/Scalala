@@ -53,7 +53,7 @@ extends MutableNumericDomainMap[A,B] with CounterLike[A,B,Counter[A,B]];
 
 object Counter {
   def count[@specialized X](values : Iterator[X]) : Counter[X,Int] = {
-    val rv = MapCounter[X,Int]();
+    val rv = HashMapCounter[X,Int]();
     for (value <- values) {
       rv(value) += 1;
     }
@@ -66,10 +66,10 @@ object Counter {
 //
 //}
 
-class MapCounter
+class HashMapCounter
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B:scalala.collection.numeric.Numeric]
 (val map : scala.collection.mutable.Map[A,B] = new scala.collection.mutable.HashMap[A,B])
-extends Counter[A,B] with CounterLike[A,B,MapCounter[A,B]] {
+extends Counter[A,B] with CounterLike[A,B,HashMapCounter[A,B]] {
   override val numeric = implicitly[Numeric[B]];
   override def default = numeric.zero;
 
@@ -83,8 +83,8 @@ extends Counter[A,B] with CounterLike[A,B,MapCounter[A,B]] {
     new SetDomain(map.keySet);
 }
 
-object MapCounter {
+object HashMapCounter {
   def apply[A,B:scalala.collection.numeric.Numeric]
   (map : scala.collection.mutable.Map[A,B] = new scala.collection.mutable.HashMap[A,B]) =
-    new MapCounter(map);
+    new HashMapCounter(map);
 }

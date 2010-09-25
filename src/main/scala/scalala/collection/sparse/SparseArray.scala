@@ -304,13 +304,13 @@ final class SparseArray[@specialized T:ClassManifest:DefaultArrayValue]
   }
 
   /**
-   * Maps all values.  If f(default) != default, then the result will not
-   * be inefficiently dense.
+   * Maps all values.  If f(this.default) is not equal to the new default
+   * value, the result will be dense (and much less efficient than just
+   * storing an Array).
    */
   def map[B:ClassManifest:DefaultArrayValue](f : T=>B) : SparseArray[B] = {
     val rv = new SparseArray[B](length);
-    val mappedDefault = f(default);
-    if (mappedDefault == rv.default) {
+    if (default == null || f(default) == rv.default) {
       val newIndex = new Array[Int](used);
       val newData = new Array[B](used);
       var i = 0;
@@ -321,6 +321,7 @@ final class SparseArray[@specialized T:ClassManifest:DefaultArrayValue]
       }
       rv.use(newIndex, newData, used);
     } else {
+      val mappedDefault = f(default);
       val newIndex = Array.range(0, length);
       val newData = new Array[B](length);
       var i = 0;
@@ -485,7 +486,7 @@ object SparseArray {
     }
   }
 
-  def tabulate[@specialized T:ClassManifest:DefaultArrayValue](length : Int)(values : (Int,T)*) = {
+  def create[@specialized T:ClassManifest:DefaultArrayValue](length : Int)(values : (Int,T)*) = {
     val rv = new SparseArray[T](length = length, initialActiveLength = values.length);
     for ((k,v) <- values) {
       rv(k) = v;
