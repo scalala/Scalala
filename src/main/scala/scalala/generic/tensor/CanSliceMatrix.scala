@@ -26,6 +26,6 @@ package tensor;
  *
  * @author dramage
  */
-trait CanSliceMatrix[-From, A1, A2, B, +To] {
+trait CanSliceMatrix[-From, A1, A2, +To] {
   def apply(from : From, keys1 : Seq[A1], keys2 : Seq[A2]) : To;
 }

@@ -43,27 +43,27 @@ extends tensor.TensorLike[A, B, D, Repr] {
 
   /** Assigns the given value to all elements of this map. */
   def :=(value : B) =
-    for (key <- keysIterator) update(key,value);
+    for (key <- domain) update(key,value);
 
   /** Assigns the corresponding value to each element of this map. */
   def :=(that : tensor.Tensor[A,B]) = {
     checkDomain(that.domain);
-    for (key <- keysIterator) update(key,that(key));
+    for (key <- domain) update(key,that(key));
   }
 
   /** Assigns the corresponding value to each element of this map. */
   def :=[O](that : tensor.Tensor[A,O])(implicit tf : (O=>B)) = {
     checkDomain(that.domain);
-    for (key <- keysIterator) update(key,that(key));
+    for (key <- domain) update(key,that(key));
   }
 
   /** Tranforms all key value pairs in this map by applying the given function. */
   def transform(f : (A,B)=>B) =
-    for (key <- keysIterator) update(key,f(key,apply(key)));
+    this.foreach((k,v) => update(k,f(k,v)));
 
   /** Tranforms all values in this map by applying the given function. */
   def transformValues(f : B=>B) =
-    for (key <- keysIterator) update(key,f(apply(key)));
+    this.foreach((k,v) => update(k,f(v)));
 }
 
 /**
@@ -95,13 +95,13 @@ object Tensor {
   }
 
   implicit def canSliceTensor[A1, A2, B:Scalar] =
-  new CanSliceTensor[Tensor[A1,B], A1, A2, B, Tensor[A2,B]] {
+  new CanSliceTensor[Tensor[A1,B], A1, A2, Tensor[A2,B]] {
     override def apply(from : Tensor[A1,B], keymap : scala.collection.Map[A2,A1]) =
       new TensorSlice.FromKeyMap[A1, A2, B, Tensor[A1,B]](from, keymap);
   }
 
   implicit def canSliceVector[A, B:Scalar] =
-  new CanSliceVector[Tensor[A,B], A, B, Vector[B]] {
+  new CanSliceVector[Tensor[A,B], A, Vector[B]] {
     override def apply(from : Tensor[A,B], keys : Seq[A]) =
       new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
   }

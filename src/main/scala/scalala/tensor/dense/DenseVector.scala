@@ -43,26 +43,31 @@ with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] {
   override def update(key : Int, value : B) =
     data(key) = value;
 
-  override def foreachNonZero[U](fn : (B=>U)) =
-    data.foreach(fn);
-
-  override def foreachNonZero[U](fn : ((Int,B)=>U)) =
-    this.foreach(fn);
-
-  /** Tranforms all key value pairs in this map by applying the given function. */
-  override def transform(f : (Int,B)=>B) = {
+  override def foreach[U](fn : ((Int,B)=>U)) = {
     var i = 0;
     while (i < data.length) {
-      data(i) = f(i,data(i));
+      fn(i,data(i));
+      i += 1;
+    }
+  }
+
+  override def foreachValue[U](fn : (B=>U)) =
+    data.foreach(fn);
+
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  override def transform(fn : (Int,B)=>B) = {
+    var i = 0;
+    while (i < data.length) {
+      data(i) = fn(i,data(i));
       i += 1;
     }
   }
   
   /** Tranforms all key value pairs in this map by applying the given function. */
-  override def transformValues(f : B=>B) = {
+  override def transformValues(fn : B=>B) = {
     var i = 0;
     while (i < data.length) {
-      data(i) = f(data(i));
+      data(i) = fn(data(i));
       i += 1;
     }
   }

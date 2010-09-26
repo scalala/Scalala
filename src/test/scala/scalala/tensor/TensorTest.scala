@@ -92,8 +92,7 @@ class TensorTest extends FunSuite with Checkers {
     
     assert(x.argsort.toList === List("c","a","b"));
 
-    val sorted = x.sorted;
-    assert(sorted.valuesIterator.toList === List(3,5,7));
+    assert(x.sorted.valuesIterator.toList === List(3,5,7));
   }
 
   test("Views") {

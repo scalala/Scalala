@@ -26,6 +26,6 @@ package tensor;
  *
  * @author dramage
  */
-trait CanTranspose[-From, A1, A2, B, +To] {
+trait CanTranspose[-From, +To] {
   def apply(in : From) : To;
 }

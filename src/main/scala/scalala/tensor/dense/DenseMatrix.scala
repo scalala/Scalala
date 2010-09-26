@@ -61,8 +61,21 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
   override def update(row : Int, col : Int, value : B) =
     data(index(row,col)) = value;
 
-  override def foreachNonZero[U](fn : (((Int,Int),B)=>U)) =
-    this.foreach(fn);
+  override def foreach[U](f : (Int,Int,B)=>U) = {
+    var i = 0;
+    while (i < data.length) {
+      f(rowIndex(i),colIndex(i),data(i));
+      i += 1;
+    }
+  }
+
+  override def foreachValue[U](f : (B)=>U) = {
+    var i = 0;
+    while (i < data.length) {
+      f(data(i));
+      i += 1;
+    }
+  }
 
   /** Tranforms all key value pairs in this map by applying the given function. */
   override def transform(f : (Int,Int,B)=>B) = {

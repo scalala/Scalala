@@ -53,8 +53,10 @@ extends mutable.TensorLike[A,B,D,This] {
     }
   }
 
-  override def foreachNonZero[U](fn : (B=>U)) =
+  override def foreachNonZeroValue[U](fn : (B=>U)) = {
     data.foreach(fn);
+    true;
+  }
 }
 
 /**

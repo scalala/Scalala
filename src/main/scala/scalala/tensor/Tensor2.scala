@@ -55,13 +55,30 @@ extends TensorLike[(A1,A2),B,D,This] {
 
   /** Slice a sub-Tensor2 */
   def apply[That](i : Seq[A1], j : Seq[A2])
-  (implicit bf : CanSliceMatrix[This,A1,A2,B,That]) : That =
+  (implicit bf : CanSliceMatrix[This,A1,A2,That]) : That =
     bf.apply(repr, i, j);
 
   /** Transpose this Tensor2. */
   def transpose[That]
-  (implicit bf : CanTranspose[This,A1,A2,B,That]) : That =
+  (implicit bf : CanTranspose[This,That]) : That =
     bf.apply(repr);
+
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  def foreach[U](fn : (A1,A2,B)=>U) =
+    super.foreach((k,v) => fn(k._1, k._2, v));
+
+  /** Fixed alias for transform((k1,k2,v) => f((k1,k2),v)) */
+  /* final */ override def foreach[U](f : ((A1,A2),B)=>U) =
+    foreach((k1,k2,v) => f((k1,k2),v));
+
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  def foreachNonZero[U](fn : (A1,A2,B)=>U) =
+    super.foreachNonZero((k,v) => fn(k._1, k._2, v));
+
+  /** Fixed alias for transform((k1,k2,v) => f((k1,k2),v)) */
+  /* final */ override def foreachNonZero[U](f : ((A1,A2),B)=>U) =
+    foreachNonZero((k1,k2,v) => f((k1,k2),v));
+
 }
 
 trait Tensor2
@@ -72,13 +89,13 @@ with Tensor2Like[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1
 
 object Tensor2 {
   implicit def canSliceMatrix[A1,A2,B:Scalar] = new CanSliceMatrix
-  [Tensor2[A1,A2,B],A1,A2,B,MatrixSlice[A1,A2,B,Tensor2[A1,A2,B]]] {
+  [Tensor2[A1,A2,B],A1,A2,MatrixSlice[A1,A2,B,Tensor2[A1,A2,B]]] {
     override def apply(from : Tensor2[A1,A2,B], keys1 : Seq[A1], keys2 : Seq[A2]) =
       new MatrixSlice.FromKeySeqs[A1,A2,B,Tensor2[A1,A2,B]](from, keys1, keys2);
   }
 
-  implicit def canTranspose[A2,A1,B:Scalar] = new CanTranspose
-  [Tensor2[A1,A2,B],A1,A2,B,Tensor2Transpose[A2,A1,B,Tensor2[A1,A2,B]]] {
+  implicit def canTranspose[A2,A1,B:Scalar] : CanTranspose[Tensor2[A1,A2,B],Tensor2Transpose[A2,A1,B,Tensor2[A1,A2,B]]]
+  = new CanTranspose[Tensor2[A1,A2,B],Tensor2Transpose[A2,A1,B,Tensor2[A1,A2,B]]] {
     override def apply(input : Tensor2[A1,A2,B]) =
       new Tensor2Transpose.Impl[A2,A1,B,Tensor2[A1,A2,B]](input);
   }

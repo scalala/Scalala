@@ -26,6 +26,6 @@ package tensor;
  *
  * @author dramage
  */
-trait CanSliceTensor[-From, A1, A2, B, +To] {
+trait CanSliceTensor[-From, A1, A2, +To] {
   def apply(from : From, keymap : scala.collection.Map[A2,A1]) : To;
 }

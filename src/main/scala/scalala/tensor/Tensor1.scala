@@ -38,19 +38,19 @@ extends TensorLike[A,B,D,This] {
   def norm(n : Double) : Double = {
     if (n == 1) {
       var sum = 0.0;
-      foreachNonZero(v => sum += scalar.norm(v));
+      foreachNonZeroValue(v => sum += scalar.norm(v));
       return sum;
     } else if (n == 2) {
       var sum = 0.0;
-      foreachNonZero(v => { val nn = scalar.norm(v); sum += nn * nn });
+      foreachNonZeroValue(v => { val nn = scalar.norm(v); sum += nn * nn });
       return math.sqrt(sum);
     } else if (n == Double.PositiveInfinity) {
       var max = Double.NegativeInfinity;
-      valuesIterator.foreach(v => { val nn = scalar.norm(v); if (nn > max) max = nn; });
+      foreachNonZeroValue(v => { val nn = scalar.norm(v); if (nn > max) max = nn; });
       return max;
     } else {
       var sum = 0.0;
-      foreachNonZero(v => { val nn = scalar.norm(v); sum += math.pow(nn,n); });
+      foreachNonZeroValue(v => { val nn = scalar.norm(v); sum += math.pow(nn,n); });
       return math.pow(sum, 1.0 / n);
     }
   }

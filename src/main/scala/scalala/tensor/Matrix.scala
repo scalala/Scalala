@@ -92,8 +92,8 @@ extends Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
 object Matrix {
-  implicit def canTranspose[B:Scalar] =
-  new CanTranspose[Matrix[B], Int, Int, Double, MatrixTranspose[B,Matrix[B]]] {
+  implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] =
+  new CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] {
     override def apply(from : Matrix[B]) = new MatrixTranspose.Impl[B,Matrix[B]](from);
   }
 }

@@ -46,7 +46,6 @@ object CanExp {
   implicit object OpD extends Op[Double,Double]
   { def apply(v : Double) = scala.math.exp(v); }
 
-  // TODO: this causes all sorts of problems
 //  implicit def opMapValues[From,A,B,To]
 //  (implicit op : Op[A,B], map : CanMapValues[From,A,B,To]) =
 //    new OpMapValues[From,A,B,To];

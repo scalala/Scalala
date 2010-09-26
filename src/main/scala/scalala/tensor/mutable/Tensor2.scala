@@ -39,6 +39,7 @@ trait Tensor2Like
  +This<:Tensor2[A1,A2,B]]
 extends TensorLike[(A1,A2),B,D,This]
 with tensor.Tensor2Like[A1,A2,B,D1,D2,D,T,This] {
+self =>
 
   /** Updates the value indexed by (i,j). */
   def update(i : A1, j : A2, value : B) : Unit;
@@ -47,13 +48,13 @@ with tensor.Tensor2Like[A1,A2,B,D1,D2,D,T,This] {
   /* final */ override def update(pos : (A1,A2), value : B) : Unit =
     update(pos._1, pos._2, value);
 
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  def transform(f : (A1,A2,B)=>B) =
+    super.transform((k,v) => f(k._1, k._2, v));
+
   /** Fixed alias for transform((k1,k2,v) => f((k1,k2),v)) */
   /* final */ override def transform(f : ((A1,A2),B)=>B) =
     transform((k1,k2,v) => f((k1,k2),v));
-
-  /** Tranforms all key value pairs in this map by applying the given function. */
-  def transform(f : (A1,A2,B)=>B) =
-    for (key <- keysIterator) update(key,f(key._1,key._2,apply(key)));
 }
 
 /**
@@ -90,13 +91,13 @@ object Tensor2 {
   }
 
   implicit def canSliceMatrix[A1, A2, B:Scalar] =
-  new CanSliceMatrix[Tensor2[A1,A2,B],A1,A2,B,MatrixSlice[A1,A2,B,Tensor2[A1,A2,B]]] {
+  new CanSliceMatrix[Tensor2[A1,A2,B],A1,A2,MatrixSlice[A1,A2,B,Tensor2[A1,A2,B]]] {
     override def apply(from : Tensor2[A1,A2,B], keys1 : Seq[A1], keys2 : Seq[A2]) =
       new MatrixSlice.FromKeySeqs[A1,A2,B,Tensor2[A1,A2,B]](from, keys1, keys2);
   }
 
   implicit def canTranspose[A2, A1, B:Scalar] =
-  new CanTranspose[Tensor2[A1,A2,B],A1,A2,B,Tensor2Transpose[A2,A1,B,Tensor2[A1,A2,B]]] {
+  new CanTranspose[Tensor2[A1,A2,B],Tensor2Transpose[A2,A1,B,Tensor2[A1,A2,B]]] {
     override def apply(input : Tensor2[A1,A2,B]) =
       new Tensor2Transpose.Impl[A2,A1,B,Tensor2[A1,A2,B]](input);
   }

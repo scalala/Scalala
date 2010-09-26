@@ -45,11 +45,15 @@ with mutable.Vector[B] with mutable.VectorLike[B,SparseVector[B]] {
   override def update(key : Int, value : B) =
     data(key) = value;
 
-  override def foreachNonZero[U](fn : (B=>U)) =
+  override def foreachNonZero[U](fn : ((Int,B)=>U)) = {
     data.foreachActive(fn);
+    data.activeLength == data.length;
+  }
 
-  override def foreachNonZero[U](fn : ((Int,B)=>U)) =
+  override def foreachNonZeroValue[U](fn : (B=>U)) = {
     data.foreachActive(fn);
+    data.activeLength == data.length;
+  }
 }
 
 object SparseVector {

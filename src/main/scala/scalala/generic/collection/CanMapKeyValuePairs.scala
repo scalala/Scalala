@@ -28,6 +28,6 @@ package collection;
  *
  * @author dramage
  */
-trait CanMapKeyValuePairs[-From, @specialized K, @specialized A, @specialized B, +To] {
+trait CanMapKeyValuePairs[-From, K, A, B, +To] {
   def apply(from : From, fn : ((K,A)=>B)) : To;
 }
