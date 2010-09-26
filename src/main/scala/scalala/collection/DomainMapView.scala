@@ -57,44 +57,6 @@ extends DomainMap[A,B]
 with DomainMapViewLike[A,B,IterableDomain[A],Coll,DomainMapView[A,B,Coll]];
 
 
-///**
-// * Implementation trait for pass-through views of underlying DomainMap.
-// *
-// * @author dramage
-// */
-//trait DomainMapTransformViewLike
-//[@specialized A, @specialized B, @specialized O, D<:IterableDomain[A],
-// +Coll <: DomainMap[A,B,D], +This <: DomainMapView[A,B,O,D,Coll]]
-//extends DomainMapLike[A,O,D,This] {
-//self =>
-//
-//  /** The collection underlying this view. */
-//  def underlying: Coll;
-//
-//  /** Transform a value in the underlying map to a value in the view. */
-//  def transform(value : B) : O;
-//
-//  override def domain =
-//    underlying.domain;
-//
-//  override def apply(key : A) =
-//    transform(underlying.apply(key));
-//
-//  override def view = repr;
-//}
-//
-///**
-// * Pass-through view of an underlying DomainMap.
-// *
-// * @author dramage
-// */
-//trait DomainMapTransformView
-//[@specialized A, @specialized B, @specialized O, D<:IterableDomain[A],
-// +Coll <: DomainMap[A,B,D]]
-//extends DomainMap[A,O,D]
-//with DomainMapViewLike[A,B,O,D,Coll,DomainMapView[A,B,O,D,Coll]];
-
-
 object DomainMapView {
 
   trait IdentityViewLike
@@ -116,7 +78,6 @@ object DomainMapView {
   class IdentityViewImpl[A, B, +Coll <: DomainMap[A,B]]
   (override val underlying : Coll)
   extends IdentityView[A,B,Coll];
-
 
   trait TransformViewLike
   [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,

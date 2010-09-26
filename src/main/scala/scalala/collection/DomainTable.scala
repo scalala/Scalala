@@ -23,6 +23,8 @@ package collection;
 import domain._;
 import generic._;
 
+import mutable.DomainMapBuilder;
+
 /**
  * Implementation trait for DomainMaps defined over a pair of IndexDomains,
  * e.g. the base type of matrices.
@@ -31,12 +33,20 @@ import generic._;
  */
 trait DomainTableLike[@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:DomainTable[B]]
 extends DomainMap2Like[Int, Int, B, IndexDomain, IndexDomain, TableDomain, TableDomain, Repr] {
+self =>
+
+  override def newBuilder[C](implicit default : DefaultValue[C]) : DomainMapBuilder[(Int,Int),C,DomainTable[C]] =
+  new DomainMapBuilder[(Int,Int),C,DomainTable[C]] {
+    val rv = MutableDomainTable[C](self.numRows, self.numCols, default.value);
+    def update(k : (Int,Int), v : C) = rv(k._1,k._2) = v;
+    def result = rv;
+  }
 
   /** Number of rows in this table. */
-  def numRows : Int = domain.numRows;
+  /* final */ def numRows : Int = domain.numRows;
 
   /** Number of columsn in this table. */
-  def numCols : Int = domain.numCols;
+  /* final */ def numCols : Int = domain.numCols;
 
   override def checkKey(row : Int, col : Int) {
     if (row < 0 || row >= numRows || col < 0 || col >= numCols)

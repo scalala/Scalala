@@ -71,7 +71,7 @@ class DomainMapTest extends FunSuite with Checkers {
   test("Filter values") {
     val x = mkDomainMap();
     x("a","b","c") := List(1,2,3);
-    x.filterValues(_ >= 2) := 0;
+    x.filter(_ >= 2) := 0;
     assert(x.valuesIterator.toList === List(1,0,0));
   }
 
@@ -94,14 +94,8 @@ class DomainMapTest extends FunSuite with Checkers {
     
     assert(x.argsort.toList === List("c","a","b"));
 
-    // TODO: this should compile without the hint, but doesn't compile
-    // even with the hint
-//    implicit val q : generic.DomainMapCanSliceSeqFrom[MutableDomainMap[String,Int,SetDomain[String]], String, SetDomain[String], Int, MutableDomainSeq[Int]]
-//      = MutableDomainMap.canSliceSeqFrom[String, SetDomain[String], Int];
-//    val z = x.sorted;
-
-    val sorted = x(x.argsort);
-    assert(sorted.valuesIterator.toList === List(3,5,7))
+    val sorted = x.sorted;
+    assert(sorted.valuesIterator.toList === List(3,5,7));
   }
 
   test("Views") {

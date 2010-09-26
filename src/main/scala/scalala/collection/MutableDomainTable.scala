@@ -43,3 +43,20 @@ trait MutableDomainTable
 extends DomainTable[B]
 with MutableDomainMap2[Int,Int,B]
 with MutableDomainTableLike[B,MutableDomainTable[B]];
+
+object MutableDomainTable {
+  import scala.collection.mutable.IndexedSeq;
+
+  class Impl[B](numRows : Int, numCols : Int, val data : IndexedSeq[IndexedSeq[B]]) extends MutableDomainTable[B] {
+    override val domain = TableDomain(numRows, numCols);
+
+    override def apply(i : Int, j : Int) =
+      data(i)(j);
+
+    override def update(i : Int, j : Int, v : B) =
+      data(i)(j) = v;
+  }
+
+  def apply[B](numRows : Int, numCols : Int, default : B) =
+    new Impl(numRows, numCols, IndexedSeq.tabulate(numRows)(r => IndexedSeq.fill(numCols)(default)));
+}

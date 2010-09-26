@@ -22,6 +22,7 @@ package collection;
 
 import domain._;
 import generic._;
+import mutable.DomainMapBuilder;
 
 /**
  * Implementation trait for DomainMaps defined over an IndexDomain,
@@ -31,9 +32,16 @@ import generic._;
  */
 trait DomainSeqLike
 [@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:DomainSeq[B]]
-extends DomainMapLike[Int, B, IndexDomain, Repr] {
+extends DomainMapLike[Int, B, IndexDomain, Repr] { self =>
 
   def size = domain.size;
+
+  override def newBuilder[C](implicit default : DefaultValue[C]) : DomainMapBuilder[Int,C,DomainSeq[C]] =
+  new DomainMapBuilder[Int,C,DomainSeq[C]] {
+    val rv = MutableDomainSeq[C](self.size, default.value);
+    def update(k : Int, v : C) = rv(k) = v;
+    def result = rv;
+  }
 
   protected[this] def mkValueString(value : B) : String =
     value.toString;

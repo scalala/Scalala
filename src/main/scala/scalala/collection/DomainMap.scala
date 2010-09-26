@@ -23,6 +23,8 @@ package collection;
 import domain._;
 import generic._;
 
+import mutable.DomainMapBuilder;
+
 /**
  * A DomainMap is a DomainFunction backed by an IterableDomain, i.e. it is
  * a function for which its domain can be enumerated, so that we can support
@@ -42,18 +44,19 @@ self =>
 
   def repr : Repr = this.asInstanceOf[Repr];
 
+  def newBuilder[C](implicit default : DefaultValue[C]) : DomainMapBuilder[A,C,DomainMap[A,C]] =
+  new DomainMapBuilder[A,C,DomainMap[A,C]] {
+    val rv = MutableDomainMap[A,C](self.domain, default.value);
+    def update(k : A, v : C) = rv(k) = v;
+    def result = rv;
+  }
+
+
 //  /**
 //   * Creates a new (empty) instance of the same type as this domain map,
 //   * optionally on a new domain.
 //   */
 //  def newInstance(domain : D = domain) : Repr;
-
-  /**
-   * Applies the given function to each element of the domain and
-   * its corresponding value (unboxed version).
-   */
-  def foreach[U](f: (A,B) => U) : Unit =
-    for (k <- domain) f(k, apply(k));
 
 //  //
 //  // for-comprehensions
@@ -99,6 +102,13 @@ self =>
   //
 
   /**
+   * Applies the given function to each element of the domain and
+   * its corresponding value (unboxed version).
+   */
+  def foreach[U](f: (A,B) => U) : Unit =
+    for (k <- domain) f(k, apply(k));
+
+  /**
    * Iterates over all iterator in the domain, whether or not the function
    * overrides the default value at that position.
    */
@@ -128,7 +138,7 @@ self =>
    * Returns a slice sequence of this DomainMap containing only those
    * values matching the given filter criteria.
    */
-  def filterValues[That](p: B => Boolean)
+  def filter[That](p: B => Boolean)
   (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, B, That]) : That =
     apply(find(p));
 
@@ -190,7 +200,9 @@ self =>
    * <code>x(x.argsort)</code>.  Changes to the sorted view are written-through
    * to the underlying map.
    */
-  def sorted[That](implicit bf : DomainMapCanSliceSeqFrom[Repr, A, B, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
+  def sorted[That]
+  (implicit bf : DomainMapCanSliceSeqFrom[Repr, A, B, That],
+   cm : ClassManifest[A], ord : Ordering[B]) : That =
     this(this.argsort);
 
   /**
@@ -206,11 +218,8 @@ self =>
   //
 
   /** Returns an ordering over the domain based on the values in this map. */
-  def asOrdering(implicit ord : Ordering[B]) : Ordering[A] = {
-    val map = this;
-    new Ordering[A] {
-      override def compare(a : A, b : A) = ord.compare(map(a), map(b));
-    }
+  def asOrdering(implicit ord : Ordering[B]) : Ordering[A] = new Ordering[A] {
+    override def compare(a : A, b : A) = ord.compare(self(a), self(b));
   }
 
   /** Returns an unmodifiable Map-like view of this DomainMap. */
@@ -228,6 +237,7 @@ self =>
       throw new UnsupportedOperationException("asMap view of DomainMap is unmodifiable: use toMap");
   }
 
+  /** Creates a new copy of this DomainMap as a scala map. */
   def toMap : Map[A,B] =
     this.iterator.toMap;
 
@@ -274,38 +284,7 @@ trait DomainMap
  @specialized(Int,Long,Float,Double,Boolean) B]
 extends DomainMapLike[A, B, IterableDomain[A], DomainMap[A, B]];
 
-//object DomainMapTypes {
-//   type From[A,B] = DomainMap[A,B,IterableDomain[A]];
-//   type ToMutable[A,B] = MutableDomainMap[A,B,IterableDomain[A]];
-//   type ToSlice[A1,A2,B] = DomainMapSlice[A1,IterableDomain[A1],A2,SetDomain[A2],B,From[A1,B]];
-//   type ToSliceSeq[A,B] = DomainMapSliceSeq[A,IterableDomain[A],B,From[A,B]];
-//}
-//
-//object DomainMap extends DomainMapCompanion[IterableDomain, DomainMapTypes.From, DomainMapTypes.ToMutable, DomainMapTypes.ToSlice, DomainMapTypes.ToSliceSeq] {
-//
-//  override protected def createMutable[A,B](domain : IterableDomain[A], initial : B) =
-//    MutableDomainMap[A,B,IterableDomain[A]](domain, initial);
-//
-//  override protected def createSlice[A1,A2,B](from : DomainMap[A1,B,IterableDomain[A1]], keymap : scala.collection.Map[A2,A1]) : DomainMapSlice[A1,IterableDomain[A1],A2,SetDomain[A2],B,DomainMap[A1,IterableDomain[A1],B]] =
-//    new DomainMapSlice.FromKeyMap[A1,IterableDomain[A1],A2,B,DomainMap[A1,B,IterableDomain[A1]]](from, keymap);
-//
-//  override protected def createSliceSeq[A,B](from : From[A,B], keys : Seq[A]) : ToSliceSeq[A,B];
-//
-//}
-
-//trait DomainMapCompanion[T[A,B,D<:IterableDomain[A] with DomainLike[A,D]] <: DomainMap[A,B,D]] {
-//
-//  type View[A,B,D<:IterableDomain[A] with DomainLike[A,D]] = DomainMapView[A,B,D,T[A,B,D]];
-//  type MapValues[A,B,O,D<:IterableDomain[A] with DomainLike[A,D]] = DomainMap[A,O,D];
-//
-//  implicit def canViewFrom[A,B,D<:IterableDomain[A] with DomainLike[A,D]] =
-//  new DomainMapCanViewFrom[T[A,B,D], View[A,B,D]] {
-//    override def apply(from : T[A,B,D]) =
-//      new DomainMapView.IdentityViewImpl[A,B,D,T[A,B,D]](from);
-//  }
-//}
-
-object DomainMap /* extends DomainMapCompanion[DomainMap] */ {
+object DomainMap {
 
   class Impl[A,B](values : Map[A,B]) extends DomainMap[A,B] {
     override val domain : SetDomain[A] = new SetDomain(values.keySet);
@@ -322,16 +301,16 @@ object DomainMap /* extends DomainMapCompanion[DomainMap] */ {
 
   implicit def canMapValuesFrom[A, B, O]
   (implicit default : DefaultValue[O]) =
-  new DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,O,MutableDomainMap[A,O]] {
+  new DomainMapCanMapValuesFrom[DomainMap[A,B],A,B,O,DomainMap[A,O]] {
     override def apply(from : DomainMap[A,B], fn : (B=>O)) = {
-      val rv = MutableDomainMap[A,O](from.domain, default.value);
-      from.foreach((k,v) => rv(k) = fn(v));
-      rv;
+      val builder = from.newBuilder[O];
+      from.foreach((k,v) => builder(k) = fn(v));
+      builder.result;
     }
     override def apply(from : DomainMap[A,B], fn : ((A,B)=>O)) = {
-      val rv = MutableDomainMap[A,O](from.domain, default.value);
-      from.foreach((k,v) => rv(k) = fn(k,v));
-      rv;
+      val builder = from.newBuilder[O];
+      from.foreach((k,v) => builder(k) = fn(k,v));
+      builder.result;
     }
   }
 
@@ -341,9 +320,9 @@ object DomainMap /* extends DomainMapCompanion[DomainMap] */ {
       if (a.domain != b.domain) {
         throw new DomainException("Mismatched domains on join");
       }
-      val rv = MutableDomainMap[K,RV](a.domain, default.value);
-      for (k <- rv.domain) { rv(k) = fn(k,a(k),b(k)); }
-      rv;
+      val builder = a.newBuilder[RV];
+      for (k <- a.domain) { builder(k) = fn(k,a(k),b(k)); }
+      builder.result;
     }
   }
 
@@ -358,5 +337,4 @@ object DomainMap /* extends DomainMapCompanion[DomainMap] */ {
     override def apply(from : DomainMap[A,B], keys : Seq[A]) =
       new DomainMapSliceSeq.FromKeySeq[A,B,DomainMap[A,B]](from, keys);
   }
-
 }
