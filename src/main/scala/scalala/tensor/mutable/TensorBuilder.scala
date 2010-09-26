@@ -18,25 +18,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
-package generic;
-package collection;
+package tensor;
+package mutable;
 
-import org.scalacheck._
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith;
+/**
+ * Builds a Tensor of type To after being given a series of
+ * key, value pairs.
+ *
+ * @author dramage
+ */
+trait TensorBuilder[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,+To] {
+  def update(key : A, value : B);
 
-@RunWith(classOf[JUnitRunner])
-class CanGetValueTest extends FunSuite with Checkers {
-  def get[Coll,K,V](coll : Coll, k : K)(implicit get : CanGetValue[Coll,K,V]) =
-    get(coll, k);
-
-  test("array") {
-    assert(get(Array(1.0,2.0,3.0),1) === 2.0);
-  }
-
-  test("map") {
-    assert(get(Map('a'->1,'b'->2), 'b') === 2);
-  }
+  def result : To;
 }

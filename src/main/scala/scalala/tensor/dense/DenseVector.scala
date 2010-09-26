@@ -21,22 +21,51 @@ package scalala;
 package tensor;
 package dense;
 
-import generic.Scalar;
-
-import collection.generic.DomainMapCanMapValuesFrom;
-
-import collection.dense.{DenseMutableDomainSeqLike,DenseMutableDomainSeq};
+import domain.IndexDomain;
 
 /**
- * A DenseVector is backed by an array of doubles.
+ * A vector backed by a dense array.
  *
  * @author dramage
  */
-class DenseVector[B](data : Array[B])
+class DenseVector[@specialized(Int,Long,Float,Double) B]
+(override val data : Array[B])
 (implicit override val scalar : Scalar[B])
-extends DenseMutableDomainSeq[B](data) with DenseMutableDomainSeqLike[B,DenseVector[B]]
-with Vector[B] with VectorLike[B,DenseVector[B]] {
-//  override def copy = new DenseVector(data.clone);
+extends DenseArrayTensor[Int,B] with DenseArrayTensorLike[Int,B,IndexDomain,DenseVector[B]]
+with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] {
+  override def size = data.length;
+
+  override val domain = IndexDomain(data.length);
+
+  override def apply(key : Int) =
+    data(key);
+
+  override def update(key : Int, value : B) =
+    data(key) = value;
+
+  override def foreachNonZero[U](fn : (B=>U)) =
+    data.foreach(fn);
+
+  override def foreachNonZero[U](fn : ((Int,B)=>U)) =
+    this.foreach(fn);
+
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  override def transform(f : (Int,B)=>B) = {
+    var i = 0;
+    while (i < data.length) {
+      data(i) = f(i,data(i));
+      i += 1;
+    }
+  }
+  
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  override def transformValues(f : B=>B) = {
+    var i = 0;
+    while (i < data.length) {
+      data(i) = f(data(i));
+      i += 1;
+    }
+  }
 }
 
 object DenseVector {

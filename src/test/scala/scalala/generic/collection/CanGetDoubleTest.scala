@@ -27,8 +27,6 @@ import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.junit.runner.RunWith;
 
-import scalala.collection.domain._;
-
 @RunWith(classOf[JUnitRunner])
 class CanGetDoubleTest extends FunSuite with Checkers {
   def get[Coll,K](coll : Coll, k : K)(implicit get : CanGetDouble[Coll,K]) =

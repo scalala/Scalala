@@ -22,6 +22,8 @@ package scalala;
 package generic;
 package collection;
 
+import scalala.tensor.Scalar;
+
 /**
  * Marker for being able to map the values in a value collection.
  * For scalar, CanMapValues just applies the given transformation

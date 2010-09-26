@@ -26,8 +26,6 @@ import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.junit.runner.RunWith
 
-import scalala.collection.domain._;
-
 @RunWith(classOf[JUnitRunner])
 class CanAssignIntoTest extends FunSuite with Checkers {
 

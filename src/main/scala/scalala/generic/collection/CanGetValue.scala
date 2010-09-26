@@ -22,8 +22,6 @@ package scalala;
 package generic;
 package collection;
 
-import scalala.collection.domain._;
-
 /**
  * Marker for being able to get the value of a map at a key.
  *

@@ -19,24 +19,13 @@
  */
 package scalala;
 package generic;
-package collection;
+package tensor;
 
-import org.scalacheck._
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith;
-
-@RunWith(classOf[JUnitRunner])
-class CanGetValueTest extends FunSuite with Checkers {
-  def get[Coll,K,V](coll : Coll, k : K)(implicit get : CanGetValue[Coll,K,V]) =
-    get(coll, k);
-
-  test("array") {
-    assert(get(Array(1.0,2.0,3.0),1) === 2.0);
-  }
-
-  test("map") {
-    assert(get(Map('a'->1,'b'->2), 'b') === 2);
-  }
+/**
+ * Builder trait for a slicing a view of a matrix.
+ *
+ * @author dramage
+ */
+trait CanSliceMatrix[-From, A1, A2, B, +To] {
+  def apply(from : From, keys1 : Seq[A1], keys2 : Seq[A2]) : To;
 }

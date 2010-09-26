@@ -27,8 +27,6 @@ import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.junit.runner.RunWith;
 
-import scalala.collection.domain._;
-
 @RunWith(classOf[JUnitRunner])
 class CanMapValuesTest extends FunSuite with Checkers {
   def toDoubles[From,A,To](coll : From)(implicit map : CanMapValues[From,A,Double,To], cv : A=>Double) =

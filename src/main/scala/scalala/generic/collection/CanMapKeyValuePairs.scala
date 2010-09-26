@@ -17,26 +17,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
+
 package scalala;
 package generic;
 package collection;
 
-import org.scalacheck._
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith;
-
-@RunWith(classOf[JUnitRunner])
-class CanGetValueTest extends FunSuite with Checkers {
-  def get[Coll,K,V](coll : Coll, k : K)(implicit get : CanGetValue[Coll,K,V]) =
-    get(coll, k);
-
-  test("array") {
-    assert(get(Array(1.0,2.0,3.0),1) === 2.0);
-  }
-
-  test("map") {
-    assert(get(Map('a'->1,'b'->2), 'b') === 2);
-  }
+/**
+ * Marker for being able to map the keys and values in a value collection
+ * to new values.
+ *
+ * @author dramage
+ */
+trait CanMapKeyValuePairs[-From, @specialized K, @specialized A, @specialized B, +To] {
+  def apply(from : From, fn : ((K,A)=>B)) : To;
 }

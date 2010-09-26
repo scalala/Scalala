@@ -20,10 +20,10 @@
 package scalala;
 package tensor;
 
-import generic.Scalar;
-import collection._;
-import collection.domain._;
-import collection.generic._;
+import domain._
+import generic.tensor._;
+
+import mutable.TensorBuilder;
 
 /**
  * Implementation trait for a matrix.
@@ -31,69 +31,69 @@ import collection.generic._;
  * @author dramage
  */
 trait MatrixLike[@specialized(Int,Long,Float,Double) B, +This<:Matrix[B]]
-extends MutableDomainTableLike[B,This]
-with Tensor2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,This];
+extends Tensor2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,This] {
+self =>
+
+  override def newBuilder[C:Scalar] : TensorBuilder[(Int,Int),C,Matrix[C]] =
+  new TensorBuilder[(Int,Int),C,Matrix[C]] {
+    val rv = mutable.Matrix[C](self.numRows, self.numCols);
+    def update(k : (Int,Int), v : C) = rv(k._1,k._2) = v;
+    def result = rv;
+  }
+
+  /** Number of rows in this table. */
+  /* final */ def numRows : Int = domain.numRows;
+
+  /** Number of columsn in this table. */
+  /* final */ def numCols : Int = domain.numCols;
+
+  override def checkKey(row : Int, col : Int) {
+    if (row < 0 || row >= numRows || col < 0 || col >= numCols)
+      throw new DomainException("Index "+(row,col)+" out of range.  Size is "+numRows+"x"+numCols);
+  }
+
+  protected[this] def mkValueString(value : B) : String =
+    value.toString;
+
+  // TODO: improve this method to make it more Matrix-like
+  def toString(maxRows : Int, maxWidth : Int) : String = {
+    def colWidth(col : Int) =
+      (0 until (maxRows min numRows)).map(row => mkValueString(this(row,col)).length).max;
+
+    val colWidths = new scala.collection.mutable.ArrayBuffer[Int];
+    var col = 0;
+    while (col < numCols && colWidths.sum < maxWidth) {
+      colWidths += colWidth(col);
+      col += 1;
+    }
+
+    var rv = new scala.StringBuilder;
+    for (row <- 0 until (maxRows min numRows); col <- 0 until colWidths.length) {
+      val cell = mkValueString(this(row,col));
+      rv.append(cell);
+      rv.append(" " * (colWidths(col) - cell.length + 2));
+      if (col == colWidths.length - 1) {
+        if (col < numCols - 1) {
+          rv.append(" ...");
+        }
+        rv.append(System.getProperty("line.separator"));
+      }
+    }
+
+    rv.toString;
+  }
+
+  override def toString : String =
+    toString(maxRows = 20, maxWidth = 72);
+}
 
 trait Matrix[@specialized(Int,Long,Float,Double) B]
-extends MutableDomainTable[B]
-with Tensor2[Int,Int,B]
+extends Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
 object Matrix {
-  /** A Transpose of any Matrix type is a Matrix. */
-  trait TransposeLike
-  [@specialized(Int,Long,Float,Double) B,
-   +Coll <: Matrix[B], +This <: Transpose[B,Coll]]
-  extends Tensor2.TransposeLike[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
-  with MatrixLike[B,This] {
-    override def domain = underlying.domain.transpose.asInstanceOf[TableDomain];
-  }
-
-  trait Transpose
-  [@specialized(Int,Long,Float,Double) B,
-   +Coll <: Matrix[B]]
-  extends Tensor2.Transpose[Int,Int,B,Coll]
-  with Matrix[B] with TransposeLike[B, Coll, Transpose[B, Coll]];
-
-  /** Default implementation. */
-  class TransposeImpl[B, +Coll <: Matrix[B]]
-  (override val underlying : Coll)
-  (implicit override val scalar : Scalar[B])
-  extends Transpose[B,Coll];
-
-  /** A SliceTable of any Double-valued MutableDomainMap is a Matrix. */
-  trait SliceTableLike
-  [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
-   @specialized(Int,Long,Float,Double) B,
-   +D1<:IterableDomain[A1] with DomainLike[A1,D1],
-   +D2<:IterableDomain[A2] with DomainLike[A2,D2],
-   +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
-   +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
-   +Coll<:MutableDomainMap2[A1,A2,B],
-   +This<:SliceTable[A1,A2,B,Coll]]
-  extends MutableDomainMap2SliceTableLike[A1,A2,B,D1,D2,D,T,Coll,This]
-  with MatrixLike[B,This];
-
-  /** A SliceTable of any Double-valued MutableDomainMap is a Matrix. */
-  trait SliceTable
-  [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
-   @specialized(Int,Long,Float,Double) B,
-   +Coll<:MutableDomainMap2[A1,A2,B]]
-  extends MutableDomainMap2SliceTable[A1,A2,B,Coll]
-  with Matrix[B]
-  with SliceTableLike[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Coll,SliceTable[A1,A2,B,Coll]];
-
-  /** Slice of a Double valued MutableDomainMap2 */
-  class SliceFromKeySeqs
-  [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
-   @specialized(Int,Long,Float,Double) B,
-   +Coll<:MutableDomainMap2[A1,A2,B]]
-  (underlying : Coll, keys1 : Seq[A1], keys2 : Seq[A2])
-  (implicit override val scalar : Scalar[B])
-  extends MutableDomainMap2SliceTable.FromKeySeqs[A1,A2,B,Coll](underlying, keys1, keys2)
-  with SliceTable[A1,A2,B,Coll];
-
-  implicit def canTranspose[B:Scalar,M<:Matrix[B]] = new DomainMap2CanTransposeFrom[M, Int, Int, Double, Transpose[B,M]] {
-    override def apply(from : M) = new TransposeImpl[B,M](from);
+  implicit def canTranspose[B:Scalar] =
+  new CanTranspose[Matrix[B], Int, Int, Double, MatrixTranspose[B,Matrix[B]]] {
+    override def apply(from : Matrix[B]) = new MatrixTranspose.Impl[B,Matrix[B]](from);
   }
 }

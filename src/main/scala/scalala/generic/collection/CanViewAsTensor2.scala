@@ -21,8 +21,8 @@ package scalala;
 package generic;
 package collection;
 
-import tensor.Tensor2;
-import tensor.dense.ArrayArrayMatrix;
+import scalala.tensor.{Scalar,Tensor2};
+import scalala.tensor.dense.ArrayArrayMatrix;
 
 /**
  * View something as a Tensor1.

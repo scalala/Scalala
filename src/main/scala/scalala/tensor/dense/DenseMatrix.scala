@@ -21,11 +21,9 @@ package scalala;
 package tensor;
 package dense;
 
-import generic.Scalar;
-import collection.domain.TableDomain;
-import collection.generic.DomainMapCanMapValuesFrom;
+import generic.collection._;
 
-import collection.dense.{DenseMutableDomainTableLike,DenseMutableDomainTable};
+import domain.TableDomain;
 
 /**
  * A DenseMatrix is backed by an array of doubles, with each column
@@ -33,11 +31,47 @@ import collection.dense.{DenseMutableDomainTableLike,DenseMutableDomainTable};
  *
  * @author dramage
  */
-class DenseMatrix[B](numRows : Int, numCols : Int, data : Array[B])
+class DenseMatrix[@specialized(Int,Long,Float,Double) B]
+(numRows : Int, numCols : Int, override val data : Array[B])
 (implicit override val scalar : Scalar[B])
-extends DenseMutableDomainTable[B](numRows, numCols, data) with DenseMutableDomainTableLike[B,DenseMatrix[B]]
-with Matrix[B] with MatrixLike[B,DenseMatrix[B]] {
-//  override def copy = new DenseMatrix(numRows, numCols, data.clone);
+extends DenseArrayTensor[(Int,Int),B] with DenseArrayTensorLike[(Int,Int),B,TableDomain,DenseMatrix[B]]
+with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
+  if (numRows * numCols != data.length)
+    throw new IllegalArgumentException("data.length must equal numRows*numCols");
+
+  override val domain = TableDomain(numRows, numCols);
+
+  final def index(row : Int, col : Int) : Int = {
+    checkKey(row,col);
+    row + col * numRows;
+  }
+
+  final def unindex(index : Int) : (Int,Int) =
+    (rowIndex(index), colIndex(index));
+
+  final def rowIndex(index : Int) : Int =
+    (index % numRows);
+
+  final def colIndex(index : Int) : Int =
+    (index / numRows);
+
+  override def apply(row : Int, col : Int) =
+    data(index(row,col));
+
+  override def update(row : Int, col : Int, value : B) =
+    data(index(row,col)) = value;
+
+  override def foreachNonZero[U](fn : (((Int,Int),B)=>U)) =
+    this.foreach(fn);
+
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  override def transform(f : (Int,Int,B)=>B) = {
+    var i = 0;
+    while (i < data.length) {
+      data(i) = f(rowIndex(i),colIndex(i),data(i));
+      i += 1;
+    }
+  }
 }
 
 object DenseMatrix {
@@ -61,8 +95,8 @@ object DenseMatrix {
   // Capabilities
   //
 
-  class DenseMatrixCanMapValuesFrom[@specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
-  extends DomainMapCanMapValuesFrom[DenseMatrix[B],(Int,Int),B,R,DenseMatrix[R]] {
+  class DenseMatrixCanMapValues[@specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
+  extends CanMapValues[DenseMatrix[B],B,R,DenseMatrix[R]] {
     override def apply(from : DenseMatrix[B], fn : (B=>R)) = {
       val data = new Array[R](from.data.length);
       var i = 0;
@@ -72,7 +106,10 @@ object DenseMatrix {
       }
       new DenseMatrix[R](from.numRows, from.numCols, data);
     }
+  }
 
+  class DenseMatrixCanMapKeyValuePairs[@specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
+  extends CanMapKeyValuePairs[DenseMatrix[B],(Int,Int),B,R,DenseMatrix[R]] {
     override def apply(from : DenseMatrix[B], fn : (((Int,Int),B)=>R)) = {
       val data = new Array[R](from.data.length);
       var i = 0;
@@ -84,10 +121,13 @@ object DenseMatrix {
     }
   }
 
-  implicit def mkDenseMatrixCanMapValuesFrom[B,R:ClassManifest:Scalar] =
-    new DenseMatrixCanMapValuesFrom[B,R];
+  implicit def mkDenseMatrixCanMapValues[B,R:ClassManifest:Scalar] =
+    new DenseMatrixCanMapValues[B,R];
   
-  implicit object DenseMatrixCanMapValuesFromDD extends DenseMatrixCanMapValuesFrom[Double,Double];
-  implicit object DenseMatrixCanMapValuesFromII extends DenseMatrixCanMapValuesFrom[Int,Int];
-  implicit object DenseMatrixCanMapValuesFromID extends DenseMatrixCanMapValuesFrom[Int,Double];
+  implicit def mkDenseMatrixCanMapKeyValuePairs[B,R:ClassManifest:Scalar] =
+    new DenseMatrixCanMapKeyValuePairs[B,R];
+  
+  implicit object DenseMatrixCanMapValuesDD extends DenseMatrixCanMapValues[Double,Double];
+  implicit object DenseMatrixCanMapValuesII extends DenseMatrixCanMapValues[Int,Int];
+  implicit object DenseMatrixCanMapValuesID extends DenseMatrixCanMapValues[Int,Double];
 }

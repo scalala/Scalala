@@ -22,7 +22,7 @@ package scalala;
 package generic;
 package collection;
 
-import scalala.collection.domain._;
+import scalala.tensor.domain._;
 
 /**
  * Marker for being able to get the domain (keys) of a collection.

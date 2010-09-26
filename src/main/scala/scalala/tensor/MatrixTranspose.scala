@@ -19,29 +19,36 @@
  */
 package scalala;
 package tensor;
-package dense;
 
-import domain.TableDomain;
+import domain._
+import generic.tensor._;
+
+import mutable.TensorBuilder;
 
 /**
- * A matrix backed by an array of arrays of values.
- * Assumes row-major storage.
+ * A Transpose of any Matrix type is a Matrix.
  *
  * @author dramage
  */
-class ArrayArrayMatrix[B](val data : Array[Array[B]])
-(implicit override val scalar : Scalar[B])
-extends mutable.Matrix[B] with mutable.MatrixLike[B,ArrayArrayMatrix[B]] {
+trait MatrixTransposeLike
+[@specialized(Int,Long,Float,Double) B, +Coll <: Matrix[B], +This <: MatrixTranspose[B,Coll]]
+extends Tensor2TransposeLike[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
+with MatrixLike[B,This] {
+  override def domain = underlying.domain.transpose.asInstanceOf[TableDomain];
+}
 
-  if (data.map(_.length).distinct.size != 1) {
-    throw new IllegalArgumentException("All rows must be same length");
-  }
+/**
+ * A Transpose of any Matrix type is a Matrix.
+ *
+ * @author dramage
+ */
+trait MatrixTranspose[@specialized(Int,Long,Float,Double) B, +Coll <: Matrix[B]]
+extends Tensor2Transpose[Int,Int,B,Coll]
+with Matrix[B] with MatrixTransposeLike[B, Coll, MatrixTranspose[B, Coll]];
 
-  override val domain = new TableDomain(data.length, data(0).length);
-
-  override def apply(i : Int, j : Int) =
-    data(i)(j);
-
-  override def update(i : Int, j : Int, v : B) =
-    data(i)(j) = v;
+object MatrixTranspose {
+  class Impl[B, +Coll <: Matrix[B]]
+  (override val underlying : Coll)
+  (implicit override val scalar : Scalar[B])
+  extends MatrixTranspose[B,Coll];
 }

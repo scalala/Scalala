@@ -20,44 +20,71 @@
 package scalala;
 package tensor;
 
-import generic.Scalar;
-import collection._;
-import collection.domain._;
+import domain._;
+import generic._;
+import mutable.TensorBuilder;
 
 trait VectorLike[@specialized(Int,Long,Float,Double) B, +This<:Vector[B]]
-extends MutableDomainSeqLike[B,This]
-with Tensor1Like[Int,B,IndexDomain,This];
+extends Tensor1Like[Int,B,IndexDomain,This] { self =>
+
+  def size = domain.size;
+
+  override def newBuilder[C:Scalar] : TensorBuilder[Int,C,Vector[C]] =
+  new TensorBuilder[Int,C,Vector[C]] {
+    val rv = mutable.Vector[C](self.size);
+    def update(k : Int, v : C) = rv(k) = v;
+    def result = rv;
+  }
+
+  protected[this] def mkValueString(value : B) : String =
+    value.toString;
+
+  def toList =
+    List.tabulate(size)(i => this(i));
+
+  def toArray(implicit m : ClassManifest[B]) =
+    Array.tabulate(size)(i => this(i));
+
+  // TODO: improve this method to make it more Vector-like
+  override def toString = {
+    val rv = valuesIterator.take(10).map(mkValueString).mkString("\n");
+    if (size > 10) {
+      rv + "\n" + "...";
+    } else {
+      rv;
+    }
+  }
+}
 
 trait Vector[@specialized(Int,Long,Float,Double) B]
-extends MutableDomainSeq[B]
-with Tensor1[Int,B]
+extends Tensor1[Int,B]
 with VectorLike[B,Vector[B]];
 
 object Vector {
-  /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
-  trait SliceSeqLike
-  [@specialized(Int,Long) A,
-   @specialized(Int,Long,Float,Double) B,
-   D<:IterableDomain[A] with DomainLike[A,D],
-   +Coll <: MutableDomainMap[A,B],
-   +This <: SliceSeq[A, B, Coll]]
-  extends MutableDomainMapSliceSeqLike[A,D,B,Coll,This]
-  with VectorLike[B,This];
-
-  /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
-  trait SliceSeq
-  [@specialized(Int,Long) A,
-   @specialized(Int,Long,Float,Double) B,
-   +Coll <: MutableDomainMap[A,B]]
-  extends MutableDomainMapSliceSeq[A,B,Coll]
-  with Vector[B] with SliceSeqLike[A,B,IterableDomain[A],Coll,SliceSeq[A,B,Coll]];
-
-  class SliceFromKeySeq
-  [@specialized(Int,Long) A,
-   @specialized(Int,Long,Float,Double) B,
-   +Coll <: MutableDomainMap[A,B]]
-  (underlying : Coll, keys : Seq[A])
-  (implicit override val scalar : Scalar[B])
-  extends MutableDomainMapSliceSeq.FromKeySeq[A,B,Coll](underlying, keys)
-  with SliceSeq[A,B,Coll];
+//  /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
+//  trait SliceSeqLike
+//  [@specialized(Int,Long) A,
+//   @specialized(Int,Long,Float,Double) B,
+//   D<:IterableDomain[A] with DomainLike[A,D],
+//   +Coll<:MutableDomainMap[A,B],
+//   +This <: SliceSeq[A, B, Coll]]
+//  extends MutableDomainMapSliceSeqLike[A,D,B,Coll,This]
+//  with VectorLike[B,This];
+//
+//  /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
+//  trait SliceSeq
+//  [@specialized(Int,Long) A,
+//   @specialized(Int,Long,Float,Double) B,
+//   +Coll <: MutableDomainMap[A,B]]
+//  extends MutableDomainMapSliceSeq[A,B,Coll]
+//  with Vector[B] with SliceSeqLike[A,B,IterableDomain[A],Coll,SliceSeq[A,B,Coll]];
+//
+//  class SliceFromKeySeq
+//  [@specialized(Int,Long) A,
+//   @specialized(Int,Long,Float,Double) B,
+//   +Coll <: MutableDomainMap[A,B]]
+//  (underlying : Coll, keys : Seq[A])
+//  (implicit override val scalar : Scalar[B])
+//  extends MutableDomainMapSliceSeq.FromKeySeq[A,B,Coll](underlying, keys)
+//  with SliceSeq[A,B,Coll];
 }

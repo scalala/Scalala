@@ -21,23 +21,30 @@ package scalala;
 package tensor;
 package sparse;
 
-import generic.Scalar;
+import domain.IndexDomain;
 
-import collection.{MutableDomainSeq,MutableDomainSeqLike};
-import collection.generic.DomainMapCanMapValuesFrom;
-import collection.sparse.{SparseMutableDomainSeq,SparseMutableDomainSeqLike};
-
-import collection.sparse.{SparseArray,DefaultArrayValue};
+import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
 /**
- * A DenseVector is backed by an array of doubles.
+ * A vector backed by a SparseArray.
  *
  * @author dramage
  */
-class SparseVector[B](data : SparseArray[B])
+class SparseVector[@specialized(Int,Long,Float,Double) B]
+(override val data : SparseArray[B])
 (implicit override val scalar : Scalar[B])
-extends SparseMutableDomainSeq[B](data) with SparseMutableDomainSeqLike[B,SparseVector[B]]
-with Vector[B] with VectorLike[B,SparseVector[B]] {
+extends SparseArrayTensor[Int,B] with SparseArrayTensorLike[Int,B,IndexDomain,SparseVector[B]]
+with mutable.Vector[B] with mutable.VectorLike[B,SparseVector[B]] {
+  override def size = data.length;
+
+  override val domain = IndexDomain(data.length);
+
+  override def apply(key : Int) =
+    data(key);
+
+  override def update(key : Int, value : B) =
+    data(key) = value;
+
   override def foreachNonZero[U](fn : (B=>U)) =
     data.foreachActive(fn);
 

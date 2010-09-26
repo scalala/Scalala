@@ -20,59 +20,66 @@
 package scalala;
 package tensor;
 
-import collection._;
-import collection.domain._;
+import domain._;
+import generic.tensor._;
 
 /**
- * Implementation trait for a tensor indexed by two values; e.g. the basis
- * of a Matrix.
+ * Implementation trait for domain maps indexed by two keys.
  *
  * @author dramage
  */
 trait Tensor2Like
 [@specialized(Int) A1, @specialized(Int) A2,
- @specialized(Int,Long,Float,Double) B,
+ @specialized(Int,Long,Float,Double,Boolean) B,
  +D1<:IterableDomain[A1] with DomainLike[A1,D1],
  +D2<:IterableDomain[A2] with DomainLike[A2,D2],
  +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
  +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
  +This<:Tensor2[A1,A2,B]]
-extends TensorLike[(A1,A2),B,D,This]
-with MutableDomainMap2Like[A1,A2,B,D1,D2,D,T,This] {
+extends TensorLike[(A1,A2),B,D,This] {
+  def checkKey(k1 : A1, k2 : A2) : Unit = {
+    if (!domain._1.contains(k1) || !domain._2.contains(k2)) {
+      throw new DomainException((k1,k2)+" not in domain");
+    }
+  }
+
+  /* final */ override def checkKey(pos : (A1,A2)) : Unit =
+    checkKey(pos._1, pos._2);
+
+  /** Gets the value indexed by (i,j). */
+  def apply(i : A1, j : A2) : B;
+
+  /** Fixed alias for apply(i,j). */
+  /* final */ override def apply(pos : (A1,A2)) : B =
+    apply(pos._1, pos._2);
+
+  /** Slice a sub-Tensor2 */
+  def apply[That](i : Seq[A1], j : Seq[A2])
+  (implicit bf : CanSliceMatrix[This,A1,A2,B,That]) : That =
+    bf.apply(repr, i, j);
+
+  /** Transpose this Tensor2. */
+  def transpose[That]
+  (implicit bf : CanTranspose[This,A1,A2,B,That]) : That =
+    bf.apply(repr);
 }
 
-/**
- * A tensor indexed by two values; e.g. the basis of a Matrix.
- *
- * @author dramage
- */
 trait Tensor2
-[@specialized(Int) A1, @specialized(Int) A2, @specialized(Int,Long,Float,Double) B]
+[@specialized(Int) A1, @specialized(Int) A2,
+ @specialized(Int,Long,Float,Double,Boolean) B]
 extends Tensor[(A1,A2),B]
-with MutableDomainMap2[A1,A2,B]
-with Tensor2Like[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Tensor2[A1,A2,B]];
-
+with Tensor2Like[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Tensor2[A1,A2,B]]
 
 object Tensor2 {
-  /** A transpose of any Tensor2 is a Tensor2. */
-  trait TransposeLike
-  [@specialized(Int) A2, @specialized(Int) A1,
-   @specialized(Int,Long,Float,Double) B,
-   +D2<:IterableDomain[A2] with DomainLike[A2,D2],
-   +D1<:IterableDomain[A1] with DomainLike[A1,D1],
-   +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
-   +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
-   +Coll<:Tensor2[A1,A2,B],
-   +This<:Transpose[A2,A1,B,Coll]]
-  extends MutableDomainMap2TransposeLike[A2,A1,B,D2,D1,T,D,Coll,This]
-  with Tensor2Like[A2,A1,B,D2,D1,T,D,This];
+  implicit def canSliceMatrix[A1,A2,B:Scalar] = new CanSliceMatrix
+  [Tensor2[A1,A2,B],A1,A2,B,MatrixSlice[A1,A2,B,Tensor2[A1,A2,B]]] {
+    override def apply(from : Tensor2[A1,A2,B], keys1 : Seq[A1], keys2 : Seq[A2]) =
+      new MatrixSlice.FromKeySeqs[A1,A2,B,Tensor2[A1,A2,B]](from, keys1, keys2);
+  }
 
-  /** A transpose of any Tensor2 is a Tensor2. */
-  trait Transpose
-  [@specialized(Int) A2, @specialized(Int) A1,
-   @specialized(Int,Long,Float,Double) B,
-   +Coll <: Tensor2[A1,A2,B]]
-  extends MutableDomainMap2Transpose[A2,A1,B,Coll]
-  with Tensor2[A2,A1,B]
-  with TransposeLike[A2,A1,B,IterableDomain[A2],IterableDomain[A1],Product2Domain[A2,A1],Product2Domain[A1,A2],Coll,Transpose[A2,A1,B,Coll]];
+  implicit def canTranspose[A2,A1,B:Scalar] = new CanTranspose
+  [Tensor2[A1,A2,B],A1,A2,B,Tensor2Transpose[A2,A1,B,Tensor2[A1,A2,B]]] {
+    override def apply(input : Tensor2[A1,A2,B]) =
+      new Tensor2Transpose.Impl[A2,A1,B,Tensor2[A1,A2,B]](input);
+  }
 }

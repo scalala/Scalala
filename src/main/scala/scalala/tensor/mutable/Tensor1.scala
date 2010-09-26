@@ -18,25 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
-package generic;
-package collection;
+package tensor;
+package mutable;
 
-import org.scalacheck._
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith;
+import domain._;
 
-@RunWith(classOf[JUnitRunner])
-class CanGetValueTest extends FunSuite with Checkers {
-  def get[Coll,K,V](coll : Coll, k : K)(implicit get : CanGetValue[Coll,K,V]) =
-    get(coll, k);
+/**
+ * Implementation trait for a one-axis tensor supports methods like norm
+ * and inner products (dot) with other one-axis tensors.
+ *
+ * @author dramage
+ */
+trait Tensor1Like
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
+ +D<:IterableDomain[A] with DomainLike[A,D], +This<:Tensor1[A,B]]
+extends tensor.Tensor1Like[A,B,D,This] with TensorLike[A,B,D,This] {
 
-  test("array") {
-    assert(get(Array(1.0,2.0,3.0),1) === 2.0);
-  }
-
-  test("map") {
-    assert(get(Map('a'->1,'b'->2), 'b') === 2);
-  }
 }
+
+trait Tensor1
+[@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B]
+extends tensor.Tensor1[A,B] with Tensor[A,B]
+with Tensor1Like[A,B,IterableDomain[A],Tensor1[A,B]];

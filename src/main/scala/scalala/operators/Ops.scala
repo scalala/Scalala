@@ -22,7 +22,8 @@ package scalala;
 package operators;
 
 import generic._;
-import scalala.collection.domain.DomainException;
+import scalala.tensor.Scalar;
+import scalala.tensor.domain.DomainException;
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
 trait NumericOps[+This] {

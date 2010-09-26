@@ -23,9 +23,9 @@ package collection;
 
 import scalala.collection.sparse.SparseArray;
 
-import tensor.Tensor1;
-import tensor.dense.DenseVector;
-import tensor.sparse.SparseVector;
+import scalala.tensor.{Scalar,Tensor1};
+import scalala.tensor.dense.DenseVector;
+import scalala.tensor.sparse.SparseVector;
 
 /**
  * View something as a Tensor1.
