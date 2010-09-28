@@ -33,7 +33,8 @@ import domain._;
 trait Tensor1Like
 [@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B,
  +D<:IterableDomain[A] with DomainLike[A,D], +This<:Tensor1[A,B]]
-extends TensorLike[A,B,D,This] {
+extends TensorLike[A,B,D,This]
+with operators.ColumnTensorOps[This] {
   /** Returns the k-norm of this tensor. */
   def norm(n : Double) : Double = {
     if (n == 1) {
@@ -61,6 +62,11 @@ extends TensorLike[A,B,D,This] {
     var sum = scalar.zero;
     foreachNonZero((k,v) => sum = add(sum, mul(v, that(k))));
     sum;
+  }
+
+  override protected def canEqual(other : Any) : Boolean = other match {
+    case that : Tensor1[_,_] => true;
+    case _ => false;
   }
 }
 

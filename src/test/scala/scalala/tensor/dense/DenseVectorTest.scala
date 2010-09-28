@@ -60,8 +60,8 @@ class DenseVectorTest extends FunSuite with Checkers {
   }
 
 //  test("Map") {
-//    val a : DenseVector = DenseVector(5)(1,2,3,4,5);
-//    val m : DenseVector = a.mapValues(_ + 1);
+//    val a : DenseVector[Int] = DenseVector(5)(1,2,3,4,5);
+//    val m : DenseVector[Int] = a.mapValues(_ + 1);
 //    assert(m.data.toList === List(2,3,4,5,6));
 //  }
 

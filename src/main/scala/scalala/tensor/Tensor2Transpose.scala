@@ -50,6 +50,8 @@ self =>
 
 /**
  * Transposed view of an underlying Tensor2.
+ *
+ * @author dramage
  */
 trait Tensor2Transpose
 [@specialized(Int) A2, @specialized(Int) A1,
@@ -67,6 +69,5 @@ object Tensor2Transpose {
   (override implicit val scalar : Scalar[B])
   extends Tensor2Transpose[A2,A1,B,Coll] {
     override val domain = underlying.domain.transpose;
-    // override def copy = new Impl[A2,A1,B,D2,D1,ID,OD,Coll](underlying.copy, domain.copy);
   }
 }

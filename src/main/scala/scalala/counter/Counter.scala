@@ -31,9 +31,7 @@
 // * where the domain semantics are to automatically grow to accomodate new
 // * requests, as opposed to throwing an exception on out of domain tokens.
 // */
-//trait CounterLike
-//[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
-// +This <: Counter[A,B]]
+//trait CounterLike[A, @specialized(Int,Long,Float,Double) B, +This <: Counter[A,B]]
 //extends MutableNumericTensorLike[A,B,SetDomain[A],This]
 //{
 //  def default : B;
@@ -52,7 +50,7 @@
 //extends MutableNumericTensor[A,B] with CounterLike[A,B,Counter[A,B]];
 //
 //object Counter {
-//  def count[@specialized X](values : Iterator[X]) : Counter[X,Int] = {
+//  def count[@specialized X](values : TraversableOnce[X]) : Counter[X,Int] = {
 //    val rv = HashMapCounter[X,Int]();
 //    for (value <- values) {
 //      rv(value) += 1;
@@ -61,10 +59,6 @@
 //  }
 //}
 //
-////class OpenAddressCounter
-////[@specialized(Int,Long) A:ClassManifest, @speicalized(Int,Long,Float,Double) B:scala.collection.numeric.Numeric:ClassManifest] {
-////
-////}
 //
 //class HashMapCounter
 //[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B:scalala.collection.numeric.Numeric]

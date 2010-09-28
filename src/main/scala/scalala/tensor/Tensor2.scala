@@ -24,7 +24,7 @@ import domain._;
 import generic.tensor._;
 
 /**
- * Implementation trait for domain maps indexed by two keys.
+ * Implementation trait for tensors indexed by two keys, such as Matrices.
  *
  * @author dramage
  */
@@ -54,9 +54,14 @@ extends TensorLike[(A1,A2),B,D,This] {
     apply(pos._1, pos._2);
 
   /** Slice a sub-Tensor2 */
-  def apply[That](i : Seq[A1], j : Seq[A2])
-  (implicit bf : CanSliceMatrix[This,A1,A2,That]) : That =
+  def apply[That](i : Seq[A1], j : Seq[A2])(implicit bf : CanSliceMatrix[This,A1,A2,That]) : That =
     bf.apply(repr, i, j);
+
+  def apply[That](i : A1, j : SelectAll)(implicit bf : CanSliceRow[This,A1,That]) : That =
+    bf.apply(repr, i);
+
+  def apply[That](i : SelectAll, j : A2)(implicit bf : CanSliceCol[This,A2,That]) : That =
+    bf.apply(repr, j);
 
   /** Transpose this Tensor2. */
   def transpose[That]
@@ -79,8 +84,17 @@ extends TensorLike[(A1,A2),B,D,This] {
   /* final */ override def foreachNonZero[U](f : ((A1,A2),B)=>U) =
     foreachNonZero((k1,k2,v) => f((k1,k2),v));
 
+  override protected def canEqual(other : Any) : Boolean = other match {
+    case that : Tensor2[_,_,_] => true;
+    case _ => false;
+  }
 }
 
+/**
+ * Tensors indexed by two keys, such as matrices.
+ *
+ * @author dramage
+ */
 trait Tensor2
 [@specialized(Int) A1, @specialized(Int) A2,
  @specialized(Int,Long,Float,Double,Boolean) B]
@@ -99,4 +113,47 @@ object Tensor2 {
     override def apply(input : Tensor2[A1,A2,B]) =
       new Tensor2Transpose.Impl[A2,A1,B,Tensor2[A1,A2,B]](input);
   }
+
+  implicit def canSliceRow[A1,A2,B:Scalar] : CanSliceRow[Tensor2[A1,A2,B],A1,RowSlice[A1,A2,B,Tensor2[A1,A2,B]]]
+  = new CanSliceRow[Tensor2[A1,A2,B],A1,RowSlice[A1,A2,B,Tensor2[A1,A2,B]]] {
+    override def apply(from : Tensor2[A1,A2,B], row : A1) =
+      new RowSliceImpl[A1,A2,B,Tensor2[A1,A2,B]](from,row);
+  }
+
+  implicit def canSliceCol[A1,A2,B:Scalar] : CanSliceCol[Tensor2[A1,A2,B],A2,ColSlice[A1,A2,B,Tensor2[A1,A2,B]]]
+  = new CanSliceCol[Tensor2[A1,A2,B],A2,ColSlice[A1,A2,B,Tensor2[A1,A2,B]]] {
+    override def apply(from : Tensor2[A1,A2,B], col : A2) =
+      new ColSliceImpl[A1,A2,B,Tensor2[A1,A2,B]](from, col);
+  }
+
+  trait RowSliceLike[A1,A2,B,+Coll<:Tensor2[A1,A2,B],+This<:RowSlice[A1,A2,B,Coll]]
+  extends Tensor1Slice[(A1,A2),A2,B,Tensor2[A1,A2,B]] {
+    def row : A1;
+    override val domain = underlying.domain._2;
+    override def lookup(key : A2) = (row,key);
+  }
+
+  trait RowSlice[A1,A2,B,+Coll<:Tensor2[A1,A2,B]]
+  extends RowSliceLike[A1,A2,B,Coll,RowSlice[A1,A2,B,Coll]];
+
+  class RowSliceImpl[A1,A2,B,+Coll<:Tensor2[A1,A2,B]]
+  (override val underlying : Coll, override val row : A1)
+  (implicit override val scalar : Scalar[B])
+  extends RowSlice[A1,A2,B,Coll];
+
+
+  trait ColSliceLike[A1,A2,B,+Coll<:Tensor2[A1,A2,B],+This<:ColSlice[A1,A2,B,Coll]]
+  extends Tensor1Slice[(A1,A2),A1,B,Tensor2[A1,A2,B]] {
+    def col : A2;
+    override val domain = underlying.domain._1;
+    override def lookup(key : A1) = (key,col);
+  }
+
+  trait ColSlice[A1,A2,B,+Coll<:Tensor2[A1,A2,B]]
+  extends ColSliceLike[A1,A2,B,Coll,ColSlice[A1,A2,B,Coll]];
+
+  class ColSliceImpl[A1,A2,B,+Coll<:Tensor2[A1,A2,B]]
+  (override val underlying : Coll, override val col : A2)
+  (implicit override val scalar : Scalar[B])
+  extends ColSlice[A1,A2,B,Coll];
 }

@@ -85,6 +85,11 @@ self =>
 
   override def toString : String =
     toString(maxRows = 20, maxWidth = 72);
+
+  override protected def canEqual(other : Any) : Boolean = other match {
+    case that : Matrix[_] => true;
+    case _ => false;
+  }
 }
 
 trait Matrix[@specialized(Int,Long,Float,Double) B]

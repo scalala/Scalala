@@ -41,6 +41,16 @@ class SparseArrayTest extends FunSuite with Checkers {
     assert((-a).toList === List(-1,0,-3));
   }
 
+  test("Zeros") {
+    val a = mk(1,0,3);
+    val b = mk(4,5,0);
+
+    assert((a :+: b).toList === List(5,5,3));
+    assert((b :+: a).toList === List(5,5,3));
+    assert((a :- b).toList === List(-3,-5,3));
+    assert((a :* b).toList === List(4,0,0));
+  }
+
   test("Collection Ops") {
     val a = mk(1,2,3);
     val b = mk(4,5,6);

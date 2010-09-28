@@ -62,4 +62,9 @@ object Matrix {
 
   def apply[B](numRows : Int, numCols : Int)(implicit scalar : Scalar[B]) =
     new Impl(numRows, numCols, IndexedSeq.tabulate(numRows)(r => IndexedSeq.fill(numCols)(scalar.zero)));
+
+  implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] =
+  new CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] {
+    override def apply(from : Matrix[B]) = new MatrixTranspose.Impl[B,Matrix[B]](from);
+  }
 }

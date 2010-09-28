@@ -54,6 +54,11 @@ extends Tensor1Like[Int,B,IndexDomain,This] { self =>
       rv;
     }
   }
+
+  override protected def canEqual(other : Any) : Boolean = other match {
+    case that : Vector[_] => true;
+    case _ => false;
+  }
 }
 
 trait Vector[@specialized(Int,Long,Float,Double) B]

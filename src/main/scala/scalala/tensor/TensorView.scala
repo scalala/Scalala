@@ -113,28 +113,36 @@ object TensorView {
 
   implicit def mkTransformCanMapValues[A, B1, B2, B3:Scalar] =
   new CanMapValues[TransformView[A,B1,B2,Tensor[A,B1]],B2,B3,TransformView[A,B1,B3,Tensor[A,B1]]] {
-    override def apply(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : (B2=>B3)) =
+    override def map(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : (B2=>B3)) =
       new TransformImpl[A,B1,B3,Tensor[A,B1]](
         from.underlying, ((k:A, v:B1) => fn(from.transform(k,v))));
+    override def mapNonZero(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : (B2=>B3)) =
+      map(from, fn);
   }
 
   implicit def mkTransformCanMapKeyValuePairs[A, B1, B2, B3:Scalar] =
   new CanMapKeyValuePairs[TransformView[A,B1,B2,Tensor[A,B1]],A,B2,B3,TransformView[A,B1,B3,Tensor[A,B1]]] {
-    override def apply(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : ((A,B2)=>B3)) =
+    override def map(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : ((A,B2)=>B3)) =
       new TransformImpl[A,B1,B3,Tensor[A,B1]](
         from.underlying, ((k:A, v:B1) => fn(k,from.transform(k,v))));
+    override def mapNonZero(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : ((A,B2)=>B3)) =
+      map(from, fn);
   }
 
   /** Override canMapValues on TensorView instances to construct a lazy view. */
   implicit def mkIdentityCanMapValues[A, B1, B2:Scalar] =
   new CanMapValues[IdentityView[A,B1,Tensor[A,B1]],B1,B2,TransformView[A,B1,B2,Tensor[A,B1]]] {
-    override def apply(from : IdentityView[A,B1,Tensor[A,B1]], fn : (B1=>B2)) =
+    override def map(from : IdentityView[A,B1,Tensor[A,B1]], fn : (B1=>B2)) =
       new TransformImpl[A,B1,B2,Tensor[A,B1]](from.underlying, ((k:A,v:B1) => fn(v)));
+    override def mapNonZero(from : IdentityView[A,B1,Tensor[A,B1]], fn : (B1=>B2)) =
+      map(from, fn);
   }
 
   implicit def mkIdentityCanMapKeyValuePairs[A, B1, B2:Scalar] =
   new CanMapKeyValuePairs[IdentityView[A,B1,Tensor[A,B1]],A,B1,B2,TransformView[A,B1,B2,Tensor[A,B1]]] {
-    override def apply(from : IdentityView[A,B1,Tensor[A,B1]], fn : ((A,B1)=>B2)) =
+    override def map(from : IdentityView[A,B1,Tensor[A,B1]], fn : ((A,B1)=>B2)) =
       new TransformImpl[A,B1,B2,Tensor[A,B1]](from.underlying, fn);
+    override def mapNonZero(from : IdentityView[A,B1,Tensor[A,B1]], fn : ((A,B1)=>B2)) =
+      map(from, fn);
   }
 }

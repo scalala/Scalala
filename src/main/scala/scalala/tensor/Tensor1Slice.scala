@@ -19,28 +19,29 @@
  */
 package scalala;
 package tensor;
-package mutable;
 
 import domain._;
 
 /**
- * Implementation trait for mutable Tensor1 instances.
+ * Implementation trait for a Tensor1 view of a slice of keys from a Tensor.
  *
  * @author dramage
  */
-trait Tensor1Like
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
- +D<:IterableDomain[A] with DomainLike[A,D], +This<:Tensor1[A,B]]
-extends tensor.Tensor1Like[A,B,D,This] with TensorLike[A,B,D,This] {
-
-}
+trait Tensor1SliceLike
+[@specialized(Int,Long) A1, +D1<:IterableDomain[A1] with DomainLike[A1,D1],
+ @specialized(Int,Long) A2, +D2<:IterableDomain[A2] with DomainLike[A2,D2],
+ @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:Tensor[A1,B],
+ +This<:Tensor1Slice[A1,A2,B,Coll]]
+extends TensorSliceLike[A1, D1, A2, D2, B, Coll, This]
+with Tensor1Like[A2, B, D2, This];
 
 /**
- * Mutable tensor.Tensor1.
+ * A Tensor1 view of a slice of keys from a Tensor.
  *
  * @author dramage
  */
-trait Tensor1
-[@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B]
-extends tensor.Tensor1[A,B] with Tensor[A,B]
-with Tensor1Like[A,B,IterableDomain[A],Tensor1[A,B]];
+trait Tensor1Slice
+[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
+ @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:Tensor[A1,B]]
+extends TensorSlice[A1,A2,B,Coll] with Tensor1[A2,B]
+with Tensor1SliceLike[A1, IterableDomain[A1], A2, IterableDomain[A2], B, Coll, Tensor1Slice[A1, A2, B, Coll]];

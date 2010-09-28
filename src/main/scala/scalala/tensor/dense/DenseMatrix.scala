@@ -110,7 +110,7 @@ object DenseMatrix {
 
   class DenseMatrixCanMapValues[@specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
   extends CanMapValues[DenseMatrix[B],B,R,DenseMatrix[R]] {
-    override def apply(from : DenseMatrix[B], fn : (B=>R)) = {
+    override def map(from : DenseMatrix[B], fn : (B=>R)) = {
       val data = new Array[R](from.data.length);
       var i = 0;
       while (i < data.length) {
@@ -119,11 +119,14 @@ object DenseMatrix {
       }
       new DenseMatrix[R](from.numRows, from.numCols, data);
     }
+
+    override def mapNonZero(from : DenseMatrix[B], fn : (B=>R)) =
+      map(from, fn);
   }
 
   class DenseMatrixCanMapKeyValuePairs[@specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
   extends CanMapKeyValuePairs[DenseMatrix[B],(Int,Int),B,R,DenseMatrix[R]] {
-    override def apply(from : DenseMatrix[B], fn : (((Int,Int),B)=>R)) = {
+    override def map(from : DenseMatrix[B], fn : (((Int,Int),B)=>R)) = {
       val data = new Array[R](from.data.length);
       var i = 0;
       while (i < data.length) {
@@ -132,6 +135,9 @@ object DenseMatrix {
       }
       new DenseMatrix(from.numRows, from.numCols, data);
     }
+    
+    override def mapNonZero(from : DenseMatrix[B], fn : (((Int,Int),B)=>R)) =
+      map(from, fn);
   }
 
   implicit def mkDenseMatrixCanMapValues[B,R:ClassManifest:Scalar] =

@@ -30,9 +30,10 @@ import domain._;
  */
 trait VectorSliceLike
 [@specialized(Int,Long) A, +D<:IterableDomain[A] with DomainLike[A,D],
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:Tensor[A,B],
+ @specialized(Int,Long,Float,Double,Boolean) B,
+ +Coll<:Tensor[A,B],
  +This<:VectorSlice[A,B,Coll]]
-extends TensorSliceLike[A, D, Int, IndexDomain, B, Coll, This]
+extends Tensor1SliceLike[A, D, Int, IndexDomain, B, Coll, This]
 with VectorLike[B, This];
 
 /**
@@ -43,7 +44,7 @@ with VectorLike[B, This];
 trait VectorSlice
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
  +Coll<:Tensor[A, B]]
-extends TensorSlice[A,Int,B,Coll] with Vector[B]
+extends Tensor1Slice[A,Int,B,Coll] with Vector[B]
 with VectorSliceLike[A, IterableDomain[A], B, Coll, VectorSlice[A, B, Coll]];
 
 object VectorSlice {

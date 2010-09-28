@@ -56,6 +56,9 @@ trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
 
   /** Returns this value as a Double.  May throw UnsupportedOperationException. */
   def toDouble(a : V) : Double;
+
+  /** Returns true if this is not a number. */
+  def isNaN(a : V) : Boolean;
 }
 
 object Scalar {
@@ -74,6 +77,7 @@ object Scalar {
     def /(a : Int, b : Int) = a / b;
     def norm(a : Int) = if (a < 0) -a else a;
     def toDouble(a : Int) = a;
+    def isNaN(a : Int) = false;
   }
 
   implicit object ScalarS extends Scalar[Short] {
@@ -91,6 +95,7 @@ object Scalar {
     def /(a : Short, b : Short) = (a / b).asInstanceOf[Short];
     def norm(a : Short) = if (a < 0) -a else a;
     def toDouble(a : Short) = a;
+    def isNaN(a : Short) = false;
   }
 
   implicit object ScalarL extends Scalar[Long] {
@@ -108,6 +113,7 @@ object Scalar {
     def /(a : Long, b : Long) = a / b;
     def norm(a : Long) = if (a < 0) -a else a;
     def toDouble(a : Long) = a;
+    def isNaN(a : Long) = false;
   }
 
   implicit object scalarF extends Scalar[Float] {
@@ -125,6 +131,7 @@ object Scalar {
     def /(a : Float, b : Float) = a / b;
     def norm(a : Float) = if (a < 0) -a else a;
     def toDouble(a : Float) = a;
+    def isNaN(a : Float) = java.lang.Float.isNaN(a);
   }
 
   implicit object scalarD extends Scalar[Double] {
@@ -142,6 +149,7 @@ object Scalar {
     def /(a : Double, b : Double) = a / b;
     def norm(a : Double) = if (a < 0) -a else a;
     def toDouble(a : Double) = a;
+    def isNaN(a : Double) = java.lang.Double.isNaN(a);
   }
 
   implicit object scalarB extends Scalar[Boolean] {
@@ -159,5 +167,6 @@ object Scalar {
     def /(a : Boolean, b : Boolean) = throw new UnsupportedOperationException();
     def norm(a : Boolean) = if (a) 1.0 else 0.0;
     def toDouble(a : Boolean) = if (a) 1.0 else 0.0;
+    def isNaN(a : Boolean) = false;
   }
 }

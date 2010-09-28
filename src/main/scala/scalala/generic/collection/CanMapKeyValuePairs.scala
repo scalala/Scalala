@@ -29,5 +29,9 @@ package collection;
  * @author dramage
  */
 trait CanMapKeyValuePairs[-From, K, A, B, +To] {
-  def apply(from : From, fn : ((K,A)=>B)) : To;
+  /** Maps all key-value pairs from the given collection. */
+  def map(from : From, fn : ((K,A) => B)) : To;
+
+  /** Maps all non-zero key-value pairs from the given collection. */
+  def mapNonZero(from : From, fn : ((K,A) => B)) : To;
 }

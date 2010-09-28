@@ -29,14 +29,21 @@ import generic.tensor._;
  *
  * @author dramage.
  */
-trait VectorLike
-[@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:Vector[B]]
+trait VectorLike[@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:Vector[B]]
 extends tensor.VectorLike[B,Repr] with TensorLike[Int,B,IndexDomain,Repr] {
 
   def := (seq : Seq[B]) = {
-    if (seq.length != domain.size) {
-      throw new DomainException("Invalid sequence length: "+seq.length+" should be "+domain.size);
+    checkDomain(IndexDomain(seq.length));
+
+    var i = 0;
+    for (v <- seq) {
+      this(i) = v;
+      i += 1;
     }
+  }
+
+  def :=[O] (seq : Seq[O])(implicit tf : O=>B) = {
+    checkDomain(IndexDomain(seq.length));
 
     var i = 0;
     for (v <- seq) {

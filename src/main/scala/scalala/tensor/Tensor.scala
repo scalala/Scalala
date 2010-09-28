@@ -21,15 +21,16 @@ package scalala;
 package tensor;
 
 import domain._;
+import generic.{CanAdd,CanMul,CanSub,CanDiv,CanMod,CanPow};
 import generic.collection._;
 import generic.tensor._;
 
 import mutable.TensorBuilder;
 
 /**
- * A Tensor is a DomainFunction backed by an IterableDomain, i.e. it is
- * a function for which its domain can be enumerated, so that we can support
- * map-like operations of forach, mapValues, etc.
+ * A Tensor is a map from keys A (with a domain) to numeric scalar values B.
+ * More specific operations are available on tensors indexed by a single key
+ * (Tensor1, Vector) or pair of keys (Tensor2, Matrix).
  *
  * @author dramage
  */
@@ -38,9 +39,12 @@ trait TensorLike
  @specialized(Int, Long, Float, Double, Boolean) B,
  +D<:IterableDomain[A] with DomainLike[A,D],
  +Repr<:Tensor[A,B]]
-extends DomainFunction[A, B, D] with operators.NumericOps[Repr]
-{
+extends DomainFunction[A, B, D]
+with operators.NumericOps[Repr] {
 self =>
+
+  // TODO: replace this with a generic parameter
+  type Bound[V] = Tensor[A,V];
 
   protected type Self = Repr;
 
@@ -57,32 +61,33 @@ self =>
     def result = rv;
   }
 
-//  //
-//  // for-comprehensions.
-//  //
-//  // Note:
-//  // 1. flatMap doesn't make sense here because the value types are
-//  //    always scalar, so you can't do { for ((k,v) <- tensor; value <- v) yield ... }.
-//  //    Although I guess you might want to iterate over they key types, k,
-//  //    but I'm not supporting that.
-//  //
-//  // 2. filter doesn't make sense because removing some elements from
-//  //    the domain is not well defined.
-//  //
-//
-//  /**
-//   * Applies the given function to each element of the domain and
-//   * its corresponding value (boxed version used by "for").
-//   */
-//  def foreach[U](f: ((A,B)) => U) : Unit =
-//    this.foreach((k,v) => f((k,v)));
-//
-//  /**
-//   * For-comprehension support for "for ((k,v) <- x) yield ..."
-//   */
-//  def map[O, That](f: ((A,B)) => O)
-//  (implicit map: CanMapValues[Repr, B, O, That]): That =
-//    this.map((k,v) => f((k,v)));
+  //
+  // for-comprehensions.
+  //
+  // Note:
+  // 1. flatMap doesn't make sense here because the value types are
+  //    always scalar, so you can't do { for ((k,v) <- tensor; value <- v) yield ... }.
+  //    Although I guess you might want to iterate over they key types, k,
+  //    but I'm not supporting that.
+  //
+  // 2. filter doesn't make sense because removing some elements from
+  //    the domain is not well defined.
+  //
+
+  /**
+   * For-comprension support for "for ((k,v) <- x) ...".
+   * Defers to un-tupled alternate foreach.
+   */
+  def foreach[U](f: ((A,B)) => U) : Unit =
+    this.foreach((k,v) => f((k,v)));
+
+  /**
+   * For-comprehension support for "for ((k,v) <- x) yield ..."
+   * Defers to un-tupled map.
+   */
+  def map[O, That](f: ((A,B)) => O)
+  (implicit map: CanMapKeyValuePairs[Repr, A, B, O, That]): That =
+    this.map((k,v) => f((k,v)));
 
   //
   // Collection contents
@@ -124,6 +129,25 @@ self =>
     true;
   }
 
+  /** Creates a new map containing a transformed copy of this map. */
+  def map[O,That](f : (A,B) => O)
+  (implicit bf : CanMapKeyValuePairs[Repr, A, B, O, That]) : That =
+    bf.map(repr, f);
+
+  /** Maps all non-zero key-value pairs values. */
+  def mapNonZero[O,That](f : (A,B) => O)
+  (implicit bf : CanMapKeyValuePairs[Repr, A, B, O, That]) : That =
+    bf.mapNonZero(repr, f);
+
+  /** Creates a new map containing a transformed copy of this map. */
+  def mapValues[O,That](f : B => O)
+  (implicit bf : CanMapValues[Repr, B, O, That]) : That =
+    bf.map(repr, f);
+
+  def mapNonZeroValues[O,That](f : B => O)
+  (implicit bf : CanMapValues[Repr, B, O, That]) : That =
+    bf.mapNonZero(repr, f);
+
   /** Iterates over all elements in the domain and the corresponding value. */
   def iterator : Iterator[(A,B)] =
     domain.iterator.map(k => (k,this(k)));
@@ -151,23 +175,31 @@ self =>
   (implicit bf : CanSliceVector[Repr, A, That]) : That =
     apply(find(p));
 
-  /** Creates a new map containing a transformed copy of this map. */
-  def map[O,That](f : (A,B) => O)
-  (implicit bf : CanMapKeyValuePairs[Repr, A, B, O, That]) : That =
-    bf.apply(repr, f);
-
-  /** Creates a new map containing a transformed copy of this map. */
-  def mapValues[O,That](f : B => O)
-  (implicit bf : CanMapValues[Repr, B, O, That]) : That =
-    bf.apply(repr, f);
-
   /**
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map.
    */
-  def join[V2,RV,That](m : Tensor[A,V2])(fn : (A,B,V2) => RV)
-  (implicit bf : CanJoin[Repr, Tensor[A,V2], A, B, V2, RV, That]) : That =
-    bf.apply(repr, m, fn);
+  def join[V2,RV,That](tensor : Bound[V2])(fn : (B,V2) => RV)
+  (implicit bf : CanJoinValues[Repr, Bound[V2], B, V2, RV, That]) : That =
+    bf.joinAll(repr, tensor, fn);
+
+  /**
+   * Creates a new Tensor over the same domain using the given value
+   * function to create each return value in the map where keys in
+   * both this and m are non-zero.
+   */
+  def joinBothNonZero[V2,RV,That](tensor : Bound[V2])(fn : (B,V2) => RV)
+  (implicit bf : CanJoinValues[Repr, Bound[V2], B, V2, RV, That]) : That =
+    bf.joinBothNonZero(repr, tensor, fn);
+
+  /**
+   * Creates a new Tensor over the same domain using the given value
+   * function to create each return value in the map where keys in
+   * either this or m are non-zero.
+   */
+  def joinEitherNonZero[V2,RV,That](tensor : Bound[V2])(fn : (B,V2) => RV)
+  (implicit bf : CanJoinValues[Repr, Bound[V2], B, V2, RV, That]) : That =
+    bf.joinEitherNonZero(repr, tensor, fn);
 
   //
   // Slice construction
@@ -217,9 +249,7 @@ self =>
    * <code>x(x.argsort)</code>.  Changes to the sorted view are
    * written-through to the underlying map.
    */
-  def sorted[That]
-  (implicit bf : CanSliceVector[Repr, A, That],
-   cm : ClassManifest[A], ord : Ordering[B]) : That =
+  def sorted[That](implicit bf : CanSliceVector[Repr, A, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
     this(this.argsort);
 
 
@@ -276,6 +306,95 @@ self =>
     return sum;
   }
 
+  //
+  // Scalar operator implementations
+  //
+
+  /** Adds each element to the given scalar. */
+  def :+[O,RV,That](s : O)(implicit op : CanAdd[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) =
+    this.mapValues(v => op(v, s));
+
+  /** Subtracts each element from the given scalar. */
+  def :-[O,RV,That](s : O)(implicit op : CanSub[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) =
+    this.mapValues(v => op(v, s));
+
+  /** Multiplies each element by the given scalar. */
+  def :*[O,RV,That](s : O)(implicit op : CanMul[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = {
+    if (so.isNaN(s)) {
+      this.mapValues(v => op(v, s));
+    } else {
+      this.mapNonZeroValues(v => op(v, s));
+    }
+  }
+
+  /** Divides each element by the given scalar. */
+  def :/[O,RV,That](s : O)(implicit op : CanDiv[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = {
+    if (s == so.zero || so.isNaN(s)) {
+      this.mapValues(v => op(v, s));
+    } else {
+      this.mapNonZeroValues(v => op(v, s));
+    }
+  }
+
+  /** Raises each element to the given power. */
+  def :^[O,RV,That](s : O)(implicit op : CanPow[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) =
+    this.mapValues(v => op(v, s));
+
+  /** Takes the modulo of each element relative to the given value. */
+  def :%[O,RV,That](s : O)(implicit op : CanMod[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) =
+    this.mapValues(v => op(v, s));
+
+
+  //
+  // Scalar operator aliases
+  //
+
+  /** Alias for :+=(s) */
+  final def +[O,RV,That](s : O)(implicit op : CanAdd[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:+(s);
+
+  /** Alias for :-=(s) */
+  final def -[O,RV,That](s : O)(implicit op : CanSub[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:-(s);
+
+  /** Alias for :*=(s) */
+  final def *[O,RV,That](s : O)(implicit op : CanMul[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:*(s);
+
+  /** Alias for :/=(s) */
+  final def /[O,RV,That](s : O)(implicit op : CanDiv[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:/(s);
+
+  /** Alias for :^=(s) */
+  final def ^[O,RV,That](s : O)(implicit op : CanPow[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:^(s);
+
+  /** Alias for :%=(s) */
+  final def %[O,RV,That](s : O)(implicit op : CanMod[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:%(s);
+
+
+  //
+  // Tensor operator implementations
+  //
+
+  /** Adds each element of this tensor to the corresponding element in t. */
+  def :+[O,RV,That](t : Bound[O])(implicit op : CanAdd[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
+    this.joinEitherNonZero[O,RV,That](t)(op);
+  
+  /** Subtracts from each element of this tensor the corresponding element in t. */
+  def :-[O,RV,That](t : Bound[O])(implicit op : CanSub[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
+    this.joinEitherNonZero[O,RV,That](t)(op);
+
+  /** Multiplies each element of this tensor by the corresponding element in t. */
+  def :*[O,RV,That](t : Bound[O])(implicit op : CanMul[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
+    this.joinEitherNonZero[O,RV,That](t)(op);
+
+  /** Divides each element of this tensor by the corresponding element in t. */
+  def :/[O,RV,That](t : Bound[O])(implicit op : CanDiv[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
+    this.joinEitherNonZero[O,RV,That](t)(op);
+
+  /** Raises each element of this tensor to the corresponding element power in t. */
+  def :^[O,RV,That](t : Bound[O])(implicit op : CanPow[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
+    this.joinEitherNonZero[O,RV,That](t)(op);
+
+  /** Takes the modulo of each element of this tensor with the corresponding element in t. */
+  def :%[O,RV,That](t : Bound[O])(implicit op : CanMod[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
+    this.joinEitherNonZero[O,RV,That](t)(op);
 
   //
   // Conversions
@@ -329,12 +448,12 @@ self =>
       (this eq that) ||
       (that canEqual this) &&
       (this.domain == that.domain) &&
-      (domain.iterator.forall((k:A) => this(k) == that(k)))
+      (this.foreachNonZero((k,v) => that(k) == v));
     case _ => false;
   }
 
   /** From recipe in "Programming in Scala" section 28.4. */
-  def canEqual(other : Any) : Boolean = other match {
+  protected def canEqual(other : Any) : Boolean = other match {
     case that : Tensor[_,_] => true;
     case _ => false;
   }
@@ -343,6 +462,13 @@ self =>
     domain.hashCode + valuesIterator.foldLeft(1)((hash,v) => 41 * hash + v.hashCode);
 }
 
+/**
+ * A Tensor is a map from keys A (with a domain) to numeric scalar values B.
+ * More specific operations are available on tensors indexed by a single key
+ * (Tensor1, Vector) or pair of keys (Tensor2, Matrix).
+ *
+ * @author dramage
+ */
 trait Tensor
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
 extends TensorLike[A, B, IterableDomain[A], Tensor[A, B]];
@@ -366,30 +492,53 @@ object Tensor {
 
   implicit def canMapValues[A, B, O:Scalar] =
   new CanMapValues[Tensor[A,B],B,O,Tensor[A,O]] {
-    override def apply(from : Tensor[A,B], fn : (B=>O)) = {
+    override def map(from : Tensor[A,B], fn : (B=>O)) = {
       val builder = from.newBuilder[O];
       from.foreach((k,v) => builder(k) = fn(v));
+      builder.result;
+    }
+    override def mapNonZero(from : Tensor[A,B], fn : (B=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreachNonZero((k,v) => builder(k) = fn(v));
       builder.result;
     }
   }
 
   implicit def canMapKeyValuePairs[A, B, O:Scalar] =
   new CanMapKeyValuePairs[Tensor[A,B],A,B,O,Tensor[A,O]] {
-    override def apply(from : Tensor[A,B], fn : ((A,B)=>O)) = {
+    override def map(from : Tensor[A,B], fn : ((A,B)=>O)) = {
       val builder = from.newBuilder[O];
       from.foreach((k,v) => builder(k) = fn(k,v));
+      builder.result;
+    }
+    override def mapNonZero(from : Tensor[A,B], fn : ((A,B)=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreachNonZero((k,v) => builder(k) = fn(k,v));
       builder.result;
     }
   }
 
   implicit def canJoin[K, V1, V2, RV:Scalar] =
-  new CanJoin[Tensor[K,V1], Tensor[K,V2], K, V1, V2, RV, Tensor[K,RV]] {
-    override def apply(a : Tensor[K,V1], b : Tensor[K,V2], fn : (K,V1,V2)=>RV) = {
-      if (a.domain != b.domain) {
-        throw new DomainException("Mismatched domains on join");
-      }
+  new CanJoinValues[Tensor[K,V1], Tensor[K,V2], V1, V2, RV, Tensor[K,RV]] {
+    override def joinAll(a : Tensor[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
       val builder = a.newBuilder[RV];
-      for (k <- a.domain) { builder(k) = fn(k,a(k),b(k)); }
+      for (k <- a.domain) { builder(k) = fn(a(k),b(k)); }
+      builder.result;
+    }
+
+    override def joinEitherNonZero(a : Tensor[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
+      b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
+      builder.result;
+    }
+
+    override def joinBothNonZero(a : Tensor[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
       builder.result;
     }
   }
@@ -406,198 +555,3 @@ object Tensor {
       new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
   }
 }
-
-///*
-// * Distributed as part of Scalala, a linear algebra library.
-// *
-// * Copyright (C) 2008- Daniel Ramage
-// *
-// * This library is free software; you can redistribute it and/or
-// * modify it under the terms of the GNU Lesser General Public
-// * License as published by the Free Software Foundation; either
-// * version 2.1 of the License, or (at your option) any later version.
-// *
-// * This library is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// * Lesser General Public License for more details.
-// *
-// * You should have received a copy of the GNU Lesser General Public
-// * License along with this library; if not, write to the Free Software
-// * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
-// */
-//package scalala;
-//package tensor;
-//
-//import scalala.generic._;
-//import scalala.collection._;
-//import scalala.collection.domain._;
-//
-///**
-// * A Tensor is a Double-valued MutableDomainMap.
-// *
-// * @author dramage
-// */
-//trait TensorLike
-//[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
-// +D<:IterableDomain[A] with DomainLike[A,D],
-// +This<:Tensor[A,B]]
-//extends MutableDomainMapLike[A,B,D,This] with operators.NumericOps[This] {
-//
-////
-////  //
-////  // Scalar updates.
-////  //
-////
-////  /** Multiplies each element by the given scale factor. */
-////  def *= (s : Double) =
-////    if (s != 1) transformValues(_ * s);
-////
-////  /** Divides each element by the given scale factor. */
-////  def /= (s : Double) =
-////    if (s != 1) transformValues(_ / s);
-////
-////  /** Increments element by the given scalar. */
-////  def += (s : Double) =
-////    if (s != 0) transformValues(_ + s);
-////
-////  /** Decrements each element by the given scalar. */
-////  def -= (s : Double) =
-////    if (s != 0) transformValues(_ - s);
-////
-////  /** Raises each element to the the given power. */
-////  def :^= (s : Double) =
-////    if (s != 1) transformValues(v => math.pow(v, s));
-////
-////  /** Each element becomes itself modulo the given scalar. */
-////  def %= (s : Double) =
-////    if (s != 0 && s != 1) transformValues(_ % s);
-////
-////  //
-////  // Updates from another DomainMap.
-////  //
-////
-////  /** Multiplies each value in this map by the corresponding value in the other map. */
-////  def :*= (t : DomainMap[A,Double,D]) {
-////    checkDomain(t.domain);
-////    transform((k,v) => v * t(k));
-////  }
-////
-////  /** Divides each value in this map by the corresponding value in the other map. */
-////  def :/= (t : DomainMap[A,Double,D]) {
-////    checkDomain(t.domain);
-////    transform((k,v) => v / t(k));
-////  }
-////
-////  /** Increments each value in this map by the corresponding value in the other map. */
-////  def :+= (t : DomainMap[A,Double,D]) {
-////    checkDomain(t.domain);
-////    transform((k,v) => v + t(k));
-////  }
-////
-////  /** Decrements each value in this map by the corresponding value in the other map. */
-////  def :-= (t : DomainMap[A,Double,D]) {
-////    checkDomain(t.domain);
-////    transform((k,v) => v - t(k));
-////  }
-////
-////  /** Raises each value in this map by the corresponding value in the other map. */
-////  def :^= (t : DomainMap[A,Double,D]) {
-////    checkDomain(t.domain);
-////    transform((k,v) => math.pow(v, t(k)));
-////  }
-////
-////  /** Modulos each value in this map by the corresponding value in the other map. */
-////  def :%= (t : DomainMap[A,Double,D]) {
-////    checkDomain(t.domain);
-////    transform((k,v) => v % t(k));
-////  }
-////
-////  /** += with another PartialMap is a fixed alias for :+= */
-////  final def += (t : DomainMap[A,Double,D]) = this.:+=(t);
-////
-////  /** -= with another PartialMap is a fixed alias for :-= */
-////  final def -= (t : DomainMap[A,Double,D]) = this.:-=(t);
-////
-////  /** Approximate equality at a given tolerance level. */
-////  def =~= (tolerance : Double)(that : DomainMap[A,Double,D]) : Boolean = {
-////    (this eq that) ||
-////    (that canEqual this) &&
-////    (this.domain == that.domain) &&
-////    (domain.iterator.forall((k:A) => math.abs(this(k) - that(k)) < tolerance));
-////  }
-////
-////  /** Approximate equality using the default Tensor.TOLERANCE value. */
-////  def =~= (that : DomainMap[A,Double,D]) : Boolean =
-////    this.=~=(Tensor.TOLERANCE)(that);
-////
-////  /** Returns !(this.=~=(tolerance)(that)) */
-////  def !~= (tolerance : Double)(that : DomainMap[A,Double,D]) : Boolean =
-////    ! this.=~=(tolerance)(that);
-////
-////  /** Returns !(this.=~=(that)) */
-////  def !~= (that : DomainMap[A,Double,D]) : Boolean =
-////    ! this.=~=(that);
-//}
-//
-///**
-// * A Tensor is a Double-valued MutableDomainMap.
-// *
-// * @author dramage
-// */
-//trait Tensor[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
-//extends DomainMap[A,B]
-//with MutableDomainMap[A,B] with TensorLike[A,B,IterableDomain[A],Tensor[A,B]];
-//
-//object Tensor {
-//
-//  type T[A,B] = Tensor[A,B];
-//
-////  class OpAdd[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R]
-////  (implicit op : CanAdd[A,B,R], scalar : Scalar[R])
-////  extends CanAdd[T[A,B],T[A,C],T[A,R]] {
-////    def apply(a : T[A,B], b : T[A,C]) = {
-////      a.
-////    }
-////  }
-//
-//
-//}
-////  /** Default tolerance value for element-wise equality. */
-////  val TOLERANCE = 1e-8;
-//
-////  /** A Tensor slice of a numeric MutableDomainMap. */
-////  trait SliceLike
-////  [@specialized(Int,Long) A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
-////   @specialized(Int,Long) A2, D2<:IterableDomain[A2] with DomainLike[A2,D2],
-////   +Coll <: MutableDomainMap[A1, Double, D1],
-////   +This <: Slice[A1, D1, A2, D2, Coll]]
-////  extends MutableDomainMapSliceLike[A1,D1,A2,D2,Double,Coll,This]
-////  with Tensor1Like[A2,D2,This];
-////
-////  /** A Tensor slice of a numeric MutableDomainMap. */
-////  trait Slice
-////  [@specialized A1, D1<:IterableDomain[A1] with DomainLike[A1,D1],
-////   @specialized A2, D2<:IterableDomain[A2] with DomainLike[A2,D2],
-////   +Coll <: MutableDomainMap[A1, Double, D1]]
-////  extends MutableDomainMapSlice[A1,D1,A2,D2,Double,Coll]
-////  with Tensor1[A2,D2]
-////  with SliceLike[A1,D1,A2,D2,Coll,Slice[A1,D1,A2,D2,Coll]];
-//
-////  implicit def canMapValues[@specialized A,D<:IterableDomain[A]] =
-////  new DomainMapCanBuildFrom[DomainMap[A,B,D], A, O, D, MutableDomainMap[A,O,D]] {
-////    override def apply(from : DomainMap[A,B,D], domain : D) =
-////      DomainMapBuilder(MutableDomainMap[A,O,D](domain, default.value));
-////  }
-////
-////  implicit def canSliceFrom[@specialized A1, @specialized A2, D<:IterableDomain[A1], @specialized B] =
-////  new DomainMapCanSliceFrom[DomainMap[A1,B,D], A1, D, A2, B, DomainMap[A2,B,SetDomain[A2]]] {
-////    override def apply(from : DomainMap[A1,B,D], keymap : scala.collection.Map[A2,A1]) =
-////      new DomainMapSlice.FromKeyMap[A1, D, A2, B, DomainMap[A1,B,D]](from, keymap);
-////  }
-////
-////  implicit def canSliceSeqFrom[@specialized A, D<:IterableDomain[A], @specialized B] =
-////  new DomainMapCanSliceSeqFrom[DomainMap[A,B,D], A, D, B, DomainSeq[B]] {
-////    override def apply(from : DomainMap[A,B,D], keys : Seq[A]) =
-////      new DomainMapSliceSeq.FromKeySeq[A,D,B,DomainMap[A,B,D]](from, keys);
-////  }

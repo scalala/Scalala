@@ -25,32 +25,31 @@ import domain._;
 import generic.tensor._;
 
 /**
- * Implementation trait for a pass-through DomainSeq-like view of an underlying
- * MutableTensor.
+ * Implementation trait for a Vector-like view of a mutable Tensor.
  *
  * @author dramage
  */
 trait VectorSliceLike
-[@specialized(Int,Long) A1, +D1<:IterableDomain[A1] with DomainLike[A1,D1],
+[@specialized(Int,Long) A, +D<:IterableDomain[A] with DomainLike[A,D],
  @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll<:Tensor[A1,B],
- +This<:VectorSlice[A1,B,Coll]]
-extends TensorSliceLike[A1, D1, Int, IndexDomain, B, Coll, This]
-with tensor.VectorSliceLike[A1, D1, B, Coll, This]
+ +Coll<:Tensor[A,B],
+ +This<:VectorSlice[A,B,Coll]]
+extends tensor.VectorSliceLike[A, D, B, Coll, This]
+with Tensor1SliceLike[A, D, Int, IndexDomain, B, Coll, This]
 with VectorLike[B, This];
 
 /**
- * DomainSeq like view of an underlying MutableTensor.
+ * Vector-like view of a mutable Tensor.
  *
  * @author dramage
  */
 trait VectorSlice
-[@specialized(Int,Long) A1, @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll<:Tensor[A1, B]]
-extends TensorSlice[A1,Int,B,Coll]
-with tensor.VectorSlice[A1,B,Coll]
+[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+ +Coll<:Tensor[A, B]]
+extends tensor.VectorSlice[A,B,Coll]
+with Tensor1Slice[A,Int,B,Coll]
 with Vector[B]
-with VectorSliceLike[A1, IterableDomain[A1], B, Coll, VectorSlice[A1, B, Coll]];
+with VectorSliceLike[A, IterableDomain[A], B, Coll, VectorSlice[A, B, Coll]];
 
 object VectorSlice {
   class FromKeySeq[A, B:Scalar, +Coll<:Tensor[A, B]]

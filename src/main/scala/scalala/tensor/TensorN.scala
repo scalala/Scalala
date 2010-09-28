@@ -18,25 +18,31 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
-package generic;
-package collection;
+package tensor;
 
-import org.scalacheck._
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.junit.runner.RunWith;
+import domain._;
+import generic.tensor._;
 
-@RunWith(classOf[JUnitRunner])
-class CanMapValuesTest extends FunSuite with Checkers {
-  def toDoubles[From,A,To](coll : From)(implicit map : CanMapValues[From,A,Double,To], cv : A=>Double) =
-    map.map(coll, cv);
+/**
+ * Tensors indexed by a sequence of keys.
+ *
+ * @author dramage
+ */
+trait TensorNLike[@specialized(Int) K, @specialized(Int,Long,Float,Double,Boolean) V, +This<:TensorN[K,V]]
+extends TensorLike[Seq[K],V,ProductNDomain[K],This] {
+  /** Gets the value indexed by (i,j). */
+  /* final */ def apply(k : K*) : V =
+    apply(k : Seq[K]);
 
-  test("array") {
-    assert(toDoubles(Array(1,2,3)).toList === List(1.0,2.0,3.0));
+
+  override protected def canEqual(other : Any) : Boolean = other match {
+    case that : TensorN[_,_] => true;
+    case _ => false;
   }
+}
 
-  test("map") {
-    assert(toDoubles(Map('a'->2,'b'->3)) === Map('a'->2.0,'b'->3.0));
-  }
+trait TensorN[@specialized(Int) K, @specialized(Int,Long,Float,Double,Boolean) V]
+extends Tensor[Seq[K],V] with TensorNLike[K,V,TensorN[K,V]]
+
+object TensorN {
 }

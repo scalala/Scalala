@@ -33,7 +33,11 @@ import scalala.tensor.Scalar;
  * @author dramage
  */
 trait CanMapValues[-From, @specialized A, @specialized B, +To] {
-  def apply(from : From, fn : (A=>B)) : To;
+  /** Maps all values from the given collection. */
+  def map(from : From, fn : (A=>B)) : To;
+
+  /** Maps all non-zero values from the given collection. */
+  def mapNonZero(from : From, fn : (A=>B)) : To;
 }
 
 object CanMapValues {
@@ -45,7 +49,8 @@ object CanMapValues {
 
   class OpScalar[@specialized A:Scalar, @specialized B]
   extends Op[A,A,B,B] {
-    def apply(from : A, fn : (A=>B)) = fn(from);
+    def map(from : A, fn : (A=>B)) = fn(from);
+    def mapNonZero(from : A, fn : (A=>B)) = fn(from);
   }
 
   implicit def opScalar[@specialized A:Scalar, @specialized B] =
@@ -67,7 +72,10 @@ object CanMapValues {
 
   class OpArray[@specialized A, @specialized B:ClassManifest]
   extends Op[Array[A],A,B,Array[B]] {
-    def apply(from : Array[A], fn : (A=>B)) = from.map(fn);
+    def map(from : Array[A], fn : (A=>B)) =
+      from.map(fn);
+    def mapNonZero(from : Array[A], fn : (A => B)) =
+      this.map(from, fn);
   }
 
   implicit def opArray[@specialized A, @specialized B:ClassManifest] =
@@ -93,7 +101,9 @@ object CanMapValues {
 
   class OpMap[K, A, B, That](implicit bf : scala.collection.generic.CanBuildFrom[scala.collection.Map[K,A], (K,B), That])
   extends Op[scala.collection.Map[K,A],A,B,That] {
-    def apply(from : scala.collection.Map[K,A], fn : (A => B)) =
+    def map(from : scala.collection.Map[K,A], fn : (A => B)) =
       from.map(tup => (tup._1, fn(tup._2)));
+    def mapNonZero(from : scala.collection.Map[K,A], fn : (A => B)) =
+      this.map(from, fn);
   }
 }

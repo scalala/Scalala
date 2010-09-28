@@ -25,7 +25,7 @@ import domain._;
 import generic.tensor._;
 
 /**
- * Implementation trait for a MutableTensor that is also a tensor.Tensor2.
+ * Implementation trait for a mutable tensor.Tensor2.
  *
  * @author dramage
  */
@@ -37,9 +37,8 @@ trait Tensor2Like
  +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
  +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
  +This<:Tensor2[A1,A2,B]]
-extends TensorLike[(A1,A2),B,D,This]
-with tensor.Tensor2Like[A1,A2,B,D1,D2,D,T,This] {
-self =>
+extends tensor.Tensor2Like[A1,A2,B,D1,D2,D,T,This]
+with TensorLike[(A1,A2),B,D,This] { self =>
 
   /** Updates the value indexed by (i,j). */
   def update(i : A1, j : A2, value : B) : Unit;
@@ -58,7 +57,7 @@ self =>
 }
 
 /**
- * MutableTensor that is also a tensor.Tensor2.
+ * Mutable tensor.Tensor2.
  *
  * @author dramage
  */

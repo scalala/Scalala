@@ -36,8 +36,8 @@ trait TensorSliceLike
  @specialized(Int,Long,Float,Double,Boolean) B,
  +Coll<:Tensor[A1,B],
  +This<:TensorSlice[A1,A2,B,Coll]]
-extends TensorLike[A2,B,D2,This]
-with tensor.TensorSliceLike[A1,D1,A2,D2,B,Coll,This] {
+extends tensor.TensorSliceLike[A1,D1,A2,D2,B,Coll,This]
+with TensorLike[A2,B,D2,This] {
 
   override def update(key : A2, value : B) =
     underlying.update(lookup(key), value);
@@ -51,7 +51,7 @@ with tensor.TensorSliceLike[A1,D1,A2,D2,B,Coll,This] {
 trait TensorSlice
 [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
  @specialized(Int,Long,Float,Double,Boolean) B, +Coll <: Tensor[A1, B]]
-extends Tensor[A2,B] with tensor.TensorSlice[A1,A2,B,Coll]
+extends tensor.TensorSlice[A1,A2,B,Coll] with Tensor[A2,B]
 with TensorSliceLike[A1, IterableDomain[A1], A2, IterableDomain[A2], B, Coll, TensorSlice[A1, A2, B, Coll]];
 
 

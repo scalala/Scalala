@@ -97,12 +97,19 @@ extends BinaryUpdateOp[SparseArray[V1],SparseArray[V2]] {
         bO += 1;
       }
     }
+
+    // process unpaired remaining from a
+    while (aO < a.activeLength) {
+      val aI = a.indexAt(aO);
+      a(aI) = op(a.valueAt(aO), b.default);
+      aO += 1;
+    }
   }
 }
 
 /**
  * Base class for updating a SparseArray by another SparseArray.  Considers
- * only non-zeros in the left operand.  Base class of AddInto.
+ * non-zeros in either operand.  Base class of AddInto.
  *
  * @author dramage
  */
@@ -112,6 +119,7 @@ extends BinaryUpdateOp[SparseArray[V1],SparseArray[V2]] {
     if (a.length != b.length) {
       throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
     }
+    
     var aO = 0;
     var bO = 0;
     while (aO < a.activeLength && bO < b.activeLength) {
@@ -128,6 +136,20 @@ extends BinaryUpdateOp[SparseArray[V1],SparseArray[V2]] {
         aO += 1;
         bO += 1;
       }
+    }
+    
+    // process unpaired remaining from a
+    while (aO < a.activeLength) {
+      val aI = a.indexAt(aO);
+      a(aI) = op(a.valueAt(aO), b.default);
+      aO += 1;
+    }
+
+    // process unpaired remaining from b
+    while (bO < b.activeLength) {
+      val bI = b.indexAt(bO);
+      a(bI) = op(a.default, b.valueAt(bO));
+      bO += 1;
     }
   }
 }

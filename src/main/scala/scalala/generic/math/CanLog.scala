@@ -54,7 +54,7 @@ object CanLog {
   class OpMapValues[From,@specialized A,@specialized B,To]
   (implicit op : Op[A,B], map : CanMapValues[From,A,B,To])
   extends Op[From,To] {
-    def apply(v : From) = map(v, op);
+    def apply(v : From) = map.map(v, op);
   }
 
   implicit object OpArrayI extends OpMapValues[Array[Int],Int,Double,Array[Double]]()(OpI,CanMapValues.OpArrayID);

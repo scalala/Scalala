@@ -21,26 +21,35 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
+import domain._
+import generic.tensor._;
 
 /**
- * Implementation trait for mutable Tensor1 instances.
+ * A Transpose of any Matrix type is a Matrix.
  *
  * @author dramage
  */
-trait Tensor1Like
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
- +D<:IterableDomain[A] with DomainLike[A,D], +This<:Tensor1[A,B]]
-extends tensor.Tensor1Like[A,B,D,This] with TensorLike[A,B,D,This] {
-
+trait MatrixTransposeLike
+[@specialized(Int,Long,Float,Double) B, +Coll <: Matrix[B], +This <: MatrixTranspose[B,Coll]]
+extends tensor.MatrixTransposeLike[B,Coll,This]
+with Tensor2TransposeLike[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
+with MatrixLike[B,This] {
+  override def domain = underlying.domain.transpose.asInstanceOf[TableDomain];
 }
 
 /**
- * Mutable tensor.Tensor1.
+ * A Transpose of any Matrix type is a Matrix.
  *
  * @author dramage
  */
-trait Tensor1
-[@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B]
-extends tensor.Tensor1[A,B] with Tensor[A,B]
-with Tensor1Like[A,B,IterableDomain[A],Tensor1[A,B]];
+trait MatrixTranspose[@specialized(Int,Long,Float,Double) B, +Coll <: Matrix[B]]
+extends tensor.MatrixTranspose[B,Coll]
+with Tensor2Transpose[Int,Int,B,Coll]
+with Matrix[B] with MatrixTransposeLike[B, Coll, MatrixTranspose[B, Coll]];
+
+object MatrixTranspose {
+  class Impl[B, +Coll <: Matrix[B]]
+  (override val underlying : Coll)
+  (implicit override val scalar : Scalar[B])
+  extends MatrixTranspose[B,Coll];
+}

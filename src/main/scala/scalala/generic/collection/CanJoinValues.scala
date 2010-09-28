@@ -27,6 +27,13 @@ package tensor;
  *
  * @author dramage
  */
-trait CanJoin[-Repr1, -Repr2, K, V1, V2, RV, +That] {
-  def apply(a : Repr1, b : Repr2, fn : (K,V1,V2)=>RV) : That;
+trait CanJoinValues[-Repr1, -Repr2, V1, V2, RV, +That] {
+  /** Joins on all keys in the domain. */
+  def joinAll(a : Repr1, b : Repr2, fn : (V1,V2)=>RV) : That;
+
+  /** Joins when both a and b are non-zero. */
+  def joinBothNonZero(a : Repr1, b : Repr2, fn : (V1,V2)=>RV) : That;
+
+  /** Joins when either a or b is non-zero. */
+  def joinEitherNonZero(a : Repr1, b : Repr2, fn : (V1,V2)=>RV) : That;
 }

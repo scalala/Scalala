@@ -56,8 +56,8 @@ trait MatrixSlice
 [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
  @specialized(Int,Long,Float,Double,Boolean) B,
  +Coll<:Tensor2[A1,A2,B]]
-extends Matrix[B]
-with tensor.MatrixSlice[A1,A2,B,Coll]
+extends tensor.MatrixSlice[A1,A2,B,Coll]
+with Matrix[B]
 with MatrixSliceLike[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Coll,MatrixSlice[A1,A2,B,Coll]];
 
 object MatrixSlice {

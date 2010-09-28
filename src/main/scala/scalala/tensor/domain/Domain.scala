@@ -149,6 +149,12 @@ extends IterableDomain[Int] with DomainLike[Int,IndexDomain] {
   }
 }
 
+/**
+ * Implementation trait for a domain containing all pairs from
+ * two underlying domains.
+ *
+ * @author dramage
+ */
 trait Product2DomainLike
 [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
  +D1 <: IterableDomain[A1] with DomainLike[A1,D1],
@@ -239,6 +245,44 @@ with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain]
   override def equals(other : Any) = other match {
     case TableDomain(nr,nc) => this.numRows == nr && this.numCols == nc;
     case that : Domain[_] => super.equals(that);
+    case _ => false;
+  }
+}
+
+/**
+ * A domain indexed by sequences of underyling key type K.
+ *
+ * @author dramage
+ */
+case class ProductNDomain[@specialized(Int) K](components : Seq[IterableDomain[K]])
+extends IterableDomain[Seq[K]] with DomainLike[Seq[K],ProductNDomain[K]] {
+  private def unroll(remaining : Seq[IterableDomain[K]]) : Iterator[Seq[K]] = {
+    require(remaining.length > 0);
+    if (remaining.length == 1) {
+      remaining.head.iterator.map(k => List(k));
+    } else {
+      for (k <- remaining.head.iterator;
+           rest <- unroll(remaining.tail))
+      yield List(k) ++ rest;
+    }
+  }
+
+  override def copy =
+    ProductNDomain(components.map(_.copy));
+
+  /** Iterators all elements of this domain. */
+  override def iterator =
+    unroll(components);
+
+  /** Returns true if a1 is in the row space and a2 is in the col space. */
+  def contains(k : Seq[K]) =
+    (components.length == k.length) && (components zip k).forall(tup => tup._1 contains tup._2);
+
+  override def equals(other : Any) = other match {
+    case that : ProductNDomain[_] =>
+      this.components == that.components
+    case base : Domain[_] =>
+      super.equals(base);
     case _ => false;
   }
 }

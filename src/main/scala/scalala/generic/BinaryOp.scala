@@ -34,9 +34,8 @@ import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
  * 
  * @author dramage
  */
-trait BinaryOp[@specialized -A, @specialized -B, +That] {
-  def apply(a : A, b : B) : That;
-}
+trait BinaryOp[@specialized -A, @specialized -B, +That]
+extends ((A,B) => That);
 
 
 /**
@@ -169,6 +168,7 @@ extends BinaryOp[SparseArray[V1],SparseArray[V2],SparseArray[RV]] {
       throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
     }
     val rv = new SparseArray[RV](a.length, scala.math.max(a.activeLength,b.activeLength));
+
     var aO = 0;
     var bO = 0;
     while (aO < a.activeLength && bO < b.activeLength) {
@@ -186,6 +186,21 @@ extends BinaryOp[SparseArray[V1],SparseArray[V2],SparseArray[RV]] {
         bO += 1;
       }
     }
+
+    // process unpaired remaining from a
+    while (aO < a.activeLength) {
+      val aI = a.indexAt(aO);
+      rv(aI) = op(a.valueAt(aO), b.default);
+      aO += 1;
+    }
+
+    // process unpaired remaining from b
+    while (bO < b.activeLength) {
+      val bI = b.indexAt(bO);
+      rv(bI) = op(a.default, b.valueAt(bO));
+      bO += 1;
+    }
+
     rv;
   }
 }
@@ -202,7 +217,7 @@ extends BinaryOp[SparseArray[V1],SparseArray[V2],SparseArray[RV]] {
     if (a.length != b.length) {
       throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
     }
-    val rv = new SparseArray[RV](a.length);
+    val rv = new SparseArray[RV](a.length, a.length);
 
     /** Optimization: use OuterOp if the default value is itself default */
     if (try { op(a.default, b.default) == rv.default } catch { case _ => false; }) {

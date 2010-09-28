@@ -441,9 +441,6 @@ trait MatrixOps[+A] extends NumericOps[A] {
     op.apply(repr,b);
 }
 
-// TODO: default DomainMap implementation of all operations should
-// use reflection to find a more specialized runtime method.
-
 //
 // Enriched types
 // 

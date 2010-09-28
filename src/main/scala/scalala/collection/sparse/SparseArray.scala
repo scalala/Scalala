@@ -39,20 +39,28 @@ import scala.collection.mutable._;
  *
  * @author dlwh, dramage
  */
-final class SparseArray[@specialized T:ClassManifest:DefaultArrayValue]
-(val length : Int, initialActiveLength : Int = 3) {
+final class SparseArray[@specialized T]
+(val length : Int, protected var index : Array[Int], protected var data : Array[T], protected var used : Int, initialActiveLength : Int)
+(implicit m : ClassManifest[T], df : DefaultArrayValue[T]) {
 
-  /** Default value when key in range but no value found. */
-  final val default = implicitly[DefaultArrayValue[T]].value;
+  def this(length : Int, initialActiveLength : Int = 3)(implicit m : ClassManifest[T], d : DefaultArrayValue[T]) =
+    this(length, new Array[Int](initialActiveLength), new Array[T](initialActiveLength), 0, initialActiveLength)(m, d);
 
-  /** Data array.  Only the first this.used elements are valid. */
-  final protected var data = new Array[T](initialActiveLength);
+  { // check rep invariants
+    require(length >= 0, "Length must be non-negative");
+    require(used >= 0 && used <= length, "Used must be <= length and >= 0");
+    if (used > 0) {
+      require(index(0) >= 0, "Indexes must be ordered and non-negative");
+      var i = 1;
+      while (i < used) {
+        require(index(i-1) < index(i) && index(i) >= 0, "Indexes must be ordered and non-negative");
+        i +=1;
+      }
+    }
+  }
 
-  /** Index array.  Only the first this.used elements are valid. */
-  final protected var index = new Array[Int](initialActiveLength);
-
-  /** Number of elements in the array that have been used. */
-  final protected var used : Int = 0;
+  /** Default value. */
+  val default = df.value;
 
   /** Last found offset. */
   final private var lastOffset = -1;
@@ -240,6 +248,28 @@ final class SparseArray[@specialized T:ClassManifest:DefaultArrayValue]
   /** Clears this array, resetting to the initial size. */
   def clear() {
     use(new Array[Int](initialActiveLength), new Array[T](initialActiveLength), 0);
+  }
+
+  /** Pre-allocate space in this array for all active indexes in other. */
+  def reserve[O](other : SparseArray[O]) {
+    val rv = new SparseArray[T](this.length, this.used + other.used);
+    var i = 0;
+    var j = 0;
+    while (j < other.used) {
+      val indexI = index(i);
+      val indexJ = index(j);
+      while (i < used && indexI < indexJ) {
+        rv(indexI) = data(i);
+        i += 1;
+      }
+      rv(indexJ) = this(indexJ);
+      j += 1;
+    }
+    while (i < used) {
+      rv(index(i)) = data(i);
+      i += 1;
+    }
+    use(rv.index, rv.data, rv.used);
   }
 
   /** Compacts the array by removing all stored default values. */
@@ -491,7 +521,6 @@ object SparseArray {
     for ((k,v) <- values) {
       rv(k) = v;
     }
-    rv.compact;
     rv;
   }
 
