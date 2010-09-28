@@ -43,13 +43,13 @@ extends PartialFunction[A, B] {
     domain(key);
 
   /** @throws DomainException if key is not in the domain. */
-  protected def checkKey(key : A) : Unit = {
+  def checkKey(key : A) : Unit = {
     if (!isDefinedAt(key))
       throw new DomainException("Key " + key + " not in domain");
   }
 
   /** @throws DomainException if domain is not equal to this domain. */
-  protected def checkDomain(domain : Domain[A]) : Unit = {
+  def checkDomain(domain : Domain[A]) : Unit = {
     if (this.domain != domain)
       throw new DomainException("Incompatible domain: "+domain);
   }

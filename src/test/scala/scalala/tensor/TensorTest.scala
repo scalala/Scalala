@@ -95,12 +95,12 @@ class TensorTest extends FunSuite with Checkers {
     assert(x.sorted.valuesIterator.toList === List(3,5,7));
   }
 
-  test("Views") {
-    val x = mkMapTensor();
-    x("a","b","c") := List(3,4,5);
-    val view = x.view.mapValues(_ % 2 == 0);
-    assert(view.isInstanceOf[TensorView[_,_,_]], "runtime");
-    assert(view.valuesIterator.toList === List(false,true,false), "values");
-    assert(view.view eq view, "view of view");
-  }
+//  test("Views") {
+//    val x = mkMapTensor();
+//    x("a","b","c") := List(3,4,5);
+//    val view = x.view.mapValues(_ % 2 == 0);
+//    assert(view.isInstanceOf[TensorView[_,_,_]], "runtime");
+//    assert(view.valuesIterator.toList === List(false,true,false), "values");
+//    assert(view.view eq view, "view of view");
+//  }
 }

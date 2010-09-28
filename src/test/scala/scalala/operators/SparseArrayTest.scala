@@ -45,8 +45,8 @@ class SparseArrayTest extends FunSuite with Checkers {
     val a = mk(1,0,3);
     val b = mk(4,5,0);
 
-    assert((a :+: b).toList === List(5,5,3));
-    assert((b :+: a).toList === List(5,5,3));
+    assert((a :+ b).toList === List(5,5,3));
+    assert((b :+ a).toList === List(5,5,3));
     assert((a :- b).toList === List(-3,-5,3));
     assert((a :* b).toList === List(4,0,0));
   }
@@ -55,7 +55,7 @@ class SparseArrayTest extends FunSuite with Checkers {
     val a = mk(1,2,3);
     val b = mk(4,5,6);
 
-    assert((a :+: b).toList === List(5,7,9));
+    assert((a :+ b).toList === List(5,7,9));
     assert((a :- b).toList === List(-3,-3,-3));
     assert((a :* b).toList === List(4,10,18));
     assert((b :/ a).toList === List(4,2,2));
@@ -66,8 +66,8 @@ class SparseArrayTest extends FunSuite with Checkers {
   test("Scalar Ops") {
     val a = mk(1,2,3);
 
-    assert((a :+: 1.0).toList === List(2.0,3.0,4.0));
-    assert((1.0 :+: a).toList === List(2.0,3.0,4.0));
+    assert((a :+ 1.0).toList === List(2.0,3.0,4.0));
+    assert((1.0 :+ a).toList === List(2.0,3.0,4.0));
     assert((a :- 1).toList === List(0,1,2));
     assert((a :* 3.0).toList === List(3.0,6.0,9.0));
     assert((a :/ 2.0).toList === List(0.5,1.0,1.5));

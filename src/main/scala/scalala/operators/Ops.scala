@@ -55,8 +55,27 @@ trait NumericOps[+This] {
 
   def :!=[B,That](b : B)(implicit op : CanNe[This,B,That]) = op(repr,b);
 
-  /** Final alias for :+ as a workaround for arrays. */
-  final def :+:[B,That](b : B)(implicit op : CanAdd[This,B,That]) = this.:+(b);
+  //
+  // Scalar operator aliases
+  //
+
+  /** Alias for :+=(b) */
+  final def +[B,That](b : B)(implicit op : CanAdd[This,B,That], sb : Scalar[B]) = this.:+(b);
+
+  /** Alias for :-=(b) */
+  final def -[B,That](b : B)(implicit op : CanSub[This,B,That], sb : Scalar[B]) = this.:-(b);
+
+  /** Alias for :*=(b) */
+  final def *[B,That](b : B)(implicit op : CanMul[This,B,That], sb : Scalar[B]) = this.:*(b);
+
+  /** Alias for :/=(b) */
+  final def /[B,That](b : B)(implicit op : CanDiv[This,B,That], sb : Scalar[B]) = this.:/(b);
+
+  /** Alias for :^=(b) */
+  final def ^[B,That](b : B)(implicit op : CanPow[This,B,That], sb : Scalar[B]) = this.:^(b);
+
+  /** Alias for :%=(b) */
+  final def %[B,That](b : B)(implicit op : CanMod[This,B,That], sb : Scalar[B]) = this.:%(b);
 }
 
 
@@ -447,7 +466,10 @@ trait MatrixOps[+A] extends NumericOps[A] {
 
 /** Numeric operator support for numeric arrays. @author dramage */
 class RichArrayVector[V:ClassManifest](override val repr : Array[V])
-extends MutableColumnTensorOps[Array[V]];
+extends MutableColumnTensorOps[Array[V]] {
+  /** Final alias for :+ as a workaround for arrays. */
+  final def :+:[B,That](b : B)(implicit op : CanAdd[Array[V],B,That]) = this.:+(b);
+}
 
 /** Numeric operator support for Array[Array] matrix. @author dramage */
 class RichArrayMatrix[V:ClassManifest](override val repr : Array[Array[V]])

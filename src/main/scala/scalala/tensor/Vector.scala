@@ -65,7 +65,7 @@ trait Vector[@specialized(Int,Long,Float,Double) B]
 extends Tensor1[Int,B]
 with VectorLike[B,Vector[B]];
 
-object Vector {
+object Vector extends VectorCompanion[Vector] {
 //  /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
 //  trait SliceSeqLike
 //  [@specialized(Int,Long) A,
@@ -92,4 +92,8 @@ object Vector {
 //  (implicit override val scalar : Scalar[B])
 //  extends MutableDomainMapSliceSeq.FromKeySeq[A,B,Coll](underlying, keys)
 //  with SliceSeq[A,B,Coll];
+}
+
+
+trait VectorCompanion[Bound[V] <: Vector[V]] extends IndexedTensorCompanion[Int,Bound] {
 }

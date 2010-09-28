@@ -43,8 +43,8 @@ extends DomainFunction[A, B, D]
 with operators.NumericOps[Repr] {
 self =>
 
-  // TODO: replace this with a generic parameter
-  type Bound[V] = Tensor[A,V];
+//  // TODO: replace this with a generic parameter
+//  type Bound[V] = Tensor[A,V];
 
   protected type Self = Repr;
 
@@ -179,8 +179,8 @@ self =>
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map.
    */
-  def join[V2,RV,That](tensor : Bound[V2])(fn : (B,V2) => RV)
-  (implicit bf : CanJoinValues[Repr, Bound[V2], B, V2, RV, That]) : That =
+  def join[V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
+  (implicit bf : CanJoinValues[Repr, Tensor[A,V2], B, V2, RV, That]) : That =
     bf.joinAll(repr, tensor, fn);
 
   /**
@@ -188,8 +188,8 @@ self =>
    * function to create each return value in the map where keys in
    * both this and m are non-zero.
    */
-  def joinBothNonZero[V2,RV,That](tensor : Bound[V2])(fn : (B,V2) => RV)
-  (implicit bf : CanJoinValues[Repr, Bound[V2], B, V2, RV, That]) : That =
+  def joinBothNonZero[V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
+  (implicit bf : CanJoinValues[Repr, Tensor[A,V2], B, V2, RV, That]) : That =
     bf.joinBothNonZero(repr, tensor, fn);
 
   /**
@@ -197,8 +197,8 @@ self =>
    * function to create each return value in the map where keys in
    * either this or m are non-zero.
    */
-  def joinEitherNonZero[V2,RV,That](tensor : Bound[V2])(fn : (B,V2) => RV)
-  (implicit bf : CanJoinValues[Repr, Bound[V2], B, V2, RV, That]) : That =
+  def joinEitherNonZero[V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
+  (implicit bf : CanJoinValues[Repr, Tensor[A,V2], B, V2, RV, That]) : That =
     bf.joinEitherNonZero(repr, tensor, fn);
 
   //
@@ -307,96 +307,6 @@ self =>
   }
 
   //
-  // Scalar operator implementations
-  //
-
-  /** Adds each element to the given scalar. */
-  def :+[O,RV,That](s : O)(implicit op : CanAdd[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) =
-    this.mapValues(v => op(v, s));
-
-  /** Subtracts each element from the given scalar. */
-  def :-[O,RV,That](s : O)(implicit op : CanSub[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) =
-    this.mapValues(v => op(v, s));
-
-  /** Multiplies each element by the given scalar. */
-  def :*[O,RV,That](s : O)(implicit op : CanMul[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = {
-    if (so.isNaN(s)) {
-      this.mapValues(v => op(v, s));
-    } else {
-      this.mapNonZeroValues(v => op(v, s));
-    }
-  }
-
-  /** Divides each element by the given scalar. */
-  def :/[O,RV,That](s : O)(implicit op : CanDiv[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = {
-    if (s == so.zero || so.isNaN(s)) {
-      this.mapValues(v => op(v, s));
-    } else {
-      this.mapNonZeroValues(v => op(v, s));
-    }
-  }
-
-  /** Raises each element to the given power. */
-  def :^[O,RV,That](s : O)(implicit op : CanPow[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) =
-    this.mapValues(v => op(v, s));
-
-  /** Takes the modulo of each element relative to the given value. */
-  def :%[O,RV,That](s : O)(implicit op : CanMod[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) =
-    this.mapValues(v => op(v, s));
-
-
-  //
-  // Scalar operator aliases
-  //
-
-  /** Alias for :+=(s) */
-  final def +[O,RV,That](s : O)(implicit op : CanAdd[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:+(s);
-
-  /** Alias for :-=(s) */
-  final def -[O,RV,That](s : O)(implicit op : CanSub[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:-(s);
-
-  /** Alias for :*=(s) */
-  final def *[O,RV,That](s : O)(implicit op : CanMul[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:*(s);
-
-  /** Alias for :/=(s) */
-  final def /[O,RV,That](s : O)(implicit op : CanDiv[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:/(s);
-
-  /** Alias for :^=(s) */
-  final def ^[O,RV,That](s : O)(implicit op : CanPow[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:^(s);
-
-  /** Alias for :%=(s) */
-  final def %[O,RV,That](s : O)(implicit op : CanMod[B,O,RV], bf : CanMapValues[Repr,B,RV,That], so : Scalar[O]) = this.:%(s);
-
-
-  //
-  // Tensor operator implementations
-  //
-
-  /** Adds each element of this tensor to the corresponding element in t. */
-  def :+[O,RV,That](t : Bound[O])(implicit op : CanAdd[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
-    this.joinEitherNonZero[O,RV,That](t)(op);
-  
-  /** Subtracts from each element of this tensor the corresponding element in t. */
-  def :-[O,RV,That](t : Bound[O])(implicit op : CanSub[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
-    this.joinEitherNonZero[O,RV,That](t)(op);
-
-  /** Multiplies each element of this tensor by the corresponding element in t. */
-  def :*[O,RV,That](t : Bound[O])(implicit op : CanMul[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
-    this.joinEitherNonZero[O,RV,That](t)(op);
-
-  /** Divides each element of this tensor by the corresponding element in t. */
-  def :/[O,RV,That](t : Bound[O])(implicit op : CanDiv[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
-    this.joinEitherNonZero[O,RV,That](t)(op);
-
-  /** Raises each element of this tensor to the corresponding element power in t. */
-  def :^[O,RV,That](t : Bound[O])(implicit op : CanPow[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
-    this.joinEitherNonZero[O,RV,That](t)(op);
-
-  /** Takes the modulo of each element of this tensor with the corresponding element in t. */
-  def :%[O,RV,That](t : Bound[O])(implicit op : CanMod[B,O,RV], bf : CanJoinValues[Repr,Bound[O],B,O,RV,That], so : Scalar[O]) : That =
-    this.joinEitherNonZero[O,RV,That](t)(op);
-
-  //
   // Conversions
   //
 
@@ -473,7 +383,9 @@ trait Tensor
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
 extends TensorLike[A, B, IterableDomain[A], Tensor[A, B]];
 
-object Tensor {
+object Tensor extends TensorCompanion[Tensor] {
+
+  // private type Bound[K,V] = Tensor[K,V];
 
   class Impl[A,B](values : Map[A,B])(implicit override val scalar : Scalar[B])
   extends Tensor[A,B] {
@@ -490,59 +402,6 @@ object Tensor {
       new TensorView.IdentityViewImpl[A,B,Tensor[A,B]](from);
   }
 
-  implicit def canMapValues[A, B, O:Scalar] =
-  new CanMapValues[Tensor[A,B],B,O,Tensor[A,O]] {
-    override def map(from : Tensor[A,B], fn : (B=>O)) = {
-      val builder = from.newBuilder[O];
-      from.foreach((k,v) => builder(k) = fn(v));
-      builder.result;
-    }
-    override def mapNonZero(from : Tensor[A,B], fn : (B=>O)) = {
-      val builder = from.newBuilder[O];
-      from.foreachNonZero((k,v) => builder(k) = fn(v));
-      builder.result;
-    }
-  }
-
-  implicit def canMapKeyValuePairs[A, B, O:Scalar] =
-  new CanMapKeyValuePairs[Tensor[A,B],A,B,O,Tensor[A,O]] {
-    override def map(from : Tensor[A,B], fn : ((A,B)=>O)) = {
-      val builder = from.newBuilder[O];
-      from.foreach((k,v) => builder(k) = fn(k,v));
-      builder.result;
-    }
-    override def mapNonZero(from : Tensor[A,B], fn : ((A,B)=>O)) = {
-      val builder = from.newBuilder[O];
-      from.foreachNonZero((k,v) => builder(k) = fn(k,v));
-      builder.result;
-    }
-  }
-
-  implicit def canJoin[K, V1, V2, RV:Scalar] =
-  new CanJoinValues[Tensor[K,V1], Tensor[K,V2], V1, V2, RV, Tensor[K,RV]] {
-    override def joinAll(a : Tensor[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-      a.checkDomain(b.domain);
-      val builder = a.newBuilder[RV];
-      for (k <- a.domain) { builder(k) = fn(a(k),b(k)); }
-      builder.result;
-    }
-
-    override def joinEitherNonZero(a : Tensor[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-      a.checkDomain(b.domain);
-      val builder = a.newBuilder[RV];
-      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-      b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
-      builder.result;
-    }
-
-    override def joinBothNonZero(a : Tensor[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-      a.checkDomain(b.domain);
-      val builder = a.newBuilder[RV];
-      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-      builder.result;
-    }
-  }
-
   implicit def canSliceTensor[A1, A2, B:Scalar] =
   new CanSliceTensor[Tensor[A1,B], A1, A2, Tensor[A2,B]] {
     override def apply(from : Tensor[A1,B], keymap : scala.collection.Map[A2,A1]) =
@@ -554,4 +413,191 @@ object Tensor {
     override def apply(from : Tensor[A,B], keys : Seq[A]) =
       new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
   }
+}
+
+/**
+ * Default instances of all capability traits for tensors bounded by
+ * Bound.  These implementations use map and join to construct new
+ * return values.
+ *
+ * @author dramgae
+ */
+trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] {
+
+  implicit def canMapValues[A, B, O:Scalar]
+  : CanMapValues[Bound[A,B],B,O,Bound[A,O]]
+  = new CanMapValues[Bound[A,B],B,O,Bound[A,O]] {
+    override def map(from : Bound[A,B], fn : (B=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreach((k,v) => builder(k) = fn(v));
+      builder.result.asInstanceOf[Bound[A,O]];
+    }
+    override def mapNonZero(from : Bound[A,B], fn : (B=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreachNonZero((k,v) => builder(k) = fn(v));
+      builder.result.asInstanceOf[Bound[A,O]];
+    }
+  }
+
+  implicit def canMapKeyValuePairs[A, B, O:Scalar]
+  : CanMapKeyValuePairs[Bound[A,B],A,B,O,Bound[A,O]]
+  = new CanMapKeyValuePairs[Bound[A,B],A,B,O,Bound[A,O]] {
+    override def map(from : Bound[A,B], fn : ((A,B)=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreach((k,v) => builder(k) = fn(k,v));
+      builder.result.asInstanceOf[Bound[A,O]];
+    }
+    override def mapNonZero(from : Bound[A,B], fn : ((A,B)=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreachNonZero((k,v) => builder(k) = fn(k,v));
+      builder.result.asInstanceOf[Bound[A,O]];
+    }
+  }
+
+  implicit def canJoin[K, V1, V2, RV:Scalar]
+  : CanJoinValues[Bound[K,V1], Bound[K,V2], V1, V2, RV, Bound[K,RV]] =
+  new CanJoinValues[Bound[K,V1], Bound[K,V2], V1, V2, RV, Bound[K,RV]] {
+    override def joinAll(a : Bound[K,V1], b : Bound[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      for (k <- a.domain) { builder(k) = fn(a(k),b(k)); }
+      builder.result.asInstanceOf[Bound[K,RV]];
+    }
+
+    override def joinEitherNonZero(a : Bound[K,V1], b : Bound[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
+      b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
+      builder.result.asInstanceOf[Bound[K,RV]];
+    }
+
+    override def joinBothNonZero(a : Bound[K,V1], b : Bound[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
+      builder.result.asInstanceOf[Bound[K,RV]];
+    }
+  }
+
+  //
+  // Tensor-scalar
+  //
+
+  implicit def canAddScalar[K,V,O,RV,That](implicit op : CanAdd[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanAdd[Bound[K,V],O,That] = new CanAdd[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
+
+  implicit def canSubScalar[K,V,O,RV,That](implicit op : CanSub[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanSub[Bound[K,V],O,That] = new CanSub[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
+
+  implicit def canMulScalar[K,V,O,RV,That](implicit op : CanMul[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], sb : Scalar[O])
+  : CanMul[Bound[K,V],O,That] = new CanMul[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      if (sb.isNaN(b)) {
+        a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+      } else {
+        a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapNonZeroValues(v => op(v, b))(bf);
+      }
+    }
+  }
+
+  implicit def canDivScalar[K,V,O,RV,That](implicit op : CanDiv[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], sb : Scalar[O])
+  : CanDiv[Bound[K,V],O,That] = new CanDiv[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      if (b == sb.zero || sb.isNaN(b)) {
+        a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b));
+      } else {
+        a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapNonZeroValues(v => op(v, b));
+      }
+    }
+  }
+
+  implicit def canPowScalar[K,V,O,RV,That](implicit op : CanPow[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanPow[Bound[K,V],O,That] = new CanPow[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
+
+  implicit def canModScalar[K,V,O,RV,That](implicit op : CanMod[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanMod[Bound[K,V],O,That] = new CanMod[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
+
+
+  //
+  // Tensor-Tensor
+  //
+
+  implicit def canAddBound[K,V,O,RV,That](implicit op : CanAdd[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanAdd[Bound[K,V],Bound[K,O],That] = new CanAdd[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a joinEitherNonZero b)(op)(bfLike);
+    }
+  }
+
+  implicit def canSubBound[K,V,O,RV,That](implicit op : CanSub[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanSub[Bound[K,V],Bound[K,O],That] = new CanSub[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a joinEitherNonZero b)(op)(bfLike);
+    }
+  }
+
+  // TODO: this could be faster via joinBothNonZero if we knew there were no NaN in b
+  implicit def canMulBound[K,V,O,RV,That](implicit op : CanMul[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanMul[Bound[K,V],Bound[K,O],That] = new CanMul[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a joinEitherNonZero b)(op)(bfLike);
+    }
+  }
+
+  implicit def canDivBound[K,V,O,RV,That](implicit op : CanDiv[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanDiv[Bound[K,V],Bound[K,O],That] = new CanDiv[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a join b)(op)(bfLike);
+    }
+  }
+
+  implicit def canPowBound[K,V,O,RV,That](implicit op : CanPow[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanPow[Bound[K,V],Bound[K,O],That] = new CanPow[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a join b)(op)(bfLike);
+    }
+  }
+
+  implicit def canModBound[K,V,O,RV,That](implicit op : CanMod[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanMod[Bound[K,V],Bound[K,O],That] = new CanMod[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a join b)(op)(bfLike);
+    }
+  }
+
 }

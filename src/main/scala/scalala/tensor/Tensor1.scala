@@ -20,7 +20,9 @@
 package scalala;
 package tensor;
 
-import generic.{CanAdd,CanMul};
+import generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
+import generic.collection._;
+import generic.tensor._;
 
 import domain._;
 
@@ -79,11 +81,14 @@ with operators.ColumnTensorOps[This] {
 trait Tensor1[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
 extends Tensor[A,B] with Tensor1Like[A,B,IterableDomain[A],Tensor1[A,B]];
 
-
-object Tensor1 {
+object Tensor1 extends Tensor1Companion[Tensor1] {
+//
 //  implicit def canSliceFrom[A1, A2, D<:IterableDomain[A1] with DomainLike[A1,D]] =
 //  new DomainMapCanSliceFrom[Tensor1[A1,Double,D], A1, D, A2, Double, Tensor1[A1,Double,SetDomain[A2]]] {
 //    override def apply(from : Tensor1[A1,Double,D], keymap : scala.collection.Map[A2,A1]) =
 //      new MutableDomainMapSlice.FromKeyMap[A1, D, A2, B, MutableDomainMap[A1,B,D]](from, keymap);
 //  }
+}
+
+trait Tensor1Companion[Bound[K,V] <: Tensor1[K,V]] extends TensorCompanion[Bound] {
 }
