@@ -191,7 +191,7 @@ final class SparseArray[@specialized T]
    * the growth is additive: an additional n * 1024 spaces will
    * be allocated for n in 1,2,4,8,16.  The largest amount of
    * space added to this vector will be an additional 16*1024*(sizeof(T)+4),
-   * which is 196608 bytes at a type for a SparseVector[Double],
+   * which is 196608 bytes at a time for a SparseVector[Double],
    * although more space is needed temporarily while moving to the
    * new arrays.
    */
@@ -206,11 +206,8 @@ final class SparseArray[@specialized T]
 
       used += 1;
 
-      var newIndex = index;
-      var newData = data;
-
       if (used > data.length) {
-        // expand array
+        // need to grow array
         val newLength = math.min(length, {
           if (data.length < 8) { 8 }
           else if (data.length > 16*1024) { data.length + 16*1024 }
@@ -222,26 +219,29 @@ final class SparseArray[@specialized T]
         });
 
         // copy existing data into new arrays
-        newIndex = new Array[Int](newLength);
-        newData  = new Array[T](newLength);
+        val newIndex = new Array[Int](newLength);
+        val newData  = new Array[T](newLength);
         System.arraycopy(index, 0, newIndex, 0, insertPos);
         System.arraycopy(data, 0, newData, 0, insertPos);
+
+        System.arraycopy(index, insertPos, newIndex, insertPos + 1, used - insertPos - 1);
+        System.arraycopy(data,  insertPos, newData,  insertPos + 1, used - insertPos - 1);
+
+        // update pointers
+        index = newIndex;
+        data = newData;
+      } else if (used - insertPos > 1) {
+        // need to make room for new element mid-array
+        System.arraycopy(index, insertPos, index, insertPos + 1, used - insertPos - 1);
+        System.arraycopy(data,  insertPos, data,  insertPos + 1, used - insertPos - 1);
       }
 
-      // make room for insertion
-      System.arraycopy(index, insertPos, newIndex, insertPos + 1, used - insertPos - 1);
-      System.arraycopy(data,  insertPos, newData,  insertPos + 1, used - insertPos - 1);
-
       // assign new value
-      newIndex(insertPos) = i;
-      newData(insertPos) = value;
+      index(insertPos) = i;
+      data(insertPos) = value;
 
       // record the insertion point
       found(i,insertPos);
-
-      // update pointers: this is a noop if we haven't expanded the arrays
-      index = newIndex;
-      data = newData;
     }
   }
 
