@@ -33,7 +33,7 @@ import operators.TensorSelfOp;
  * of the number of non-zeros.  Getting a value takes on the order
  * of the log of the number of non-default values, with special
  * constant time shortcuts for getting the previously accessed
- * element or its successor.  Note that this class is not threadsafe.
+ * element or its successor.
  * 
  * @author dramage
  */
@@ -53,7 +53,9 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   
   /** The previous index and offset found by apply or update. */
   final var lastOffset = -1;
-  final var lastIndex = -1;
+  // if we do it this way it's thread safe.
+  def lastIndex = if(lastOffset < 0) lastOffset else index(lastOffset);
+  
 
   /** Constructs a new SparseVector with initially 0 allocation. */
   def this(size : Int) =
@@ -82,7 +84,6 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
     index = inIndex;
     used = inUsed;
     lastOffset = -1;
-    lastIndex = -1;
   }
   
   override def size = domainSize;
@@ -116,7 +117,6 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   /** Records that the given index was found at this.index(offset). */
   protected final def found(index : Int, offset : Int) : Int = {
     lastOffset = offset;
-    lastIndex = index;
     return offset;
   }
   
