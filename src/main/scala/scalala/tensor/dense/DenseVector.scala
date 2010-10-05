@@ -125,21 +125,14 @@ class DenseVector(data : Array[Double]) extends
   }
 
   override def :+=  (t : PartialMap[Int,Double]) = t match {
-    case v: DenseVector =>
+    case v: Vector =>
       ensure(t);
       var i = 0;
       while(i < size) {
         this(i) += v(i);
         i += 1;
       }
-    case s: SparseVector =>
-      Arrays.fill(this.data,s.default);
-      var offset = 0;
-      while(offset < s.used) {
-        data(s.index(offset)) += s.data(offset);
-        offset+=1;
-      }
-    case _ => super.:=(t);
+    case _ => super.:+=(t);
   }
 
 
