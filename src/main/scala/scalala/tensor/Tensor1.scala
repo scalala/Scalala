@@ -88,7 +88,44 @@ object Tensor1 extends Tensor1Companion[Tensor1] {
 //    override def apply(from : Tensor1[A1,Double,D], keymap : scala.collection.Map[A2,A1]) =
 //      new MutableDomainMapSlice.FromKeyMap[A1, D, A2, B, MutableDomainMap[A1,B,D]](from, keymap);
 //  }
+
+
+  class CanMapValuesImpl[A,B,O](implicit override val scalar : Scalar[O])
+  extends Tensor1CanMapValues[Tensor1,A,B,O];
+
+  implicit def canMapValues[A,B,O:Scalar] : Tensor1CanMapValues[Tensor1,A,B,O] =
+    new CanMapValuesImpl[A,B,O];
+
+  class CanMapKeyValuePairsImpl[A,B,O](implicit override val scalar : Scalar[O])
+  extends Tensor1CanMapKeyValuePairs[Tensor1,A,B,O];
+
+  implicit def canMapKeyValuePairs[A,B,O:Scalar] : Tensor1CanMapKeyValuePairs[Tensor1,A,B,O] =
+    new CanMapKeyValuePairsImpl[A,B,O];
+
+  class CanJoinValuesImpl[K,V1,V2,RV](implicit override val scalar : Scalar[RV])
+  extends Tensor1CanJoinValues[Tensor1,K,V1,V2,RV];
+
+  implicit def canJoinValues[K,V1,V2,RV:Scalar] : Tensor1CanJoinValues[Tensor1,K,V1,V2,RV] =
+    new CanJoinValuesImpl[K,V1,V2,RV];
 }
 
-trait Tensor1Companion[Bound[K,V] <: Tensor1[K,V]] extends TensorCompanion[Bound] {
-}
+trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V] with Tensor1Like[K,V,_,Bound[K,V]]]
+extends TensorCompanion[Bound];
+
+trait Tensor1CanMapValues[TT[K,V]<:Tensor1[K,V] with Tensor1Like[K,V,_,TT[K,V]],K,V,RV]
+extends TensorCanMapValues[TT,K,V,RV];
+
+trait Tensor1CanMapKeyValuePairs[TT[K,V]<:Tensor1[K,V] with Tensor1Like[K,V,_,TT[K,V]],K,V,RV]
+extends TensorCanMapKeyValuePairs[TT,K,V,RV];
+
+trait Tensor1CanJoinValues[TT[K,V]<:Tensor1[K,V] with Tensor1Like[K,V,_,TT[K,V]],K,V1,V2,RV]
+extends TensorCanJoinValues[TT,K,V1,V2,RV];
+
+//class Tensor1CanMapValues[Bound[A,B]<:Tensor1[A,B],A,B,O:Scalar]
+//extends TensorCanMapValues[Bound,A,B,O];
+//
+//class Tensor1CanMapKeyValuePairs[Bound[A,B]<:Tensor1[A,B],A,B,O:Scalar]
+//extends TensorCanMapKeyValuePairs[Bound,A,B,O];
+//
+//class Tensor1CanJoinValues[Bound[A,B]<:Tensor[A,B],K,V1,V2,RV:Scalar]
+//extends TensorCanJoinValues[Bound,K,V1,V2,RV];
