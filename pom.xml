@@ -7,7 +7,7 @@
   <groupId>org.scalanlp</groupId>
   <artifactId>scalala_${scala.version}</artifactId>
   <name>Scalala</name>
-  <version>0.4.1</version>
+  <version>0.4.2-SNAPSHOT</version>
   <inceptionYear>2008</inceptionYear>
 
   <developers>
