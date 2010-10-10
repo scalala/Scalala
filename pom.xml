@@ -264,7 +264,7 @@
         <version>2.10</version>
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
-          <sourceDir>src/</sourceDir>
+          <sourceDir>src/main</sourceDir>
         </configuration>
       </plugin>
     </plugins>
