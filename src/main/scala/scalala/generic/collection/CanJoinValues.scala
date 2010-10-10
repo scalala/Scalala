@@ -27,7 +27,7 @@ package tensor;
  *
  * @author dramage
  */
-trait CanJoinValues[-Repr1, -Repr2, V1, V2, RV, +That] {
+trait CanJoinValues[Repr1, -Repr2, V1, V2, RV, +That] {
   /** Joins on all keys in the domain. */
   def joinAll(a : Repr1, b : Repr2, fn : (V1,V2)=>RV) : That;
 

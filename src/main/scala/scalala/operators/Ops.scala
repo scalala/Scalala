@@ -29,72 +29,78 @@ import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 trait NumericOps[+This] {
   def repr : This;
 
-  def unary_-[That](implicit op : CanNeg[This,That]) : That = op(repr);
+  def unary_-[TT>:This,That](implicit op : CanNeg[TT,That]) : That = op(repr);
 
-  def :+[B,That](b : B)(implicit op : CanAdd[This,B,That]) = op(repr,b);
+  def :+[TT>:This,B,That](b : B)(implicit op : CanAdd[TT,B,That]) = op(repr,b);
 
-  def :-[B,That](b : B)(implicit op : CanSub[This,B,That]) = op(repr,b);
+  def :-[TT>:This,B,That](b : B)(implicit op : CanSub[TT,B,That]) = op(repr,b);
 
-  def :*[B,That](b : B)(implicit op : CanMul[This,B,That]) = op(repr,b);
+  def :*[TT>:This,B,That](b : B)(implicit op : CanMul[TT,B,That]) = op(repr,b);
 
-  def :/[B,That](b : B)(implicit op : CanDiv[This,B,That]) = op(repr,b);
+  def :/[TT>:This,B,That](b : B)(implicit op : CanDiv[TT,B,That]) = op(repr,b);
 
-  def :%[B,That](b : B)(implicit op : CanMod[This,B,That]) = op(repr,b);
+  def :%[TT>:This,B,That](b : B)(implicit op : CanMod[TT,B,That]) = op(repr,b);
 
-  def :^[B,That](b : B)(implicit op : CanPow[This,B,That]) = op(repr,b);
+  def :^[TT>:This,B,That](b : B)(implicit op : CanPow[TT,B,That]) = op(repr,b);
 
-  def :<[B,That](b : B)(implicit op : CanLT[This,B,That]) = op(repr,b);
+  def :<[TT>:This,B,That](b : B)(implicit op : CanLT[TT,B,That]) = op(repr,b);
 
-  def :<=[B,That](b : B)(implicit op : CanLTE[This,B,That]) = op(repr,b);
+  def :<=[TT>:This,B,That](b : B)(implicit op : CanLTE[TT,B,That]) = op(repr,b);
 
-  def :>[B,That](b : B)(implicit op : CanGT[This,B,That]) = op(repr,b);
+  def :>[TT>:This,B,That](b : B)(implicit op : CanGT[TT,B,That]) = op(repr,b);
 
-  def :>=[B,That](b : B)(implicit op : CanGTE[This,B,That]) = op(repr,b);
+  def :>=[TT>:This,B,That](b : B)(implicit op : CanGTE[TT,B,That]) = op(repr,b);
 
-  def :==[B,That](b : B)(implicit op : CanEq[This,B,That]) = op(repr,b);
+  def :==[TT>:This,B,That](b : B)(implicit op : CanEq[TT,B,That]) = op(repr,b);
 
-  def :!=[B,That](b : B)(implicit op : CanNe[This,B,That]) = op(repr,b);
+  def :!=[TT>:This,B,That](b : B)(implicit op : CanNe[TT,B,That]) = op(repr,b);
 
   //
   // Scalar operator aliases
   //
 
   /** Alias for :+=(b) */
-  final def +[B,That](b : B)(implicit op : CanAdd[This,B,That], sb : Scalar[B]) = this.:+(b);
+  final def +[TT>:This,B,That](b : B)(implicit op : CanAdd[TT,B,That], sb : Scalar[B]) =
+    this.:+[TT,B,That](b);
 
   /** Alias for :-=(b) */
-  final def -[B,That](b : B)(implicit op : CanSub[This,B,That], sb : Scalar[B]) = this.:-(b);
+  final def -[TT>:This,B,That](b : B)(implicit op : CanSub[TT,B,That], sb : Scalar[B]) =
+    this.:-[TT,B,That](b);
 
   /** Alias for :*=(b) */
-  final def *[B,That](b : B)(implicit op : CanMul[This,B,That], sb : Scalar[B]) = this.:*(b);
+  final def *[TT>:This,B,That](b : B)(implicit op : CanMul[TT,B,That], sb : Scalar[B]) =
+    this.:*[TT,B,That](b);
 
   /** Alias for :/=(b) */
-  final def /[B,That](b : B)(implicit op : CanDiv[This,B,That], sb : Scalar[B]) = this.:/(b);
+  final def /[TT>:This,B,That](b : B)(implicit op : CanDiv[TT,B,That], sb : Scalar[B]) =
+    this.:/[TT,B,That](b);
 
   /** Alias for :^=(b) */
-  final def ^[B,That](b : B)(implicit op : CanPow[This,B,That], sb : Scalar[B]) = this.:^(b);
+  final def ^[TT>:This,B,That](b : B)(implicit op : CanPow[TT,B,That], sb : Scalar[B]) =
+    this.:^[TT,B,That](b);
 
   /** Alias for :%=(b) */
-  final def %[B,That](b : B)(implicit op : CanMod[This,B,That], sb : Scalar[B]) = this.:%(b);
+  final def %[TT>:This,B,That](b : B)(implicit op : CanMod[TT,B,That], sb : Scalar[B]) =
+    this.:%[TT,B,That](b);
 }
 
 
 trait MutableNumericOps[+This] extends NumericOps[This] {
   def repr : This;
 
-  def :=[B](b : B)(implicit op : CanAssignInto[This,B]) = op(repr,b);
+  def :=[TT>:This,B](b : B)(implicit op : CanAssignInto[TT,B]) = op(repr,b);
 
-  def :+=[B](b : B)(implicit op : CanAddInto[This,B]) = op(repr,b);
+  def :+=[TT>:This,B](b : B)(implicit op : CanAddInto[TT,B]) = op(repr,b);
 
-  def :-=[B](b : B)(implicit op : CanSubInto[This,B]) = op(repr,b);
+  def :-=[TT>:This,B](b : B)(implicit op : CanSubInto[TT,B]) = op(repr,b);
 
-  def :*=[B](b : B)(implicit op : CanMulInto[This,B]) = op(repr,b);
+  def :*=[TT>:This,B](b : B)(implicit op : CanMulInto[TT,B]) = op(repr,b);
 
-  def :/=[B](b : B)(implicit op : CanDivInto[This,B]) = op(repr,b);
+  def :/=[TT>:This,B](b : B)(implicit op : CanDivInto[TT,B]) = op(repr,b);
 
-  def :%=[B](b : B)(implicit op : CanModInto[This,B]) = op(repr,b);
+  def :%=[TT>:This,B](b : B)(implicit op : CanModInto[TT,B]) = op(repr,b);
 
-  def :^=[B](b : B)(implicit op : CanPowInto[This,B]) = op(repr,b);
+  def :^=[TT>:This,B](b : B)(implicit op : CanPowInto[TT,B]) = op(repr,b);
 }
 
 //
@@ -103,7 +109,7 @@ trait MutableNumericOps[+This] extends NumericOps[This] {
 
 
 /** Construction delegate for outer (dot) product A * B. @author dramage */
-trait CanMulOuter[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanMulOuter[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulOuter {
   implicit def CanMulOuterArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV])
@@ -126,7 +132,7 @@ object CanMulOuter {
 }
 
 /** For A*B where A is a matrix. @author dramage */
-trait CanMulMatrixBy[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanMulMatrixBy[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulMatrixBy {
   implicit def CanMulArrayMatrixByArray[V1,V2,RV]
@@ -202,11 +208,11 @@ object CanMulMatrixBy {
  *
  * @author dramage
  */
-trait ColumnTensorOps[+A] extends NumericOps[A] {
-  def *[B,RV](b : RowTensorOps[B])(implicit op : CanMulOuter[A,B,RV]) : RV =
+trait ColumnTensorOps[+This] extends NumericOps[This] {
+  def *[TT>:This,B,RV](b : RowTensorOps[B])(implicit op : CanMulOuter[TT,B,RV]) : RV =
     op(repr,b.column);
 
-  def t : RowTensorOps[A] = RowTensorOps(repr);
+  def t : RowTensorOps[This] = RowTensorOps(repr);
 }
 
 /**
@@ -217,13 +223,13 @@ trait ColumnTensorOps[+A] extends NumericOps[A] {
  *
  * @author dramage
  */
-trait MutableColumnTensorOps[+A] extends ColumnTensorOps[A] with MutableNumericOps[A] {
-  override def t : MutableRowTensorOps[A] = MutableRowTensorOps(repr);
+trait MutableColumnTensorOps[+This] extends ColumnTensorOps[This] with MutableNumericOps[This] {
+  override def t : MutableRowTensorOps[This] = MutableRowTensorOps(repr);
 }
 
 
 /** For A*B where A is a row vector. @author dramage */
-trait CanMulRowBy[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanMulRowBy[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulRowBy {
   //
@@ -377,23 +383,23 @@ object CanMulRowBy {
  *
  * @author dramage
  */
-trait RowTensorOps[+A] extends NumericOps[RowTensorOps[A]] {
-  override def repr : RowTensorOps[A] = this;
+trait RowTensorOps[+This] extends NumericOps[RowTensorOps[This]] {
+  override def repr : RowTensorOps[This] = this;
 
-  def column : A;
+  def column : This;
 
-  def *[B,RV](b : B)(implicit op : CanMulRowBy[A,B,RV]) : RV =
+  def *[TT>:This,B,RV](b : B)(implicit op : CanMulRowBy[TT,B,RV]) : RV =
     op(this.column,b);
 
   /** The transpose returns the underlying value, which assumed to be a column. */
-  def t : A = column;
+  def t : This = column;
 }
 
 object RowTensorOps {
   def apply[This](v : This) : RowTensorOps[This] =
     new RowTensorOps[This] { override def column = v; }
 
-  class RowBinaryOp[-A,-B,+That](implicit op : BinaryOp[A,B,That])
+  class RowBinaryOp[A,-B,+That](implicit op : BinaryOp[A,B,That])
   extends BinaryOp[RowTensorOps[A],RowTensorOps[B],RowTensorOps[That]] {
     override def apply(a : RowTensorOps[A], b : RowTensorOps[B]) =
       RowTensorOps(op(a.column,b.column));
@@ -440,8 +446,8 @@ object RowTensorOps {
  * Specialized RowTensorOps support for RowTensors that have mutable
  * underlying collections.
  */
-trait MutableRowTensorOps[+A]
-extends RowTensorOps[A] with MutableNumericOps[RowTensorOps[A]] {
+trait MutableRowTensorOps[+This]
+extends RowTensorOps[This] with MutableNumericOps[RowTensorOps[This]] {
 }
 
 object MutableRowTensorOps {
@@ -455,8 +461,8 @@ object MutableRowTensorOps {
  * Provides matrix-like operations for two dimensional collections.
  * @author dramage
  */
-trait MatrixOps[+A] extends NumericOps[A] {
-  def *[B,That](b : B)(implicit op : CanMulMatrixBy[A,B,That]) =
+trait MatrixOps[+This] extends NumericOps[This] {
+  def *[TT>:This,B,That](b : B)(implicit op : CanMulMatrixBy[TT,B,That]) =
     op.apply(repr,b);
 }
 

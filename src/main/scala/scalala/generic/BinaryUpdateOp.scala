@@ -30,7 +30,7 @@ import scalala.collection.sparse.{SparseArray};
  * 
  * @author dramage
  */
-trait BinaryUpdateOp[-A,-B] {
+trait BinaryUpdateOp[A,@specialized -B] {
   def apply(a : A, b : B) : Unit;
 }
 
@@ -187,7 +187,7 @@ extends BinaryUpdateOp[SparseArray[V1],B] {
 }
 
 /** Mutation delegate for A := B. @author dramage */
-trait CanAssignInto[-A,-B] extends BinaryUpdateOp[A,B];
+trait CanAssignInto[A,-B] extends BinaryUpdateOp[A,B];
 
 object CanAssignInto {
   implicit def mkIntoArrayInnerArrayInner[A,B](implicit op : CanAssignInto[A,B])
@@ -258,7 +258,7 @@ object CanAssignInto {
 }
 
 /** Mutation delegate for A :+= B. @author dramage */
-trait CanAddInto[-A,-B] extends BinaryUpdateOp[A,B];
+trait CanAddInto[A,-B] extends BinaryUpdateOp[A,B];
 
 object CanAddInto {
   type Op[A,B] = CanAdd[A,B,A];
@@ -311,7 +311,7 @@ object CanAddInto {
 }
 
 /** Mutation delegate for A :-= B. @author dramage */
-trait CanSubInto[-A,-B] extends BinaryUpdateOp[A,B];
+trait CanSubInto[A,-B] extends BinaryUpdateOp[A,B];
 
 object CanSubInto {
   type Op[A,B] = CanSub[A,B,A];
@@ -364,7 +364,7 @@ object CanSubInto {
 }
 
 /** Mutation delegate for A :*= B. @author dramage */
-trait CanMulInto[-A,-B] extends BinaryUpdateOp[A,B];
+trait CanMulInto[A,-B] extends BinaryUpdateOp[A,B];
 
 object CanMulInto {
   type Op[A,B] = CanMul[A,B,A];
@@ -417,7 +417,7 @@ object CanMulInto {
 }
 
 /** Mutation delegate for A :/= B. @author dramage */
-trait CanDivInto[-A,-B] extends BinaryUpdateOp[A,B];
+trait CanDivInto[A,-B] extends BinaryUpdateOp[A,B];
 
 object CanDivInto {
   type Op[A,B] = CanDiv[A,B,A];
@@ -470,7 +470,7 @@ object CanDivInto {
 }
 
 /** Mutation delegate for A :/= B. @author dramage */
-trait CanModInto[-A,-B] extends BinaryUpdateOp[A,B];
+trait CanModInto[A,-B] extends BinaryUpdateOp[A,B];
 
 object CanModInto {
   type Op[A,B] = CanMod[A,B,A];
@@ -523,4 +523,4 @@ object CanModInto {
 }
 
 /** Mutation delegate for A :^= B. @author dramage */
-trait CanPowInto[-A,-B] extends BinaryUpdateOp[A,B];
+trait CanPowInto[A,-B] extends BinaryUpdateOp[A,B];

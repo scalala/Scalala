@@ -38,17 +38,17 @@ trait TensorLike
 [@specialized(Int, Long) A,
  @specialized(Int, Long, Float, Double, Boolean) B,
  +D<:IterableDomain[A] with DomainLike[A,D],
- +Repr<:Tensor[A,B]]
+ +This<:Tensor[A,B]]
 extends DomainFunction[A, B, D]
-with operators.NumericOps[Repr] {
+with operators.NumericOps[This] {
 self =>
 
 //  // TODO: replace this with a generic parameter
 //  type Bound[V] = Tensor[A,V];
 
-  protected type Self = Repr;
+  protected type Self = This;
 
-  def repr : Repr = this.asInstanceOf[Repr];
+  def repr : This = this.asInstanceOf[This];
 
   /** Provides information about the underlying scalar value type B. */
   implicit val scalar : Scalar[B];
@@ -85,9 +85,9 @@ self =>
    * For-comprehension support for "for ((k,v) <- x) yield ..."
    * Defers to un-tupled map.
    */
-  def map[O, That](f: ((A,B)) => O)
-  (implicit map: CanMapKeyValuePairs[Repr, A, B, O, That]): That =
-    this.map((k,v) => f((k,v)));
+  def map[TT>:This, O, That](f: ((A,B)) => O)
+  (implicit map: CanMapKeyValuePairs[TT, A, B, O, That]): That =
+    this.map[TT,O,That]((k : A, v : B) => f((k,v)));
 
   //
   // Collection contents
@@ -130,23 +130,23 @@ self =>
   }
 
   /** Creates a new map containing a transformed copy of this map. */
-  def map[O,That](f : (A,B) => O)
-  (implicit bf : CanMapKeyValuePairs[Repr, A, B, O, That]) : That =
-    bf.map(repr, f);
+  def map[TT>:This,O,That](f : (A,B) => O)
+  (implicit bf : CanMapKeyValuePairs[TT, A, B, O, That]) : That =
+    bf.map(repr.asInstanceOf[TT], f);
 
   /** Maps all non-zero key-value pairs values. */
-  def mapNonZero[O,That](f : (A,B) => O)
-  (implicit bf : CanMapKeyValuePairs[Repr, A, B, O, That]) : That =
-    bf.mapNonZero(repr, f);
+  def mapNonZero[TT>:This,O,That](f : (A,B) => O)
+  (implicit bf : CanMapKeyValuePairs[TT, A, B, O, That]) : That =
+    bf.mapNonZero(repr.asInstanceOf[TT], f);
 
   /** Creates a new map containing a transformed copy of this map. */
-  def mapValues[O,That](f : B => O)
-  (implicit bf : CanMapValues[Repr, B, O, That]) : That =
-    bf.map(repr, f);
+  def mapValues[TT>:This,O,That](f : B => O)
+  (implicit bf : CanMapValues[TT, B, O, That]) : That =
+    bf.map(repr.asInstanceOf[TT], f);
 
-  def mapNonZeroValues[O,That](f : B => O)
-  (implicit bf : CanMapValues[Repr, B, O, That]) : That =
-    bf.mapNonZero(repr, f);
+  def mapNonZeroValues[TT>:This,O,That](f : B => O)
+  (implicit bf : CanMapValues[TT, B, O, That]) : That =
+    bf.mapNonZero(repr.asInstanceOf[TT], f);
 
   /** Iterates over all elements in the domain and the corresponding value. */
   def iterator : Iterator[(A,B)] =
@@ -164,7 +164,7 @@ self =>
    * Constructs a view of this map on which calls to mapValues are
    * chained together and lazily evaluated.
    */
-  def view[That](implicit bf : CanView[Repr,That]) : That =
+  def view[That](implicit bf : CanView[This,That]) : That =
     bf.apply(repr);
 
   /**
@@ -172,34 +172,34 @@ self =>
    * values matching the given filter criteria.
    */
   def filter[That](p: B => Boolean)
-  (implicit bf : CanSliceVector[Repr, A, That]) : That =
+  (implicit bf : CanSliceVector[This, A, That]) : That =
     apply(find(p));
 
   /**
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map.
    */
-  def join[V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
-  (implicit bf : CanJoinValues[Repr, Tensor[A,V2], B, V2, RV, That]) : That =
-    bf.joinAll(repr, tensor, fn);
+  def join[TT>:This,V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
+  (implicit bf : CanJoinValues[TT, Tensor[A,V2], B, V2, RV, That]) : That =
+    bf.joinAll(repr.asInstanceOf[TT], tensor, fn);
 
   /**
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map where keys in
    * both this and m are non-zero.
    */
-  def joinBothNonZero[V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
-  (implicit bf : CanJoinValues[Repr, Tensor[A,V2], B, V2, RV, That]) : That =
-    bf.joinBothNonZero(repr, tensor, fn);
+  def joinBothNonZero[TT>:This,V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
+  (implicit bf : CanJoinValues[TT, Tensor[A,V2], B, V2, RV, That]) : That =
+    bf.joinBothNonZero(repr.asInstanceOf[TT], tensor, fn);
 
   /**
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map where keys in
    * either this or m are non-zero.
    */
-  def joinEitherNonZero[V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
-  (implicit bf : CanJoinValues[Repr, Tensor[A,V2], B, V2, RV, That]) : That =
-    bf.joinEitherNonZero(repr, tensor, fn);
+  def joinEitherNonZero[TT>:This,V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
+  (implicit bf : CanJoinValues[TT, Tensor[A,V2], B, V2, RV, That]) : That =
+    bf.joinEitherNonZero(repr.asInstanceOf[TT], tensor, fn);
 
   //
   // Slice construction
@@ -210,26 +210,26 @@ self =>
 
   /** Creates a view backed by the given keys, returning them as a sequence. */
   def apply[That](keys : A*)
-  (implicit bf : CanSliceVector[Repr, A, That]) : That =
+  (implicit bf : CanSliceVector[This, A, That]) : That =
     bf(repr, keys);
 
   /** Creates a view backed by the given keys, returning them as a sequence. */
   def apply[That](keys : Traversable[A])
-  (implicit bf : CanSliceVector[Repr, A, That]) : That =
+  (implicit bf : CanSliceVector[This, A, That]) : That =
     bf(repr, keys.toIndexedSeq);
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : (I,A)*)
-  (implicit bf : CanSliceTensor[Repr, A, I, That]) : That =
-    apply[I,That](keys.toMap);
+  (implicit bf : CanSliceTensor[This, A, I, That]) : That =
+    apply(keys.toMap);
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : Iterable[(I,A)])
-  (implicit bf : CanSliceTensor[Repr, A, I, That]) : That =
-    apply[I,That](keys.toMap);
+  (implicit bf : CanSliceTensor[This, A, I, That]) : That =
+    apply(keys.toMap);
 
   def apply[I,That](keys : scala.collection.Map[I,A])
-  (implicit bf : CanSliceTensor[Repr, A, I, That]) : That =
+  (implicit bf : CanSliceTensor[This, A, I, That]) : That =
     bf(repr, keys);
 
   //
@@ -249,8 +249,8 @@ self =>
    * <code>x(x.argsort)</code>.  Changes to the sorted view are
    * written-through to the underlying map.
    */
-  def sorted[That](implicit bf : CanSliceVector[Repr, A, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
-    this(this.argsort);
+  def sorted[That](implicit bf : CanSliceVector[This, A, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
+    this.apply(this.argsort);
 
 
   //
@@ -571,7 +571,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
       (a joinEitherNonZero b)(op)(bfLike);
     }
   }
@@ -581,7 +581,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
       (a joinEitherNonZero b)(op)(bfLike);
     }
   }
@@ -592,7 +592,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
       (a joinEitherNonZero b)(op)(bfLike);
     }
   }
@@ -602,7 +602,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
       (a join b)(op)(bfLike);
     }
   }
@@ -612,7 +612,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
       (a join b)(op)(bfLike);
     }
   }
@@ -622,7 +622,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
       (a join b)(op)(bfLike);
     }
   }

@@ -32,7 +32,7 @@ import scalala.tensor.Scalar;
  *
  * @author dramage
  */
-trait CanMapValues[-From, @specialized A, @specialized B, +To] {
+trait CanMapValues[From, @specialized A, @specialized B, +To] {
   /** Maps all values from the given collection. */
   def map(from : From, fn : (A=>B)) : To;
 

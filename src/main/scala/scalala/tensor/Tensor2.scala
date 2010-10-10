@@ -54,18 +54,18 @@ extends TensorLike[(A1,A2),B,D,This] {
     apply(pos._1, pos._2);
 
   /** Slice a sub-Tensor2 */
-  def apply[That](i : Seq[A1], j : Seq[A2])(implicit bf : CanSliceMatrix[This,A1,A2,That]) : That =
+  def apply[TT>:This,That](i : Seq[A1], j : Seq[A2])(implicit bf : CanSliceMatrix[TT,A1,A2,That]) : That =
     bf.apply(repr, i, j);
 
-  def apply[That](i : A1, j : SelectAll)(implicit bf : CanSliceRow[This,A1,That]) : That =
+  def apply[TT>:This,That](i : A1, j : SelectAll)(implicit bf : CanSliceRow[TT,A1,That]) : That =
     bf.apply(repr, i);
 
-  def apply[That](i : SelectAll, j : A2)(implicit bf : CanSliceCol[This,A2,That]) : That =
+  def apply[TT>:This,That](i : SelectAll, j : A2)(implicit bf : CanSliceCol[TT,A2,That]) : That =
     bf.apply(repr, j);
 
   /** Transpose this Tensor2. */
-  def transpose[That]
-  (implicit bf : CanTranspose[This,That]) : That =
+  def transpose[TT>:This,That]
+  (implicit bf : CanTranspose[TT,That]) : That =
     bf.apply(repr);
 
   /** Tranforms all key value pairs in this map by applying the given function. */

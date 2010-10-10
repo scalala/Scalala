@@ -34,7 +34,7 @@ import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
  * 
  * @author dramage
  */
-trait BinaryOp[@specialized -A, @specialized -B, +That]
+trait BinaryOp[@specialized A, @specialized -B, +That]
 extends ((A,B) => That);
 
 
@@ -374,7 +374,7 @@ extends BinaryOp[(VA1,VA2,VA3,VA4),(VB1,VB2,VB3,VB4),(RV1,RV2,RV3,RV4)] {
 }
 
 /** Construction delegate for A :+ B. @author dramage */
-trait CanAdd[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanAdd[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanAdd {
   type Op[A,B,That] = CanAdd[A,B,That]
@@ -582,7 +582,7 @@ object CanAdd {
 }
 
 /** Construction delegate for A :- B. @author dramage */
-trait CanSub[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanSub[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanSub {
   type Op[A,B,That] = CanSub[A,B,That]
@@ -790,7 +790,7 @@ object CanSub {
 }
 
 /** Construction delegate for A :* B. @author dramage */
-trait CanMul[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanMul[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMul {
   type Op[A,B,That] = CanMul[A,B,That]
@@ -999,7 +999,7 @@ object CanMul {
 
 
 /** Construction delegate for A :/ B. @author dramage */
-trait CanDiv[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanDiv[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanDiv {
   type Op[A,B,That] = CanDiv[A,B,That]
@@ -1207,7 +1207,7 @@ object CanDiv {
 }
 
 /** Construction delegate for A :% B. @author dramage */
-trait CanMod[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanMod[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMod {
   type Op[A,B,That] = CanMod[A,B,That]
@@ -1415,22 +1415,22 @@ object CanMod {
 }
 
 /** Construction delegate for A :^ B. @author dramage */
-trait CanPow[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanPow[A,-B,+That] extends BinaryOp[A,B,That];
 
 /** Construction delegate for A :< B. @author dramage */
-trait CanLT[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanLT[A,-B,+That] extends BinaryOp[A,B,That];
 
 /** Construction delegate for A :<= B. @author dramage */
-trait CanLTE[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanLTE[A,-B,+That] extends BinaryOp[A,B,That];
 
 /** Construction delegate for A :> B. @author dramage */
-trait CanGT[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanGT[A,-B,+That] extends BinaryOp[A,B,That];
 
 /** Construction delegate for A :>= B. @author dramage */
-trait CanGTE[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanGTE[A,-B,+That] extends BinaryOp[A,B,That];
 
 /** Construction delegate for A :== B. @author dramage */
-trait CanEq[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanEq[A,-B,+That] extends BinaryOp[A,B,That];
 
 /** Construction delegate for A :!= B. @author dramage */
-trait CanNe[-A,-B,+That] extends BinaryOp[A,B,That];
+trait CanNe[A,-B,+That] extends BinaryOp[A,B,That];
