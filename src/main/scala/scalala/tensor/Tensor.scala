@@ -413,24 +413,6 @@ object Tensor extends TensorCompanion[Tensor] {
     override def apply(from : Tensor[A,B], keys : Seq[A]) =
       new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
   }
-
-  class CanMapValuesImpl[A,B,O](implicit override val scalar : Scalar[O])
-  extends TensorCanMapValues[Tensor,A,B,O];
-
-  implicit def canMapValues[A,B,O:Scalar] : TensorCanMapValues[Tensor,A,B,O] =
-    new CanMapValuesImpl[A,B,O];
-
-  class CanMapKeyValuePairsImpl[A,B,O](implicit override val scalar : Scalar[O])
-  extends TensorCanMapKeyValuePairs[Tensor,A,B,O];
-
-  implicit def canMapKeyValuePairs[A,B,O:Scalar] : TensorCanMapKeyValuePairs[Tensor,A,B,O] =
-    new CanMapKeyValuePairsImpl[A,B,O];
-
-  class CanJoinValuesImpl[K,V1,V2,RV](implicit override val scalar : Scalar[RV])
-  extends TensorCanJoinValues[Tensor,K,V1,V2,RV];
-
-  implicit def canJoinValues[K,V1,V2,RV:Scalar] : TensorCanJoinValues[Tensor,K,V1,V2,RV] =
-    new CanJoinValuesImpl[K,V1,V2,RV];
 }
 
 /**
@@ -451,61 +433,61 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
 //      from.asInstanceOf[Tensor[K,V]].newBuilder.asInstanceOf[TensorBuilder[K,V,Bound[K,V]]];
 //  }
 
-//  implicit def canMapValues[A, B, O:Scalar]
-//  : CanMapValues[Bound[A,B],B,O,Bound[A,O]]
-//  = new CanMapValues[Bound[A,B],B,O,Bound[A,O]] {
-//    override def map(from : Bound[A,B], fn : (B=>O)) = {
-//      val builder = from.newBuilder[O];
-//      from.foreach((k,v) => builder(k) = fn(v));
-//      builder.result.asInstanceOf[Bound[A,O]];
-//    }
-//    override def mapNonZero(from : Bound[A,B], fn : (B=>O)) = {
-//      val builder = from.newBuilder[O];
-//      from.foreachNonZero((k,v) => builder(k) = fn(v));
-//      builder.result.asInstanceOf[Bound[A,O]];
-//    }
-//  }
-//
-//  implicit def canMapKeyValuePairs[A, B, O:Scalar]
-//  : CanMapKeyValuePairs[Bound[A,B],A,B,O,Bound[A,O]]
-//  = new CanMapKeyValuePairs[Bound[A,B],A,B,O,Bound[A,O]] {
-//    override def map(from : Bound[A,B], fn : ((A,B)=>O)) = {
-//      val builder = from.newBuilder[O];
-//      from.foreach((k,v) => builder(k) = fn(k,v));
-//      builder.result.asInstanceOf[Bound[A,O]];
-//    }
-//    override def mapNonZero(from : Bound[A,B], fn : ((A,B)=>O)) = {
-//      val builder = from.newBuilder[O];
-//      from.foreachNonZero((k,v) => builder(k) = fn(k,v));
-//      builder.result.asInstanceOf[Bound[A,O]];
-//    }
-//  }
-//
-//  implicit def canJoin[K, V1, V2, RV:Scalar]
-//  : CanJoinValues[Bound[K,V1], Tensor[K,V2], V1, V2, RV, Bound[K,RV]] =
-//  new CanJoinValues[Bound[K,V1], Tensor[K,V2], V1, V2, RV, Bound[K,RV]] {
-//    override def joinAll(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-//      a.checkDomain(b.domain);
-//      val builder = a.newBuilder[RV];
-//      a.foreach((k,aV) => builder(k) = fn(aV,b(k)));
-//      builder.result.asInstanceOf[Bound[K,RV]];
-//    }
-//
-//    override def joinEitherNonZero(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-//      a.checkDomain(b.domain);
-//      val builder = a.newBuilder[RV];
-//      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-//      b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
-//      builder.result.asInstanceOf[Bound[K,RV]];
-//    }
-//
-//    override def joinBothNonZero(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-//      a.checkDomain(b.domain);
-//      val builder = a.newBuilder[RV];
-//      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-//      builder.result.asInstanceOf[Bound[K,RV]];
-//    }
-//  }
+  implicit def canMapValues[A, B, O:Scalar]
+  : CanMapValues[Bound[A,B],B,O,Bound[A,O]]
+  = new CanMapValues[Bound[A,B],B,O,Bound[A,O]] {
+    override def map(from : Bound[A,B], fn : (B=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreach((k,v) => builder(k) = fn(v));
+      builder.result.asInstanceOf[Bound[A,O]];
+    }
+    override def mapNonZero(from : Bound[A,B], fn : (B=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreachNonZero((k,v) => builder(k) = fn(v));
+      builder.result.asInstanceOf[Bound[A,O]];
+    }
+  }
+
+  implicit def canMapKeyValuePairs[A, B, O:Scalar]
+  : CanMapKeyValuePairs[Bound[A,B],A,B,O,Bound[A,O]]
+  = new CanMapKeyValuePairs[Bound[A,B],A,B,O,Bound[A,O]] {
+    override def map(from : Bound[A,B], fn : ((A,B)=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreach((k,v) => builder(k) = fn(k,v));
+      builder.result.asInstanceOf[Bound[A,O]];
+    }
+    override def mapNonZero(from : Bound[A,B], fn : ((A,B)=>O)) = {
+      val builder = from.newBuilder[O];
+      from.foreachNonZero((k,v) => builder(k) = fn(k,v));
+      builder.result.asInstanceOf[Bound[A,O]];
+    }
+  }
+
+  implicit def canJoin[K, V1, V2, RV:Scalar]
+  : CanJoinValues[Bound[K,V1], Tensor[K,V2], V1, V2, RV, Bound[K,RV]] =
+  new CanJoinValues[Bound[K,V1], Tensor[K,V2], V1, V2, RV, Bound[K,RV]] {
+    override def joinAll(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreach((k,aV) => builder(k) = fn(aV,b(k)));
+      builder.result.asInstanceOf[Bound[K,RV]];
+    }
+
+    override def joinEitherNonZero(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
+      b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
+      builder.result.asInstanceOf[Bound[K,RV]];
+    }
+
+    override def joinBothNonZero(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
+      builder.result.asInstanceOf[Bound[K,RV]];
+    }
+  }
 
   //
   // Tensor-scalar
@@ -627,137 +609,3 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     }
   }
 }
-
-trait TensorCanMapValues[TT[A,B]<:Tensor[A,B] with TensorLike[A,B,_,TT[A,B]],A,B,O]
-extends CanMapValues[TT[A,B],B,O,TT[A,O]] {
-  implicit val scalar : Scalar[O];
-
-  override def map(from : TT[A,B], fn : (B=>O)) = {
-    val builder = from.newBuilder[O];
-    from.foreach((k,v) => builder(k) = fn(v));
-    builder.result.asInstanceOf[TT[A,O]];
-  }
-  override def mapNonZero(from : TT[A,B], fn : (B=>O)) = {
-    val builder = from.newBuilder[O];
-    from.foreachNonZero((k,v) => builder(k) = fn(v));
-    builder.result.asInstanceOf[TT[A,O]];
-  }
-}
-
-trait TensorCanMapKeyValuePairs[TT[A,B]<:Tensor[A,B] with TensorLike[A,B,_,TT[A,B]],A,B,O]
-extends CanMapKeyValuePairs[TT[A,B],A,B,O,TT[A,O]] {
-  implicit val scalar : Scalar[O];
-
-  override def map(from : TT[A,B], fn : ((A,B)=>O)) = {
-    val builder = from.newBuilder[O];
-    from.foreach((k,v) => builder(k) = fn(k,v));
-    builder.result.asInstanceOf[TT[A,O]];
-  }
-  override def mapNonZero(from : TT[A,B], fn : ((A,B)=>O)) = {
-    val builder = from.newBuilder[O];
-    from.foreachNonZero((k,v) => builder(k) = fn(k,v));
-    builder.result.asInstanceOf[TT[A,O]];
-  }
-}
-
-trait TensorCanJoinValues[TT[K,V]<:Tensor[K,V] with TensorLike[K,V,_,TT[K,V]],K,V1,V2,RV]
-extends CanJoinValues[TT[K,V1], Tensor[K,V2], V1, V2, RV, TT[K,RV]] {
-  implicit val scalar : Scalar[RV];
-
-  override def joinAll(a : TT[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-    a.checkDomain(b.domain);
-    val builder = a.newBuilder[RV];
-    a.foreach((k,aV) => builder(k) = fn(aV,b(k)));
-    builder.result.asInstanceOf[TT[K,RV]];
-  }
-
-  override def joinEitherNonZero(a : TT[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-    a.checkDomain(b.domain);
-    val builder = a.newBuilder[RV];
-    a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-    b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
-    builder.result.asInstanceOf[TT[K,RV]];
-  }
-
-  override def joinBothNonZero(a : TT[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-    a.checkDomain(b.domain);
-    val builder = a.newBuilder[RV];
-    a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-    builder.result.asInstanceOf[TT[K,RV]];
-  }
-}
-
-
-///**
-// * Contains classes and implicit definitions for constructing new factories
-// * by mapping or joining existing ones.
-// */
-//abstract class TensorFactory[TT[K,V] <: Tensor[K,V] with TensorLike[K,V,_,TT[K,V]]] {
-//  type Coll = TT[_,_];
-//
-//  implicit def canMapValues[A,B,O:Scalar] =
-//    new TensorCanMapValues[A,B,O];
-//
-//  implicit def canMapKeyValuePairs[A,B,O:Scalar] =
-//    new TensorCanMapKeyValuePairs[A,B,O];
-//
-//  implicit def canJoinValues[A,B1,B2,O:Scalar] =
-//    new TensorCanJoinValues[A,B1,B2,O];
-//
-//  class TensorCanMapValues[A,B,O:Scalar]
-//  extends CanMapValues[TT[A,B],B,O,TT[A,O]] {
-//    override def map(from : TT[A,B], fn : (B=>O)) = {
-//      val builder = from.newBuilder[O];
-//      from.foreach((k,v) => builder(k) = fn(v));
-//      builder.result.asInstanceOf[TT[A,O]];
-//    }
-//    override def mapNonZero(from : TT[A,B], fn : (B=>O)) = {
-//      val builder = from.newBuilder[O];
-//      from.foreachNonZero((k,v) => builder(k) = fn(v));
-//      builder.result.asInstanceOf[TT[A,O]];
-//    }
-//  }
-//
-//  class TensorCanMapKeyValuePairs[A,B,O:Scalar]
-//  extends CanMapKeyValuePairs[TT[A,B],A,B,O,TT[A,O]] {
-//    override def map(from : TT[A,B], fn : ((A,B)=>O)) = {
-//      val builder = from.newBuilder[O];
-//      from.foreach((k,v) => builder(k) = fn(k,v));
-//      builder.result.asInstanceOf[TT[A,O]];
-//    }
-//    override def mapNonZero(from : TT[A,B], fn : ((A,B)=>O)) = {
-//      val builder = from.newBuilder[O];
-//      from.foreachNonZero((k,v) => builder(k) = fn(k,v));
-//      builder.result.asInstanceOf[TT[A,O]];
-//    }
-//  }
-//
-//  class TensorCanJoinValues[K,V1,V2,RV:Scalar]
-//  extends CanJoinValues[TT[K,V1], Tensor[K,V2], V1, V2, RV, TT[K,RV]] {
-//    override def joinAll(a : TT[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-//      a.checkDomain(b.domain);
-//      val builder = a.newBuilder[RV];
-//      a.foreach((k,aV) => builder(k) = fn(aV,b(k)));
-//      builder.result.asInstanceOf[TT[K,RV]];
-//    }
-//
-//    override def joinEitherNonZero(a : TT[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-//      a.checkDomain(b.domain);
-//      val builder = a.newBuilder[RV];
-//      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-//      b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
-//      builder.result.asInstanceOf[TT[K,RV]];
-//    }
-//
-//    override def joinBothNonZero(a : TT[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
-//      a.checkDomain(b.domain);
-//      val builder = a.newBuilder[RV];
-//      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-//      builder.result.asInstanceOf[TT[K,RV]];
-//    }
-//  }
-//}
-
-//trait CanBuildTensor[-From,A,B,+To] {
-//  def apply(from : From) : TensorBuilder[A,B,To];
-//}
