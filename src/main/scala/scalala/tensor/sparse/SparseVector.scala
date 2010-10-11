@@ -37,7 +37,7 @@ import operators.TensorSelfOp;
  * 
  * @author dramage
  */
-class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector 
+final class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   with TensorSelfOp[Int,SparseVector,Shape1Col] {
   if (domainSize < 0)
     throw new IllegalArgumentException("Invalid domain size: "+domainSize);
@@ -51,9 +51,8 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   /** How many iterator of data,index are used. */
   final var used : Int = 0;
   
-  /** The previous index and offset found by apply or update. */
-  final var lastOffset = -1;
-  final var lastIndex = -1;
+  /** The previous offset found by apply or update. */
+  @volatile var lastOffset = -1;
 
   /** Constructs a new SparseVector with initially 0 allocation. */
   def this(size : Int) =
@@ -82,7 +81,6 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
     index = inIndex;
     used = inUsed;
     lastOffset = -1;
-    lastIndex = -1;
   }
   
   override def size = domainSize;
@@ -116,7 +114,6 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   /** Records that the given index was found at this.index(offset). */
   protected final def found(index : Int, offset : Int) : Int = {
     lastOffset = offset;
-    lastIndex = index;
     return offset;
   }
   
@@ -130,6 +127,9 @@ class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
       throw new IndexOutOfBoundsException("index is negative (" + index + ")");
     if (i >= size)
       throw new IndexOutOfBoundsException("index >= size (" + index + " >= " + size + ")");
+
+    val lastOffset = this.lastOffset;
+    val lastIndex = if(lastOffset >= 0) index(lastOffset) else -1;
     
     if (i == lastIndex) {
       // previous element; don't need to update lastOffset
