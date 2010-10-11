@@ -62,13 +62,8 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
     figure.clear;
   }
   
-  /** Saves the current figure at 72 dpi to the given filename. */
-  def saveas(filename : String)(implicit figure : Figure) : Unit = {
-    saveas(filename, 72)(figure);
-  }
-  
   /** Saves the current figure at the requested dpi to the given filename. */
-  def saveas(filename : String, dpi : Int)(implicit figure : Figure) : Unit = {
+  def saveas(filename : String, dpi : Int = 72)(implicit figure : Figure) : Unit = {
     import java.io._;
     
     // make sure figure is visible or saved image will come up empty
@@ -85,7 +80,7 @@ trait Plotting extends Library with PartialMaps with Vectors with Matrices with 
       figure.writePDF(fos);
       fos.close();
     } else {
-      throw new IOException("Unrecognized file extension: should be eps or png");
+      throw new IOException("Unrecognized file extension: should be eps, png, or pdf");
     }
   }
   
