@@ -18,7 +18,7 @@ package scalala;
 package tensor;
 package counters;
 
-import scala.collection.JavaConversions.asIterator;
+import scala.collection.JavaConversions._;
 
 import Scalala._;
 import sparse._;

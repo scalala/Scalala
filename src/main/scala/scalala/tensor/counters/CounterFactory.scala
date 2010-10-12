@@ -134,8 +134,6 @@ trait DoubleCounterFactory { factory =>
 
   }
 
-
-
   /**
   * Return a counter after adding in all the tuples.
   */ 
