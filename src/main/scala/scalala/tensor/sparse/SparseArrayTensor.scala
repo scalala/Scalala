@@ -38,7 +38,7 @@ extends mutable.TensorLike[A,B,D,This] {
   def data : SparseArray[B];
 
   /** Assigns the given value to all elements of this map. */
-  override def :=(value : B) = {
+  def :=(value : B) = {
     if (value == data.default) {
       data.clear;
     } else {

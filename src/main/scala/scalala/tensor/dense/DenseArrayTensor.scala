@@ -36,7 +36,7 @@ extends mutable.TensorLike[A,B,D,This] {
   def data : Array[B];
 
   /** Assigns the given value to all elements of this map. */
-  override def :=(value : B) = {
+  def :=(value : B) = {
     var i = 0;
     while (i < data.length) {
       data(i) = value;

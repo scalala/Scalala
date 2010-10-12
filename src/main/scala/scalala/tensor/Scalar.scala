@@ -59,6 +59,9 @@ trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
 
   /** Returns true if this is not a number. */
   def isNaN(a : V) : Boolean;
+
+  /** Returns the class manifest of the scalar type. */
+  def manifest : ClassManifest[V];
 }
 
 object Scalar {
@@ -78,6 +81,7 @@ object Scalar {
     def norm(a : Int) = if (a < 0) -a else a;
     def toDouble(a : Int) = a;
     def isNaN(a : Int) = false;
+    val manifest = implicitly[ClassManifest[Int]];
   }
 
   implicit object ScalarS extends Scalar[Short] {
@@ -96,6 +100,7 @@ object Scalar {
     def norm(a : Short) = if (a < 0) -a else a;
     def toDouble(a : Short) = a;
     def isNaN(a : Short) = false;
+    val manifest = implicitly[ClassManifest[Short]];
   }
 
   implicit object ScalarL extends Scalar[Long] {
@@ -114,6 +119,7 @@ object Scalar {
     def norm(a : Long) = if (a < 0) -a else a;
     def toDouble(a : Long) = a;
     def isNaN(a : Long) = false;
+    val manifest = implicitly[ClassManifest[Long]];
   }
 
   implicit object scalarF extends Scalar[Float] {
@@ -132,6 +138,7 @@ object Scalar {
     def norm(a : Float) = if (a < 0) -a else a;
     def toDouble(a : Float) = a;
     def isNaN(a : Float) = java.lang.Float.isNaN(a);
+    val manifest = implicitly[ClassManifest[Float]];
   }
 
   implicit object scalarD extends Scalar[Double] {
@@ -150,6 +157,7 @@ object Scalar {
     def norm(a : Double) = if (a < 0) -a else a;
     def toDouble(a : Double) = a;
     def isNaN(a : Double) = java.lang.Double.isNaN(a);
+    val manifest = implicitly[ClassManifest[Double]];
   }
 
   implicit object scalarB extends Scalar[Boolean] {
@@ -168,5 +176,6 @@ object Scalar {
     def norm(a : Boolean) = if (a) 1.0 else 0.0;
     def toDouble(a : Boolean) = if (a) 1.0 else 0.0;
     def isNaN(a : Boolean) = false;
+    def manifest = implicitly[ClassManifest[Boolean]];
   }
 }

@@ -90,5 +90,5 @@ object Tensor1 extends Tensor1Companion[Tensor1] {
 //  }
 }
 
-trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V] with Tensor1Like[K,V,_,Bound[K,V]]]
+trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V]]
 extends TensorCompanion[Bound];

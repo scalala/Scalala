@@ -25,6 +25,7 @@ import domain._;
 import generic.tensor._;
 
 import generic.{CanMul,CanDiv,CanAdd,CanSub,CanPow,CanMod}
+import generic.{CanAssignInto,CanMulInto,CanDivInto,CanAddInto,CanSubInto,CanPowInto,CanModInto}
 
 /**
  * Implementation trait for TensorLike.  Supports assigning,
@@ -73,139 +74,6 @@ with operators.MutableNumericOps[Repr] {
     this.transformValues(fn);
     true;
   }
-
-
-  //
-  // Scalar updates
-  //
-
-  /** Assigns the given value to all elements of this map. */
-  def := (s : B) = {
-    if (s == scalar.zero) {
-      transformNonZeroValues(v => s);
-    } else {
-      transformValues(v => s);
-    }
-  }
-
-  /** Increments element by the given scalar. */
-  def :+=[O](s : O)(implicit op : CanAdd[B,O,B], so : Scalar[O]) =
-    transformValues(v => op(v, s));
-
-  /** Decrements each element by the given scalar. */
-  def :-=[O](s : O)(implicit op : CanSub[B,O,B], so : Scalar[O]) =
-    transformValues(v => op(v, s));
-
-  /** Multiplies each element by the given scale factor. */
-  def :*=[O](s : O)(implicit op : CanMul[B,O,B], so : Scalar[O]) = {
-    if (so.isNaN(s)) {
-      transformValues(v => op(v, s));
-    } else {
-      transformNonZeroValues(v => op(v, s));
-    }
-  }
-
-  /** Divides each element by the given scale factor. */
-  def :/=[O](s : O)(implicit op : CanDiv[B,O,B], so : Scalar[O]) = {
-    if (s == so.zero || so.isNaN(s)) {
-      transformValues(v => op(v, s));
-    } else {
-      transformNonZeroValues(v => op(v,s));
-    }
-  }
-
-  /** Raises each element to the the given power. */
-  def :^=[O](s : O)(implicit op : CanPow[B,O,B], so : Scalar[O]) =
-    transformValues(v => op(v, s));
-
-  /** Each element becomes itself modulo the given scalar. */
-  def :%=[O](s : O)(implicit op : CanMod[B,O,B], so : Scalar[O]) =
-    transformValues(v => op(v, s));
-
-  //
-  // Scalar operator aliases
-  //
-
-  /** Alias for :+=(s) */
-  final def +=[O](s : O)(implicit op : CanAdd[B,O,B], so : Scalar[O]) = this.:+=(s);
-
-  /** Alias for :-=(s) */
-  final def -=[O](s : O)(implicit op : CanSub[B,O,B], so : Scalar[O]) = this.:-=(s);
-
-  /** Alias for :*=(s) */
-  final def *=[O](s : O)(implicit op : CanMul[B,O,B], so : Scalar[O]) = this.:*=(s);
-
-  /** Alias for :/=(s) */
-  final def /=[O](s : O)(implicit op : CanDiv[B,O,B], so : Scalar[O]) = this.:/=(s);
-
-  /** Alias for :^=(s) */
-  final def ^=[O](s : O)(implicit op : CanPow[B,O,B], so : Scalar[O]) = this.:^=(s);
-
-  /** Alias for :%=(s) */
-  final def %=[O](s : O)(implicit op : CanMod[B,O,B], so : Scalar[O]) = this.:%=(s);
-
-
-  //
-  // Updates from another Tensor.
-  //
-
-  /** Assigns the corresponding value to each element of this map. */
-  def :=(that : tensor.Tensor[A,B]) = {
-    checkDomain(that.domain);
-    for (key <- domain) update(key,that(key));
-  }
-
-  /** Assigns the corresponding value to each element of this map. */
-  def :=[O](that : tensor.Tensor[A,O])(implicit tf : (O=>B)) = {
-    checkDomain(that.domain);
-    for (key <- domain) update(key,that(key));
-  }
-
-  /** Increments each value in this map by the corresponding value in the other map. */
-  def :+=[O](t : tensor.Tensor[A,O])(implicit op : CanAdd[B,O,B]) = {
-    checkDomain(t.domain);
-    transform((k,v) => op(v,t(k)));
-  }
-
-  /** Decrements each value in this map by the corresponding value in the other map. */
-  def :-=[O](t : tensor.Tensor[A,O])(implicit op : CanSub[B,O,B]) = {
-    checkDomain(t.domain);
-    transform((k,v) => op(v,t(k)));
-  }
-
-  /** Multiplies each value in this map by the corresponding value in the other map. */
-  def :*=[O](t : tensor.Tensor[A,O])(implicit op : CanMul[B,O,B]) = {
-    checkDomain(t.domain);
-    transform((k,v) => op(v,t(k)));
-  }
-
-  /** Divides each value in this map by the corresponding value in the other map. */
-  def :/=[O](t : tensor.Tensor[A,O])(implicit op : CanDiv[B,O,B]) = {
-    checkDomain(t.domain);
-    transform((k,v) => op(v,t(k)));
-  }
-
-  /** Modulos each value in this map by the corresponding value in the other map. */
-  def :%=[O](t : tensor.Tensor[A,O])(implicit op : CanMod[B,O,B]) = {
-    checkDomain(t.domain);
-    transform((k,v) => op(v,t(k)));
-  }
-
-  /** Raises each value in this map by the corresponding value in the other map. */
-  def :^=[O](t : tensor.Tensor[A,O])(implicit op : CanPow[B,O,B]) = {
-    checkDomain(t.domain);
-    transform((k,v) => op(v,t(k)));
-  }
-
-  //
-  // Tensor method aliases
-  //
-
-  /** Alias for :+= */
-  final def +=[O](t : tensor.Tensor[A,O])(implicit op : CanAdd[B,O,B]) = this.:+=(t);
-
-  /** Alias for :-= */
-  final def -=[O](t : tensor.Tensor[A,O])(implicit op : CanSub[B,O,B]) = this.:-=(t);
 }
 
 /**
@@ -217,7 +85,7 @@ trait Tensor
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
 extends tensor.Tensor[A,B] with TensorLike[A,B,IterableDomain[A],Tensor[A,B]];
 
-object Tensor {
+object Tensor extends TensorCompanion[Tensor] {
 
   def apply[A, B:Scalar](domain : IterableDomain[A], map : scala.collection.Map[A,B] = scala.collection.mutable.Map[A,B]()) =
     new Impl[A,B](map, domain);
@@ -246,5 +114,150 @@ object Tensor {
   new CanSliceVector[Tensor[A,B], A, Vector[B]] {
     override def apply(from : Tensor[A,B], keys : Seq[A]) =
       new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
+  }
+}
+
+/**
+ * Companion for mutable tensors.
+ *
+ * @author dramage
+ */
+trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] extends tensor.TensorCompanion[Bound] {
+
+  //
+  // Tensor-scalar
+  //
+
+  implicit def canAssignScalarInto[K,V](scalar : Scalar[V])
+  : CanAssignInto[Bound[K,V],V] = new CanAssignInto[Bound[K,V],V] {
+    override def apply(a : Bound[K,V], s : V) = {
+      if (s == scalar.zero) {
+        a.transformNonZeroValues(v => s);
+      } else {
+        a.transformValues(v => s);
+      }
+    }
+  }
+
+  implicit def canAddScalarInto[K,V,O](implicit op : CanAdd[V,O,V], so : Scalar[O])
+  : CanAddInto[Bound[K,V],O] = new CanAddInto[Bound[K,V],O] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.transformValues(v => op(v, b));
+    }
+  }
+
+  implicit def canSubScalarInto[K,V,O](implicit op : CanSub[V,O,V], so : Scalar[O])
+  : CanSubInto[Bound[K,V],O] = new CanSubInto[Bound[K,V],O] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.transformValues(v => op(v, b));
+    }
+  }
+
+  implicit def canMulScalarInto[K,V,O](implicit op : CanMul[V,O,V], so : Scalar[O])
+  : CanMulInto[Bound[K,V],O] = new CanMulInto[Bound[K,V],O] {
+    override def apply(a : Bound[K,V], b : O) = {
+      if (so.isNaN(b)) {
+        a.transformValues(v => op(v, b));
+      } else {
+        a.transformNonZeroValues(v => op(v, b));
+      }
+    }
+  }
+
+  /** Divides each element by the given scale factor. */
+  implicit def canDivScalarInto[K,V,O](implicit op : CanDiv[V,O,V], so : Scalar[O])
+  : CanDivInto[Bound[K,V],O] = new CanDivInto[Bound[K,V],O] {
+    override def apply(a : Bound[K,V], b : O) = {
+      if (b == so.zero || so.isNaN(b)) {
+        a.transformValues(v => op(v, b));
+      } else {
+        a.transformNonZeroValues(v => op(v, b));
+      }
+    }
+  }
+
+  /** Divides each element by the given scale factor. */
+  implicit def canPowScalarInto[K,V,O](implicit op : CanPow[V,O,V], so : Scalar[O])
+  : CanDivInto[Bound[K,V],O] = new CanDivInto[Bound[K,V],O] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.transformValues(v => op(v, b));
+    }
+  }
+
+  /** Divides each element by the given scale factor. */
+  implicit def canModScalarInto[K,V,O](implicit op : CanMod[V,O,V], so : Scalar[O])
+  : CanModInto[Bound[K,V],O] = new CanModInto[Bound[K,V],O] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.transformValues(v => op(v, b));
+    }
+  }
+
+
+  //
+  // Updates from another Tensor.
+  //
+
+  implicit def canAssignInto[K,V1]
+  : CanAssignInto[Bound[K,V1],Tensor[K,V1]] = new CanAssignInto[Bound[K,V1],Tensor[K,V1]] {
+    override def apply(a : Bound[K,V1], b : Tensor[K,V1]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => b(k));
+    }
+  }
+
+  implicit def canAssignInto[K,V1,V2](implicit s : Scalar[V2], tf : (V2=>V1))
+  : CanAssignInto[Bound[K,V1],Tensor[K,V2]] = new CanAssignInto[Bound[K,V1],Tensor[K,V2]] {
+    override def apply(a : Bound[K,V1], b : Tensor[K,V2]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => b(k));
+    }
+  }
+
+  implicit def canAddBoundInto[K,V1,V2](implicit op : CanAdd[V1,V2,V1], s : Scalar[V2])
+  : CanAddInto[Bound[K,V1],Tensor[K,V2]] = new CanAddInto[Bound[K,V1],Tensor[K,V2]] {
+    override def apply(a : Bound[K,V1], b : Tensor[K,V2]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => op(v,b(k)));
+    }
+  }
+
+  implicit def canSubBoundInto[K,V1,V2](implicit op : CanSub[V1,V2,V1], s : Scalar[V2])
+  : CanSubInto[Bound[K,V1],Tensor[K,V2]] = new CanSubInto[Bound[K,V1],Tensor[K,V2]] {
+    override def apply(a : Bound[K,V1], b : Tensor[K,V2]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => op(v,b(k)));
+    }
+  }
+
+  implicit def canMulBoundInto[K,V1,V2](implicit op : CanMul[V1,V2,V1], s : Scalar[V2])
+  : CanMulInto[Bound[K,V1],Tensor[K,V2]] = new CanMulInto[Bound[K,V1],Tensor[K,V2]] {
+    override def apply(a : Bound[K,V1], b : Tensor[K,V2]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => op(v,b(k)));
+    }
+  }
+
+  implicit def canDivBoundInto[K,V1,V2](implicit op : CanDiv[V1,V2,V1], s : Scalar[V2])
+  : CanDivInto[Bound[K,V1],Tensor[K,V2]] = new CanDivInto[Bound[K,V1],Tensor[K,V2]] {
+    override def apply(a : Bound[K,V1], b : Tensor[K,V2]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => op(v,b(k)));
+    }
+  }
+
+  implicit def canModBoundInto[K,V1,V2](implicit op : CanMod[V1,V2,V1], s : Scalar[V2])
+  : CanModInto[Bound[K,V1],Tensor[K,V2]] = new CanModInto[Bound[K,V1],Tensor[K,V2]] {
+    override def apply(a : Bound[K,V1], b : Tensor[K,V2]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => op(v,b(k)));
+    }
+  }
+
+  implicit def canPowBoundInto[K,V1,V2](implicit op : CanPow[V1,V2,V1], s : Scalar[V2])
+  : CanPowInto[Bound[K,V1],Tensor[K,V2]] = new CanPowInto[Bound[K,V1],Tensor[K,V2]] {
+    override def apply(a : Bound[K,V1], b : Tensor[K,V2]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => op(v,b(k)));
+    }
   }
 }

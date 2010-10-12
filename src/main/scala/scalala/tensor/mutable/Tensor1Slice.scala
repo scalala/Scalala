@@ -48,3 +48,9 @@ trait Tensor1Slice
 extends tensor.Tensor1Slice[A1,A2,B,Coll]
 with TensorSlice[A1,A2,B,Coll] with Tensor1[A2,B]
 with Tensor1SliceLike[A1, IterableDomain[A1], A2, IterableDomain[A2], B, Coll, Tensor1Slice[A1, A2, B, Coll]];
+
+object Tensor1Slice {
+  /** This view is a no-op but is needed for correct implicit resolution. */
+  implicit def asTensor1[A,B](slice : Tensor1Slice[A,_,B,_]) : Tensor1[A,B] =
+    slice;
+}

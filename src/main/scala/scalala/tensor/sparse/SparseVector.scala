@@ -56,7 +56,7 @@ with mutable.Vector[B] with mutable.VectorLike[B,SparseVector[B]] {
   }
 }
 
-object SparseVector {
+object SparseVector extends mutable.VectorCompanion[SparseVector] {
   def apply[B:Scalar:ClassManifest:DefaultArrayValue](size : Int)(values : (Int,B)*) =
     new SparseVector(SparseArray.create(size)(values :_*));
 

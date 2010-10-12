@@ -32,7 +32,16 @@ class DenseVector[@specialized(Int,Long,Float,Double) B]
 (override val data : Array[B])
 (implicit override val scalar : Scalar[B])
 extends DenseArrayTensor[Int,B] with DenseArrayTensorLike[Int,B,IndexDomain,DenseVector[B]]
-with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] {
+with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] { self =>
+
+  override def newBuilder[C:Scalar] : mutable.TensorBuilder[Int,C,Vector[C]] =
+  new mutable.TensorBuilder[Int,C,Vector[C]] {
+    implicit val cm = implicitly[Scalar[C]].manifest;
+    val rv = new DenseVector(new Array[C](self.size));
+    def update(k : Int, v : C) = rv(k) = v;
+    def result = rv;
+  }
+
   override def size = data.length;
 
   override val domain = IndexDomain(data.length);
@@ -73,7 +82,7 @@ with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] {
   }
 }
 
-object DenseVector {
+object DenseVector extends mutable.VectorCompanion[DenseVector] {
   /**
    * Static constructor that creates a dense vector of the given size
    * initialized by elements from the given values list (looping if

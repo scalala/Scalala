@@ -75,16 +75,16 @@ trait NumericOps[+This] {
   final def /[TT>:This,B,That](b : B)(implicit op : CanDiv[TT,B,That], sb : Scalar[B]) =
     this.:/[TT,B,That](b);
 
-  /** Alias for :^=(b) */
-  final def ^[TT>:This,B,That](b : B)(implicit op : CanPow[TT,B,That], sb : Scalar[B]) =
-    this.:^[TT,B,That](b);
-
   /** Alias for :%=(b) */
   final def %[TT>:This,B,That](b : B)(implicit op : CanMod[TT,B,That], sb : Scalar[B]) =
     this.:%[TT,B,That](b);
 }
 
-
+/**
+ * Operators for mutable numeric collections.
+ *
+ * @author dramage
+ */
 trait MutableNumericOps[+This] extends NumericOps[This] {
   def repr : This;
 
@@ -101,6 +101,26 @@ trait MutableNumericOps[+This] extends NumericOps[This] {
   def :%=[TT>:This,B](b : B)(implicit op : CanModInto[TT,B]) = op(repr,b);
 
   def :^=[TT>:This,B](b : B)(implicit op : CanPowInto[TT,B]) = op(repr,b);
+
+  /** Alias for :+=(b). */
+  final def +=[TT>:This,B](b : B)(implicit op : CanAddInto[TT,B], sb : Scalar[B]) =
+    this.:+=[TT,B](b);
+
+  /** Alias for :-=(b). */
+  final def -=[TT>:This,B](b : B)(implicit op : CanSubInto[TT,B], sb : Scalar[B]) =
+    this.:-=[TT,B](b);
+
+  /** Alias for :*=(b). */
+  final def *=[TT>:This,B](b : B)(implicit op : CanMulInto[TT,B], sb : Scalar[B]) =
+    this.:*=[TT,B](b);
+
+  /** Alias for :/=(b). */
+  final def /=[TT>:This,B](b : B)(implicit op : CanDivInto[TT,B], sb : Scalar[B]) =
+    this.:/=[TT,B](b);
+
+  /** Alias for :%=(b). */
+  final def %=[TT>:This,B](b : B)(implicit op : CanModInto[TT,B], sb : Scalar[B]) =
+    this.:%=[TT,B](b);
 }
 
 //

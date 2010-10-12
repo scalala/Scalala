@@ -44,3 +44,8 @@ trait Tensor1
 [@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B]
 extends tensor.Tensor1[A,B] with Tensor[A,B]
 with Tensor1Like[A,B,IterableDomain[A],Tensor1[A,B]];
+
+object Tensor1 extends Tensor1Companion[Tensor1];
+
+trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V]]
+extends tensor.Tensor1Companion[Bound] with TensorCompanion[Bound];

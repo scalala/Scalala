@@ -422,7 +422,7 @@ object Tensor extends TensorCompanion[Tensor] {
  *
  * @author dramage
  */
-trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]]] {
+trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] {
 
   implicit def canMapValues[A, B, O:Scalar]
   : CanMapValues[Bound[A,B],B,O,Bound[A,O]]
@@ -544,7 +544,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
       (a joinEitherNonZero b)(op)(bfLike);
     }
   }
@@ -554,7 +554,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
       (a joinEitherNonZero b)(op)(bfLike);
     }
   }
@@ -565,7 +565,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
       (a joinEitherNonZero b)(op)(bfLike);
     }
   }
@@ -575,7 +575,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
       (a join b)(op)(bfLike);
     }
   }
@@ -585,7 +585,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
       (a join b)(op)(bfLike);
     }
   }
@@ -595,7 +595,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]
     override def apply(a : Bound[K,V], b : Bound[K,O]) = {
       val aLike = a.asInstanceOf[Tensor[K,V]];
       val bLike = b.asInstanceOf[Tensor[K,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[K,V],Tensor[K,O],V,O,RV,That]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
       (a join b)(op)(bfLike);
     }
   }

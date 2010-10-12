@@ -171,7 +171,7 @@ extends tensor.Vector[B] with Tensor[Int,B]
 with VectorLike[B,Vector[B]];
 
 
-object Vector {
+object Vector extends VectorCompanion[Vector] {
   def apply[B](size : Int)(implicit scalar : Scalar[B]) =
     new Impl(scala.collection.mutable.IndexedSeq.fill(size)(scalar.zero));
 
@@ -186,3 +186,6 @@ object Vector {
     override val domain = IndexDomain(values.size);
   }
 }
+
+trait VectorCompanion[Bound[V]<:Vector[V]]
+extends tensor.VectorCompanion[Bound] with IndexedTensorCompanion[Int,Bound];
