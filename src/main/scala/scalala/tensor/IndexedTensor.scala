@@ -24,34 +24,84 @@ import domain._;
 import generic._;
 
 import scalala.generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
-import scalala.generic.collection.{CanMapValues};
+import scalala.generic.collection.{CanMapValues,CanMapKeyValuePairs};
 import scalala.generic.tensor.CanJoinValues;
-
-object IndexedTensorCompanion {
-  sealed trait NoBound[A,B] extends Tensor[A,B];
-}
 
 /**
  * Base companion methods for tensors that have a known key type,
  * such as Vectors (Int) and Matrices (Int,Int).  This class is
  * almost identical to TensorCompanion but Bound only specifies
- * a value type, not a key type.  If I were better at type constructors,
- * I think I might be able to figure out how to this by inheriting
- * from TensorCompanion.
+ * a value type, not a key type.  There might be a cleverer way
+ * to do this with type constructors and inheriting from TensorCompanion.
  *
  * @author dramage
  */
-trait IndexedTensorCompanion[K,Bound[V]<:Tensor[K,V]] { // extends TensorCompanion[IndexedTensorCompanion.NoBound] {
+trait IndexedTensorCompanion[K,Bound[V]<:Tensor[K,V]] {
+
+  implicit def canMapValues[V, RV:Scalar]
+  : CanMapValues[Bound[V],V,RV,Bound[RV]]
+  = new CanMapValues[Bound[V],V,RV,Bound[RV]] {
+    override def map(from : Bound[V], fn : (V=>RV)) = {
+      val builder = from.newBuilder[RV];
+      from.foreach((k,v) => builder(k) = fn(v));
+      builder.result.asInstanceOf[Bound[RV]];
+    }
+    override def mapNonZero(from : Bound[V], fn : (V=>RV)) = {
+      val builder = from.newBuilder[RV];
+      from.foreachNonZero((k,v) => builder(k) = fn(v));
+      builder.result.asInstanceOf[Bound[RV]];
+    }
+  }
+
+  implicit def canMapKeyValuePairs[V, RV:Scalar]
+  : CanMapKeyValuePairs[Bound[V],K,V,RV,Bound[RV]]
+  = new CanMapKeyValuePairs[Bound[V],K,V,RV,Bound[RV]] {
+    override def map(from : Bound[V], fn : ((K,V)=>RV)) = {
+      val builder = from.newBuilder[RV];
+      from.foreach((k,v) => builder(k) = fn(k,v));
+      builder.result.asInstanceOf[Bound[RV]];
+    }
+    override def mapNonZero(from : Bound[V], fn : ((K,V)=>RV)) = {
+      val builder = from.newBuilder[RV];
+      from.foreachNonZero((k,v) => builder(k) = fn(k,v));
+      builder.result.asInstanceOf[Bound[RV]];
+    }
+  }
+
+  implicit def canJoin[V1, V2, RV:Scalar]
+  : CanJoinValues[Bound[V1], Tensor[K,V2], V1, V2, RV, Bound[RV]] =
+  new CanJoinValues[Bound[V1], Tensor[K,V2], V1, V2, RV, Bound[RV]] {
+    override def joinAll(a : Bound[V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreach((k,aV) => builder(k) = fn(aV,b(k)));
+      builder.result.asInstanceOf[Bound[RV]];
+    }
+
+    override def joinEitherNonZero(a : Bound[V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
+      b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
+      builder.result.asInstanceOf[Bound[RV]];
+    }
+
+    override def joinBothNonZero(a : Bound[V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+      a.checkDomain(b.domain);
+      val builder = a.newBuilder[RV];
+      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
+      builder.result.asInstanceOf[Bound[RV]];
+    }
+  }
+
   //
   // Tensor-scalar
   //
 
-  implicit def canAddScalarIndexed[V,O,RV,That](implicit op : CanAdd[V,O,RV], bf : CanMapValues[Bound[V],V,RV,That], so : Scalar[O])
+  implicit def canAddScalar[V,O,RV,That](implicit op : CanAdd[V,O,RV], bf : CanMapValues[Bound[V],V,RV,That], so : Scalar[O])
   : CanAdd[Bound[V],O,That] = new CanAdd[Bound[V],O,That] {
     override def apply(a : Bound[V], b : O) = {
-      val aLike = a.asInstanceOf[Tensor[Unit,V]];
-      val bfLike = bf.asInstanceOf[CanMapValues[Tensor[Unit,V],V,RV,That]];
-      aLike.mapValues(v => op(v, b))(bfLike);
+      a.asInstanceOf[TensorLike[K,V,_,Bound[V]]].mapValues(v => op(v, b))(bf);
     }
   }
 
@@ -103,59 +153,64 @@ trait IndexedTensorCompanion[K,Bound[V]<:Tensor[K,V]] { // extends TensorCompani
   // Tensor-Tensor
   //
 
-  implicit def canAddBoundIndexed[V,O,RV,That](implicit op : CanAdd[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
+  implicit def canAddBound[V,O,RV,That](implicit op : CanAdd[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
   : CanAdd[Bound[V],Bound[O],That] = new CanAdd[Bound[V],Bound[O],That] {
     override def apply(a : Bound[V], b : Bound[O]) = {
-      val aLike = a.asInstanceOf[Tensor[Unit,V]];
-      val bLike = b.asInstanceOf[Tensor[Unit,O]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[Unit,V],Tensor[Unit,O],V,O,RV,That]];
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
       (aLike joinEitherNonZero bLike)(op)(bfLike);
     }
   }
-//
-//  implicit def canSubBound[V,O,RV,That](implicit op : CanSub[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
-//  : CanSub[Bound[V],Bound[O],That] = new CanSub[Bound[V],Bound[O],That] {
-//    override def apply(a : Bound[V], b : Bound[O]) = {
-//      val bLike = b.asInstanceOf[a.Bound[O]]; // TensorLike[K,O,_,Bound[O]]];
-//      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[V],a.Bound[O],V,O,RV,That]];
-//      a.asInstanceOf[TensorLike[K,V,_,Bound[V]]].joinEitherNonZero(bLike)(op)(bfLike);
-//    }
-//  }
-//
-//  // TODO: this could be faster via joinBothNonZero if we knew there were no NaN in b
-//  implicit def canMulBound[V,O,RV,That](implicit op : CanMul[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
-//  : CanMul[Bound[V],Bound[O],That] = new CanMul[Bound[V],Bound[O],That] {
-//    override def apply(a : Bound[V], b : Bound[O]) = {
-//      val bLike = b.asInstanceOf[a.Bound[O]]; // TensorLike[K,O,_,Bound[O]]];
-//      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[V],a.Bound[O],V,O,RV,That]];
-//      a.asInstanceOf[TensorLike[K,V,_,Bound[V]]].joinEitherNonZero(bLike)(op)(bfLike);
-//    }
-//  }
-//
-//  implicit def canDivBound[V,O,RV,That](implicit op : CanDiv[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
-//  : CanDiv[Bound[V],Bound[O],That] = new CanDiv[Bound[V],Bound[O],That] {
-//    override def apply(a : Bound[V], b : Bound[O]) = {
-//      val bLike = b.asInstanceOf[a.Bound[O]]; // TensorLike[K,O,_,Bound[O]]];
-//      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[V],a.Bound[O],V,O,RV,That]];
-//      a.asInstanceOf[TensorLike[K,V,_,Bound[V]]].join(bLike)(op)(bfLike);
-//    }
-//  }
-//
-//  implicit def canPowBound[V,O,RV,That](implicit op : CanPow[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
-//  : CanPow[Bound[V],Bound[O],That] = new CanPow[Bound[V],Bound[O],That] {
-//    override def apply(a : Bound[V], b : Bound[O]) = {
-//      val bLike = b.asInstanceOf[a.Bound[O]]; // TensorLike[K,O,_,Bound[O]]];
-//      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[V],a.Bound[O],V,O,RV,That]];
-//      a.asInstanceOf[TensorLike[K,V,_,Bound[V]]].join(bLike)(op)(bfLike);
-//    }
-//  }
-//
-//  implicit def canModBound[V,O,RV,That](implicit op : CanMod[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
-//  : CanMod[Bound[V],Bound[O],That] = new CanMod[Bound[V],Bound[O],That] {
-//    override def apply(a : Bound[V], b : Bound[O]) = {
-//      val bLike = b.asInstanceOf[a.Bound[O]]; // TensorLike[K,O,_,Bound[O]]];
-//      val bfLike = bf.asInstanceOf[CanJoinValues[Bound[V],a.Bound[O],V,O,RV,That]];
-//      a.asInstanceOf[TensorLike[K,V,_,Bound[V]]].join(bLike)(op)(bfLike);
-//    }
-//  }
+
+  implicit def canSubBound[V,O,RV,That](implicit op : CanSub[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
+  : CanSub[Bound[V],Bound[O],That] = new CanSub[Bound[V],Bound[O],That] {
+    override def apply(a : Bound[V], b : Bound[O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (aLike joinEitherNonZero bLike)(op)(bfLike);
+    }
+  }
+
+  // TODO: this could be faster via joinBothNonZero if we knew there were no NaN in b
+  implicit def canMulBound[V,O,RV,That](implicit op : CanMul[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
+  : CanMul[Bound[V],Bound[O],That] = new CanMul[Bound[V],Bound[O],That] {
+    override def apply(a : Bound[V], b : Bound[O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (aLike joinEitherNonZero bLike)(op)(bfLike);
+    }
+  }
+
+  implicit def canDivBound[V,O,RV,That](implicit op : CanDiv[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
+  : CanDiv[Bound[V],Bound[O],That] = new CanDiv[Bound[V],Bound[O],That] {
+    override def apply(a : Bound[V], b : Bound[O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (aLike join bLike)(op)(bfLike);
+    }
+  }
+
+  implicit def canPowBound[V,O,RV,That](implicit op : CanPow[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
+  : CanPow[Bound[V],Bound[O],That] = new CanPow[Bound[V],Bound[O],That] {
+    override def apply(a : Bound[V], b : Bound[O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (aLike join bLike)(op)(bfLike);
+    }
+  }
+
+  implicit def canModBound[V,O,RV,That](implicit op : CanMod[V,O,RV], bf : CanJoinValues[Bound[V],Bound[O],V,O,RV,That], so : Scalar[O])
+  : CanMod[Bound[V],Bound[O],That] = new CanMod[Bound[V],Bound[O],That] {
+    override def apply(a : Bound[V], b : Bound[O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (aLike join bLike)(op)(bfLike);
+    }
+  }
 }

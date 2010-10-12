@@ -424,15 +424,6 @@ object Tensor extends TensorCompanion[Tensor] {
  */
 trait TensorCompanion[Bound[K,V] <: Tensor[K,V] with TensorLike[K,V,_,Bound[K,V]]] {
 
-//  type Coll = Bound[_,_];
-// 
-//  implicit def canBuildTensor[Coll,K,V:Scalar,Bound[K,V]]
-//  : CanBuildTensor[Coll,K,V,Bound[K,V]]
-//  = new CanBuildTensor[Coll,K,V,Bound[K,V]] {
-//    override def apply(from : Coll) =
-//      from.asInstanceOf[Tensor[K,V]].newBuilder.asInstanceOf[TensorBuilder[K,V,Bound[K,V]]];
-//  }
-
   implicit def canMapValues[A, B, O:Scalar]
   : CanMapValues[Bound[A,B],B,O,Bound[A,O]]
   = new CanMapValues[Bound[A,B],B,O,Bound[A,O]] {

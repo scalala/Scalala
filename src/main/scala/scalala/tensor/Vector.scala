@@ -95,5 +95,4 @@ object Vector extends VectorCompanion[Vector] {
 }
 
 
-trait VectorCompanion[Bound[V] <: Vector[V]] extends IndexedTensorCompanion[Int,Bound] {
-}
+trait VectorCompanion[Bound[V] <: Vector[V]] extends IndexedTensorCompanion[Int,Bound];
