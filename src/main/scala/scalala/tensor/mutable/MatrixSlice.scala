@@ -60,7 +60,7 @@ extends tensor.MatrixSlice[A1,A2,B,Coll]
 with Matrix[B]
 with MatrixSliceLike[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Coll,MatrixSlice[A1,A2,B,Coll]];
 
-object MatrixSlice {
+object MatrixSlice /* extends MatrixSliceCompanion[MatrixSlice] */ {
   class FromKeySeqs[A1, A2, B, +Coll<:Tensor2[A1,A2,B]]
   (override val underlying : Coll, val keys1 : Seq[A1], val keys2 : Seq[A2])
   (override implicit val scalar : Scalar[B])
@@ -71,3 +71,7 @@ object MatrixSlice {
     override val domain = TableDomain(keys1.length, keys2.length);
   }
 }
+
+//object MatrixSliceCompanion {
+//  type SliceBound[V] = MatrixSlice[_,_,V,_];
+//}

@@ -26,6 +26,12 @@ import scalala.tensor.Scalar;
 import scalala.tensor.domain.DomainException;
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
+/**
+ * Mix-in trait for supporting numeric operators on instances of type This
+ * (accessible with the repr method).
+ *
+ * @author dramage
+ */
 trait NumericOps[+This] {
   def repr : This;
 

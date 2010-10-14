@@ -96,9 +96,12 @@ trait Matrix[@specialized(Int,Long,Float,Double) B]
 extends Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
-object Matrix {
+object Matrix extends MatrixCompanion[Matrix] {
   implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] =
   new CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] {
     override def apply(from : Matrix[B]) = new MatrixTranspose.Impl[B,Matrix[B]](from);
   }
 }
+
+trait MatrixCompanion[Bound[V]<:Matrix[V]]
+extends IndexedTensorCompanion[(Int,Int),Bound];

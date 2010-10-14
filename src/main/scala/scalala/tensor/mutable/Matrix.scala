@@ -45,7 +45,7 @@ extends tensor.Matrix[B]
 with Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
-object Matrix {
+object Matrix extends MatrixCompanion[Matrix] {
   import scala.collection.mutable.IndexedSeq;
 
   class Impl[B](numRows : Int, numCols : Int, val data : IndexedSeq[IndexedSeq[B]])
@@ -68,3 +68,6 @@ object Matrix {
     override def apply(from : Matrix[B]) = new MatrixTranspose.Impl[B,Matrix[B]](from);
   }
 }
+
+trait MatrixCompanion[Bound[V]<:Matrix[V]]
+extends tensor.MatrixCompanion[Bound] with IndexedTensorCompanion[(Int,Int),Bound];
