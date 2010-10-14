@@ -21,21 +21,27 @@ import scala.reflect.ClassManifest;
 import scala.collection.mutable._;
 
 /**
- * <p>Nearly-drop-in replacement for Array[T](length) that does not represent
+ * <p>Nearly-drop-in replacement for Array[T](length) that does not store
  * default array values.  Internally, the SparseArray data structure
  * stores an array of indexes in packed, sorted order, and a
  * corresponding packed array of values.  Updates are linear in
  * the number of non-zero array elements, while accesses are
- * logarithmic.  This class is not threadsafe.</p>
+ * logarithmic.  This class is not threadsafe for simultaneous
+ * reads and writes, but more than one thread can read simultaneously
+ * if no threads are writing.</p>
  *
- * <p>Note that the DefaultArrayValue must be constant reference -- no
+ * <p>Note that the DefaultArrayValue must be a constant reference -- no
  * clever tricks like creating new instances of type T are supported
- * by the nature of the way this map works - i.e., otherwise iterating
- * over all the values (possibly to mutate them) would cause the sparse
- * array to become dense.</p>
+ * by the nature of the way this map works.  Otherwise, iterating
+ * over the size of the array would cause the SparseArray to become
+ * (inefficiently) dense.</p>
  *
  * @param length The virtual length of the array.
- * @param initialActiveLength The initial length of the sparse data structures.
+ * @param index The indices of the array, in packed sorted order.
+ * @param data The data of the array, in corresponding positions to index.
+ * @param used The number of used elements in index and data.
+ * @param initialActiveLength The initial length of the sparse data structures
+ *   when creating new instances.
  *
  * @author dlwh, dramage
  */
@@ -62,12 +68,6 @@ final class SparseArray[@specialized T]
   /** Default value. */
   val default = df.value;
 
-  /** Last found offset. */
-  final private var lastOffset = -1;
-
-  /** Index at last found offset. */
-  final private var lastIndex = -1;
-
   /** Iterator over used indexes and values */
   def iterator = Iterator.range(0, used).map(i => (index(i),data(i)));
 
@@ -86,13 +86,6 @@ final class SparseArray[@specialized T]
   /** A copy of the values in this array. */
   def valueArray : Array[T] = data.take(used);
 
-  /** Records that the given index was found at this.index(offset). */
-  private def found(index : Int, offset : Int) : Int = {
-    lastOffset = offset;
-    lastIndex = index;
-    return offset;
-  }
-
   /**
    * Returns the offset into index and data for the requested vector
    * index.  If the requested index is not found, the return value is
@@ -102,33 +95,18 @@ final class SparseArray[@specialized T]
     if (i < 0 || i >= length)
       throw new IndexOutOfBoundsException("Index "+i+" out of bounds [0,"+used+")");
 
-    if (i == lastIndex) {
-      // previous element; don't need to update lastOffset
-      return lastOffset;
-    } else if (used == 0) {
+    if (used == 0) {
       // empty list; do nothing
       return -1;
+    } else if (i > index(used-1)) {
+      // special case for end of list - this is a big win for growing sparse arrays
+      return ~used;
     } else {
       // regular binary search from begin to end (inclusive)
       var begin = 0;
       var end = used - 1;
 
-      // narrow the search if we have a previous reference
-      if (i < lastIndex) {
-        // in range preceding last request
-        end = lastOffset;
-      } else if (lastIndex >= 0) {
-        // in range following last request
-        begin = lastOffset;
-
-        if (begin + 1 <= end && index(begin + 1) == i) {
-          // special case: successor of last request
-          return found(i, begin + 1);
-        }
-      }
-
-      // Simple optimization:
-      // the i'th entry can't be after entry i.
+      // Simple optimization: position i can't be after offset i.
       if(end > i)
         end = i;
 
@@ -140,7 +118,7 @@ final class SparseArray[@specialized T]
         else if (index(mid) > i)
           end = mid - 1;
         else
-          return found(i, mid);
+          return i;
       }
 
       // no match found, return insertion point
@@ -171,13 +149,13 @@ final class SparseArray[@specialized T]
 
   /** Returns the index of the item stored at the given offset. */
   def indexAt(offset : Int) : Int = {
-    if (offset > used) throw new ArrayIndexOutOfBoundsException();
+    if (offset >= used) throw new ArrayIndexOutOfBoundsException();
     index(offset);
   }
 
   /** Returns the value of the item stored at the given offset. */
   def valueAt(offset : Int) : T = {
-    if (offset > used) throw new ArrayIndexOutOfBoundsException();
+    if (offset >= used) throw new ArrayIndexOutOfBoundsException();
     data(offset);
   }
 
@@ -201,22 +179,21 @@ final class SparseArray[@specialized T]
       // found at offset
       data(offset) = value;
     } else if (value != default) {
-      // need to insert at position -(offset+1)
+      // need to insert at ~offset
       val insertPos = ~offset;
 
       used += 1;
 
       if (used > data.length) {
         // need to grow array
-        val newLength = math.min(length, {
-          if (data.length < 8) { 8 }
-          else if (data.length > 16*1024) { data.length + 16*1024 }
-          else if (data.length > 8*1024)  { data.length +  8*1024 }
-          else if (data.length > 4*1024)  { data.length +  4*1024 }
-          else if (data.length > 2*1024)  { data.length +  2*1024 }
-          else if (data.length > 1*1024)  { data.length +  1*1024 }
-          else { data.length * 2 }
-        });
+        val newLength = {
+          if      (data.length < 0x0400) { data.length * 2 }
+          else if (data.length < 0x0800) { data.length + 0x0400 }
+          else if (data.length < 0x1000) { data.length + 0x0800 }
+          else if (data.length < 0x2000) { data.length + 0x1000 }
+          else if (data.length < 0x4000) { data.length + 0x2000 }
+          else { data.length + 0x4000 };
+        };
 
         // copy existing data into new arrays
         val newIndex = new Array[Int](newLength);
@@ -239,9 +216,6 @@ final class SparseArray[@specialized T]
       // assign new value
       index(insertPos) = i;
       data(insertPos) = value;
-
-      // record the insertion point
-      found(i,insertPos);
     }
   }
 
@@ -312,8 +286,6 @@ final class SparseArray[@specialized T]
     data = inData;
     index = inIndex;
     used = inUsed;
-    lastOffset = -1;
-    lastIndex = -1;
   }
 
   private def checkrep() {
@@ -339,8 +311,7 @@ final class SparseArray[@specialized T]
    * storing an Array).
    */
   def map[B:ClassManifest:DefaultArrayValue](f : T=>B) : SparseArray[B] = {
-    val rv = new SparseArray[B](length);
-    if (default == null || f(default) == rv.default) {
+    if (default == null || f(default) == implicitly[DefaultArrayValue[B]].value) {
       val newIndex = new Array[Int](used);
       val newData = new Array[B](used);
       var i = 0;
@@ -349,7 +320,7 @@ final class SparseArray[@specialized T]
         newData(i) = f(data(i));
         i += 1;
       }
-      rv.use(newIndex, newData, used);
+      new SparseArray[B](length, newIndex, newData, used, initialActiveLength);
     } else {
       val mappedDefault = f(default);
       val newIndex = Array.range(0, length);
@@ -369,9 +340,8 @@ final class SparseArray[@specialized T]
         newData(o) = mappedDefault;
         o += 1;
       }
-      rv.use(newIndex, newData, length);
+      new SparseArray[B](length, newIndex, newData, length, initialActiveLength);
     }
-    rv;
   }
 
   /**
