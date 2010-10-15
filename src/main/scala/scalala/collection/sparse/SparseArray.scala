@@ -118,7 +118,7 @@ final class SparseArray[@specialized T]
         else if (index(mid) > i)
           end = mid - 1;
         else
-          return i;
+          return mid;
       }
 
       // no match found, return insertion point
