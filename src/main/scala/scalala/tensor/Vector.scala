@@ -21,7 +21,6 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic._;
 import mutable.TensorBuilder;
 
 trait VectorLike[@specialized(Int,Long,Float,Double) B, +This<:Vector[B]]

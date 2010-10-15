@@ -23,7 +23,6 @@ package tensor;
 import domain._;
 import generic.{CanAdd,CanMul,CanSub,CanDiv,CanMod,CanPow};
 import generic.collection._;
-import generic.tensor._;
 
 import mutable.TensorBuilder;
 
@@ -167,13 +166,6 @@ self =>
   def view[That](implicit bf : CanView[This,That]) : That =
     bf.apply(repr);
 
-  /**
-   * Returns a slice sequence of this Tensor containing only those
-   * values matching the given filter criteria.
-   */
-  def filter[That](p: B => Boolean)
-  (implicit bf : CanSliceVector[This, A, That]) : That =
-    apply(find(p));
 
   /**
    * Creates a new Tensor over the same domain using the given value

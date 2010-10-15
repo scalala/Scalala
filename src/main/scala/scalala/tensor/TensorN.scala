@@ -21,7 +21,6 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic.tensor._;
 
 /**
  * Tensors indexed by a sequence of keys.

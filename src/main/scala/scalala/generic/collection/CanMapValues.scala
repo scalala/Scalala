@@ -17,18 +17,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-
 package scalala;
 package generic;
 package collection;
 
-import scalala.tensor.Scalar;
-
 /**
  * Marker for being able to map the values in a value collection.
- * For scalar, CanMapValues just applies the given transformation
- * funciton.  For collections, keys remain the same but values
- * are mapped.
  *
  * @author dramage
  */
@@ -42,29 +36,6 @@ trait CanMapValues[From, @specialized A, @specialized B, +To] {
 
 object CanMapValues {
   type Op[From,A,B,To] = CanMapValues[From,A,B,To];
-
-  //
-  // Scalars
-  //
-
-  class OpScalar[@specialized A:Scalar, @specialized B]
-  extends Op[A,A,B,B] {
-    def map(from : A, fn : (A=>B)) = fn(from);
-    def mapNonZero(from : A, fn : (A=>B)) = fn(from);
-  }
-
-  implicit def opScalar[@specialized A:Scalar, @specialized B] =
-    new OpScalar[A,B];
-
-  implicit object OpScalarII extends OpScalar[Int,Int];
-  implicit object OpScalarSS extends OpScalar[Short,Short];
-  implicit object OpScalarLL extends OpScalar[Long,Long];
-  implicit object OpScalarFF extends OpScalar[Float,Float];
-  implicit object OpScalarDD extends OpScalar[Double,Double];
-  implicit object OpScalarID extends OpScalar[Int,Double];
-  implicit object OpScalarSD extends OpScalar[Short,Double];
-  implicit object OpScalarLD extends OpScalar[Long,Double];
-  implicit object OpScalarFD extends OpScalar[Float,Double];
 
   //
   // Arrays

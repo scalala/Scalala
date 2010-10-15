@@ -21,7 +21,6 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic._;
 
 /**
  * Implementation trait for a transposed view of an underlying Tensor2.

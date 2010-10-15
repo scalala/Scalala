@@ -19,33 +19,13 @@
  */
 package scalala;
 package generic;
-package tensor;
+package collection;
 
 /**
- * Builder trait for a slicing a view of a matrix.
+ * Supports sliced view of a Tensor.
  *
  * @author dramage
  */
-trait CanSliceMatrix[-From, A1, A2, +To] {
-  def apply(from : From, keys1 : Seq[A1], keys2 : Seq[A2]) : To;
-}
-
-
-/**
- * Builder trait for a slicing a row from a matrix.
- *
- * @author dramage
- */
-trait CanSliceRow[-From, K, +To] {
-  def apply(from : From, row : K) : To;
-}
-
-
-/**
- * Builder trait for a slicing a column from a matrix.
- *
- * @author dramage
- */
-trait CanSliceCol[-From, K, +To] {
-  def apply(from : From, row : K) : To;
+trait CanSliceTensor[-From, A1, A2, +To] {
+  def apply(from : From, keymap : scala.collection.Map[A2,A1]) : To;
 }

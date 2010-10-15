@@ -19,13 +19,13 @@
  */
 package scalala;
 package generic;
-package tensor;
+package collection;
 
 /**
- * Supports sliced view of a Tensor.
+ * Trait for constructing a lazy view of a given Tensor.
  *
  * @author dramage
  */
-trait CanSliceTensor[-From, A1, A2, +To] {
-  def apply(from : From, keymap : scala.collection.Map[A2,A1]) : To;
+trait CanView[-From, +To] {
+  def apply(from : From) : To;
 }

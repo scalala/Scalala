@@ -22,10 +22,10 @@ package tensor;
 package mutable;
 
 import domain._;
-import generic.tensor._;
 
 import generic.{CanMul,CanDiv,CanAdd,CanSub,CanPow,CanMod}
 import generic.{CanAssignInto,CanMulInto,CanDivInto,CanAddInto,CanSubInto,CanPowInto,CanModInto}
+import generic.collection._;
 
 /**
  * Implementation trait for TensorLike.  Supports assigning,
@@ -128,7 +128,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] extends tensor.TensorCompanion[
   // Tensor-scalar
   //
 
-  implicit def canAssignScalarInto[K,V](scalar : Scalar[V])
+  implicit def canAssignScalarInto[K,V](implicit scalar : Scalar[V])
   : CanAssignInto[Bound[K,V],V] = new CanAssignInto[Bound[K,V],V] {
     override def apply(a : Bound[K,V], s : V) = {
       if (s == scalar.zero) {

@@ -19,13 +19,13 @@
  */
 package scalala;
 package generic;
-package tensor;
+package collection;
 
 /**
- * Builder trait for transposing a matrix.
+ * Capability trait for slicing a Vector from something.
  *
  * @author dramage
  */
-trait CanTranspose[-From, +To] {
-  def apply(in : From) : To;
+trait CanSliceVector[-From, A, +To] {
+  def apply(from : From, keys : Seq[A]) : To;
 }

@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic.tensor._;
+import generic.collection._;
 
 /**
  * Implementation trait for tensors indexed by two keys, such as Matrices.

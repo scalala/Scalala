@@ -69,7 +69,7 @@ class TensorTest extends FunSuite with Checkers {
   test("Filter values") {
     val x = mkMapTensor();
     x("a","b","c") := List(1,2,3);
-    x.filter(_ >= 2) := 0;
+    x(x.find(_ >= 2)) := 0;
     assert(x.valuesIterator.toList === List(1,0,0));
   }
 
@@ -93,6 +93,15 @@ class TensorTest extends FunSuite with Checkers {
     assert(x.argsort.toList === List("c","a","b"));
 
     assert(x.sorted.valuesIterator.toList === List(3,5,7));
+  }
+
+  test("Min/Max") {
+    val x = mkMapTensor();
+    x("a","b","c") := List(5,7,3);
+    assert(x.min === 3);
+    assert(x.max === 7);
+    assert(x.argmin === "c");
+    assert(x.argmax === "b");
   }
 
 //  test("Views") {

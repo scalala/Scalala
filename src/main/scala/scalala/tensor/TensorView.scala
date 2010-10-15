@@ -22,7 +22,6 @@ package tensor;
 
 import domain._;
 import generic.collection._;
-import generic.tensor._;
 
 /**
  * Implementation trait for pass-through views of underlying Tensor.

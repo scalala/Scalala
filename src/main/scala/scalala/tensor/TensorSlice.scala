@@ -21,9 +21,6 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic._;
-
-import mutable.TensorBuilder;
 
 /**
  * Implementation trait for slices of an underlying Tensor.  A slice

@@ -20,10 +20,10 @@
 package scalala;
 package tensor;
 
-import domain._
-import generic.tensor._;
+import domain._;
 
-import mutable.TensorBuilder;
+import generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
+import generic.collection._;
 
 /**
  * A Transpose of any Matrix type is a Matrix.
@@ -51,4 +51,31 @@ object MatrixTranspose {
   (override val underlying : Coll)
   (implicit override val scalar : Scalar[B])
   extends MatrixTranspose[B,Coll];
+
+  implicit def canMapValues[V,RV](implicit c : CanMapValues[Matrix[V],V,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanMapValues[MatrixTranspose[V,Matrix[V]],V,RV,Matrix[RV]]];
+
+  implicit def canKeyValuePairs[V,RV](implicit c : CanMapKeyValuePairs[Matrix[V],(Int,Int),V,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanMapKeyValuePairs[MatrixTranspose[V,Matrix[V]],(Int,Int),V,RV,Matrix[RV]]];
+
+  implicit def canJoinValues[V1,V2,RV](implicit c : CanJoinValues[Matrix[V1],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanJoinValues[MatrixTranspose[V1,Matrix[V1]],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]];
+
+  implicit def canAdd[V,B,That](implicit c : CanAdd[Matrix[V],B,That]) =
+    c.asInstanceOf[CanAdd[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canSub[V,B,That](implicit c : CanSub[Matrix[V],B,That]) =
+    c.asInstanceOf[CanSub[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canMul[V,B,That](implicit c : CanMul[Matrix[V],B,That]) =
+    c.asInstanceOf[CanMul[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canDiv[V,B,That](implicit c : CanDiv[Matrix[V],B,That]) =
+    c.asInstanceOf[CanDiv[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canMod[V,B,That](implicit c : CanMod[Matrix[V],B,That]) =
+    c.asInstanceOf[CanMod[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canPow[V,B,That](implicit c : CanPow[Matrix[V],B,That]) =
+    c.asInstanceOf[CanPow[MatrixTranspose[V,Matrix[V]],B,That]];
 }

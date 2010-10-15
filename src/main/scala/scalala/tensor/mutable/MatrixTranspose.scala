@@ -21,8 +21,11 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._
-import generic.tensor._;
+import domain._;
+
+import scalala.generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
+import scalala.generic.{CanAssignInto, CanAddInto, CanSubInto, CanMulInto, CanDivInto, CanPowInto, CanModInto};
+import scalala.generic.collection._;
 
 /**
  * A Transpose of any Matrix type is a Matrix.
@@ -52,4 +55,52 @@ object MatrixTranspose {
   (override val underlying : Coll)
   (implicit override val scalar : Scalar[B])
   extends MatrixTranspose[B,Coll];
+
+  implicit def canMapValues[V,RV](implicit c : CanMapValues[Matrix[V],V,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanMapValues[MatrixTranspose[V,Matrix[V]],V,RV,Matrix[RV]]];
+
+  implicit def canKeyValuePairs[V,RV](implicit c : CanMapKeyValuePairs[Matrix[V],(Int,Int),V,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanMapKeyValuePairs[MatrixTranspose[V,Matrix[V]],(Int,Int),V,RV,Matrix[RV]]];
+
+  implicit def canJoinValues[V1,V2,RV](implicit c : CanJoinValues[Matrix[V1],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanJoinValues[MatrixTranspose[V1,Matrix[V1]],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]];
+
+  implicit def canAdd[K1,K2,V,B,That](implicit c : CanAdd[Matrix[V],B,That]) =
+    c.asInstanceOf[CanAdd[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canSub[K1,K2,V,B,That](implicit c : CanSub[Matrix[V],B,That]) =
+    c.asInstanceOf[CanSub[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canMul[K1,K2,V,B,That](implicit c : CanMul[Matrix[V],B,That]) =
+    c.asInstanceOf[CanMul[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canDiv[K1,K2,V,B,That](implicit c : CanDiv[Matrix[V],B,That]) =
+    c.asInstanceOf[CanDiv[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canMod[K1,K2,V,B,That](implicit c : CanMod[Matrix[V],B,That]) =
+    c.asInstanceOf[CanMod[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canPow[K1,K2,V,B,That](implicit c : CanPow[Matrix[V],B,That]) =
+    c.asInstanceOf[CanPow[MatrixTranspose[V,Matrix[V]],B,That]];
+
+  implicit def canAssignInto[K1,K2,V](implicit c : CanAssignInto[Matrix[V],V]) =
+    c.asInstanceOf[CanAssignInto[MatrixTranspose[V,Matrix[V]],V]];
+
+  implicit def canAddInto[K1,K2,V](implicit c : CanAddInto[Matrix[V],V]) =
+    c.asInstanceOf[CanAddInto[MatrixTranspose[V,Matrix[V]],V]];
+
+  implicit def canSubInto[K1,K2,V](implicit c : CanSubInto[Matrix[V],V]) =
+    c.asInstanceOf[CanSubInto[MatrixTranspose[V,Matrix[V]],V]];
+
+  implicit def canMulInto[K1,K2,V](implicit c : CanMulInto[Matrix[V],V]) =
+    c.asInstanceOf[CanMulInto[MatrixTranspose[V,Matrix[V]],V]];
+
+  implicit def canDivInto[K1,K2,V](implicit c : CanDivInto[Matrix[V],V]) =
+    c.asInstanceOf[CanDivInto[MatrixTranspose[V,Matrix[V]],V]];
+
+  implicit def canModInto[K1,K2,V](implicit c : CanModInto[Matrix[V],V]) =
+    c.asInstanceOf[CanModInto[MatrixTranspose[V,Matrix[V]],V]];
+
+  implicit def canPowInto[K1,K2,V](implicit c : CanPowInto[Matrix[V],V]) =
+    c.asInstanceOf[CanPowInto[MatrixTranspose[V,Matrix[V]],V]];
 }

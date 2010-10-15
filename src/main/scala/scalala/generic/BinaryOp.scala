@@ -343,12 +343,43 @@ extends BinaryOp[Array[V1],SparseArray[V2],Array[RV]] {
 
 
 
-/** Base class for BinaryOp on a pair of scala maps. @author dramage */
-class MapMapOp[K,V1,V2,RV](implicit op : BinaryOp[V1,V2,RV])
+/**
+ * Base class for BinaryOp on a pair of scala maps on all values where at
+ * least one map contains the given key.
+ *
+ * @author dramage
+ */
+class MapMapEitherNonZeroOp[K,V1,V2,RV](implicit op : BinaryOp[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV))
+extends BinaryOp[Map[K,V1],Map[K,V2],Map[K,RV]] {
+  def apply(a : Map[K,V1], b : Map[K,V2]) : Map[K,RV] = {
+    (a.keySet ++ b.keySet).map(
+      k => {
+        val aHasK = a contains k;
+        val bHasK = b contains k;
+        if (aHasK && bHasK) {
+          (k, op(a(k),b(k)));
+        } else if (aHasK) {
+          (k, promoteL(a(k)));
+        } else /* if (bHasK) */ {
+          (k, promoteR(b(k)));
+        }
+      }
+    ).toMap;
+  }
+}
+
+/**
+ * Base class for BinaryOp on a pair of scala maps on all values where at
+ * both maps contains the given key.
+ *
+ * @author dramage
+ */
+class MapMapBothNonZeroOp[K,V1,V2,RV](implicit op : BinaryOp[V1,V2,RV])
 extends BinaryOp[Map[K,V1],Map[K,V2],Map[K,RV]] {
   def apply(a : Map[K,V1], b : Map[K,V2]) =
-    (a.keySet ++ b.keySet).map(k => (k,op(a(k),b(k)))).toMap;
+    (a.keySet & b.keySet).map(k => (k,op(a(k),b(k)))).toMap;
 }
+
 
 class Tuple2Tuple2Op[VA1,VA2,VB1,VB2,RV1,RV2]
 (implicit op1 : BinaryOp[VA1,VB1,RV1], op2 : BinaryOp[VA2,VB2,RV2])
@@ -383,6 +414,7 @@ object CanAdd {
   type ArraySparseArrayBase[A,B,That] = ArraySparseArrayAllOp[A,B,That];
   type SparseArrayArrayOutput[A] = Array[A];
   type ArraySparseArrayOutput[A] = Array[A];
+  type MapMapBase[K,V1,V2,RV] = MapMapEitherNonZeroOp[K,V1,V2,RV];
 
   //
   // Primitives
@@ -574,11 +606,11 @@ object CanAdd {
   // Scala Maps
   //
 
-  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV]) =
+  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV)) =
     new OpMap[K,V1,V2,RV];
 
-  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV])
-  extends MapMapOp[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
+  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV))
+  extends MapMapBase[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
 }
 
 /** Construction delegate for A :- B. @author dramage */
@@ -591,6 +623,7 @@ object CanSub {
   type ArraySparseArrayBase[A,B,That] = ArraySparseArrayAllOp[A,B,That];
   type SparseArrayArrayOutput[A] = Array[A];
   type ArraySparseArrayOutput[A] = Array[A];
+  type MapMapBase[K,V1,V2,RV] = MapMapEitherNonZeroOp[K,V1,V2,RV];
 
   //
   // Primitives
@@ -782,11 +815,11 @@ object CanSub {
   // Scala Maps
   //
 
-  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV]) =
+  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV)) =
     new OpMap[K,V1,V2,RV];
 
-  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV])
-  extends MapMapOp[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
+  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV))
+  extends MapMapBase[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
 }
 
 /** Construction delegate for A :* B. @author dramage */
@@ -799,6 +832,7 @@ object CanMul {
   type ArraySparseArrayBase[A,B,That] = ArraySparseArrayInnerOp[A,B,That];
   type SparseArrayArrayOutput[A] = SparseArray[A];
   type ArraySparseArrayOutput[A] = SparseArray[A];
+  type MapMapBase[K,V1,V2,RV] = MapMapBothNonZeroOp[K,V1,V2,RV];
 
   //
   // Primitives
@@ -990,11 +1024,11 @@ object CanMul {
   // Scala Maps
   //
 
-  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV]) =
+  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV)) =
     new OpMap[K,V1,V2,RV];
 
-  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV])
-  extends MapMapOp[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
+  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV))
+  extends MapMapBase[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
 }
 
 
@@ -1008,6 +1042,7 @@ object CanDiv {
   type ArraySparseArrayBase[A,B,That] = ArraySparseArrayAllOp[A,B,That];
   type SparseArrayArrayOutput[A] = SparseArray[A];
   type ArraySparseArrayOutput[A] = Array[A];
+  type MapMapBase[K,V1,V2,RV] = MapMapEitherNonZeroOp[K,V1,V2,RV];
 
   //
   // Primitives
@@ -1199,11 +1234,11 @@ object CanDiv {
   // Scala Maps
   //
 
-  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV]) =
+  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV)) =
     new OpMap[K,V1,V2,RV];
 
-  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV])
-  extends MapMapOp[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
+  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV))
+  extends MapMapBase[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
 }
 
 /** Construction delegate for A :% B. @author dramage */
@@ -1216,6 +1251,7 @@ object CanMod {
   type ArraySparseArrayBase[A,B,That] = ArraySparseArrayAllOp[A,B,That];
   type SparseArrayArrayOutput[A] = SparseArray[A];
   type ArraySparseArrayOutput[A] = Array[A];
+  type MapMapBase[K,V1,V2,RV] = MapMapEitherNonZeroOp[K,V1,V2,RV];
 
   //
   // Primitives
@@ -1407,11 +1443,11 @@ object CanMod {
   // Scala Maps
   //
 
-  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV]) =
+  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV)) =
     new OpMap[K,V1,V2,RV];
 
-  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV])
-  extends MapMapOp[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
+  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV))
+  extends MapMapBase[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
 }
 
 /** Construction delegate for A :^ B. @author dramage */

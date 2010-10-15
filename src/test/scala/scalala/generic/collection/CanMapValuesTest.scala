@@ -37,6 +37,6 @@ class CanMapValuesTest extends FunSuite with Checkers {
   }
 
   test("map") {
-    assert(toDoubles(Map('a'->2,'b'->3)) === Map('a'->2.0,'b'->3.0));
+    assert(toDoubles(scala.collection.Map('a'->2,'b'->3)) === Map('a'->2.0,'b'->3.0));
   }
 }

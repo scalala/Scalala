@@ -20,11 +20,8 @@
 package scalala;
 package tensor;
 
-import generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
-import generic.collection._;
-import generic.tensor._;
-
 import domain._;
+import generic.{CanAdd,CanMul};
 
 /**
  * Implementation trait for a one-axis tensor supports methods like norm

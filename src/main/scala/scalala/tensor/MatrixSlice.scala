@@ -21,7 +21,9 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic._;
+
+import generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
+import generic.collection._;
 
 /**
  * A table sliced from a Tensor2 by providing a set product set of
@@ -76,4 +78,31 @@ object MatrixSlice {
 
     override val domain = TableDomain(keys1.length, keys2.length);
   }
+
+  implicit def canMapValues[K1,K2,V,RV](implicit c : CanMapValues[Matrix[V],V,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanMapValues[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],V,RV,Matrix[RV]]];
+
+  implicit def canKeyValuePairs[K1,K2,V,RV](implicit c : CanMapKeyValuePairs[Matrix[V],(Int,Int),V,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanMapKeyValuePairs[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],(Int,Int),V,RV,Matrix[RV]]];
+
+  implicit def canJoinValues[K1,K2,V1,V2,RV](implicit c : CanJoinValues[Matrix[V1],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanJoinValues[MatrixSlice[K1,K2,V1,Tensor2[K1,K2,V1]],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]];
+
+  implicit def canAdd[K1,K2,V,B,That](implicit c : CanAdd[Matrix[V],B,That]) =
+    c.asInstanceOf[CanAdd[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canSub[K1,K2,V,B,That](implicit c : CanSub[Matrix[V],B,That]) =
+    c.asInstanceOf[CanSub[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canMul[K1,K2,V,B,That](implicit c : CanMul[Matrix[V],B,That]) =
+    c.asInstanceOf[CanMul[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canDiv[K1,K2,V,B,That](implicit c : CanDiv[Matrix[V],B,That]) =
+    c.asInstanceOf[CanDiv[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canMod[K1,K2,V,B,That](implicit c : CanMod[Matrix[V],B,That]) =
+    c.asInstanceOf[CanMod[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canPow[K1,K2,V,B,That](implicit c : CanPow[Matrix[V],B,That]) =
+    c.asInstanceOf[CanPow[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
 }

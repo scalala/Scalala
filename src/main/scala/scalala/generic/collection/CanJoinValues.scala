@@ -19,7 +19,7 @@
  */
 package scalala;
 package generic;
-package tensor;
+package collection;
 
 /**
  * Builder trait for creating a view of two tensors by joining two underlying

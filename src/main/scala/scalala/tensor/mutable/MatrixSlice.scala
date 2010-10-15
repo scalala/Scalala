@@ -22,7 +22,10 @@ package tensor;
 package mutable;
 
 import domain._;
-import generic.tensor._;
+
+import scalala.generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
+import scalala.generic.{CanAssignInto, CanAddInto, CanSubInto, CanMulInto, CanDivInto, CanPowInto, CanModInto};
+import scalala.generic.collection._;
 
 /**
  * Implementation trait for a pass-through view of a (key-mapped)
@@ -60,7 +63,7 @@ extends tensor.MatrixSlice[A1,A2,B,Coll]
 with Matrix[B]
 with MatrixSliceLike[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Coll,MatrixSlice[A1,A2,B,Coll]];
 
-object MatrixSlice /* extends MatrixSliceCompanion[MatrixSlice] */ {
+object MatrixSlice {
   class FromKeySeqs[A1, A2, B, +Coll<:Tensor2[A1,A2,B]]
   (override val underlying : Coll, val keys1 : Seq[A1], val keys2 : Seq[A2])
   (override implicit val scalar : Scalar[B])
@@ -70,8 +73,52 @@ object MatrixSlice /* extends MatrixSliceCompanion[MatrixSlice] */ {
 
     override val domain = TableDomain(keys1.length, keys2.length);
   }
-}
 
-//object MatrixSliceCompanion {
-//  type SliceBound[V] = MatrixSlice[_,_,V,_];
-//}
+  implicit def canMapValues[K1,K2,V,RV](implicit c : CanMapValues[Matrix[V],V,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanMapValues[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],V,RV,Matrix[RV]]];
+  
+  implicit def canKeyValuePairs[K1,K2,V,RV](implicit c : CanMapKeyValuePairs[Matrix[V],(Int,Int),V,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanMapKeyValuePairs[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],(Int,Int),V,RV,Matrix[RV]]];
+  
+  implicit def canJoinValues[K1,K2,V1,V2,RV](implicit c : CanJoinValues[Matrix[V1],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]) =
+    c.asInstanceOf[CanJoinValues[MatrixSlice[K1,K2,V1,Tensor2[K1,K2,V1]],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]];
+
+  implicit def canAdd[K1,K2,V,B,That](implicit c : CanAdd[Matrix[V],B,That]) =
+    c.asInstanceOf[CanAdd[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canSub[K1,K2,V,B,That](implicit c : CanSub[Matrix[V],B,That]) =
+    c.asInstanceOf[CanSub[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canMul[K1,K2,V,B,That](implicit c : CanMul[Matrix[V],B,That]) =
+    c.asInstanceOf[CanMul[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canDiv[K1,K2,V,B,That](implicit c : CanDiv[Matrix[V],B,That]) =
+    c.asInstanceOf[CanDiv[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canMod[K1,K2,V,B,That](implicit c : CanMod[Matrix[V],B,That]) =
+    c.asInstanceOf[CanMod[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canPow[K1,K2,V,B,That](implicit c : CanPow[Matrix[V],B,That]) =
+    c.asInstanceOf[CanPow[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],B,That]];
+
+  implicit def canAssignInto[K1,K2,V](implicit c : CanAssignInto[Matrix[V],V]) =
+    c.asInstanceOf[CanAssignInto[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],V]];
+
+  implicit def canAddInto[K1,K2,V](implicit c : CanAddInto[Matrix[V],V]) =
+    c.asInstanceOf[CanAddInto[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],V]];
+
+  implicit def canSubInto[K1,K2,V](implicit c : CanSubInto[Matrix[V],V]) =
+    c.asInstanceOf[CanSubInto[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],V]];
+
+  implicit def canMulInto[K1,K2,V](implicit c : CanMulInto[Matrix[V],V]) =
+    c.asInstanceOf[CanMulInto[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],V]];
+
+  implicit def canDivInto[K1,K2,V](implicit c : CanDivInto[Matrix[V],V]) =
+    c.asInstanceOf[CanDivInto[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],V]];
+
+  implicit def canModInto[K1,K2,V](implicit c : CanModInto[Matrix[V],V]) =
+    c.asInstanceOf[CanModInto[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],V]];
+
+  implicit def canPowInto[K1,K2,V](implicit c : CanPowInto[Matrix[V],V]) =
+    c.asInstanceOf[CanPowInto[MatrixSlice[K1,K2,V,Tensor2[K1,K2,V]],V]];
+}

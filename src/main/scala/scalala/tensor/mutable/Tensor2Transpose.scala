@@ -22,7 +22,7 @@ package tensor;
 package mutable;
 
 import domain._;
-import generic.tensor._;
+import generic.collection._;
 
 /**
  * Implementation trait for a transposed view of an underlying MutableTensor2.
