@@ -25,9 +25,7 @@ import generic.collection.{CanViewAsTensor1,CanViewAsTensor2};
 import plotting._;
 
 /**
- * Matlab-like plotting routines.  Note that Scalala is 0-indexed,
- * so figure(0) is like matlab's figure(1), and subplot(2,1,0) is the first
- * subplot in two rows, one column.
+ * Matlab-like plotting routines.
  *
  * @author dramage
  */
@@ -38,9 +36,9 @@ trait Plotting {
   def figures = Figures.global;
 
   /** Selects and returns the requested figure by index (0-based). */
-  def figure(select:Int = -1)(implicit figures : Figures = figures) : Figure = {
-    if (select >= 0) {
-      figures.figure = select;
+  def figure(select:Int = 0)(implicit figures : Figures = figures) : Figure = {
+    if (select > 0) {
+      figures.figure = select - 1;
       figures.figure.refresh;
     }
     return figures.figure
@@ -63,7 +61,7 @@ trait Plotting {
   def subplot(rows:Int,cols:Int,select:Int)(implicit figure : Figure = figure) : XYPlot = {
     figure.rows = rows;
     figure.cols = cols;
-    figure.plot = select;
+    figure.plot = select - 1;
     figure.refresh;
     return figure.plot;
   }
