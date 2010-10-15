@@ -21,6 +21,8 @@ package scalala;
 package generic;
 package collection;
 
+import scalala.tensor.Scalar;
+
 /**
  * Builder trait for transposing a matrix.
  *
@@ -28,4 +30,20 @@ package collection;
  */
 trait CanTranspose[-From, +To] {
   def apply(in : From) : To;
+}
+
+object CanTranspose {
+  class ArrayArrayTranspose[V:Scalar:Manifest] extends CanTranspose[Array[Array[V]], Array[Array[V]]] {
+    override def apply(in : Array[Array[V]]) =
+      Array.tabulate(in(0).length, in.length)((i,j) => in(j)(i));
+  }
+
+  implicit def mkArrayArrayTranspose[V:Scalar:Manifest] =
+    new ArrayArrayTranspose[V];
+
+  implicit object OpI extends ArrayArrayTranspose[Int];
+  implicit object OpS extends ArrayArrayTranspose[Short];
+  implicit object OpL extends ArrayArrayTranspose[Long];
+  implicit object OpF extends ArrayArrayTranspose[Float];
+  implicit object OpD extends ArrayArrayTranspose[Double];
 }

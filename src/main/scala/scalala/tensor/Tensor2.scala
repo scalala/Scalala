@@ -36,7 +36,7 @@ trait Tensor2Like
  +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
  +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
  +This<:Tensor2[A1,A2,B]]
-extends TensorLike[(A1,A2),B,D,This] {
+extends TensorLike[(A1,A2),B,D,This] with operators.MatrixOps[This] {
   def checkKey(k1 : A1, k2 : A2) : Unit = {
     if (!domain._1.contains(k1) || !domain._2.contains(k2)) {
       throw new DomainException((k1,k2)+" not in domain");

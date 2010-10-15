@@ -31,9 +31,8 @@ import domain._;
 trait Tensor1Like
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,
  +D<:IterableDomain[A] with DomainLike[A,D], +This<:Tensor1[A,B]]
-extends tensor.Tensor1Like[A,B,D,This] with TensorLike[A,B,D,This] {
-
-}
+extends tensor.Tensor1Like[A,B,D,This] with TensorLike[A,B,D,This]
+with operators.MutableColumnTensorOps[This];
 
 /**
  * Mutable tensor.Tensor1.

@@ -63,4 +63,20 @@ class ArrayTest extends FunSuite with Checkers {
     assert((a :/ 2.0).toList === List(0.5,1.0,1.5));
     assert((a :% 2).toList === List(1,0,1));
   }
+
+  test("Vector ops") {
+    val a = mk(1,2,3);
+
+    assert(a.t * a === 1+4+9);
+    assert((a * a.t).map(_.toList).toList === List(List(1,2,3),List(2,4,6),List(3,6,9)));
+  }
+
+  test("Matrix ops") {
+    val m = Array(Array(1,2,4),Array(-1,7,0));
+    val v = Array(6.0, 2.0, 1.0);
+    assert((m * v).toList === Array(14,8).toList);
+
+    assert((m * m.t).map(_.toList).toList === List(List(21,13), List(13,50)));
+    assert((m.t * m).map(_.toList).toList === List(List(2,-5,4), List(-5,53,8), List(4,8,16)))
+  }
 }
