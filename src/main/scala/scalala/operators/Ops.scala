@@ -74,18 +74,6 @@ trait NumericOps[+This] {
   /** Alias for :-=(b) */
   final def -[TT>:This,B,That](b : B)(implicit op : CanSub[TT,B,That], sb : Scalar[B]) =
     this.:-[TT,B,That](b);
-
-  /** Alias for :*=(b) */
-  final def *[TT>:This,B,That](b : B)(implicit op : CanMul[TT,B,That], sb : Scalar[B]) =
-    this.:*[TT,B,That](b);
-
-  /** Alias for :/=(b) */
-  final def /[TT>:This,B,That](b : B)(implicit op : CanDiv[TT,B,That], sb : Scalar[B]) =
-    this.:/[TT,B,That](b);
-
-  /** Alias for :%=(b) */
-  final def %[TT>:This,B,That](b : B)(implicit op : CanMod[TT,B,That], sb : Scalar[B]) =
-    this.:%[TT,B,That](b);
 }
 
 /**

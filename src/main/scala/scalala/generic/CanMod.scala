@@ -230,9 +230,9 @@ object CanMod {
   // Scala Maps
   //
 
-  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV)) =
+  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], sa : Scalar[V1], sb : Scalar[V2]) =
     new OpMap[K,V1,V2,RV];
 
-  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV))
+  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], sa : Scalar[V1], sb : Scalar[V2])
   extends MapMapBase[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
 }

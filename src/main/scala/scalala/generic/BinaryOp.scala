@@ -346,20 +346,21 @@ extends BinaryOp[Array[V1],SparseArray[V2],Array[RV]] {
  *
  * @author dramage
  */
-class MapMapEitherNonZeroOp[K,V1,V2,RV](implicit op : BinaryOp[V1,V2,RV], promoteL : (V1=>RV), promoteR : (V2=>RV))
+class MapMapEitherNonZeroOp[K,V1,V2,RV](implicit op : BinaryOp[V1,V2,RV], sa : Scalar[V1], sb : Scalar[V2])
 extends BinaryOp[Map[K,V1],Map[K,V2],Map[K,RV]] {
   def apply(a : Map[K,V1], b : Map[K,V2]) : Map[K,RV] = {
     (a.keySet ++ b.keySet).map(
       k => {
-        val aHasK = a contains k;
-        val bHasK = b contains k;
-        if (aHasK && bHasK) {
-          (k, op(a(k),b(k)));
-        } else if (aHasK) {
-          (k, promoteL(a(k)));
-        } else /* if (bHasK) */ {
-          (k, promoteR(b(k)));
-        }
+        (k, op(a.getOrElse(k, sa.zero), b.getOrElse(k, sb.zero)));
+//        val aHasK = a contains k;
+//        val bHasK = b contains k;
+//        if (aHasK && bHasK) {
+//          (k, op(a(k),b(k)));
+//        } else if (aHasK) {
+//          (k, promoteL(a(k)));
+//        } else /* if (bHasK) */ {
+//          (k, promoteR(b(k)));
+//        }
       }
     ).toMap;
   }

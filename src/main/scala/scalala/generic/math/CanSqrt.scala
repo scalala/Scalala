@@ -32,30 +32,28 @@ import collection.CanMapValues;
 trait CanSqrt[-A,+RV] extends UnaryOp[A,RV];
 
 object CanSqrt {
-  type Op[A,RV] = CanSqrt[A,RV];
+  implicit object OpI extends CanSqrt[Int,Double] {
+    def apply(v : Int) = scala.math.sqrt(v);
+  }
 
-  implicit object OpI extends Op[Int,Double]
-  { def apply(v : Int) = scala.math.sqrt(v); }
+  implicit object OpL extends CanSqrt[Long,Double] {
+    def apply(v : Long) = scala.math.sqrt(v);
+  }
 
-  implicit object OpL extends Op[Long,Double]
-  { def apply(v : Long) = scala.math.sqrt(v); }
+  implicit object OpF extends CanSqrt[Float,Double] {
+    def apply(v : Float) = scala.math.sqrt(v);
+  }
 
-  implicit object OpF extends Op[Float,Double]
-  { def apply(v : Float) = scala.math.sqrt(v); }
+  implicit object OpD extends CanSqrt[Double,Double] {
+    def apply(v : Double) = scala.math.sqrt(v);
+  }
 
-  implicit object OpD extends Op[Double,Double]
-  { def apply(v : Double) = scala.math.sqrt(v); }
-
-  // TODO: this causes all sorts of problems
-//  implicit def opMapValues[From,A,B,To]
-//  (implicit op : Op[A,B], map : CanMapValues[From,A,B,To]) =
-//    new OpMapValues[From,A,B,To];
-
-  class OpMapValues[From,@specialized A,@specialized B,To]
-  (implicit op : Op[A,B], map : CanMapValues[From,A,B,To])
-  extends Op[From,To] {
+  class OpMapValues[From,A,B,To](implicit op : CanSqrt[A,B], map : CanMapValues[From,A,B,To]) extends CanSqrt[From,To] {
     def apply(v : From) = map.map(v, op);
   }
+
+  implicit def opMapValues[From,A,B,To](implicit map : CanMapValues[From,A,B,To], op : CanSqrt[A,B])
+  : CanSqrt[From,To] = new OpMapValues[From,A,B,To]()(op, map);
 
   implicit object OpArrayI extends OpMapValues[Array[Int],Int,Double,Array[Double]]()(OpI,CanMapValues.OpArrayID);
   implicit object OpArrayL extends OpMapValues[Array[Long],Long,Double,Array[Double]]()(OpL,CanMapValues.OpArrayLD);

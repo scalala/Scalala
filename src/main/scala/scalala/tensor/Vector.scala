@@ -23,6 +23,10 @@ package tensor;
 import domain._;
 import mutable.TensorBuilder;
 
+import generic.{CanAdd,CanMul,CanMulRowBy,CanMulColumnBy};
+import generic.collection.CanSliceCol;
+import operators.RowTensorOps;
+
 trait VectorLike[@specialized(Int,Long,Float,Double) B, +This<:Vector[B]]
 extends Tensor1Like[Int,B,IndexDomain,This] { self =>
 
@@ -94,4 +98,31 @@ object Vector extends VectorCompanion[Vector] {
 }
 
 
-trait VectorCompanion[Bound[V] <: Vector[V]] extends IndexedTensorCompanion[Int,Bound];
+trait VectorCompanion[Bound[V] <: Vector[V]] extends IndexedTensorCompanion[Int,Bound] {
+  implicit def canMulRowVectorByCol[V1,V2,RV]
+  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], scalar : Scalar[RV])
+  : CanMulRowBy[Bound[V1],Tensor1[Int,V2],RV]
+  = new CanMulRowBy[Bound[V1],Tensor1[Int,V2],RV] {
+    override def apply(a : Bound[V1], b : Tensor1[Int,V2]) =
+      a dot b;
+  }
+
+  implicit def canMulRowVectorByMatrix[V1,V2,RV,S]
+  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], scalar : Scalar[RV],
+   slice : CanSliceCol[scalala.tensor.Matrix[V2],Int,S])
+  : CanMulRowBy[Bound[V1],Matrix[V2],RowTensorOps[Bound[RV]]]
+  = new CanMulRowBy[Bound[V1],Matrix[V2],RowTensorOps[Bound[RV]]] {
+    override def apply(a : Bound[V1], b : Matrix[V2]) = {
+      val rv = a.newBuilder[RV];
+      var j = 0;
+      while (j < b.numCols) {
+        rv(j) = a dot b(::, j).asInstanceOf[Vector[V2]];
+        j += 1;
+      }
+      RowTensorOps(rv.result.asInstanceOf[Bound[RV]]);
+    }
+  }
+
+//  implicit def canMulColVectorByRow[V1,V2,RV]
+//  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[])
+}

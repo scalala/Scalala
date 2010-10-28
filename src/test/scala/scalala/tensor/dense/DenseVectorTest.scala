@@ -57,16 +57,21 @@ class DenseVectorTest extends FunSuite with Checkers {
     val a = DenseVector(5)(0.56390,0.36231,0.14601,0.60294,0.14535);
     val b = DenseVector(5)(0.15951,0.83671,0.56002,0.57797,0.54450);
     assertClose(a dot b, .90249);
+    assertClose(a.t * b, .90249);
   }
 
-//  test("Map") {
-//    val a : DenseVector[Int] = DenseVector(5)(1,2,3,4,5);
-//    val m : DenseVector[Int] = a.mapValues(_ + 1);
-//    assert(m.data.toList === List(2,3,4,5,6));
-//  }
+  test("Map") {
+    val a : DenseVector[Int] = DenseVector(5)(1,2,3,4,5);
+    val m : DenseVector[Int] = a.mapValues(_ + 1);
+    assert(m.data.toList === List(2,3,4,5,6));
+  }
 
   test("Tabulate") {
     val m = DenseVector.tabulate(5)(i => i + 1);
     assert(m.data.toList === List(1,2,3,4,5));
+  }
+  
+  test("Matrix-multiply") {
+    
   }
 }

@@ -21,7 +21,8 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic.{CanAdd,CanMul,CanMulColumnBy};
+import generic.{CanAdd,CanMul,CanMulRowBy,CanMulColumnBy};
+import operators.RowTensorOps;
 
 /**
  * Implementation trait for a one-axis tensor supports methods like norm
@@ -88,11 +89,11 @@ object Tensor1 extends Tensor1Companion[Tensor1] {
 }
 
 trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V]] extends TensorCompanion[Bound] {
-  implicit def canMulColTensor1ByRow[K,V1,V2,RV]
+  implicit def canMulRowTensor1ByCol[K,V1,V2,RV]
   (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], scalar : Scalar[RV])
-  : CanMulColumnBy[Bound[K,V1],operators.RowTensorOps[Tensor1[K,V2]],RV]
-  = new CanMulColumnBy[Bound[K,V1],operators.RowTensorOps[Tensor1[K,V2]],RV] {
-    override def apply(a : Bound[K,V1], b : operators.RowTensorOps[Tensor1[K,V2]]) =
-      a.dot(b.column);
+  : CanMulRowBy[Bound[K,V1],Tensor1[K,V2],RV]
+  = new CanMulRowBy[Bound[K,V1],Tensor1[K,V2],RV] {
+    override def apply(a : Bound[K,V1], b : Tensor1[K,V2]) =
+      a dot b;
   }
 }

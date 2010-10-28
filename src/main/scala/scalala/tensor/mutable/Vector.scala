@@ -30,7 +30,7 @@ import generic.collection._;
  * @author dramage.
  */
 trait VectorLike[@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:Vector[B]]
-extends tensor.VectorLike[B,Repr] with TensorLike[Int,B,IndexDomain,Repr] {
+extends tensor.VectorLike[B,Repr] with Tensor1Like[Int,B,IndexDomain,Repr] {
 
   def := (seq : Seq[B]) = {
     checkDomain(IndexDomain(seq.length));
@@ -167,7 +167,7 @@ extends tensor.VectorLike[B,Repr] with TensorLike[Int,B,IndexDomain,Repr] {
  * @author dramage
  */
 trait Vector[@specialized(Int,Long,Float,Double,Boolean) B]
-extends tensor.Vector[B] with Tensor[Int,B]
+extends tensor.Vector[B] with Tensor1[Int,B]
 with VectorLike[B,Vector[B]];
 
 

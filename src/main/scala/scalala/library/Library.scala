@@ -20,10 +20,10 @@
 package scalala;
 package library;
 
-// import scalala.counter.HashMapCounter;
-
 import scalala.generic._;
 import scalala.generic.math._;
+
+import scalala.tensor.mutable.Tensor;
 
 /**
  * Library of scalala basic mathematical functions.
@@ -93,15 +93,13 @@ trait Library {
   //
 
 //  /** Counts the given items. */
-//  def count[X](items : TraversableOnce[X]) : HashMapCounter[X,Int] = {
-//    val c = HashMapCounter[X,Int]();
+//  def count[X](items : TraversableOnce[X]) : Tensor[X,Int] = {
+//    val m = scala.collection.mutable.Map[X,Int]();
 //    for (item <- items) {
-//      c(item) += 1;
+//      m(item) = m.getOrElse(item, 0) + 1;
 //    }
-//    c;
+//    new Tensor.Impl[X,Int](m);
 //  }
-
-
 }
 
 object Library extends Library;
