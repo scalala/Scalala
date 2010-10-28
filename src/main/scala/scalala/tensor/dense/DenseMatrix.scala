@@ -88,19 +88,41 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
 }
 
 object DenseMatrix {
-  /**
-   * Static constructor that creates a dense matrix of the given size
-   * initialized by iterator from the given values list (looping if
-   * necessary).  The values are initialized column-major, i.e. values
-   * is read in order to populate the matrix, filling up column 0 before
-   * column 1, before column 2 ...
-   */
-  def apply[B:Scalar:ClassManifest](rows : Int, cols : Int)(values : B*) = {
-    new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => values(i % values.length)));
+  /** Static constructor for a literal matrix. */
+  def apply[R,V](rows : R*)(implicit rl : RowLiteral[R,V], scalar : Scalar[V]) = {
+    val nRows = rows.length;
+    val nCols = rl.length(rows(0));
+    val rv = zeros(nRows, nCols);
+    for ((row,i) <- rows.zipWithIndex) {
+      rl.foreach(row, ((j, v) => rv(i,j) = v));
+    }
+    rv;
+  }
+
+  /** Creates a dense matrix of zeros of the requested size. */
+  def zeros[V](rows : Int, cols : Int)(implicit scalar : Scalar[V]) = {
+    implicit val mf = scalar.manifest;
+    new DenseMatrix[V](rows, cols, Array.fill(rows * cols)(scalar.zero));
+  }
+
+  /** Creates a dense matrix of zeros of the requested size. */
+  def ones[V](rows : Int, cols : Int)(implicit scalar : Scalar[V]) = {
+    implicit val mf = scalar.manifest;
+    new DenseMatrix[V](rows, cols, Array.fill(rows * cols)(scalar.one));
+  }
+
+  /** Creates an identity matrix with size rows and columsn. */
+  def eye[V](size : Int)(implicit scalar : Scalar[V]) = {
+    val rv = zeros(size, size);
+    for (i <- 0 until size) {
+      rv(i,i) = scalar.one;
+    }
+    rv;
   }
 
   /** Tabulate a matrix from a function from row,col position to value. */
-  def tabulate[B:Scalar:ClassManifest](rows : Int, cols : Int)(fn : (Int, Int) => B) = {
+  def tabulate[B:Scalar](rows : Int, cols : Int)(fn : (Int, Int) => B) = {
+    implicit val mf = implicitly[Scalar[B]].manifest;
     new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => fn(i % rows, i / rows)));
   }
 
