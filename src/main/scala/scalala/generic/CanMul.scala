@@ -20,7 +20,7 @@
 package scalala;
 package generic;
 
-import scalala.scalar.Scalar;
+import scalala.scalar._;
 import scalala.tensor.domain.DomainException;
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
@@ -56,6 +56,9 @@ object CanMul {
   implicit object OpID extends Op[Int,Double,Double]
   { def apply(a : Int, b : Double) = a * b; }
 
+  implicit object OpIC extends Op[Int,Complex,Complex]
+  { def apply(a : Int, b : Complex) = a * b; }
+
   implicit object OpLI extends Op[Long,Int,Long]
   { def apply(a : Long, b : Int) = a * b; }
 
@@ -67,6 +70,9 @@ object CanMul {
 
   implicit object OpLD extends Op[Long,Double,Double]
   { def apply(a : Long, b : Double) = a * b; }
+
+  implicit object OpLC extends Op[Long,Complex,Complex]
+  { def apply(a : Long, b : Complex) = a * b; }
 
   implicit object OpFI extends Op[Float,Int,Float]
   { def apply(a : Float, b : Int) = a * b; }
@@ -80,6 +86,9 @@ object CanMul {
   implicit object OpFD extends Op[Float,Double,Double]
   { def apply(a : Float, b : Double) = a * b; }
 
+  implicit object OpFC extends Op[Float,Complex,Complex]
+  { def apply(a : Float, b : Complex) = a * b; }
+
   implicit object OpDI extends Op[Double,Int,Double]
   { def apply(a : Double, b : Int) = a * b; }
 
@@ -91,6 +100,24 @@ object CanMul {
 
   implicit object OpDD extends Op[Double,Double,Double]
   { def apply(a : Double, b : Double) = a * b; }
+
+  implicit object OpDC extends Op[Double,Complex,Complex]
+  { def apply(a : Double, b : Complex) = a * b; }
+
+  implicit object OpCI extends Op[Complex,Int,Complex]
+  { def apply(a : Complex, b : Int) = a * b; }
+
+  implicit object OpCL extends Op[Complex,Long,Complex]
+  { def apply(a : Complex, b : Long) = a * b; }
+
+  implicit object OpCF extends Op[Complex,Float,Complex]
+  { def apply(a : Complex, b : Float) = a * b; }
+
+  implicit object OpCD extends Op[Complex,Double,Complex]
+  { def apply(a : Complex, b : Double) = a * b; }
+
+  implicit object OpCC extends Op[Complex,Complex,Complex]
+  { def apply(a : Complex, b : Complex) = a * b; }
 
   //
   //

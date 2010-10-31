@@ -45,7 +45,7 @@ extends Tensor1Like[Int,B,IndexDomain,This] { self =>
   override def toString = {
     val rv = valuesIterator.take(10).map(mkValueString).mkString("\n");
     if (size > 10) {
-      rv + "\n" + "...";
+      rv + "\n" + "... ("+(size-10) +" more)";
     } else {
       rv;
     }

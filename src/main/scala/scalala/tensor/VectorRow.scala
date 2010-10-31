@@ -33,7 +33,18 @@ import mutable.TensorBuilder;
  * @author dramage
  */
 trait VectorRowLike[@specialized(Int,Long,Float,Double) B, +This<:VectorRow[B]]
-extends VectorLike[B,This] with Tensor1RowLike[Int,B,IndexDomain,This];
+extends VectorLike[B,This] with Tensor1RowLike[Int,B,IndexDomain,This] {
+
+  // TODO: improve this method to make it more Vector-like
+  override def toString = {
+    val rv = valuesIterator.take(8).map(mkValueString).mkString(" ");
+    if (size > 10) {
+      rv + " " + "... ("+(size-8) +" more)";
+    } else {
+      rv;
+    }
+  }
+}
 
 /**
  * A vector shaped as a row.

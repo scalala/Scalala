@@ -22,7 +22,7 @@ package tensor;
 package mutable;
 
 import domain.{IndexDomain,TableDomain};
-import generic.collection.CanTranspose;
+import generic.collection.{CanTranspose,CanSliceRow,CanSliceCol};
 import scalar.Scalar;
 
 /**
@@ -51,6 +51,48 @@ object Matrix extends MatrixCompanion[Matrix] with dense.DenseMatrixConstructors
   new CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] {
     override def apply(from : Matrix[B]) = new MatrixTranspose.Impl[B,Matrix[B]](from);
   }
+
+  implicit def canSliceRow[V:Scalar] : CanSliceRow[Matrix[V],Int,VectorRow[V]]
+  = new CanSliceRow[Matrix[V],Int,VectorRow[V]] {
+    override def apply(from : Matrix[V], row : Int) =
+      new RowSliceImpl[V,Matrix[V]](from,row);
+  }
+
+  implicit def canSliceCol[V:Scalar] : CanSliceCol[Matrix[V],Int,VectorCol[V]]
+  = new CanSliceCol[Matrix[V],Int,VectorCol[V]] {
+    override def apply(from : Matrix[V], col : Int) =
+      new ColSliceImpl[V,Matrix[V]](from, col);
+  }
+
+  trait RowSliceLike[V,+Coll<:Matrix[V],+This<:RowSlice[V,Coll]]
+  extends VectorSliceLike[(Int,Int),TableDomain,V,Coll,This] with VectorRowLike[V,This] {
+    def row : Int;
+    override val domain = underlying.domain._2;
+    override def lookup(key : Int) = (row,key);
+  }
+
+  trait RowSlice[V,+Coll<:Matrix[V]]
+  extends VectorSlice[(Int,Int),V,Coll] with VectorRow[V] with RowSliceLike[V,Coll,RowSlice[V,Coll]];
+
+  class RowSliceImpl[V,+Coll<:Matrix[V]]
+  (override val underlying : Coll, override val row : Int)
+  (implicit override val scalar : Scalar[V])
+  extends RowSlice[V,Coll];
+
+  trait ColSliceLike[V,+Coll<:Matrix[V],+This<:ColSlice[V,Coll]]
+  extends VectorSliceLike[(Int,Int),TableDomain,V,Coll,This] with VectorColLike[V,This] {
+    def col : Int;
+    override val domain = underlying.domain._2;
+    override def lookup(key : Int) = (col,key);
+  }
+
+  trait ColSlice[V,+Coll<:Matrix[V]]
+  extends VectorSlice[(Int,Int),V,Coll] with VectorCol[V] with ColSliceLike[V,Coll,ColSlice[V,Coll]];
+
+  class ColSliceImpl[V,+Coll<:Matrix[V]]
+  (override val underlying : Coll, override val col : Int)
+  (implicit override val scalar : Scalar[V])
+  extends ColSlice[V,Coll];
 }
 
 trait MatrixCompanion[Bound[V]<:Matrix[V]]
