@@ -72,20 +72,34 @@ with Tensor2Like[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1
 
 
 object Tensor2 {
-  def apply[A1, A2, B:Scalar]
-  (domain : Product2Domain[A1,A2], map : scala.collection.Map[(A1,A2),B] = new scala.collection.mutable.HashMap[(A1,A2),B]) =
-    new Impl[A1,A2,B](map, domain);
+  /** Constructs an open-domain tensor seeded with the given values. */
+  def apply[K1,K2,V:Scalar](values : ((K1,K2),V)*) : Tensor2[K1,K2,V] = {
+    new Impl[K1,K2,V](scala.collection.mutable.Map(values :_*)) {
+      override def checkKey(k1 : K1, k2 : K2) = true;
+    }
+  }
 
-  class Impl[A1, A2, B]
-  (protected var map : scala.collection.Map[(A1,A2),B], override val domain : Product2Domain[A1,A2])
-  (implicit override val scalar : Scalar[B])
-  extends Tensor2[A1,A2,B] {
-    override def apply(k1 : A1, k2 : A2) : B = {
+  /** Constructs a closed-domain tensor for the given domain. */
+  def apply[K1,K2,V:Scalar](domain : Product2Domain[K1,K2]) : Tensor2[K1,K2,V] = {
+    val d = domain;
+    new Impl[K1,K2,V](scala.collection.mutable.Map[(K1,K2),V]()) {
+      override val domain = d;
+    }
+  }
+
+  class Impl[K1,K2,V:Scalar](m : scala.collection.Map[(K1,K2),V])
+  extends Tensor.Impl[(K1,K2),V](m) with Tensor2[K1,K2,V] {
+    override def domain =
+      Product2Domain(
+        SetDomain(map.keySet.map(_._1)),
+        SetDomain(map.keySet.map(_._2)));
+
+    override def apply(k1 : K1, k2 : K2) : V = {
       checkKey(k1,k2);
       map.getOrElse((k1,k2),scalar.zero);
     }
 
-    override def update(k1 : A1, k2 : A2, value : B) = {
+    override def update(k1 : K1, k2 : K2, value : V) = {
       checkKey(k1,k2);
       map = map.updated((k1,k2), value);
     }

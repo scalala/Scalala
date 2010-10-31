@@ -46,14 +46,23 @@ extends tensor.Tensor1[K,V] with Tensor[K,V]
 with Tensor1Like[K,V,IterableDomain[K],Tensor1[K,V]];
 
 object Tensor1 extends Tensor1Companion[Tensor1] {
-  def apply[K,V:Scalar](domain : IterableDomain[K]) =
-    new Impl[K,V](scala.collection.mutable.Map[K,V](), domain);
+  /** Constructs an open-domain tensor seeded with the given values. */
+  def apply[K,V:Scalar](values : (K,V)*) : Tensor1[K,V] = {
+    new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
+      override def checkKey(key : K) = true;
+    }
+  }
 
-  class Impl[K,V]
-  (map : scala.collection.Map[K,V],
-   override val domain : IterableDomain[K])
-  (implicit scalar : Scalar[V])
-  extends Tensor.Impl[K,V](map, domain) with Tensor1[K,V];
+  /** Constructs a closed-domain tensor for the given domain. */
+  def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor1[K,V] = {
+    val d = domain;
+    new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
+      override val domain = d;
+    }
+  }
+
+  class Impl[K,V:Scalar](map : scala.collection.Map[K,V])
+  extends Tensor.Impl[K,V](map) with Tensor1[K,V];
 }
 
 trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V]]

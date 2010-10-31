@@ -92,14 +92,14 @@ trait Library {
   // Constructors
   //
 
-//  /** Counts the given items. */
-//  def count[X](items : TraversableOnce[X]) : Tensor[X,Int] = {
-//    val m = scala.collection.mutable.Map[X,Int]();
-//    for (item <- items) {
-//      m(item) = m.getOrElse(item, 0) + 1;
-//    }
-//    new Tensor.Impl[X,Int](m);
-//  }
+  /** Counts the given items. */
+  def count[X](items : TraversableOnce[X]) : Tensor[X,Int] = {
+    val m = scalala.tensor.mutable.Tensor1Col[X,Int]();
+    for (item <- items) {
+      m(item) += 1;
+    }
+    m;
+  }
 }
 
 object Library extends Library;

@@ -99,12 +99,27 @@ extends tensor.Tensor[A,B] with TensorLike[A,B,IterableDomain[A],Tensor[A,B]];
 
 object Tensor extends TensorCompanion[Tensor] {
 
-  def apply[A, B:Scalar](domain : IterableDomain[A], map : scala.collection.Map[A,B] = scala.collection.mutable.Map[A,B]()) =
-    new Impl[A,B](map, domain);
+  /** Constructs an open-domain tensor seeded with the given values. */
+  def apply[K,V:Scalar](values : (K,V)*) : Tensor[K,V] = {
+    new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
+      override def checkKey(key : K) = true;
+    }
+  }
 
-  class Impl[A, B](protected var map : scala.collection.Map[A,B], override val domain : IterableDomain[A])
+  /** Constructs a closed-domain tensor for the given domain. */
+  def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor[K,V] = {
+    val d = domain;
+    new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
+      override val domain = d;
+    }
+  }
+
+  class Impl[A, B](protected var map : scala.collection.Map[A,B])
   (implicit override val scalar : Scalar[B])
   extends Tensor[A, B] {
+    override def domain : IterableDomain[A] =
+      SetDomain(map.keySet);
+    
     override def apply(key : A) : B = {
       checkKey(key);
       map.getOrElse(key, scalar.zero);

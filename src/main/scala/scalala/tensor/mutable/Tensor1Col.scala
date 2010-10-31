@@ -47,25 +47,34 @@ extends tensor.Tensor1Col[K,V] with Tensor1[K,V]
 with Tensor1ColLike[K,V,IterableDomain[K],Tensor1Col[K,V]];
 
 object Tensor1Col extends Tensor1ColCompanion[Tensor1Col] {
-  def apply[K,V:Scalar](domain : IterableDomain[K]) =
-    new Impl[K,V](scala.collection.mutable.Map[K,V](), domain);
-
-  implicit def canTranspose[K,V] : CanTranspose[Tensor1Col[K,V],Tensor1Row[K,V]]
-  = new CanTranspose[Tensor1Col[K,V],Tensor1Row[K,V]] {
-    override def apply(col : Tensor1Col[K,V]) =
-      new Tensor1Row.View[K,V](col);
+  /** Constructs an open-domain tensor seeded with the given values. */
+  def apply[K,V:Scalar](values : (K,V)*) : Tensor1Col[K,V] = {
+    new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
+      override def checkKey(key : K) = true;
+    }
   }
 
-  class Impl[K,V]
-  (map : scala.collection.Map[K,V],
-   override val domain : IterableDomain[K])
-  (implicit scalar : Scalar[V])
-  extends Tensor1.Impl[K,V](map, domain) with Tensor1Col[K,V];
+  /** Constructs a closed-domain tensor for the given domain. */
+  def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor1Col[K,V] = {
+    val d = domain;
+    new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
+      override val domain = d;
+    }
+  }
+
+  class Impl[K,V:Scalar](map : scala.collection.Map[K,V])
+  extends Tensor1.Impl[K,V](map) with Tensor1Col[K,V];
 
   class View[K,V](override val inner : Tensor1Row[K,V])
   extends Tensor1Proxy[K,V,Tensor1Row[K,V]] with Tensor1Col[K,V]
   with Tensor1Like[K,V,IterableDomain[K],View[K,V]] {
     override def repr : View[K,V] = this;
+  }
+
+  implicit def canTranspose[K,V] : CanTranspose[Tensor1Col[K,V],Tensor1Row[K,V]]
+  = new CanTranspose[Tensor1Col[K,V],Tensor1Row[K,V]] {
+    override def apply(col : Tensor1Col[K,V]) =
+      new Tensor1Row.View[K,V](col);
   }
 }
 
