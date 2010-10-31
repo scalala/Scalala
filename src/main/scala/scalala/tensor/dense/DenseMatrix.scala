@@ -87,44 +87,7 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
   }
 }
 
-object DenseMatrix {
-  /** Static constructor for a literal matrix. */
-  def apply[R,V](rows : R*)(implicit rl : RowLiteral[R,V], scalar : Scalar[V]) = {
-    val nRows = rows.length;
-    val nCols = rl.length(rows(0));
-    val rv = zeros(nRows, nCols);
-    for ((row,i) <- rows.zipWithIndex) {
-      rl.foreach(row, ((j, v) => rv(i,j) = v));
-    }
-    rv;
-  }
-
-  /** Creates a dense matrix of zeros of the requested size. */
-  def zeros[V](rows : Int, cols : Int)(implicit scalar : Scalar[V]) = {
-    implicit val mf = scalar.manifest;
-    new DenseMatrix[V](rows, cols, Array.fill(rows * cols)(scalar.zero));
-  }
-
-  /** Creates a dense matrix of zeros of the requested size. */
-  def ones[V](rows : Int, cols : Int)(implicit scalar : Scalar[V]) = {
-    implicit val mf = scalar.manifest;
-    new DenseMatrix[V](rows, cols, Array.fill(rows * cols)(scalar.one));
-  }
-
-  /** Creates an identity matrix with size rows and columsn. */
-  def eye[V](size : Int)(implicit scalar : Scalar[V]) = {
-    val rv = zeros(size, size);
-    for (i <- 0 until size) {
-      rv(i,i) = scalar.one;
-    }
-    rv;
-  }
-
-  /** Tabulate a matrix from a function from row,col position to value. */
-  def tabulate[B:Scalar](rows : Int, cols : Int)(fn : (Int, Int) => B) = {
-    implicit val mf = implicitly[Scalar[B]].manifest;
-    new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => fn(i % rows, i / rows)));
-  }
+object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrixConstructors {
 
   //
   // Capabilities
@@ -171,4 +134,55 @@ object DenseMatrix {
   implicit object DenseMatrixCanMapValuesDD extends DenseMatrixCanMapValues[Double,Double];
   implicit object DenseMatrixCanMapValuesII extends DenseMatrixCanMapValues[Int,Int];
   implicit object DenseMatrixCanMapValuesID extends DenseMatrixCanMapValues[Int,Double];
+}
+
+/**
+ * Constructors for dense matrices.
+ * 
+ * @author dramage
+ */
+trait DenseMatrixConstructors {
+  /** Constructs a dense matrix for the given table domain. */
+  def apply[V:Scalar](domain : TableDomain) =
+    zeros[V](domain._1.size, domain._2.size);
+
+  /** Static constructor for a literal matrix. */
+  def apply[R,V](rows : R*)(implicit rl : RowLiteral[R,V], scalar : Scalar[V]) = {
+    val nRows = rows.length;
+    val nCols = rl.length(rows(0));
+    val rv = zeros(nRows, nCols);
+    for ((row,i) <- rows.zipWithIndex) {
+      rl.foreach(row, ((j, v) => rv(i,j) = v));
+    }
+    rv;
+  }
+
+  /** Creates a dense matrix of the given value repeated of the requested size. */
+  def fill[V:Scalar](rows : Int, cols : Int)(value : V) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseMatrix[V](rows, cols, Array.fill(rows * cols)(value));
+  }
+
+  /** Creates a dense matrix of zeros of the requested size. */
+  def zeros[V:Scalar](rows : Int, cols : Int) =
+    fill(rows, cols)(implicitly[Scalar[V]].zero);
+
+  /** Creates a dense matrix of zeros of the requested size. */
+  def ones[V:Scalar](rows : Int, cols : Int) =
+    fill(rows, cols)(implicitly[Scalar[V]].one);
+
+  /** Creates an identity matrix with size rows and columsn. */
+  def eye[V](size : Int)(implicit scalar : Scalar[V]) = {
+    val rv = zeros(size, size);
+    for (i <- 0 until size) {
+      rv(i,i) = scalar.one;
+    }
+    rv;
+  }
+
+  /** Tabulate a matrix from a function from row,col position to value. */
+  def tabulate[V:Scalar](rows : Int, cols : Int)(fn : (Int, Int) => V) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => fn(i % rows, i / rows)));
+  }
 }

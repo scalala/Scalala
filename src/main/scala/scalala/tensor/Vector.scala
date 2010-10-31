@@ -20,9 +20,13 @@
 package scalala;
 package tensor;
 
-import domain._;
-import mutable.TensorBuilder;
+import domain.IndexDomain;
 
+/**
+ * Vectors are Tensor1's on the non-negative integers.
+ *
+ * @author dramage
+ */
 trait VectorLike[@specialized(Int,Long,Float,Double) B, +This<:Vector[B]]
 extends Tensor1Like[Int,B,IndexDomain,This] { self =>
 
@@ -53,6 +57,11 @@ extends Tensor1Like[Int,B,IndexDomain,This] { self =>
   }
 }
 
+/**
+ * Vectors are Tensor1's on the non-negative integers.
+ *
+ * @author dramage
+ */
 trait Vector[@specialized(Int,Long,Float,Double) B]
 extends Tensor1[Int,B]
 with VectorLike[B,Vector[B]];

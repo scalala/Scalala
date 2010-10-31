@@ -81,9 +81,9 @@ trait Tensor1[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
 extends Tensor[A,B] with Tensor1Like[A,B,IterableDomain[A],Tensor1[A,B]];
 
 object Tensor1 extends Tensor1Companion[Tensor1] {
-  def apply[K,V](keys : (K,V)*)(implicit scalar : Scalar[V]) : Tensor1Col[K,V] = {
+  def apply[K,V:Scalar](keys : (K,V)*) : Tensor1Col[K,V] = {
     val m = keys.toMap;
-    val s = scalar;
+    val s = implicitly[Scalar[V]];
     new Tensor1Col[K,V] {
       override val scalar = s;
       override val domain = scalala.tensor.domain.SetDomain(m.keySet);

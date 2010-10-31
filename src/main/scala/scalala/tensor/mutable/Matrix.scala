@@ -45,10 +45,7 @@ extends tensor.Matrix[B]
 with Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
-object Matrix extends MatrixCompanion[Matrix] {
-  def apply[V:Scalar](domain : TableDomain) =
-    dense.DenseMatrix.zeros[V](domain._1.size, domain._2.size);
-
+object Matrix extends MatrixCompanion[Matrix] with dense.DenseMatrixConstructors {
   implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] =
   new CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] {
     override def apply(from : Matrix[B]) = new MatrixTranspose.Impl[B,Matrix[B]](from);

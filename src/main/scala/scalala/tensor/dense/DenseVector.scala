@@ -76,29 +76,7 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
   }
 }
 
-object DenseVector extends mutable.VectorCompanion[DenseVector] {
-  def apply[V:Scalar](values : V*) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(values.toArray);
-  }
-
-  /** Dense vector of zeros of the given size. */
-  def zeros[V:Scalar](size : Int) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(Array.fill(size)(implicitly[Scalar[V]].zero));
-  }
-
-  /** Dense vector of ones of the given size. */
-  def ones[V:Scalar](size : Int) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(Array.fill(size)(implicitly[Scalar[V]].one));
-  }
-
-  /** Tabulate a vector with the value at each offset given by the function. */
-  def tabulate[V:Scalar](size : Int)(f : (Int => V)) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(Array.tabulate(size)(f));
-  }
+object DenseVector extends mutable.VectorCompanion[DenseVector] with DenseVectorConstructors {
 
 //  implicit object DenseVectorCanMapValuesFrom
 //  extends DomainMapCanMapValuesFrom[DenseVector,Int,Double,Double,DenseVector] {
@@ -124,6 +102,48 @@ object DenseVector extends mutable.VectorCompanion[DenseVector] {
 //  }
 }
 
+/**
+ * Constructors for dense vectors.
+ *
+ * @author dramage
+ */
+trait DenseVectorConstructors {
+  /** Constructs a DenseVector for the given IndexDomain. */
+  def apply[S:Scalar](domain : IndexDomain) =
+    zeros(domain.size);
+
+  /** Constructs a literal DenseVector. */
+  def apply[V:Scalar](values : V*) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(values.toArray);
+  }
+
+  /** Dense vector containing the given value for all elements. */
+  def fill[V:Scalar](size : Int)(value : V) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(Array.fill(size)(value));
+  }
+
+  /** Dense vector of zeros of the given size. */
+  def zeros[V:Scalar](size : Int) =
+    fill(size)(implicitly[Scalar[V]].zero);
+
+  /** Dense vector of ones of the given size. */
+  def ones[V:Scalar](size : Int) =
+    fill(size)(implicitly[Scalar[V]].one);
+
+  /** Tabulate a vector with the value at each offset given by the function. */
+  def tabulate[V:Scalar](size : Int)(f : (Int => V)) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(Array.tabulate(size)(f));
+  }
+}
+
+/**
+ * DenseVectors as a row.
+ *
+ * @author dramage
+ */
 class DenseVectorRow[@specialized(Int,Long,Float,Double) V]
 (override val data : Array[V])
 (implicit override val scalar : Scalar[V])
@@ -146,6 +166,11 @@ object DenseVectorRow extends mutable.VectorRowCompanion[DenseVectorRow] {
   }
 }
 
+/**
+ * DenseVectors as a column.
+ *
+ * @author dramage
+ */
 class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
 (override val data : Array[V])
 (implicit override val scalar : Scalar[V])

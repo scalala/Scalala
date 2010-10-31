@@ -171,10 +171,7 @@ extends tensor.Vector[B] with Tensor1[Int,B]
 with VectorLike[B,Vector[B]];
 
 
-object Vector extends VectorCompanion[Vector] {
-  def apply[S:Scalar](domain : IndexDomain) : VectorCol[S] =
-    dense.DenseVector.zeros(domain.size);
-}
+object Vector extends VectorCompanion[Vector] with dense.DenseVectorConstructors;
 
 trait VectorCompanion[Bound[V]<:Vector[V]]
 extends tensor.VectorCompanion[Bound] with IndexedTensorCompanion[Int,Bound];
