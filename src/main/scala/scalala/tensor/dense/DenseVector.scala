@@ -21,26 +21,20 @@ package scalala;
 package tensor;
 package dense;
 
-import domain.IndexDomain;
+import domain.{IterableDomain,IndexDomain};
+
+import generic.collection.CanTranspose;
 
 /**
  * A vector backed by a dense array.
  *
  * @author dramage
  */
-class DenseVector[@specialized(Int,Long,Float,Double) B]
-(override val data : Array[B])
-(implicit override val scalar : Scalar[B])
-extends DenseArrayTensor[Int,B] with DenseArrayTensorLike[Int,B,IndexDomain,DenseVector[B]]
-with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] { self =>
-
-  override def newBuilder[C:Scalar] : mutable.TensorBuilder[Int,C,Vector[C]] =
-  new mutable.TensorBuilder[Int,C,Vector[C]] {
-    implicit val cm = implicitly[Scalar[C]].manifest;
-    val rv = new DenseVector(new Array[C](self.size));
-    def update(k : Int, v : C) = rv(k) = v;
-    def result = rv;
-  }
+class DenseVector[@specialized(Int,Long,Float,Double) V]
+(override val data : Array[V])
+(implicit override val scalar : Scalar[V])
+extends mutable.Vector[V] with mutable.VectorLike[V,DenseVector[V]]
+with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVector[V]] { self =>
 
   override def size = data.length;
 
@@ -49,10 +43,10 @@ with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] { self =>
   override def apply(key : Int) =
     data(key);
 
-  override def update(key : Int, value : B) =
+  override def update(key : Int, value : V) =
     data(key) = value;
 
-  override def foreach[U](fn : ((Int,B)=>U)) = {
+  override def foreach[U](fn : ((Int,V)=>U)) = {
     var i = 0;
     while (i < data.length) {
       fn(i,data(i));
@@ -60,11 +54,11 @@ with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] { self =>
     }
   }
 
-  override def foreachValue[U](fn : (B=>U)) =
+  override def foreachValue[U](fn : (V=>U)) =
     data.foreach(fn);
 
   /** Tranforms all key value pairs in this map by applying the given function. */
-  override def transform(fn : (Int,B)=>B) = {
+  override def transform(fn : (Int,V)=>V) = {
     var i = 0;
     while (i < data.length) {
       data(i) = fn(i,data(i));
@@ -73,7 +67,7 @@ with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] { self =>
   }
   
   /** Tranforms all key value pairs in this map by applying the given function. */
-  override def transformValues(fn : B=>B) = {
+  override def transformValues(fn : V=>V) = {
     var i = 0;
     while (i < data.length) {
       data(i) = fn(data(i));
@@ -83,17 +77,28 @@ with mutable.Vector[B] with mutable.VectorLike[B,DenseVector[B]] { self =>
 }
 
 object DenseVector extends mutable.VectorCompanion[DenseVector] {
-  /**
-   * Static constructor that creates a dense vector of the given size
-   * initialized by elements from the given values list (looping if
-   * necessary).
-   */
-  def apply[B:Scalar:ClassManifest](size : Int)(values : B*) =
-    new DenseVector(Array.tabulate(size)(i => values(i % values.length)));
+  def apply[V:Scalar](values : V*) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(values.toArray);
+  }
+
+  /** Dense vector of zeros of the given size. */
+  def zeros[V:Scalar](size : Int) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(Array.fill(size)(implicitly[Scalar[V]].zero));
+  }
+
+  /** Dense vector of ones of the given size. */
+  def ones[V:Scalar](size : Int) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(Array.fill(size)(implicitly[Scalar[V]].one));
+  }
 
   /** Tabulate a vector with the value at each offset given by the function. */
-  def tabulate[B:Scalar:ClassManifest](size : Int)(f : (Int => B)) =
-    new DenseVector(Array.tabulate(size)(f));
+  def tabulate[V:Scalar](size : Int)(f : (Int => V)) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(Array.tabulate(size)(f));
+  }
 
 //  implicit object DenseVectorCanMapValuesFrom
 //  extends DomainMapCanMapValuesFrom[DenseVector,Int,Double,Double,DenseVector] {
@@ -117,4 +122,48 @@ object DenseVector extends mutable.VectorCompanion[DenseVector] {
 //      new DenseVector(data);
 //    }
 //  }
+}
+
+class DenseVectorRow[@specialized(Int,Long,Float,Double) V]
+(override val data : Array[V])
+(implicit override val scalar : Scalar[V])
+extends DenseVector[V](data)(scalar) with mutable.VectorRow[V] with mutable.VectorRowLike[V,DenseVectorRow[V]] {
+  override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
+    implicit val mf = implicitly[Scalar[V2]].manifest;
+    domain match {
+      case that : IndexDomain => new DenseVectorRow(new Array[V2](size)).asBuilder;
+      case _ => super.newBuilder[K2,V2](domain);
+    }
+  }
+}
+
+object DenseVectorRow extends mutable.VectorRowCompanion[DenseVectorRow] {
+  /** Transpose shares the same data. */
+  implicit def canTranspose[V] : CanTranspose[DenseVectorRow[V],DenseVectorCol[V]]
+  = new CanTranspose[DenseVectorRow[V],DenseVectorCol[V]] {
+    override def apply(row : DenseVectorRow[V]) =
+      new DenseVectorCol(row.data)(row.scalar);
+  }
+}
+
+class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
+(override val data : Array[V])
+(implicit override val scalar : Scalar[V])
+extends DenseVector[V](data)(scalar) with mutable.VectorCol[V] with mutable.VectorColLike[V,DenseVectorCol[V]]  {
+  override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
+    implicit val mf = implicitly[Scalar[V2]].manifest;
+    domain match {
+      case that : IndexDomain => new DenseVectorCol(new Array[V2](size)).asBuilder;
+      case _ => super.newBuilder[K2,V2](domain);
+    }
+  }
+}
+
+object DenseVectorCol extends mutable.VectorColCompanion[DenseVectorCol] {
+  /** Transpose shares the same data. */
+  implicit def canTranspose[V] : CanTranspose[DenseVectorCol[V],DenseVectorRow[V]]
+  = new CanTranspose[DenseVectorCol[V],DenseVectorRow[V]] {
+    override def apply(row : DenseVectorCol[V]) =
+      new DenseVectorRow(row.data)(row.scalar);
+  }
 }

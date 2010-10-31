@@ -114,43 +114,42 @@ object Tensor2 {
       new Tensor2Transpose.Impl[A2,A1,B,Tensor2[A1,A2,B]](input);
   }
 
-  implicit def canSliceRow[A1,A2,B:Scalar] : CanSliceRow[Tensor2[A1,A2,B],A1,RowSlice[A1,A2,B,Tensor2[A1,A2,B]]]
-  = new CanSliceRow[Tensor2[A1,A2,B],A1,RowSlice[A1,A2,B,Tensor2[A1,A2,B]]] {
+  implicit def canSliceRow[A1,A2,B:Scalar] : CanSliceRow[Tensor2[A1,A2,B],A1,Tensor1Row[A2,B]]
+  = new CanSliceRow[Tensor2[A1,A2,B],A1,Tensor1Row[A2,B]] {
     override def apply(from : Tensor2[A1,A2,B], row : A1) =
       new RowSliceImpl[A1,A2,B,Tensor2[A1,A2,B]](from,row);
   }
 
-  implicit def canSliceCol[A1,A2,B:Scalar] : CanSliceCol[Tensor2[A1,A2,B],A2,ColSlice[A1,A2,B,Tensor2[A1,A2,B]]]
-  = new CanSliceCol[Tensor2[A1,A2,B],A2,ColSlice[A1,A2,B,Tensor2[A1,A2,B]]] {
+  implicit def canSliceCol[A1,A2,B:Scalar] : CanSliceCol[Tensor2[A1,A2,B],A2,Tensor1Col[A1,B]]
+  = new CanSliceCol[Tensor2[A1,A2,B],A2,Tensor1Col[A1,B]] {
     override def apply(from : Tensor2[A1,A2,B], col : A2) =
       new ColSliceImpl[A1,A2,B,Tensor2[A1,A2,B]](from, col);
   }
 
   trait RowSliceLike[A1,A2,B,+Coll<:Tensor2[A1,A2,B],+This<:RowSlice[A1,A2,B,Coll]]
-  extends Tensor1Slice[(A1,A2),A2,B,Tensor2[A1,A2,B]] {
+  extends Tensor1SliceLike[(A1,A2),IterableDomain[(A1,A2)],A2,IterableDomain[A2],B,Coll,This] with Tensor1RowLike[A2,B,IterableDomain[A2],This] {
     def row : A1;
     override val domain = underlying.domain._2;
     override def lookup(key : A2) = (row,key);
   }
 
   trait RowSlice[A1,A2,B,+Coll<:Tensor2[A1,A2,B]]
-  extends RowSliceLike[A1,A2,B,Coll,RowSlice[A1,A2,B,Coll]];
+  extends Tensor1Slice[(A1,A2),A2,B,Coll] with Tensor1Row[A2,B] with RowSliceLike[A1,A2,B,Coll,RowSlice[A1,A2,B,Coll]];
 
   class RowSliceImpl[A1,A2,B,+Coll<:Tensor2[A1,A2,B]]
   (override val underlying : Coll, override val row : A1)
   (implicit override val scalar : Scalar[B])
   extends RowSlice[A1,A2,B,Coll];
 
-
   trait ColSliceLike[A1,A2,B,+Coll<:Tensor2[A1,A2,B],+This<:ColSlice[A1,A2,B,Coll]]
-  extends Tensor1Slice[(A1,A2),A1,B,Tensor2[A1,A2,B]] {
+  extends Tensor1SliceLike[(A1,A2),IterableDomain[(A1,A2)],A1,IterableDomain[A1],B,Coll,This] with Tensor1ColLike[A1,B,IterableDomain[A1],This] {
     def col : A2;
     override val domain = underlying.domain._1;
     override def lookup(key : A1) = (key,col);
   }
 
   trait ColSlice[A1,A2,B,+Coll<:Tensor2[A1,A2,B]]
-  extends ColSliceLike[A1,A2,B,Coll,ColSlice[A1,A2,B,Coll]];
+  extends Tensor1Slice[(A1,A2),A1,B,Coll] with Tensor1Col[A1,B] with ColSliceLike[A1,A2,B,Coll,ColSlice[A1,A2,B,Coll]];
 
   class ColSliceImpl[A1,A2,B,+Coll<:Tensor2[A1,A2,B]]
   (override val underlying : Coll, override val col : A2)

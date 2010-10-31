@@ -28,7 +28,7 @@ import org.junit.runner.RunWith
 @RunWith(classOf[JUnitRunner])
 class TensorTest extends FunSuite with Checkers {
   def mkMapTensor() =
-    mutable.Tensor[String,Int](domain.SetDomain("a","b","c"));
+    mutable.Tensor[String,Int](domain.SetDomain(Set("a","b","c")));
 
   test("Get and set values") {
     val x = mkMapTensor();

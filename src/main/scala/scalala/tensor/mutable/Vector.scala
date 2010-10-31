@@ -172,19 +172,8 @@ with VectorLike[B,Vector[B]];
 
 
 object Vector extends VectorCompanion[Vector] {
-  def apply[B](size : Int)(implicit scalar : Scalar[B]) =
-    new Impl(scala.collection.mutable.IndexedSeq.fill(size)(scalar.zero));
-
-  class Impl[B](values : scala.collection.mutable.IndexedSeq[B])
-  (implicit override val scalar : Scalar[B])
-  extends Vector[B] {
-    override def apply(key : Int) = values(key);
-
-    override def update(key : Int, value : B) =
-      values(key) = value;
-
-    override val domain = IndexDomain(values.size);
-  }
+  def apply[S:Scalar](domain : IndexDomain) : VectorCol[S] =
+    dense.DenseVector.zeros(domain.size);
 }
 
 trait VectorCompanion[Bound[V]<:Vector[V]]

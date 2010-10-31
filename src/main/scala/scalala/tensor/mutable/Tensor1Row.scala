@@ -22,28 +22,29 @@ package tensor;
 package mutable;
 
 import domain._;
+import generic.collection.CanTranspose;
 
 /**
- * Implementation trait for mutable Tensor1 instances.
+ * Implementation trait for mutable Tensor1Row instances.
  *
  * @author dramage
  */
-trait Tensor1Like
+trait Tensor1RowLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:IterableDomain[K] with DomainLike[K,D], +This<:Tensor1[K,V]]
-extends tensor.Tensor1Like[K,V,D,This] with TensorLike[K,V,D,This];
+ +D<:IterableDomain[K] with DomainLike[K,D], +This<:Tensor1Row[K,V]]
+extends tensor.Tensor1RowLike[K,V,D,This] with Tensor1Like[K,V,D,This];
 
 /**
  * Mutable tensor.Tensor1.
  *
  * @author dramage
  */
-trait Tensor1
+trait Tensor1Row
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
-extends tensor.Tensor1[K,V] with Tensor[K,V]
-with Tensor1Like[K,V,IterableDomain[K],Tensor1[K,V]];
+extends tensor.Tensor1Row[K,V] with Tensor1[K,V]
+with Tensor1RowLike[K,V,IterableDomain[K],Tensor1Row[K,V]];
 
-object Tensor1 extends Tensor1Companion[Tensor1] {
+object Tensor1Row extends Tensor1RowCompanion[Tensor1Row] {
   def apply[K,V:Scalar](domain : IterableDomain[K]) =
     new Impl[K,V](scala.collection.mutable.Map[K,V](), domain);
 
@@ -51,8 +52,14 @@ object Tensor1 extends Tensor1Companion[Tensor1] {
   (map : scala.collection.Map[K,V],
    override val domain : IterableDomain[K])
   (implicit scalar : Scalar[V])
-  extends Tensor.Impl[K,V](map, domain) with Tensor1[K,V];
+  extends Tensor1.Impl[K,V](map, domain) with Tensor1Row[K,V];
+
+  class View[K,V](override val inner : Tensor1Col[K,V])
+  extends Tensor1Proxy[K,V,Tensor1Col[K,V]] with Tensor1Row[K,V]
+  with Tensor1Like[K,V,IterableDomain[K],View[K,V]] {
+    override def repr : View[K,V] = this;
+  }
 }
 
-trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V]]
-extends tensor.Tensor1Companion[Bound] with TensorCompanion[Bound];
+trait Tensor1RowCompanion[Bound[K,V]<:Tensor1Row[K,V]]
+extends tensor.Tensor1RowCompanion[Bound] with Tensor1Companion[Bound];

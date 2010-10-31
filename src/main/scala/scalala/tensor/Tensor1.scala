@@ -21,8 +21,9 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic.{CanAdd,CanMul,CanMulRowBy,CanMulColumnBy};
-import operators.RowTensorOps;
+import generic.{CanAdd,CanMul};
+
+import mutable.TensorBuilder;
 
 /**
  * Implementation trait for a one-axis tensor supports methods like norm
@@ -33,8 +34,8 @@ import operators.RowTensorOps;
 trait Tensor1Like
 [@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B,
  +D<:IterableDomain[A] with DomainLike[A,D], +This<:Tensor1[A,B]]
-extends TensorLike[A,B,D,This]
-with operators.ColumnTensorOps[This] {
+extends TensorLike[A,B,D,This] { self =>
+
   /** Returns the k-norm of this tensor. */
   def norm(n : Double) : Double = {
     if (n == 1) {
@@ -80,20 +81,20 @@ trait Tensor1[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
 extends Tensor[A,B] with Tensor1Like[A,B,IterableDomain[A],Tensor1[A,B]];
 
 object Tensor1 extends Tensor1Companion[Tensor1] {
-//
-//  implicit def canSliceFrom[A1, A2, D<:IterableDomain[A1] with DomainLike[A1,D]] =
-//  new DomainMapCanSliceFrom[Tensor1[A1,Double,D], A1, D, A2, Double, Tensor1[A1,Double,SetDomain[A2]]] {
-//    override def apply(from : Tensor1[A1,Double,D], keymap : scala.collection.Map[A2,A1]) =
-//      new MutableDomainMapSlice.FromKeyMap[A1, D, A2, B, MutableDomainMap[A1,B,D]](from, keymap);
-//  }
-}
-
-trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V]] extends TensorCompanion[Bound] {
-  implicit def canMulRowTensor1ByCol[K,V1,V2,RV]
-  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], scalar : Scalar[RV])
-  : CanMulRowBy[Bound[K,V1],Tensor1[K,V2],RV]
-  = new CanMulRowBy[Bound[K,V1],Tensor1[K,V2],RV] {
-    override def apply(a : Bound[K,V1], b : Tensor1[K,V2]) =
-      a dot b;
+  def apply[K,V](keys : (K,V)*)(implicit scalar : Scalar[V]) : Tensor1Col[K,V] = {
+    val m = keys.toMap;
+    val s = scalar;
+    new Tensor1Col[K,V] {
+      override val scalar = s;
+      override val domain = scalala.tensor.domain.SetDomain(m.keySet);
+      override def apply(key : K) = m(key);
+    }
   }
 }
+
+/**
+ * Default companion for Tensor1.
+ * 
+ * @author dramage
+ */
+trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V]] extends TensorCompanion[Bound];

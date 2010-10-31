@@ -45,6 +45,9 @@ self =>
 
   override def apply(key : A2) =
     underlying.apply(lookup(key));
+
+  override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) =
+    underlying.newBuilder[K2,V2](domain);
 }
 
 /**

@@ -35,7 +35,7 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(math.abs(a - b) < TOLERANCE);
 
   test("Min/Max") {
-    val v = DenseVector(5)(2,0,3,2,-1);
+    val v = DenseVector(2,0,3,2,-1);
     assert(v.argmin === 4);
     assert(v.argmax === 2);
     assert(v.min === -1);
@@ -43,7 +43,7 @@ class DenseVectorTest extends FunSuite with Checkers {
   }
 
   test("Norm") {
-    val v = DenseVector(5)(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
+    val v = DenseVector(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
     assertClose(v.norm(1), 3.6577);
     assertClose(v.norm(2), 2.0915);
     assertClose(v.norm(3), 1.8405);
@@ -54,14 +54,14 @@ class DenseVectorTest extends FunSuite with Checkers {
   }
 
   test("Dot") {
-    val a = DenseVector(5)(0.56390,0.36231,0.14601,0.60294,0.14535);
-    val b = DenseVector(5)(0.15951,0.83671,0.56002,0.57797,0.54450);
+    val a = DenseVector(0.56390,0.36231,0.14601,0.60294,0.14535);
+    val b = DenseVector(0.15951,0.83671,0.56002,0.57797,0.54450);
     assertClose(a dot b, .90249);
     assertClose(a.t * b, .90249);
   }
 
   test("Map") {
-    val a : DenseVector[Int] = DenseVector(5)(1,2,3,4,5);
+    val a : DenseVector[Int] = DenseVector(1,2,3,4,5);
     val m : DenseVector[Int] = a.mapValues(_ + 1);
     assert(m.data.toList === List(2,3,4,5,6));
   }

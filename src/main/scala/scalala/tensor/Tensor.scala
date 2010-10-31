@@ -42,9 +42,6 @@ extends DomainFunction[A, B, D]
 with operators.NumericOps[This] {
 self =>
 
-//  // TODO: replace this with a generic parameter
-//  type Bound[V] = Tensor[A,V];
-
   protected type Self = This;
 
   def repr : This = this.asInstanceOf[This];
@@ -52,12 +49,25 @@ self =>
   /** Provides information about the underlying scalar value type B. */
   implicit val scalar : Scalar[B];
 
-  /** Constructs a builder on the same domain as this tensor but for type C. */
-  def newBuilder[C:Scalar] : TensorBuilder[A,C,Tensor[A,C]] =
-  new TensorBuilder[A,C,Tensor[A,C]] {
-    val rv = mutable.Tensor[A,C](self.domain);
-    def update(k : A, v : C) = rv(k) = v;
-    def result = rv;
+  /**
+   * Returns a builder for constructing new instances like this one,
+   * on the given domain.
+   */
+  def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK])
+  : TensorBuilder[NK,NV,Tensor[NK,NV]] = domain match {
+    case that : IndexDomain =>
+      mutable.Vector(that)(implicitly[Scalar[NV]]).asBuilder;
+    case that : Product1Domain[_] =>
+      mutable.Tensor1(that)(implicitly[Scalar[NV]]).asBuilder;
+    case that : TableDomain =>
+      mutable.Matrix(that)(implicitly[Scalar[NV]]).asBuilder;
+    case that : Product2Domain[_,_] =>
+      mutable.Tensor2(that)(implicitly[Scalar[NV]]).asBuilder;
+      // TODO: add this in when we have a mutable.TensorN
+//    case that : ProductNDomain[_] =>
+//      mutable.TensorN(that)(implicitly[Scalar[NV]]).asBuilder;
+    case _ =>
+      mutable.Tensor[NK,NV](domain).asBuilder;
   }
 
   //
@@ -233,15 +243,15 @@ self =>
    * Currently this method is not particularly efficient, as it creates several
    * in-memory arrays the size of the domain.
    */
-  def argsort(implicit cm : ClassManifest[A], ord : Ordering[B]) : Array[A] =
-    domain.toArray.sortWith((i:A, j:A) => ord.lt(this(i), this(j)));
+  def argsort(implicit cm : Manifest[A], ord : Ordering[B]) : Array[A] =
+    domain.toArray(cm).sortWith((i:A, j:A) => ord.lt(this(i), this(j)));
 
   /**
    * Returns a sorted view of the current map.  Equivalent to calling
    * <code>x(x.argsort)</code>.  Changes to the sorted view are
    * written-through to the underlying map.
    */
-  def sorted[That](implicit bf : CanSliceVector[This, A, That], cm : ClassManifest[A], ord : Ordering[B]) : That =
+  def sorted[That](implicit bf : CanSliceVector[This, A, That], cm : Manifest[A], ord : Ordering[B]) : That =
     this.apply(this.argsort);
 
 
@@ -416,33 +426,33 @@ object Tensor extends TensorCompanion[Tensor] {
  */
 trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] {
 
-  implicit def canMapValues[A, B, O:Scalar]
-  : CanMapValues[Bound[A,B],B,O,Bound[A,O]]
-  = new CanMapValues[Bound[A,B],B,O,Bound[A,O]] {
-    override def map(from : Bound[A,B], fn : (B=>O)) = {
-      val builder = from.newBuilder[O];
+  implicit def canMapValues[K, V, RV:Scalar]
+  : CanMapValues[Bound[K,V],V,RV,Bound[K,RV]]
+  = new CanMapValues[Bound[K,V],V,RV,Bound[K,RV]] {
+    override def map(from : Bound[K,V], fn : (V=>RV)) = {
+      val builder = from.newBuilder[K,RV](from.domain);
       from.foreach((k,v) => builder(k) = fn(v));
-      builder.result.asInstanceOf[Bound[A,O]];
+      builder.result.asInstanceOf[Bound[K,RV]];
     }
-    override def mapNonZero(from : Bound[A,B], fn : (B=>O)) = {
-      val builder = from.newBuilder[O];
+    override def mapNonZero(from : Bound[K,V], fn : (V=>RV)) = {
+      val builder = from.newBuilder[K,RV](from.domain);
       from.foreachNonZero((k,v) => builder(k) = fn(v));
-      builder.result.asInstanceOf[Bound[A,O]];
+      builder.result.asInstanceOf[Bound[K,RV]];
     }
   }
 
-  implicit def canMapKeyValuePairs[A, B, O:Scalar]
-  : CanMapKeyValuePairs[Bound[A,B],A,B,O,Bound[A,O]]
-  = new CanMapKeyValuePairs[Bound[A,B],A,B,O,Bound[A,O]] {
-    override def map(from : Bound[A,B], fn : ((A,B)=>O)) = {
-      val builder = from.newBuilder[O];
+  implicit def canMapKeyValuePairs[K, V, RV:Scalar]
+  : CanMapKeyValuePairs[Bound[K,V],K,V,RV,Bound[K,RV]]
+  = new CanMapKeyValuePairs[Bound[K,V],K,V,RV,Bound[K,RV]] {
+    override def map(from : Bound[K,V], fn : ((K,V)=>RV)) = {
+      val builder = from.newBuilder[K,RV](from.domain);
       from.foreach((k,v) => builder(k) = fn(k,v));
-      builder.result.asInstanceOf[Bound[A,O]];
+      builder.result.asInstanceOf[Bound[K,RV]];
     }
-    override def mapNonZero(from : Bound[A,B], fn : ((A,B)=>O)) = {
-      val builder = from.newBuilder[O];
+    override def mapNonZero(from : Bound[K,V], fn : ((K,V)=>RV)) = {
+      val builder = from.newBuilder[K,RV](from.domain);
       from.foreachNonZero((k,v) => builder(k) = fn(k,v));
-      builder.result.asInstanceOf[Bound[A,O]];
+      builder.result.asInstanceOf[Bound[K,RV]];
     }
   }
 
@@ -451,14 +461,14 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] {
   new CanJoinValues[Bound[K,V1], Tensor[K,V2], V1, V2, RV, Bound[K,RV]] {
     override def joinAll(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
-      val builder = a.newBuilder[RV];
+      val builder = a.newBuilder[K,RV](a.domain union b.domain);
       a.foreach((k,aV) => builder(k) = fn(aV,b(k)));
       builder.result.asInstanceOf[Bound[K,RV]];
     }
 
     override def joinEitherNonZero(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
-      val builder = a.newBuilder[RV];
+      val builder = a.newBuilder[K,RV](a.domain union b.domain);
       a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
       b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
       builder.result.asInstanceOf[Bound[K,RV]];
@@ -466,7 +476,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] {
 
     override def joinBothNonZero(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
-      val builder = a.newBuilder[RV];
+      val builder = a.newBuilder[K,RV](a.domain union b.domain);
       a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
       builder.result.asInstanceOf[Bound[K,RV]];
     }

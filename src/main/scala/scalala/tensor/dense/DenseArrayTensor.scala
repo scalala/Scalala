@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package dense;
 
-import domain.{DomainLike,IterableDomain};
+import domain._;
 
 /**
  * Implementation trait for a tensor backed by a dense array of values.
@@ -34,6 +34,13 @@ trait DenseArrayTensorLike
  +This<:DenseArrayTensor[A,B]]
 extends mutable.TensorLike[A,B,D,This] {
   def data : Array[B];
+
+  override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2])
+  : mutable.TensorBuilder[K2,V2,Tensor[K2,V2]] = domain match {
+    case that : IndexDomain => DenseVector.zeros[V2](that.size).asBuilder;
+    case that : TableDomain => DenseMatrix.zeros[V2](that.numRows, that.numCols).asBuilder;
+    case _ => super.newBuilder[K2,V2](domain);
+  }
 
   /** Assigns the given value to all elements of this map. */
   def :=(value : B) = {

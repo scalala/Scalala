@@ -46,22 +46,8 @@ with Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
 object Matrix extends MatrixCompanion[Matrix] {
-  import scala.collection.mutable.IndexedSeq;
-
-  class Impl[B](numRows : Int, numCols : Int, val data : IndexedSeq[IndexedSeq[B]])
-  (implicit override val scalar : Scalar[B])
-  extends Matrix[B] {
-    override val domain = TableDomain(numRows, numCols);
-
-    override def apply(i : Int, j : Int) =
-      data(i)(j);
-
-    override def update(i : Int, j : Int, v : B) =
-      data(i)(j) = v;
-  }
-
-  def apply[B](numRows : Int, numCols : Int)(implicit scalar : Scalar[B]) =
-    new Impl(numRows, numCols, IndexedSeq.tabulate(numRows)(r => IndexedSeq.fill(numCols)(scalar.zero)));
+  def apply[V:Scalar](domain : TableDomain) =
+    dense.DenseMatrix.zeros[V](domain._1.size, domain._2.size);
 
   implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] =
   new CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] {

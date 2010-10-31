@@ -123,6 +123,31 @@ trait MutableNumericOps[+This] extends NumericOps[This] {
 // Shaped operations
 // 
 
+/**
+ * Secialized shaped numeric operations for columns.
+ *
+ * @author dramage
+ */
+trait ColOps[+This] extends NumericOps[This] {
+  def *[TT>:This,B,That](b : B)(implicit op : CanMulColumnBy[TT,B,That]) : That =
+    op(repr, b);
+
+  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
+    op.apply(repr);
+}
+
+/**
+ * Secialized shaped numeric operations for rows.
+ *
+ * @author dramage
+ */
+trait RowOps[+This] extends NumericOps[This] {
+  def *[TT>:This,B,That](b : B)(implicit op : CanMulRowBy[TT,B,That]) : That =
+    op(repr, b);
+
+  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
+    op.apply(repr);
+}
 
 /**
  * Secialized NumericOps with shaped operations taking A is a column.

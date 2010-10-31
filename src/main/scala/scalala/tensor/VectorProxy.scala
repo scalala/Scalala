@@ -23,24 +23,20 @@ package tensor;
 import domain._;
 
 /**
- * Tensors indexed by a sequence of keys.
+ * Implementation trait for proxies to a Vector instance.
  *
  * @author dramage
  */
-trait TensorNLike[@specialized(Int) K, @specialized(Int,Long,Float,Double,Boolean) V, +This<:TensorN[K,V]]
-extends TensorLike[Seq[K],V,ProductNDomain[K],This] {
-  /** Gets the value indexed by (i,j). */
-  /* final */ def apply(k : K*) : V =
-    apply(k : Seq[K]);
-
-
-  override protected def canEqual(other : Any) : Boolean = other match {
-    case that : TensorN[_,_] => true;
-    case _ => false;
-  }
+trait VectorProxyLike[@specialized(Int,Long,Float,Double) V, Inner<:Vector[V], +This<:Vector[V]]
+extends Tensor1ProxyLike[Int,V,IndexDomain,Inner,This] with VectorLike[V,This] {
+  override def size =
+    inner.size;
 }
 
-trait TensorN[@specialized(Int) K, @specialized(Int,Long,Float,Double,Boolean) V]
-extends Tensor[Seq[K],V] with TensorNLike[K,V,TensorN[K,V]]
-
-object TensorN;
+/**
+ * Proxy to a Vector instance.
+ *
+ * @author dramage
+ */
+trait VectorProxy[@specialized(Int,Long,Float,Double) V, Inner<:Vector[V]]
+extends Tensor1Proxy[Int,V,Inner] with Vector[V] with VectorProxyLike[V,Inner,VectorProxy[V,Inner]];

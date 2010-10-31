@@ -21,26 +21,29 @@ package scalala;
 package tensor;
 
 import domain._;
+import generic.{CanAdd,CanMul};
 
 /**
- * Tensors indexed by a sequence of keys.
+ * Implementation trait for proxies to a Tensor1 instance.
  *
  * @author dramage
  */
-trait TensorNLike[@specialized(Int) K, @specialized(Int,Long,Float,Double,Boolean) V, +This<:TensorN[K,V]]
-extends TensorLike[Seq[K],V,ProductNDomain[K],This] {
-  /** Gets the value indexed by (i,j). */
-  /* final */ def apply(k : K*) : V =
-    apply(k : Seq[K]);
+trait Tensor1ProxyLike
+[@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B,
+ +D<:IterableDomain[A] with DomainLike[A,D], Inner<:Tensor1[A,B], +This<:Tensor1[A,B]]
+extends TensorProxyLike[A,B,D,Inner,This] with Tensor1Like[A,B,D,This] {
+  override def norm(n : Double) =
+    inner.norm(n);
 
-
-  override protected def canEqual(other : Any) : Boolean = other match {
-    case that : TensorN[_,_] => true;
-    case _ => false;
-  }
+  override def dot[C,R](that : Tensor1[A,C])(implicit mul : CanMul[B,C,R], add : CanAdd[R,R,R], scalar : Scalar[R]) : R =
+    inner.dot(that);
 }
 
-trait TensorN[@specialized(Int) K, @specialized(Int,Long,Float,Double,Boolean) V]
-extends Tensor[Seq[K],V] with TensorNLike[K,V,TensorN[K,V]]
-
-object TensorN;
+/**
+ * Proxy to a Tensor1 instance.
+ * 
+ * @author dramage
+ */
+trait Tensor1Proxy
+[@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B, Inner<:Tensor1[A,B]]
+extends TensorProxy[A,B,Inner] with Tensor1[A,B] with Tensor1ProxyLike[A,B,IterableDomain[A],Inner,Tensor1Proxy[A,B,Inner]];

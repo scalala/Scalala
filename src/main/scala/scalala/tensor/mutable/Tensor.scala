@@ -37,7 +37,7 @@ trait TensorLike
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
  +D<:IterableDomain[A] with DomainLike[A,D], +Repr<:Tensor[A,B]]
 extends tensor.TensorLike[A, B, D, Repr]
-with operators.MutableNumericOps[Repr] {
+with operators.MutableNumericOps[Repr] { self =>
 
   /**
    * Update an individual value.  The given key must be in the
@@ -73,6 +73,16 @@ with operators.MutableNumericOps[Repr] {
   def transformNonZeroValues(fn : (B=>B)) = {
     this.transformValues(fn);
     true;
+  }
+
+  /**
+   * Returns a view of this tensor as a builder for itself.  This is used
+   * so that you can construct the appropriate return instance and then
+   * call asBuilder to get a builder view of it.
+   */
+  def asBuilder[RV>:Repr] : TensorBuilder[A,B,RV] = new TensorBuilder[A,B,RV] {
+    def update(k : A, v : B) = self(k) = v;
+    def result = self.asInstanceOf[RV];
   }
 }
 

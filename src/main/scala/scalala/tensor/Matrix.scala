@@ -23,8 +23,6 @@ package tensor;
 import domain._
 import generic.collection._;
 
-import mutable.TensorBuilder;
-
 /**
  * Implementation trait for a matrix.
  *
@@ -33,13 +31,6 @@ import mutable.TensorBuilder;
 trait MatrixLike[@specialized(Int,Long,Float,Double) B, +This<:Matrix[B]]
 extends Tensor2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,This] {
 self =>
-
-  override def newBuilder[C:Scalar] : TensorBuilder[(Int,Int),C,Matrix[C]] =
-  new TensorBuilder[(Int,Int),C,Matrix[C]] {
-    val rv = mutable.Matrix[C](self.numRows, self.numCols);
-    def update(k : (Int,Int), v : C) = rv(k._1,k._2) = v;
-    def result = rv;
-  }
 
   /** Number of rows in this table. */
   /* final */ def numRows : Int = domain.numRows;

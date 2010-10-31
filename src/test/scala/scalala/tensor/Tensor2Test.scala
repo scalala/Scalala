@@ -31,7 +31,7 @@ import domain._;
 @RunWith(classOf[JUnitRunner])
 class Tensor2Test extends FunSuite with Checkers {
   def mkTensor2() = {
-    val domain = Product2Domain(SetDomain("a","b","c"), SetDomain(1,2));
+    val domain = Product2Domain(SetDomain(Set("a","b","c")), SetDomain(Set(1,2)));
     mutable.Tensor2[String,Int,Double](domain);
   }
 

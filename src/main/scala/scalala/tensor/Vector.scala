@@ -23,21 +23,10 @@ package tensor;
 import domain._;
 import mutable.TensorBuilder;
 
-import generic.{CanAdd,CanMul,CanMulRowBy,CanMulColumnBy};
-import generic.collection.CanSliceCol;
-import operators.RowTensorOps;
-
 trait VectorLike[@specialized(Int,Long,Float,Double) B, +This<:Vector[B]]
 extends Tensor1Like[Int,B,IndexDomain,This] { self =>
 
   def size = domain.size;
-
-  override def newBuilder[C:Scalar] : TensorBuilder[Int,C,Vector[C]] =
-  new TensorBuilder[Int,C,Vector[C]] {
-    val rv = mutable.Vector[C](self.size);
-    def update(k : Int, v : C) = rv(k) = v;
-    def result = rv;
-  }
 
   protected[this] def mkValueString(value : B) : String =
     value.toString;
@@ -68,61 +57,7 @@ trait Vector[@specialized(Int,Long,Float,Double) B]
 extends Tensor1[Int,B]
 with VectorLike[B,Vector[B]];
 
-object Vector extends VectorCompanion[Vector] {
-//  /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
-//  trait SliceSeqLike
-//  [@specialized(Int,Long) A,
-//   @specialized(Int,Long,Float,Double) B,
-//   D<:IterableDomain[A] with DomainLike[A,D],
-//   +Coll<:MutableDomainMap[A,B],
-//   +This <: SliceSeq[A, B, Coll]]
-//  extends MutableDomainMapSliceSeqLike[A,D,B,Coll,This]
-//  with VectorLike[B,This];
-//
-//  /** A slice-seq of any Double-valued MutableDomainMap is a Vector. */
-//  trait SliceSeq
-//  [@specialized(Int,Long) A,
-//   @specialized(Int,Long,Float,Double) B,
-//   +Coll <: MutableDomainMap[A,B]]
-//  extends MutableDomainMapSliceSeq[A,B,Coll]
-//  with Vector[B] with SliceSeqLike[A,B,IterableDomain[A],Coll,SliceSeq[A,B,Coll]];
-//
-//  class SliceFromKeySeq
-//  [@specialized(Int,Long) A,
-//   @specialized(Int,Long,Float,Double) B,
-//   +Coll <: MutableDomainMap[A,B]]
-//  (underlying : Coll, keys : Seq[A])
-//  (implicit override val scalar : Scalar[B])
-//  extends MutableDomainMapSliceSeq.FromKeySeq[A,B,Coll](underlying, keys)
-//  with SliceSeq[A,B,Coll];
-}
+object Vector extends VectorCompanion[Vector];
 
 
-trait VectorCompanion[Bound[V] <: Vector[V]] extends IndexedTensorCompanion[Int,Bound] {
-  implicit def canMulRowVectorByCol[V1,V2,RV]
-  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], scalar : Scalar[RV])
-  : CanMulRowBy[Bound[V1],Tensor1[Int,V2],RV]
-  = new CanMulRowBy[Bound[V1],Tensor1[Int,V2],RV] {
-    override def apply(a : Bound[V1], b : Tensor1[Int,V2]) =
-      a dot b;
-  }
-
-  implicit def canMulRowVectorByMatrix[V1,V2,RV,S]
-  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], scalar : Scalar[RV],
-   slice : CanSliceCol[scalala.tensor.Matrix[V2],Int,S])
-  : CanMulRowBy[Bound[V1],Matrix[V2],RowTensorOps[Bound[RV]]]
-  = new CanMulRowBy[Bound[V1],Matrix[V2],RowTensorOps[Bound[RV]]] {
-    override def apply(a : Bound[V1], b : Matrix[V2]) = {
-      val rv = a.newBuilder[RV];
-      var j = 0;
-      while (j < b.numCols) {
-        rv(j) = a dot b(::, j).asInstanceOf[Vector[V2]];
-        j += 1;
-      }
-      RowTensorOps(rv.result.asInstanceOf[Bound[RV]]);
-    }
-  }
-
-//  implicit def canMulColVectorByRow[V1,V2,RV]
-//  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[])
-}
+trait VectorCompanion[Bound[V] <: Vector[V]] extends IndexedTensorCompanion[Int,Bound];
