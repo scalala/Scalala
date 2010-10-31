@@ -24,6 +24,7 @@ package dense;
 import domain.{IterableDomain,IndexDomain};
 
 import generic.collection.CanTranspose;
+import scalar.Scalar;
 
 /**
  * A vector backed by a dense array.

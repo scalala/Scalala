@@ -23,6 +23,8 @@ package mutable;
 
 import domain._;
 
+import scalar.Scalar;
+
 /**
  * Implementation trait for slices of an underlying Tensor.  A slice
  * is a pass-through view of a (mapped) subset of the original Tensor's

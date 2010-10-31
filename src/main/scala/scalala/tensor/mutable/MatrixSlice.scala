@@ -27,6 +27,8 @@ import scalala.generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
 import scalala.generic.{CanAssignInto, CanAddInto, CanSubInto, CanMulInto, CanDivInto, CanPowInto, CanModInto};
 import scalala.generic.collection._;
 
+import scalar.Scalar;
+
 /**
  * Implementation trait for a pass-through view of a (key-mapped)
  * MutableDomainTable from an underlying Tensor2.

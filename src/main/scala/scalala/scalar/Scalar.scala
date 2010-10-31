@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
-package tensor;
+package scalar;
 
 /**
  * Marker trait for scalar values.  Scalars must be immutable.

@@ -25,7 +25,7 @@ package tensor;
  *
  * @author dramage
  */
-trait RowLiteral[R, @specialized V] {
+trait RowLiteral[-R, @specialized V] {
   def foreach[X](row : R, fn : ((Int,V) => X));
   def length(row : R) : Int;
 }
@@ -38,7 +38,15 @@ object RowLiteral {
       }
     }
 
-    def length(arr : Array[V]) = 2;
+    def length(arr : Array[V]) = arr.length;
+  }
+
+  implicit def row[V] : RowLiteral[VectorRow[V],V] = new RowLiteral[VectorRow[V],V] {
+    def foreach[X](row : VectorRow[V], fn : ((Int,V) => X)) = {
+      row.foreachNonZero(fn);
+    }
+
+    def length(row : VectorRow[V]) = row.size;
   }
 
   implicit def tuple2[V] : RowLiteral[Tuple2[V,V],V] = new RowLiteral[Tuple2[V,V],V] {

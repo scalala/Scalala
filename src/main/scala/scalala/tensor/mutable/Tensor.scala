@@ -27,6 +27,8 @@ import generic.{CanMul,CanDiv,CanAdd,CanSub,CanPow,CanMod}
 import generic.{CanAssignInto,CanMulInto,CanDivInto,CanAddInto,CanSubInto,CanPowInto,CanModInto}
 import generic.collection._;
 
+import scalar.Scalar;
+
 /**
  * Implementation trait for TensorLike.  Supports assigning,
  * updating, and transforming values.

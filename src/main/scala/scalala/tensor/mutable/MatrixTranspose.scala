@@ -21,11 +21,13 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
+import domain.{IndexDomain,TableDomain};
 
 import scalala.generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
 import scalala.generic.{CanAssignInto, CanAddInto, CanSubInto, CanMulInto, CanDivInto, CanPowInto, CanModInto};
 import scalala.generic.collection._;
+
+import scalar.Scalar;
 
 /**
  * A Transpose of any Matrix type is a Matrix.

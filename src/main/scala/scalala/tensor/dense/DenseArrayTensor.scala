@@ -22,6 +22,7 @@ package tensor;
 package dense;
 
 import domain._;
+import scalar.Scalar;
 
 /**
  * Implementation trait for a tensor backed by a dense array of values.

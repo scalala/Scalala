@@ -24,6 +24,8 @@ package mutable;
 import domain._;
 import generic.collection.CanTranspose;
 
+import scalar.Scalar;
+
 /**
  * Implementation trait for mutable Tensor1Row instances.
  *

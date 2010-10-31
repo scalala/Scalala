@@ -20,10 +20,11 @@
 package scalala;
 package tensor;
 
-import domain._;
+import domain.{IndexDomain,TableDomain};
 
 import generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
 import generic.collection._;
+import scalar.Scalar;
 
 /**
  * A Transpose of any Matrix type is a Matrix.

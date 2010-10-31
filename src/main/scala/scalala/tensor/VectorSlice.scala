@@ -21,6 +21,8 @@
 package scalala;
 package tensor;
 
+import scalar.Scalar;
+
 import domain._;
 
 /**

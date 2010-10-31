@@ -20,8 +20,9 @@
 package scalala;
 package tensor;
 
-import domain._
+import domain.{DomainException,IndexDomain,TableDomain}
 import generic.collection._;
+import scalar.Scalar;
 
 /**
  * Implementation trait for a matrix.

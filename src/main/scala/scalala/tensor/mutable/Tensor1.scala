@@ -23,6 +23,8 @@ package mutable;
 
 import domain._;
 
+import scalar.Scalar;
+
 /**
  * Implementation trait for mutable Tensor1 instances.
  *

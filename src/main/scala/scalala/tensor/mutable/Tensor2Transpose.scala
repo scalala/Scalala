@@ -24,6 +24,8 @@ package mutable;
 import domain._;
 import generic.collection._;
 
+import scalar.Scalar;
+
 /**
  * Implementation trait for a transposed view of an underlying MutableTensor2.
  *

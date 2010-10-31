@@ -21,7 +21,7 @@ package scalala;
 package generic;
 package collection;
 
-import scalala.tensor.Scalar;
+import scalala.scalar.Scalar;
 
 /**
  * Builder trait for transposing a matrix.

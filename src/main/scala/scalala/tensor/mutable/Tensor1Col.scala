@@ -24,6 +24,8 @@ package mutable;
 import scalala.tensor.domain._;
 import scalala.generic.collection.CanTranspose;
 
+import scalar.Scalar;
+
 /**
  * Implementation trait for mutable Tensor1Col instances.
  *

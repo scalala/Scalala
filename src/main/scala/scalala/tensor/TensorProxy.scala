@@ -20,6 +20,8 @@
 package scalala;
 package tensor;
 
+import scalar.Scalar;
+
 import domain._;
 import generic.collection._;
 

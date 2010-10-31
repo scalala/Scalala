@@ -24,6 +24,7 @@ package sparse;
 import domain.IndexDomain;
 
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
+import scalala.scalar.Scalar;
 
 /**
  * A vector backed by a SparseArray.

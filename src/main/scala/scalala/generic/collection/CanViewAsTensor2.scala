@@ -21,7 +21,8 @@ package scalala;
 package generic;
 package collection;
 
-import scalala.tensor.{Scalar,Tensor2};
+import scalala.scalar.Scalar;
+import scalala.tensor.Tensor2;
 import scalala.tensor.dense.ArrayArrayMatrix;
 
 /**

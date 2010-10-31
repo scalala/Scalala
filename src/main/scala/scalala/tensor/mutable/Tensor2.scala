@@ -24,6 +24,8 @@ package mutable;
 import domain._;
 import generic.collection._;
 
+import scalar.Scalar;
+
 /**
  * Implementation trait for a mutable tensor.Tensor2.
  *

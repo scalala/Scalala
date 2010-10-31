@@ -20,6 +20,8 @@
 package scalala;
 package tensor;
 
+import scalar.Scalar;
+
 import domain._;
 import generic.{CanAdd,CanMul,CanMulColumnBy};
 import generic.collection.CanTranspose;

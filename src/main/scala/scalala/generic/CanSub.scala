@@ -20,7 +20,7 @@
 package scalala;
 package generic;
 
-import scalala.tensor.Scalar;
+import scalala.scalar.Scalar;
 import scalala.tensor.domain.DomainException;
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 

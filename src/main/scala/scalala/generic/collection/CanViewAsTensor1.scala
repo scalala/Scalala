@@ -23,7 +23,8 @@ package collection;
 
 import scalala.collection.sparse.SparseArray;
 
-import scalala.tensor.{Scalar,Tensor1};
+import scalala.scalar.Scalar;
+import scalala.tensor.Tensor1;
 import scalala.tensor.dense.DenseVector;
 import scalala.tensor.sparse.SparseVector;
 

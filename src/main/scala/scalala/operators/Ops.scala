@@ -24,7 +24,7 @@ package operators;
 import generic._;
 import generic.collection.CanTranspose;
 
-import scalala.tensor.Scalar;
+import scalala.scalar.Scalar;
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
 /**
@@ -174,12 +174,174 @@ trait MatrixOps[+This] extends NumericOps[This] {
 }
 
 /**
+ * Specialized column and row tensor ops for wrapped data structures that
+ * cannot directly inherit and distinguish between rows and columns in the
+ * type system.  This class assumes unwrapped objects are columsn and
+ * wrapped ones are rows.
+ *
+ * @author dramage
+ */
+trait WrappedColOps[+This] extends NumericOps[This] {
+  def *[TT>:This,B,RV](b : WrappedRowOps[B])(implicit op : CanMulColumnBy[TT,B,RV]) : RV =
+    op(repr,b.column);
+
+  def t : WrappedRowOps[This] = WrappedRowOps(repr);
+}
+
+/**
+ * A wrapped column tensor whose underyling collection is mutable.  This trait
+ * should be used instead of mixing in "WrappedColOps with
+ * MutableNumeriCollectionOps" directly, because .t needs to return an instance
+ * of MutableRowOps insetad of RowOps.
+ *
+ * @author dramage
+ */
+trait MutableWrappedColOps[+This] extends WrappedColOps[This] with MutableNumericOps[This] {
+  override def t : MutableWrappedRowOps[This] = MutableWrappedRowOps(repr);
+}
+
+
+/**
+ * Secialized NumericOps with shaped operations taking A is a row.
+ * Note that there is an inherent asymmetry between WrappedColumnTensorOps and
+ * WrappedRowOps: because tensors are assumed to be columns until reshaped
+ * (e.g. by calling .t), that class extends NumericOps[A].  This
+ * class, by contrast, must preserve the fact that the base numeric operations
+ * like plus must honor the row shape, and that the return result should also
+ * be a row.  Hence this class extends NumericOps[WrappedRowOps[A]]
+ * and provides implicit magic in the companion object to wrap the
+ * corresponding construction delegates.
+ *
+ * @author dramage
+ */
+trait WrappedRowOps[+This] extends NumericOps[WrappedRowOps[This]] {
+  override def repr : WrappedRowOps[This] = this;
+
+  def column : This;
+
+  def *[TT>:This,B,RV](b : B)(implicit op : CanMulRowBy[TT,B,RV]) : RV =
+    op(this.column,b);
+
+  /** The transpose returns the underlying value, which assumed to be a column. */
+  def t : This = column;
+}
+
+object WrappedRowOps {
+  def apply[This](v : This) : WrappedRowOps[This] =
+    new WrappedRowOps[This] { override def column = v; }
+
+  class WrappedRowBinaryOp[A,-B,+That](implicit op : BinaryOp[A,B,That])
+  extends BinaryOp[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]] {
+    override def apply(a : WrappedRowOps[A], b : WrappedRowOps[B]) =
+      WrappedRowOps(op(a.column,b.column));
+  }
+
+  implicit def CanAddRows[A,B,That](implicit op : CanAdd[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanAdd[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanSubRows[A,B,That](implicit op : CanSub[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanSub[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanMulRows[A,B,That](implicit op : CanMul[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanMul[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanDivRows[A,B,That](implicit op : CanDiv[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanDiv[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanModRows[A,B,That](implicit op : CanMod[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanMod[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanPowRows[A,B,That](implicit op : CanPow[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanPow[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanLTRows[A,B,That](implicit op : CanLT[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanLT[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanLTERows[A,B,That](implicit op : CanLTE[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanLTE[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanGTRows[A,B,That](implicit op : CanGT[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanGT[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanGTERows[A,B,That](implicit op : CanGTE[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanGTE[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanEqRows[A,B,That](implicit op : CanEq[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanEq[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+
+  implicit def CanNeRows[A,B,That](implicit op : CanNe[A,B,That])
+  = new WrappedRowBinaryOp[A,B,That] with CanNe[WrappedRowOps[A],WrappedRowOps[B],WrappedRowOps[That]];
+}
+
+/**
+ * Specialized WrappedRowOps support for WrappedRows that have mutable
+ * underlying collections.
+ *
+ * @author dramage
+ */
+trait MutableWrappedRowOps[+This]
+extends WrappedRowOps[This] with MutableNumericOps[WrappedRowOps[This]];
+
+object MutableWrappedRowOps {
+  def apply[This](v : This) : MutableWrappedRowOps[This] =
+    new MutableWrappedRowOps[This] { override def column = v; }
+
+  class MutableWrappedRowBinaryOp[A,-B,+That](implicit op : BinaryOp[A,B,That])
+  extends BinaryOp[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]] {
+    override def apply(a : MutableWrappedRowOps[A], b : WrappedRowOps[B]) =
+      MutableWrappedRowOps(op(a.column,b.column));
+  }
+
+  class MutableWrappedRowBinaryUpdateOp[A,-B](implicit op : BinaryUpdateOp[A,B])
+  extends BinaryUpdateOp[MutableWrappedRowOps[A],WrappedRowOps[B]] {
+    override def apply(a : MutableWrappedRowOps[A], b : WrappedRowOps[B]) =
+      op(a.column, b.column);
+  }
+
+  implicit def CanAddRows[A,B,That](implicit op : CanAdd[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanAdd[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanSubRows[A,B,That](implicit op : CanSub[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanSub[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanMulRows[A,B,That](implicit op : CanMul[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanMul[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanDivRows[A,B,That](implicit op : CanDiv[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanDiv[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanModRows[A,B,That](implicit op : CanMod[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanMod[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanPowRows[A,B,That](implicit op : CanPow[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanPow[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanLTRows[A,B,That](implicit op : CanLT[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanLT[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanLTERows[A,B,That](implicit op : CanLTE[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanLTE[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanGTRows[A,B,That](implicit op : CanGT[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanGT[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanGTERows[A,B,That](implicit op : CanGTE[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanGTE[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanEqRows[A,B,That](implicit op : CanEq[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanEq[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+
+  implicit def CanNeRows[A,B,That](implicit op : CanNe[A,B,That])
+  = new MutableWrappedRowBinaryOp[A,B,That] with CanNe[MutableWrappedRowOps[A],WrappedRowOps[B],MutableWrappedRowOps[That]];
+}
+
+/**
  * Numeric operator support for numeric arrays.
  *
  * @author dramage
  */
 class RichArrayVector[V:ClassManifest](override val repr : Array[V])
-extends MutableColumnTensorOps[Array[V]] {
+extends MutableWrappedColOps[Array[V]] {
   /** Final alias for :+ as a workaround for arrays. */
   final def :+:[B,That](b : B)(implicit op : CanAdd[Array[V],B,That]) = this.:+(b);
 }
@@ -198,7 +360,7 @@ extends MatrixOps[Array[Array[V]]];
  * @author dramage
  */
 class RichSparseArrayVector[V:ClassManifest:DefaultArrayValue](override val repr : SparseArray[V])
-extends MutableColumnTensorOps[SparseArray[V]];
+extends MutableWrappedColOps[SparseArray[V]];
 
 /**
  * Numeric operator support for solo scalars.  Note: we do not support

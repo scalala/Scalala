@@ -20,11 +20,11 @@
 package scalala;
 package generic;
 
-import scalala.tensor.Scalar;
+import scalala.scalar.Scalar;
 import scalala.tensor.domain.DomainException;
 import scalala.collection.sparse.SparseArray;
 
-import scalala.operators.MutableRowTensorOps;
+import scalala.operators.MutableWrappedRowOps;
 
 /**
  * Construction delegate for A*B where A is a row vector.
@@ -150,7 +150,7 @@ object CanMulRowBy {
   class CanMulRowArrayByArrayMatrix[V1,V2,RV]
   (implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV],
    add : CanAdd[RV,RV,RV], srv : Scalar[RV])
-  extends CanMulRowBy[Array[V1],Array[Array[V2]],MutableRowTensorOps[Array[RV]]] {
+  extends CanMulRowBy[Array[V1],Array[Array[V2]],MutableWrappedRowOps[Array[RV]]] {
     override def apply(a : Array[V1], b : Array[Array[V2]]) = {
       val rv = Array.fill(b.length)(srv.zero);
       var i = 0;
@@ -162,7 +162,7 @@ object CanMulRowBy {
         }
         i += 1;
       }
-      MutableRowTensorOps(rv);
+      MutableWrappedRowOps(rv);
     }
   }
 

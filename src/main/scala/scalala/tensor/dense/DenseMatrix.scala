@@ -24,6 +24,7 @@ package dense;
 import generic.collection._;
 
 import domain.TableDomain;
+import scalar.Scalar;
 
 /**
  * A DenseMatrix is backed by an array of doubles, with each column

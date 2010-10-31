@@ -24,6 +24,7 @@ import domain._;
 
 import generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
 import generic.collection._;
+import scalar.Scalar;
 
 /**
  * A table sliced from a Tensor2 by providing a set product set of

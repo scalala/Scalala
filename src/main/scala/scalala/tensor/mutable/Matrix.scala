@@ -21,8 +21,9 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
-import generic.collection._;
+import domain.{IndexDomain,TableDomain};
+import generic.collection.CanTranspose;
+import scalar.Scalar;
 
 /**
  * Implementation trait for a MutableTensor that is also a tensor.Matrix.

@@ -24,6 +24,7 @@ package sparse;
 import domain.{DomainLike,IterableDomain};
 
 import scalala.collection.sparse.SparseArray;
+import scalala.scalar.Scalar;
 
 /**
  * Implementation trait for a tensor backed by a sparse array of values.
