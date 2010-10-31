@@ -38,7 +38,7 @@ trait Plotting {
   /** Selects and returns the requested figure by index (0-based). */
   def figure(select:Int = 0)(implicit figures : Figures = figures) : Figure = {
     if (select > 0) {
-      figures.figure = select - 1;
+      figures.figure = select;
       figures.figure.refresh;
     }
     return figures.figure
@@ -57,7 +57,7 @@ trait Plotting {
   def plot : XYPlot =
     figure.plot;
 
-  /** Selects the given subplot.  Note that select is 0-based. */
+  /** Selects the given subplot.  Note that select is 1-based for compatibility with matlab. */
   def subplot(rows:Int,cols:Int,select:Int)(implicit figure : Figure = figure) : XYPlot = {
     figure.rows = rows;
     figure.cols = cols;
