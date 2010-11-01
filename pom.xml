@@ -1,13 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <properties>
-    <scala.version>2.8.0</scala.version>
+    <scala.version>2.8.1.RC3</scala.version>
   </properties>
 
   <groupId>org.scalanlp</groupId>
   <artifactId>scalala_${scala.version}</artifactId>
   <name>Scalala</name>
-  <version>0.4.2</version>
+  <version>1.0.0.RC1-SNAPSHOT</version>
   <inceptionYear>2008</inceptionYear>
 
   <developers>
@@ -68,7 +68,7 @@
     <pluginRepository>
       <id>scala-tools.org</id>
       <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
+      <url>http://scala-tools.org/repo-snapshots</url>
     </pluginRepository>
   </pluginRepositories>
 
@@ -83,35 +83,21 @@
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
     </dependency>
-    <dependency>
-       <groupId>jline</groupId>
-       <artifactId>jline</artifactId>
-       <version>0.9.94</version>
-    </dependency>
-    <dependency> <!-- some numerical routines -->
-      <groupId>mtj</groupId>
-      <artifactId>mtj</artifactId>
-      <version>0.9.9</version>
-    </dependency>
+
     <dependency> <!-- plotting -->
       <groupId>jfree</groupId>
       <artifactId>jcommon</artifactId>
-      <version>1.0.12</version>
+      <version>1.0.16</version>
     </dependency>
     <dependency> <!-- plotting -->
       <groupId>jfree</groupId>
       <artifactId>jfreechart</artifactId>
-      <version>1.0.9</version>
+      <version>1.0.13</version>
     </dependency>
     <dependency> <!-- eps support -->
       <groupId>org.apache.xmlgraphics</groupId>
       <artifactId>xmlgraphics-commons</artifactId>
       <version>1.3.1</version>
-    </dependency>
-    <dependency> <!-- sparse data structures with primitive types -->
-      <groupId>fastutil</groupId>
-      <artifactId>fastutil</artifactId>
-      <version>5.1.5</version>
     </dependency>
     <dependency> <!-- pdf support -->
       <groupId>com.lowagie</groupId>
@@ -128,10 +114,16 @@
           </exclusion>
       </exclusions>
     </dependency>
+    <dependency> <!-- console line editing -->
+       <groupId>jline</groupId>
+       <artifactId>jline</artifactId>
+       <version>0.9.94</version>
+    </dependency>
 
+    <!-- test-only -->
     <dependency>
       <groupId>org.scala-tools.testing</groupId>
-      <artifactId>scalacheck_${scala.version}</artifactId>
+      <artifactId>scalacheck_2.8.0</artifactId>
       <version>1.7</version>
       <scope>test</scope>
     </dependency>
@@ -173,34 +165,13 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.14</version>
+        <version>2.14.2-SNAPSHOT</version>
         <executions>
           <execution>
-            <id>compile-scala</id>
             <goals>
               <goal>compile</goal>
-            </goals>
-            <phase>compile</phase>
-            <configuration>
-               <sourceDir>src/main/scala</sourceDir>
-            </configuration>
-          </execution>
-          <execution>
-            <id>doc-scala</id>
-            <phase>doc</phase>
-            <configuration>
-               <excludes>src/test/scala</excludes>
-            </configuration>
-          </execution>
-          <execution>
-            <id>test-compile-scala</id>
-            <goals>
               <goal>testCompile</goal>
             </goals>
-            <phase>test-compile</phase>
-            <configuration>
-              <testSourceDir>src/test/scala</testSourceDir>
-            </configuration>
           </execution>
         </executions>
         <configuration>
@@ -208,6 +179,8 @@
           <args>
             <arg>-deprecation</arg>
             <arg>-optimize</arg>
+            <arg>-Yinline</arg>
+            <arg>-no-specialization</arg>
           </args>
           <jvmArgs>
             <jvmArg>-Xmx1G</jvmArg>
@@ -308,10 +281,10 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.10</version>
+        <version>2.14.2-SNAPSHOT</version>
         <configuration>
           <scalaVersion>${scala.version}</scalaVersion>
-          <sourceDir>src/main/</sourceDir>
+          <sourceDir>src/main</sourceDir>
         </configuration>
       </plugin>
     </plugins>
@@ -325,3 +298,4 @@
     </repository>
   </distributionManagement>
 </project>
+

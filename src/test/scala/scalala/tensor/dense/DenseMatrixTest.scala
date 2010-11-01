@@ -1,42 +1,69 @@
 /*
- Copyright 2010 David Hall, Daniel Ramage
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
+ * Distributed as part of Scalala, a linear algebra library.
+ *
+ * Copyright (C) 2008- Daniel Ramage
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
+ */
 package scalala;
 package tensor;
 package dense;
 
+import org.scalacheck._
+import org.scalatest._;
 import org.scalatest.junit._;
-import org.junit.runner.RunWith;
+import org.scalatest.prop._;
+import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
-class DenseMatrixTest extends ScalalaTest {
- import tensor.dense.DenseMatrix;
- import Scalala._;
+class DenseMatrixTest extends FunSuite with Checkers {
 
- def createM1 = DenseMatrix(2, 2)(1.0, 2.0, 3.0, 4.0)
+// TODO: fix slicing on matrices
+//  test("Slicing") {
+//    val m = DenseMatrix.zeros[Int](2,3);
+//    m((0 to 1), (1 to 2)) := 1;
+//    m((0 to 1), (0 to 1)) :+= 4;
+//
+//    assert(m.data.toList === List(4, 4, 5, 5, 1, 1));
+//  }
 
- test("copy is not shallow") {
-   val m1 = createM1
-   val m2 = m1.copy
-   m2 *= 2.0
-   assert(m1 ==(createM1));
- }
+  test("Transpose") {
+    val m = DenseMatrix((1,2,3),(4,5,6));
+    assert(m.transpose === DenseMatrix((1,4),(2,3),(5,6)));
+    assert(m.transpose.isInstanceOf[Matrix[Int]]);
+  }
 
- test("svd is not destructive")  {
-   val m1 = createM1
-   svd(m1)
-   assert(m1 ==(createM1))
- }
+  test("Min/Max") {
+    val m = DenseMatrix((1,0,0),(2,3,-1));
+    assert(m.argmin === (1,2));
+    assert(m.argmax === (1,1));
+    assert(m.min === -1);
+    assert(m.max === 3);
+  }
+
+  test("Map") {
+    val a : DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1));
+    val m : DenseMatrix[Int] = a.mapValues(_ + 1);
+    assert(m.data.toList === List(2,3,1,4,1,0));
+  }
+
+  test("Tabulate") {
+    val m = DenseMatrix.tabulate(2,2)((i,j) => 1.0 * (i+1) * (j+2));
+    assert(m(0,0) === 2);
+    assert(m(0,1) === 3);
+    assert(m(1,0) === 4);
+    assert(m(1,1) === 6);
+  }
 }
