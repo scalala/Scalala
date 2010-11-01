@@ -56,11 +56,11 @@ class Tensor2Test extends FunSuite with Checkers {
     val x = mkTensor2();
     x(("a",1),("b",2),("c",2)) := List(3.0,7.75,8.0);
 
-    assert(x.transpose.valuesIterator.toList === List(3.0,0,0,0,7.75,8.0));
-    assert(x.transpose.transpose === x);
-    assert(x.transpose.transpose eq x);
+    assert(x.t.valuesIterator.toList === List(3.0,0,0,0,7.75,8.0));
+    assert(x.t.t === x);
+    assert(x.t.t eq x);
 
-    x.transpose(2,"a") = 1;
+    x.t(2,"a") = 1;
     assert(x("a",2) === 1);
   }
 

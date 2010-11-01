@@ -53,11 +53,51 @@ class DenseVectorTest extends FunSuite with Checkers {
     assertClose(v.norm(Double.PositiveInfinity), 1.6656);
   }
 
-  test("Dot") {
+  test("MulInner") {
     val a = DenseVector(0.56390,0.36231,0.14601,0.60294,0.14535);
     val b = DenseVector(0.15951,0.83671,0.56002,0.57797,0.54450);
     assertClose(a dot b, .90249);
     assertClose(a.t * b, .90249);
+  }
+
+  test("MulOuter") {
+    val a = DenseVector(1, 2, 3);
+    val b = DenseVector(6, -4, 8);
+
+    // assert result is a dense matrix
+    val m : DenseMatrix[Int] = a * b.t;
+    assert(m === DenseMatrix((6,-4,8),(12,-8,16),(18,-12,24)));
+  }
+
+  test("MulMatrix") {
+    val x = DenseVector(1,2).t;
+    val m = DenseMatrix((1,2,1),(2,7,8));
+
+    // assert return type is a dense column
+    val r : DenseVectorRow[Int] = x * m;
+    assert(r === DenseVector(5, 16, 7));
+  }
+
+  test("Slice") {
+    val x = DenseVector.zeros[Int](5);
+
+    // check that the slice is a vector and mutable
+    val y : mutable.Vector[Int] = x(0 to 2);
+    y :+= 1;
+
+    val z : mutable.Vector[Int] = x(1 to 3);
+    z :+= 1;
+
+    assert(x === DenseVector(1,2,2,1,0));
+  }
+
+  test("Transpose") {
+    val x : DenseVectorCol[Int] = DenseVector(1,2,3);
+
+    // test static type and write-through of transpose
+    val y : DenseVectorRow[Int] = x.t;
+    y(0) = 0;
+    assert(x === DenseVector(0,2,3));
   }
 
   test("Map") {
@@ -69,9 +109,5 @@ class DenseVectorTest extends FunSuite with Checkers {
   test("Tabulate") {
     val m = DenseVector.tabulate(5)(i => i + 1);
     assert(m.data.toList === List(1,2,3,4,5));
-  }
-  
-  test("Matrix-multiply") {
-    
   }
 }

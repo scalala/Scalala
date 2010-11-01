@@ -37,9 +37,9 @@ extends VectorLike[B,This] with Tensor1RowLike[Int,B,IndexDomain,This] {
 
   // TODO: improve this method to make it more Vector-like
   override def toString = {
-    val rv = valuesIterator.take(8).map(mkValueString).mkString(" ");
+    val rv = valuesIterator.take(10).map(mkValueString).mkString(" ");
     if (size > 10) {
-      rv + " " + "... ("+(size-8) +" more)";
+      rv + " " + "... ("+(size-10) +" more)";
     } else {
       rv;
     }

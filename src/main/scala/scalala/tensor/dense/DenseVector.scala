@@ -21,10 +21,11 @@ package scalala;
 package tensor;
 package dense;
 
-import domain.{IterableDomain,IndexDomain};
 
-import generic.collection.CanTranspose;
 import scalar.Scalar;
+import domain.{IterableDomain,IndexDomain};
+import generic.{CanMul,CanMulColumnBy,CanMulRowBy};
+import generic.collection.{CanSliceCol,CanTranspose};
 
 /**
  * A vector backed by a dense array.
@@ -152,7 +153,7 @@ extends DenseVector[V](data)(scalar) with mutable.VectorRow[V] with mutable.Vect
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
     implicit val mf = implicitly[Scalar[V2]].manifest;
     domain match {
-      case that : IndexDomain => new DenseVectorRow(new Array[V2](size)).asBuilder;
+      case that : IndexDomain => new DenseVectorRow(new Array[V2](that.size)).asBuilder;
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
@@ -165,6 +166,11 @@ object DenseVectorRow extends mutable.VectorRowCompanion[DenseVectorRow] {
     override def apply(row : DenseVectorRow[V]) =
       new DenseVectorCol(row.data)(row.scalar);
   }
+
+  /** Tighten bound on return value. */
+  override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
+  (implicit slice : CanSliceCol[Matrix[V2],Int,Col], mul : CanMulRowBy[DenseVectorRow[V1],Col,RV], scalar : Scalar[RV]) =
+     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[CanMulRowBy[DenseVectorRow[V1],tensor.Matrix[V2],DenseVectorRow[RV]]];
 }
 
 /**
@@ -179,7 +185,7 @@ extends DenseVector[V](data)(scalar) with mutable.VectorCol[V] with mutable.Vect
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
     implicit val mf = implicitly[Scalar[V2]].manifest;
     domain match {
-      case that : IndexDomain => new DenseVectorCol(new Array[V2](size)).asBuilder;
+      case that : IndexDomain => new DenseVectorCol(new Array[V2](that.size)).asBuilder;
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
@@ -192,4 +198,8 @@ object DenseVectorCol extends mutable.VectorColCompanion[DenseVectorCol] {
     override def apply(row : DenseVectorCol[V]) =
       new DenseVectorRow(row.data)(row.scalar);
   }
+
+  /** Tighten bound on super.canMulVectorColByRow to be a DenseMatrix. */
+  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : CanMul[V1,V2,RV], scalar : Scalar[RV])
+  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[CanMulColumnBy[DenseVectorCol[V1],tensor.VectorRow[V2],DenseMatrix[RV]]];
 }

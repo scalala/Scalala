@@ -21,7 +21,10 @@ package scalala;
 package tensor;
 package mutable;
 
+import scalar.Scalar;
+
 import domain._;
+import generic.{CanMul,CanMulColumnBy};
 import generic.collection.CanTranspose;
 
 /**
@@ -56,4 +59,8 @@ object VectorCol extends VectorColCompanion[VectorCol] {
 }
 
 trait VectorColCompanion[Bound[V]<:VectorCol[V]]
-extends tensor.VectorColCompanion[Bound] with VectorCompanion[Bound];
+extends tensor.VectorColCompanion[Bound] with VectorCompanion[Bound] {
+  /** Tighten bound on super.canMulVectorColByRow to be a mutable return value. */
+  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : CanMul[V1,V2,RV], scalar : Scalar[RV])
+  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[CanMulColumnBy[Bound[V1],tensor.VectorRow[V2],Matrix[RV]]];
+}

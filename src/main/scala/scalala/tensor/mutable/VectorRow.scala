@@ -21,8 +21,11 @@ package scalala;
 package tensor;
 package mutable;
 
+import scalar.Scalar;
+
 import domain._;
-import generic.collection.CanTranspose;
+import generic.{CanMulRowBy};
+import generic.collection.{CanTranspose,CanSliceCol};
 
 /**
  * Implementation trait for mutable VectorRow instances.
@@ -56,4 +59,10 @@ object VectorRow extends VectorRowCompanion[VectorRow] {
 }
 
 trait VectorRowCompanion[Bound[V]<:VectorRow[V]]
-extends tensor.VectorRowCompanion[Bound] with VectorCompanion[Bound];
+extends tensor.VectorRowCompanion[Bound] with VectorCompanion[Bound] {
+  /** Tighten bound on return value. */
+  override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
+  (implicit slice : CanSliceCol[tensor.Matrix[V2],Int,Col], mul : CanMulRowBy[Bound[V1],Col,RV], scalar : Scalar[RV])
+  : CanMulRowBy[Bound[V1],tensor.Matrix[V2],VectorRow[RV]] =
+     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[CanMulRowBy[Bound[V1],tensor.Matrix[V2],VectorRow[RV]]];
+}

@@ -21,6 +21,7 @@ package scalala;
 package tensor;
 
 import domain.{DomainException,IndexDomain,TableDomain}
+import generic.{CanMulMatrixBy,CanMulRowBy};
 import generic.collection._;
 import scalar.Scalar;
 
@@ -89,9 +90,15 @@ extends Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
 object Matrix extends MatrixCompanion[Matrix] {
-  implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] =
-  new CanTranspose[Matrix[B], MatrixTranspose[B,Matrix[B]]] {
-    override def apply(from : Matrix[B]) = new MatrixTranspose.Impl[B,Matrix[B]](from);
+  implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B], Matrix[B]] =
+  new CanTranspose[Matrix[B], Matrix[B]] {
+    override def apply(from : Matrix[B]) = {
+      if (from.isInstanceOf[MatrixTranspose[_,_]]) {
+        from.asInstanceOf[MatrixTranspose[_,_]].underlying.asInstanceOf[Matrix[B]]
+      } else {
+        new MatrixTranspose.Impl[B,Matrix[B]](from);
+      }
+    }
   }
 
   implicit def canSliceRow[V:Scalar] : CanSliceRow[Matrix[V],Int,VectorRow[V]]
@@ -104,6 +111,12 @@ object Matrix extends MatrixCompanion[Matrix] {
   = new CanSliceCol[Matrix[V],Int,VectorCol[V]] {
     override def apply(from : Matrix[V], col : Int) =
       new ColSliceImpl[V,Matrix[V]](from, col);
+  }
+
+  implicit def canSliceMatrix[V:Scalar] : CanSliceMatrix[Matrix[V],Int,Int,Matrix[V]]
+  = new CanSliceMatrix[Matrix[V],Int,Int,Matrix[V]] {
+    override def apply(from : Matrix[V], keys1 : Seq[Int], keys2 : Seq[Int]) =
+      new MatrixSliceImpl[V,Matrix[V]](from, keys1, keys2);
   }
 
   trait RowSliceLike[V,+Coll<:Matrix[V],+This<:RowSlice[V,Coll]]
@@ -124,8 +137,8 @@ object Matrix extends MatrixCompanion[Matrix] {
   trait ColSliceLike[V,+Coll<:Matrix[V],+This<:ColSlice[V,Coll]]
   extends VectorSliceLike[(Int,Int),TableDomain,V,Coll,This] with VectorColLike[V,This] {
     def col : Int;
-    override val domain = underlying.domain._2;
-    override def lookup(key : Int) = (col,key);
+    override val domain = underlying.domain._1;
+    override def lookup(key : Int) = (key,col);
   }
 
   trait ColSlice[V,+Coll<:Matrix[V]]
@@ -135,7 +148,76 @@ object Matrix extends MatrixCompanion[Matrix] {
   (override val underlying : Coll, override val col : Int)
   (implicit override val scalar : Scalar[V])
   extends ColSlice[V,Coll];
+
+  trait MatrixSliceLike[@specialized(Int,Long,Float,Double,Boolean) V,
+   +Coll<:Matrix[V], +This<:MatrixSlice[V,Coll]]
+  extends TensorSliceLike[(Int,Int),TableDomain,(Int,Int),TableDomain,V,Coll,This]
+  with MatrixLike[V,This] {
+
+    def lookup1(i : Int) : Int;
+    def lookup2(j : Int) : Int;
+
+    /* final */ override def lookup(tup : (Int,Int)) =
+      (lookup1(tup._1), lookup2(tup._2));
+
+    override def apply(i : Int, j : Int) : V =
+      underlying.apply(lookup1(i), lookup2(j));
+  }
+
+  trait MatrixSlice[@specialized(Int,Long,Float,Double,Boolean) V,
+   +Coll<:Matrix[V]]
+  extends TensorSlice[(Int,Int),(Int,Int),V,Coll]
+  with Matrix[V] with MatrixSliceLike[V,Coll,MatrixSlice[V,Coll]];
+
+  class MatrixSliceImpl[V, +Coll<:Matrix[V]]
+  (override val underlying : Coll, val keys1 : Seq[Int], val keys2 : Seq[Int])
+  (implicit override val scalar : Scalar[V])
+  extends MatrixSlice[V, Coll] {
+    override def lookup1(i : Int) = keys1(i);
+    override def lookup2(j : Int) = keys2(j);
+
+    override val domain = TableDomain(keys1.length, keys2.length);
+  }
 }
 
 trait MatrixCompanion[Bound[V]<:Matrix[V]]
-extends IndexedTensorCompanion[(Int,Int),Bound];
+extends IndexedTensorCompanion[(Int,Int),Bound] {
+  implicit def canMulMatrixByCol[V1,V2,RV]
+  (implicit sr : CanSliceRow[Bound[V1],Int,VectorRow[V1]],
+   mul : CanMulRowBy[VectorRow[V1],VectorCol[V2],RV],
+   scalar : Scalar[RV])
+  : CanMulMatrixBy[Bound[V1], VectorCol[V2], VectorCol[RV]] =
+  new CanMulMatrixBy[Bound[V1], VectorCol[V2], VectorCol[RV]] {
+    override def apply(a : Bound[V1], b : VectorCol[V2]) = {
+      val builder = a.newBuilder[Int,RV](IndexDomain(a.numRows));
+      var i = 0;
+      while (i < a.numRows) {
+        builder(i) = mul(a(i, ::)(sr.asInstanceOf[CanSliceRow[Matrix[V1],Int,VectorRow[V1]]]), b);
+        i += 1;
+      }
+      builder.result.asInstanceOf[VectorCol[RV]];
+    }
+  }
+
+  implicit def canMulMatrixByMatrix[V1,V2,RV]
+  (implicit sr : CanSliceRow[Bound[V1],Int,VectorRow[V1]],
+   sc : CanSliceCol[Matrix[V2],Int,VectorCol[V2]],
+   mul : CanMulRowBy[VectorRow[V1],VectorCol[V2],RV],
+   scalar : Scalar[RV])
+  : CanMulMatrixBy[Bound[V1], Matrix[V2], Matrix[RV]] =
+  new CanMulMatrixBy[Bound[V1], Matrix[V2], Matrix[RV]] {
+    override def apply(a : Bound[V1], b : Matrix[V2]) = {
+      val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows, b.numCols));
+      var i = 0;
+      while (i < a.numRows) {
+        var j = 0;
+        while (j < b.numCols) {
+          builder((i,j)) = mul(a(i, ::)(sr.asInstanceOf[CanSliceRow[Matrix[V1],Int,VectorRow[V1]]]), b(::, j)(sc));
+          j += 1;
+        }
+        i += 1;
+      }
+      builder.result.asInstanceOf[Matrix[RV]];
+    }
+  }
+}
