@@ -60,14 +60,14 @@ trait Random {
     v;
   }
 
-//  /** Returns a random matrix of the given size, each element drawn from 0 to 1 */
-//  def rand(rows : Int, cols : Int)(implicit rand : java.util.Random) : Array[Array[Double]] = {
-//    val m = new DenseMatrix(rows,cols);
-//    for (i <- 0 until rows; j <- 0 until cols) {
-//      m(i,j) = rand.nextDouble;
-//    }
-//    return m;
-//  }
+  /** Returns a random matrix of the given size, each element drawn from 0 to 1 */
+  def rand(rows : Int, cols : Int)(implicit mt : MersenneTwisterFast) : Array[Array[Double]] = mt.synchronized {
+    val m = Array.tabulate(rows)(i => new Array[Double](cols));
+    for (i <- 0 until rows; j <- 0 until cols) {
+      m(i)(j) = mt.nextDouble;
+    }
+    return m;
+  }
 
   /** Returns a pseudo-random gaussian variable. */
   def randn()(implicit mt : MersenneTwisterFast) = mt.synchronized {
@@ -85,14 +85,14 @@ trait Random {
     v;
   }
 
-//  /** Returns a random matrix of the given size, each element drawn from a gaussian */
-//  def randn(rows : Int, cols : Int)(implicit rand : java.util.Random) : Matrix = {
-//    val m = new DenseMatrix(rows,cols);
-//    for (i <- 0 until rows; j <- 0 until cols) {
-//      m(i,j) = rand.nextGaussian;
-//    }
-//    return m;
-//  }
+  /** Returns a random matrix of the given size, each element drawn from a gaussian */
+  def randn(rows : Int, cols : Int)(implicit mt : MersenneTwisterFast) : Array[Array[Double]] = mt.synchronized {
+    val m = Array.tabulate(rows)(i => new Array[Double](cols));
+    for (i <- 0 until rows; j <- 0 until cols) {
+      m(i)(j) = mt.nextGaussian;
+    }
+    return m;
+  }
 
   /** Returns a random integer in the range [0..max). */
   def randi(max : Int)(implicit mt : MersenneTwisterFast) = mt.synchronized {

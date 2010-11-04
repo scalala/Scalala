@@ -25,7 +25,7 @@ import scalar.Scalar;
 
 import domain._;
 import generic.{CanMul,CanMulColumnBy};
-import generic.collection.CanTranspose;
+import generic.collection.{CanTranspose,CanAppendColumns};
 
 /**
  * Implementation trait for mutable VectorCol instances.
@@ -60,7 +60,17 @@ object VectorCol extends VectorColCompanion[VectorCol] {
 
 trait VectorColCompanion[Bound[V]<:VectorCol[V]]
 extends tensor.VectorColCompanion[Bound] with VectorCompanion[Bound] {
-  /** Tighten bound on super.canMulVectorColByRow to be a mutable return value. */
+  /** Tighten bound on super to be a mutable in return value. */
   override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : CanMul[V1,V2,RV], scalar : Scalar[RV])
   = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[CanMulColumnBy[Bound[V1],tensor.VectorRow[V2],Matrix[RV]]];
+
+  /** Tighten bound on return value to be mutable. */
+  override implicit def canAppendMatrixColumns[V]
+  : CanAppendColumns[Bound[V],tensor.Matrix[V],Matrix[V]]
+  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.Matrix[V], Matrix[V]]];
+
+  /** Tighten bound on return value to be mutable. */
+  override implicit def canAppendVectorColumn[V]
+  : CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]
+  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]];
 }

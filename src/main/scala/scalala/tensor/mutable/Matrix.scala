@@ -23,7 +23,7 @@ package mutable;
 
 import domain.{IndexDomain,TableDomain};
 import generic.{CanMulMatrixBy,CanMulRowBy};
-import generic.collection.{CanTranspose,CanSliceRow,CanSliceCol,CanSliceMatrix};
+import generic.collection.{CanTranspose,CanSliceRow,CanSliceCol,CanSliceMatrix,CanAppendColumns};
 import scalar.Scalar;
 
 /**
@@ -159,4 +159,14 @@ extends tensor.MatrixCompanion[Bound] with IndexedTensorCompanion[(Int,Int),Boun
    scalar : Scalar[RV])
   : CanMulMatrixBy[Bound[V1], tensor.Matrix[V2], Matrix[RV]] =
   super.canMulMatrixByMatrix[V1,V2,RV](sr,sc,mul,scalar).asInstanceOf[CanMulMatrixBy[Bound[V1], tensor.Matrix[V2], Matrix[RV]]];
+
+  /** Tighten bound on return value to be mutable. */
+  override implicit def canAppendMatrixColumns[V]
+  : CanAppendColumns[Bound[V],tensor.Matrix[V],Matrix[V]]
+  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.Matrix[V], Matrix[V]]];
+
+  /** Tighten bound on return value to be mutable. */
+  override implicit def canAppendVectorColumn[V]
+  : CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]
+  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]];
 }

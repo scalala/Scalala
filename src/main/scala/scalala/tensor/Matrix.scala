@@ -220,4 +220,30 @@ extends IndexedTensorCompanion[(Int,Int),Bound] {
       builder.result.asInstanceOf[Matrix[RV]];
     }
   }
+
+  implicit def canAppendMatrixColumns[V]
+  : CanAppendColumns[Bound[V],Matrix[V],Matrix[V]]
+  = new CanAppendColumns[Bound[V],Matrix[V],Matrix[V]] {
+    override def apply(a : Bound[V], b : Matrix[V]) = {
+      require(a.numRows == b.numRows, "Arguments must have same number of rows");
+      implicit val sv = a.scalar;
+      val builder = a.newBuilder[(Int,Int),V](TableDomain(a.numRows, a.numCols+b.numCols));
+      a.foreachNonZero((i,j,v) => builder((i,j)) = v);
+      b.foreachNonZero((i,j,v) => builder((i,j+a.numCols)) = v);
+      builder.result.asInstanceOf[Matrix[V]];
+    }
+  }
+
+  implicit def canAppendVectorColumn[V]
+  : CanAppendColumns[Bound[V],VectorCol[V],Matrix[V]]
+  = new CanAppendColumns[Bound[V],VectorCol[V],Matrix[V]] {
+    override def apply(a : Bound[V], b : VectorCol[V]) = {
+      require(a.numRows == b.size, "Arguments must have same number of rows");
+      implicit val sv = a.scalar;
+      val builder = a.newBuilder[(Int,Int),V](TableDomain(a.numRows, a.numCols+1));
+      a.foreachNonZero((i,j,v) => builder((i,j)) = v);
+      b.foreachNonZero((i,v) => builder((i,a.numCols)) = v);
+      builder.result.asInstanceOf[Matrix[V]];
+    }
+  }
 }

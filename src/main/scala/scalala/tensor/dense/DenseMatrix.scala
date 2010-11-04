@@ -21,6 +21,7 @@ package scalala;
 package tensor;
 package dense;
 
+import generic.{CanMulMatrixBy,CanMulRowBy};
 import generic.{CanSolveMatrix,MatrixSingularException};
 import generic.collection._;
 
@@ -249,6 +250,33 @@ object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrix
       new DenseVectorCol[Double](rv.data);
     }
   }
+
+  /** Tighten bound on return value to be dense. */
+  override implicit def canMulMatrixByCol[V1,V2,RV]
+  (implicit sr : CanSliceRow[DenseMatrix[V1],Int,tensor.VectorRow[V1]],
+   mul : CanMulRowBy[tensor.VectorRow[V1],tensor.VectorCol[V2],RV],
+   scalar : Scalar[RV])
+  : CanMulMatrixBy[DenseMatrix[V1], tensor.VectorCol[V2], DenseVectorCol[RV]] =
+  super.canMulMatrixByCol[V1,V2,RV](sr,mul,scalar).asInstanceOf[CanMulMatrixBy[DenseMatrix[V1], tensor.VectorCol[V2], DenseVectorCol[RV]]];
+
+  /** Tighten bound on return value to be dense. */
+  override implicit def canMulMatrixByMatrix[V1,V2,RV]
+  (implicit sr : CanSliceRow[DenseMatrix[V1],Int,tensor.VectorRow[V1]],
+   sc : CanSliceCol[tensor.Matrix[V2],Int,tensor.VectorCol[V2]],
+   mul : CanMulRowBy[tensor.VectorRow[V1],tensor.VectorCol[V2],RV],
+   scalar : Scalar[RV])
+  : CanMulMatrixBy[DenseMatrix[V1], tensor.Matrix[V2], DenseMatrix[RV]] =
+  super.canMulMatrixByMatrix[V1,V2,RV](sr,sc,mul,scalar).asInstanceOf[CanMulMatrixBy[DenseMatrix[V1], tensor.Matrix[V2], DenseMatrix[RV]]];
+
+  /** Tighten bound on return value to be dense. */
+  override implicit def canAppendMatrixColumns[V]
+  : CanAppendColumns[DenseMatrix[V],tensor.Matrix[V],DenseMatrix[V]]
+  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[DenseMatrix[V],tensor.Matrix[V], DenseMatrix[V]]];
+
+  /** Tighten bound on return value to be dense. */
+  override implicit def canAppendVectorColumn[V]
+  : CanAppendColumns[DenseMatrix[V],tensor.VectorCol[V],DenseMatrix[V]]
+  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[DenseMatrix[V],tensor.VectorCol[V],DenseMatrix[V]]];
 }
 
 /**
@@ -262,7 +290,7 @@ trait DenseMatrixConstructors {
     zeros[V](domain._1.size, domain._2.size);
 
   /** Static constructor for a literal matrix. */
-  def apply[R,V](rows : R*)(implicit rl : RowLiteral[R,V], scalar : Scalar[V]) = {
+  def apply[R,V](rows : R*)(implicit rl : LiteralRow[R,V], scalar : Scalar[V]) = {
     val nRows = rows.length;
     val nCols = rl.length(rows(0));
     val rv = zeros(nRows, nCols);

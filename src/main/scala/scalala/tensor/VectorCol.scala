@@ -24,7 +24,7 @@ import scalar.Scalar;
 
 import domain._;
 import generic.{CanAdd,CanMul,CanMulColumnBy};
-import generic.collection.{CanTranspose};
+import generic.collection.{CanTranspose,CanAppendColumns};
 
 /**
  * Implementation trait for a row vector.
@@ -65,6 +65,32 @@ trait VectorColCompanion[Bound[V]<:VectorCol[V]] extends VectorCompanion[Bound] 
       val builder = a.newBuilder(TableDomain(a.domain.size, b.domain.size));
       a.foreachNonZero((i,va) => b.foreachNonZero((j,vb) => builder((i,j)) = mul(va,vb)));
       builder.result.asInstanceOf[Matrix[RV]];
+    }
+  }
+
+  implicit def canAppendMatrixColumns[V]
+  : CanAppendColumns[Bound[V],Matrix[V],Matrix[V]]
+  = new CanAppendColumns[Bound[V],Matrix[V],Matrix[V]] {
+    override def apply(a : Bound[V], b : Matrix[V]) = {
+      require(a.size == b.numRows, "Arguments must have same number of rows");
+      implicit val sv = a.scalar;
+      val builder = a.newBuilder[(Int,Int),V](TableDomain(a.size, 1+b.numCols));
+      a.foreachNonZero((i,v) => builder((i,0)) = v);
+      b.foreachNonZero((i,j,v) => builder((i,j+1)) = v);
+      builder.result.asInstanceOf[Matrix[V]];
+    }
+  }
+
+  implicit def canAppendVectorColumn[V]
+  : CanAppendColumns[Bound[V],VectorCol[V],Matrix[V]]
+  = new CanAppendColumns[Bound[V],VectorCol[V],Matrix[V]] {
+    override def apply(a : Bound[V], b : VectorCol[V]) = {
+      require(a.size == b.size, "Arguments must have same number of rows");
+      implicit val sv = a.scalar;
+      val builder = a.newBuilder[(Int,Int),V](TableDomain(a.size, 2));
+      a.foreachNonZero((i,v) => builder((i,0)) = v);
+      b.foreachNonZero((i,v) => builder((i,1)) = v);
+      builder.result.asInstanceOf[Matrix[V]];
     }
   }
 }

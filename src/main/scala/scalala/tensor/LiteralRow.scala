@@ -25,13 +25,13 @@ package tensor;
  *
  * @author dramage
  */
-trait RowLiteral[-R, @specialized V] {
+trait LiteralRow[-R, @specialized V] {
   def foreach[X](row : R, fn : ((Int,V) => X));
   def length(row : R) : Int;
 }
 
-object RowLiteral {
-  implicit def array[V] : RowLiteral[Array[V],V] = new RowLiteral[Array[V],V] {
+object LiteralRow {
+  implicit def array[V] : LiteralRow[Array[V],V] = new LiteralRow[Array[V],V] {
     def foreach[X](arr : Array[V], fn : ((Int,V) => X)) = {
       for (i <- 0 until arr.length) {
         fn(i, arr(i));
@@ -41,7 +41,7 @@ object RowLiteral {
     def length(arr : Array[V]) = arr.length;
   }
 
-  implicit def row[V] : RowLiteral[VectorRow[V],V] = new RowLiteral[VectorRow[V],V] {
+  implicit def row[V] : LiteralRow[VectorRow[V],V] = new LiteralRow[VectorRow[V],V] {
     def foreach[X](row : VectorRow[V], fn : ((Int,V) => X)) = {
       row.foreachNonZero(fn);
     }
@@ -49,7 +49,7 @@ object RowLiteral {
     def length(row : VectorRow[V]) = row.size;
   }
 
-  implicit def tuple2[V] : RowLiteral[Tuple2[V,V],V] = new RowLiteral[Tuple2[V,V],V] {
+  implicit def tuple2[V] : LiteralRow[Tuple2[V,V],V] = new LiteralRow[Tuple2[V,V],V] {
     def foreach[X](tup : Tuple2[V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -59,7 +59,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple3[V] : RowLiteral[Tuple3[V,V,V],V] = new RowLiteral[Tuple3[V,V,V],V] {
+  implicit def tuple3[V] : LiteralRow[Tuple3[V,V,V],V] = new LiteralRow[Tuple3[V,V,V],V] {
     def foreach[X](tup : Tuple3[V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -70,7 +70,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple4[V] : RowLiteral[Tuple4[V,V,V,V],V] = new RowLiteral[Tuple4[V,V,V,V],V] {
+  implicit def tuple4[V] : LiteralRow[Tuple4[V,V,V,V],V] = new LiteralRow[Tuple4[V,V,V,V],V] {
     def foreach[X](tup : Tuple4[V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -82,7 +82,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple5[V] : RowLiteral[Tuple5[V,V,V,V,V],V] = new RowLiteral[Tuple5[V,V,V,V,V],V] {
+  implicit def tuple5[V] : LiteralRow[Tuple5[V,V,V,V,V],V] = new LiteralRow[Tuple5[V,V,V,V,V],V] {
     def foreach[X](tup : Tuple5[V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -95,7 +95,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple6[V] : RowLiteral[Tuple6[V,V,V,V,V,V],V] = new RowLiteral[Tuple6[V,V,V,V,V,V],V] {
+  implicit def tuple6[V] : LiteralRow[Tuple6[V,V,V,V,V,V],V] = new LiteralRow[Tuple6[V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple6[V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -109,7 +109,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple7[V] : RowLiteral[Tuple7[V,V,V,V,V,V,V],V] = new RowLiteral[Tuple7[V,V,V,V,V,V,V],V] {
+  implicit def tuple7[V] : LiteralRow[Tuple7[V,V,V,V,V,V,V],V] = new LiteralRow[Tuple7[V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple7[V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -124,7 +124,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple8[V] : RowLiteral[Tuple8[V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple8[V,V,V,V,V,V,V,V],V] {
+  implicit def tuple8[V] : LiteralRow[Tuple8[V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple8[V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple8[V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -140,7 +140,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple9[V] : RowLiteral[Tuple9[V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple9[V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple9[V] : LiteralRow[Tuple9[V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple9[V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple9[V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -157,7 +157,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple10[V] : RowLiteral[Tuple10[V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple10[V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple10[V] : LiteralRow[Tuple10[V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple10[V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple10[V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -175,7 +175,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple11[V] : RowLiteral[Tuple11[V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple11[V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple11[V] : LiteralRow[Tuple11[V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple11[V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple11[V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -194,7 +194,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple12[V] : RowLiteral[Tuple12[V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple12[V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple12[V] : LiteralRow[Tuple12[V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple12[V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple12[V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -214,7 +214,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple13[V] : RowLiteral[Tuple13[V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple13[V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple13[V] : LiteralRow[Tuple13[V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple13[V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple13[V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -235,7 +235,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple14[V] : RowLiteral[Tuple14[V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple14[V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple14[V] : LiteralRow[Tuple14[V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple14[V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple14[V,V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -257,7 +257,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple15[V] : RowLiteral[Tuple15[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple15[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple15[V] : LiteralRow[Tuple15[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple15[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple15[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -280,7 +280,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple16[V] : RowLiteral[Tuple16[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple16[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple16[V] : LiteralRow[Tuple16[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple16[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple16[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -304,7 +304,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple17[V] : RowLiteral[Tuple17[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple17[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple17[V] : LiteralRow[Tuple17[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple17[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple17[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -329,7 +329,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple18[V] : RowLiteral[Tuple18[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple18[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple18[V] : LiteralRow[Tuple18[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple18[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple18[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -355,7 +355,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple19[V] : RowLiteral[Tuple19[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple19[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple19[V] : LiteralRow[Tuple19[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple19[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple19[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -382,7 +382,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple20[V] : RowLiteral[Tuple20[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple20[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple20[V] : LiteralRow[Tuple20[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple20[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple20[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -410,7 +410,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple21[V] : RowLiteral[Tuple21[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple21[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple21[V] : LiteralRow[Tuple21[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple21[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple21[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);
@@ -439,7 +439,7 @@ object RowLiteral {
   }
 
 
-  implicit def tuple22[V] : RowLiteral[Tuple22[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new RowLiteral[Tuple22[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
+  implicit def tuple22[V] : LiteralRow[Tuple22[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] = new LiteralRow[Tuple22[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V],V] {
     def foreach[X](tup : Tuple22[V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V,V], fn : ((Int,V) => X)) = {
       fn(0, tup._1);
       fn(1, tup._2);

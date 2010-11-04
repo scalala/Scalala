@@ -22,7 +22,7 @@ package scalala;
 package operators;
 
 import generic._;
-import generic.collection.CanTranspose;
+import generic.collection.{CanTranspose,CanAppendColumns};
 
 import scalala.scalar.Scalar;
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
@@ -143,6 +143,9 @@ trait ColOps[+This] extends NumericOps[This] {
   def *[TT>:This,B,That](b : B)(implicit op : CanMulColumnBy[TT,B,That]) : That =
     op(repr, b);
 
+  def |[TT>:This,B,That](b : B)(implicit op : CanAppendColumns[TT,B,That]) =
+    op.apply(repr,b);
+
   def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
 }
@@ -170,6 +173,9 @@ trait MatrixOps[+This] extends NumericOps[This] {
     op.apply(repr,b);
 
   def \[TT>:This,B,That](b : B)(implicit op : CanSolveMatrix[TT,B,That]) =
+    op.apply(repr,b);
+
+  def |[TT>:This,B,That](b : B)(implicit op : CanAppendColumns[TT,B,That]) =
     op.apply(repr,b);
 
   def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =

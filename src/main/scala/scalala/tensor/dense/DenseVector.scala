@@ -25,7 +25,7 @@ package dense;
 import scalar.Scalar;
 import domain.{IterableDomain,IndexDomain};
 import generic.{CanMul,CanMulColumnBy,CanMulRowBy};
-import generic.collection.{CanSliceCol,CanTranspose};
+import generic.collection.{CanSliceCol,CanTranspose,CanAppendColumns};
 
 import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
@@ -188,7 +188,7 @@ object DenseVectorRow extends mutable.VectorRowCompanion[DenseVectorRow] {
       new DenseVectorCol(row.data)(row.scalar);
   }
 
-  /** Tighten bound on return value. */
+  /** Tighten bound on super to be a dense in return value. */
   override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
   (implicit slice : CanSliceCol[Matrix[V2],Int,Col], mul : CanMulRowBy[DenseVectorRow[V1],Col,RV], scalar : Scalar[RV]) =
      super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[CanMulRowBy[DenseVectorRow[V1],tensor.Matrix[V2],DenseVectorRow[RV]]];
@@ -220,7 +220,17 @@ object DenseVectorCol extends mutable.VectorColCompanion[DenseVectorCol] {
       new DenseVectorRow(row.data)(row.scalar);
   }
 
-  /** Tighten bound on super.canMulVectorColByRow to be a DenseMatrix. */
+  /** Tighten bound on super to be a dense in return value. */
   override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : CanMul[V1,V2,RV], scalar : Scalar[RV])
   = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[CanMulColumnBy[DenseVectorCol[V1],tensor.VectorRow[V2],DenseMatrix[RV]]];
+
+  /** Tighten bound on super to be a dense in return value. */
+  override implicit def canAppendMatrixColumns[V]
+  : CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V],DenseMatrix[V]]
+  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V], DenseMatrix[V]]];
+
+  /** Tighten bound on super to be a dense in return value. */
+  override implicit def canAppendVectorColumn[V]
+  : CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]
+  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]];
 }
