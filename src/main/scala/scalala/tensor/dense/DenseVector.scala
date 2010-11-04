@@ -27,6 +27,9 @@ import domain.{IterableDomain,IndexDomain};
 import generic.{CanMul,CanMulColumnBy,CanMulRowBy};
 import generic.collection.{CanSliceCol,CanTranspose};
 
+import scalala.library.random.MersenneTwisterFast;
+import scalala.library.Random;
+
 /**
  * A vector backed by a dense array.
  *
@@ -138,6 +141,24 @@ trait DenseVectorConstructors {
   def tabulate[V:Scalar](size : Int)(f : (Int => V)) = {
     implicit val mf = implicitly[Scalar[V]].manifest;
     new DenseVectorCol(Array.tabulate(size)(f));
+  }
+
+  /** A vector of the given size with uniform random values between 0 and 1. */
+  def rand(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(size)(i => mt.nextDouble);
+  }
+
+  /**
+   * A vector of the given size with normally distributed random values
+   * with mean 0 and standard deviation 1.
+   */
+  def randn(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(size)(i => mt.nextGaussian);
+  }
+
+  /** A vector of the given size of random integers in the range [0..max). */
+  def randi(imax : Int, size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(size)(i => mt.nextInt(imax));
   }
 }
 

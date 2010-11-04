@@ -27,6 +27,9 @@ import generic.collection._;
 import domain.TableDomain;
 import scalar.Scalar;
 
+import scalala.library.random.MersenneTwisterFast;
+import scalala.library.Random;
+
 import org.netlib.lapack._;
 import org.netlib.util.intW;
 
@@ -296,5 +299,23 @@ trait DenseMatrixConstructors {
   def tabulate[V:Scalar](rows : Int, cols : Int)(fn : (Int, Int) => V) = {
     implicit val mf = implicitly[Scalar[V]].manifest;
     new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => fn(i % rows, i / rows)));
+  }
+
+  /** A vector of the given size with uniform random values between 0 and 1. */
+  def rand(rows : Int, cols : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(rows, cols)((i,j) => mt.nextDouble);
+  }
+
+  /**
+   * A vector of the given size with normally distributed random values
+   * with mean 0 and standard deviation 1.
+   */
+  def randn(rows : Int, cols : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(rows, cols)((i,j) => mt.nextGaussian);
+  }
+
+  /** A vector of the given size of random integers in the range [0..max). */
+  def randi(imax : Int, rows : Int, cols : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(rows, cols)((i,j) => mt.nextInt(imax));
   }
 }
