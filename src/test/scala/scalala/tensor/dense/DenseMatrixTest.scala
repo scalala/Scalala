@@ -98,4 +98,25 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(a * b === DenseMatrix((37, -8, 25), (85, -23, 67)));
     assert(a * c === DenseVector(19,52));
   }
+
+  test("Solving") {
+    // square solve
+    val r1 : DenseMatrix[Double] = DenseMatrix((1.0,3.0),(2.0,0.0)) \ DenseMatrix((1.0,2.0),(3.0,4.0));
+    assert(r1 === DenseMatrix((1.5, 2.0), (-1.0/6, 0.0)));
+
+    // matrix-vector solve
+    val r2 : DenseVector[Double] = DenseMatrix((1.0,3.0,4.0),(2.0,0.0,6.0)) \ DenseVector(1.0,3.0);
+    assert(r2 === DenseVector(0.1813186813186811, -0.3131868131868131, 0.43956043956043944));
+
+    // wide matrix solve
+    val r3 : DenseMatrix[Double] = DenseMatrix((1.0,3.0,4.0),(2.0,0.0,6.0)) \ DenseMatrix((1.0,2.0),(3.0,4.0));
+    assert(r3 === DenseMatrix((0.1813186813186811,   0.2197802197802196),
+                              (-0.3131868131868131, -0.1978021978021977),
+                              (0.43956043956043944,  0.5934065934065933)));
+
+    // tall matrix solve
+    val r4 : DenseMatrix[Double] = DenseMatrix((1.0,3.0),(2.0,0.0),(4.0,6.0)) \ DenseMatrix((1.0,4.0),(2.0,5.0),(3.0,6.0));
+    assert(r4 === DenseMatrix((0.9166666666666667,    1.9166666666666672),
+                             (-0.08333333333333352, -0.08333333333333436)));
+  }
 }

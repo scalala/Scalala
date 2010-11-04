@@ -169,6 +169,9 @@ trait MatrixOps[+This] extends NumericOps[This] {
   def *[TT>:This,B,That](b : B)(implicit op : CanMulMatrixBy[TT,B,That]) =
     op.apply(repr,b);
 
+  def \[TT>:This,B,That](b : B)(implicit op : CanSolveMatrix[TT,B,That]) =
+    op.apply(repr,b);
+
   def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
 }

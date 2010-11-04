@@ -84,6 +84,16 @@
       <version>${scala.version}</version>
     </dependency>
 
+    <dependency> <!-- blas / lapack -->
+      <groupId>netlib</groupId>
+      <artifactId>netlib-java</artifactId>
+      <version>0.9.2</version>
+    </dependency>
+    <dependency> <!-- blas / lapack -->
+      <groupId>netlib</groupId>
+      <artifactId>arpack-combo</artifactId>
+      <version>0.1</version>
+    </dependency>
     <dependency> <!-- plotting -->
       <groupId>jfree</groupId>
       <artifactId>jcommon</artifactId>

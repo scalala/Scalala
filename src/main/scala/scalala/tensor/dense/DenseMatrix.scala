@@ -21,10 +21,14 @@ package scalala;
 package tensor;
 package dense;
 
+import generic.{CanSolveMatrix,MatrixSingularException};
 import generic.collection._;
 
 import domain.TableDomain;
 import scalar.Scalar;
+
+import org.netlib.lapack._;
+import org.netlib.util.intW;
 
 /**
  * A DenseMatrix is backed by an array of doubles, with each column
@@ -86,6 +90,11 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
       i += 1;
     }
   }
+
+  def copy =
+    new DenseMatrix[B](numRows, numCols, data.clone);
+
+
 }
 
 object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrixConstructors {
@@ -135,6 +144,108 @@ object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrix
   implicit object DenseMatrixCanMapValuesDD extends DenseMatrixCanMapValues[Double,Double];
   implicit object DenseMatrixCanMapValuesII extends DenseMatrixCanMapValues[Int,Int];
   implicit object DenseMatrixCanMapValuesID extends DenseMatrixCanMapValues[Int,Double];
+
+  implicit object DenseMatrixCanSolveDenseMatrix
+  extends CanSolveMatrix[DenseMatrix[Double],DenseMatrix[Double],DenseMatrix[Double]] {
+    override def apply(A : DenseMatrix[Double], B : DenseMatrix[Double]) = {
+      require(A.numRows == B.numRows,
+              "Non-conformant matrix sizes");
+
+      // from MTJ 0.9.9
+      if (A.numRows == A.numCols) {
+        // square: LUSolve
+        val X = B.copy;
+        LUSolve(X,A);
+        X;
+      } else {
+        // non-square: QRSolve
+        val X = DenseMatrix.zeros[Double](A.numCols, B.numCols);
+        QRSolve(X,A,B,false);
+        X;
+      }
+    }
+
+    /** X := A \ X */
+    def LUSolve(X : DenseMatrix[Double], A : DenseMatrix[Double]) = {
+      val piv = new Array[Int](A.numRows);
+
+      val info = new intW(0);
+      LAPACK.getInstance().dgesv(
+        A.numRows, X.numCols,
+        A.data.clone(), math.max(1, A.numRows),
+        piv,
+        X.data, math.max(1, A.numRows), info);
+
+      if (info.`val` > 0)
+        throw new MatrixSingularException();
+      else if (info.`val` < 0)
+        throw new IllegalArgumentException();
+
+      X;
+    }
+
+    /** X := A \ B */
+    def QRSolve(X : DenseMatrix[Double], A : DenseMatrix[Double], B : DenseMatrix[Double], transpose : Boolean) = {
+      require(X.numRows == A.numCols, "Wrong number of rows in return value");
+      require(X.numCols == B.numCols, "Wrong number of rows in return value");
+
+      val nrhs = B.numCols;
+      
+      // allocate temporary solution matrix
+      val Xtmp = DenseMatrix.zeros[Double](math.max(A.numRows, A.numCols), nrhs);
+      val M = if (!transpose) A.numRows else A.numCols;
+      for (j <- 0 until nrhs; i <- 0 until M) { Xtmp(i,j) = B(i,j); }
+
+      val newData = A.data.clone();
+
+      // query optimal workspace
+      val queryWork = new Array[Double](1);
+      val queryInfo = new intW(0);
+      LAPACK.getInstance().dgels(
+        if (!transpose) "N" else "T",
+        A.numRows, A.numCols, nrhs,
+        newData, math.max(1,A.numRows),
+        Xtmp.data, math.max(1,math.max(A.numRows,A.numCols)),
+        queryWork, -1, queryInfo);
+
+      // allocate workspace
+      val work = {
+        val lwork = {
+          if (queryInfo.`val` != 0)
+            math.max(1, math.min(A.numRows, A.numCols) + math.max(math.min(A.numRows, A.numCols), nrhs));
+          else
+            math.max(queryWork(0).toInt, 1);
+        }
+        new Array[Double](lwork);
+      }
+
+      // compute factorization
+      val info = new intW(0);
+      LAPACK.getInstance().dgels(
+        if (!transpose) "N" else "T",
+        A.numRows, A.numCols, nrhs,
+        newData, math.max(1,A.numRows),
+        Xtmp.data, math.max(1,math.max(A.numRows,A.numCols)),
+        work, work.length, info);
+
+      if (info.`val` < 0)
+        throw new IllegalArgumentException;
+
+      // extract solution
+      val N = if (!transpose) A.numCols else A.numRows;
+      for (j <- 0 until nrhs; i <- 0 until N) X(i,j) = Xtmp(i,j);
+
+      X;
+    }
+  }
+
+  implicit object DenseMatrixCanSolveDenseVector
+  extends CanSolveMatrix[DenseMatrix[Double],DenseVectorCol[Double],DenseVectorCol[Double]] {
+    override def apply(a : DenseMatrix[Double], b : DenseVectorCol[Double]) = {
+      val rv = a \ new DenseMatrix[Double](b.size, 1, b.data);
+      new DenseVectorCol[Double](rv.data);
+    }
+  }
 }
 
 /**
