@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 
 import domain.{DomainException,IndexDomain,TableDomain}
-import generic.{CanMulMatrixBy,CanMulRowBy};
+import generic.{CanAdd,CanMulMatrixBy,CanMulRowBy};
 import generic.collection._;
 import scalar.Scalar;
 
@@ -43,6 +43,18 @@ self =>
   override def checkKey(row : Int, col : Int) {
     if (row < 0 || row >= numRows || col < 0 || col >= numCols)
       throw new DomainException("Index "+(row,col)+" out of range.  Size is "+numRows+"x"+numCols);
+  }
+
+  /** Returns the sum of the diagonal elements of this matrix. */
+  def trace(implicit add : CanAdd[B,B,B]) = {
+    var rv = this(0,0);
+    var i = 1;
+    var n = math.min(numRows, numCols);
+    while (i < n) {
+      rv = add(rv, this(i,i));
+      i += 1;
+    }
+    rv;
   }
 
   protected[this] def mkValueString(value : B) : String =

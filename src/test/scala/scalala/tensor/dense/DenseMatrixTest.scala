@@ -99,7 +99,22 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(a * c === DenseVector(19,52));
   }
 
-  test("Solving") {
+  test("Trace") {
+    assert(DenseMatrix((1,2,3),(4,5,6)).trace === 1 + 5);
+    assert(DenseMatrix((1,2),(3,4),(5,6)).trace == 1 + 4);
+    assert(DenseMatrix((1,2,3),(4,5,6),(7,8,9)).trace === 1 + 5 + 9);
+  }
+
+  test("Reshape") {
+    val m = DenseMatrix((1,2,3),(4,5,6));
+    val r = m.reshape(3,2);
+    assert(m.data eq r.data);
+    assert(r.numRows === 3);
+    assert(r.numCols === 2);
+    assert(r === DenseMatrix((1,2),(3,4),(5,6)));
+  }
+
+  test("Solve") {
     // square solve
     val r1 : DenseMatrix[Double] = DenseMatrix((1.0,3.0),(2.0,0.0)) \ DenseMatrix((1.0,2.0),(3.0,4.0));
     assert(r1 === DenseMatrix((1.5, 2.0), (-1.0/6, 0.0)));

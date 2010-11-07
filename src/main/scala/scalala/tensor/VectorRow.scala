@@ -61,8 +61,8 @@ object VectorRow extends VectorRowCompanion[VectorRow] {
       new VectorCol.View[V](row);
   }
 
-  class View[V](override val inner : VectorCol[V])
-  extends VectorProxy[V,VectorCol[V]] with VectorRow[V]
+  class View[V](override val inner : Vector[V])
+  extends VectorProxy[V,Vector[V]] with VectorRow[V]
   with VectorLike[V,View[V]] {
     override def repr : View[V] = this;
   }

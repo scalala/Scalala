@@ -48,7 +48,19 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
   if (numRows * numCols != data.length)
     throw new IllegalArgumentException("data.length must equal numRows*numCols");
 
-  override val domain = TableDomain(numRows, numCols);
+  override def domain = TableDomain(numRows, numCols);
+
+  /**
+   * Returns a view of this data matrix but with the given number of rows and columns.
+   * 
+   * @throws IllegalArgumentException if the requested size does not match the current size.
+   */
+  def reshape(rows : Int, cols : Int) : DenseMatrix[B] = {
+    if (rows * cols != data.length) {
+      throw new IllegalArgumentException("Cannot reshape "+numRows+"x"+numCols+" to "+rows+"x"+cols);
+    }
+    new DenseMatrix(rows, cols, data);
+  }
 
   final def index(row : Int, col : Int) : Int = {
     checkKey(row,col);
@@ -97,8 +109,6 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
 
   def copy =
     new DenseMatrix[B](numRows, numCols, data.clone);
-
-
 }
 
 object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrixConstructors {

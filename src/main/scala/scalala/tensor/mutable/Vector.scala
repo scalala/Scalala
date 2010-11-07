@@ -32,6 +32,18 @@ import generic.collection._;
 trait VectorLike[@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:Vector[B]]
 extends tensor.VectorLike[B,Repr] with Tensor1Like[Int,B,IndexDomain,Repr] {
 
+  /** Returns a view of this vector as a row. Tightens bound superclass's return value. */
+  override def asRow : VectorRow[B] = this match {
+    case r : VectorRow[_] => this.asInstanceOf[VectorRow[B]];
+    case _ => new VectorRow.View(repr);
+  }
+
+  /** Returns a view of this vector as a column. Tightens bound superclass's return value.  */
+  override def asCol : VectorCol[B] = this match {
+    case c : VectorCol[_] => this.asInstanceOf[VectorCol[B]];
+    case _ => new VectorCol.View(repr);
+  }
+
   def := (seq : Seq[B]) = {
     checkDomain(IndexDomain(seq.length));
 

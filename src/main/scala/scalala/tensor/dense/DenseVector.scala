@@ -43,7 +43,7 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
 
   override def size = data.length;
 
-  override val domain = IndexDomain(data.length);
+  override def domain = IndexDomain(data.length);
 
   override def apply(key : Int) =
     data(key);
@@ -79,6 +79,18 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
       i += 1;
     }
   }
+
+  /** Returns a view of this vector as a row. Tightens bound superclass's return value. */
+  override def asRow : DenseVectorRow[V] = this match {
+    case r : DenseVectorRow[_] => this.asInstanceOf[DenseVectorRow[V]];
+    case _ => new DenseVectorRow(this.data);
+  }
+
+  /** Returns a view of this vector as a column. Tightens bound superclass's return value.  */
+  override def asCol : DenseVectorCol[V] = this match {
+    case c : DenseVectorCol[_] => this.asInstanceOf[DenseVectorCol[V]];
+    case _ => new DenseVectorCol(this.data);
+  }
 }
 
 object DenseVector extends mutable.VectorCompanion[DenseVector] with DenseVectorConstructors {
@@ -112,55 +124,7 @@ object DenseVector extends mutable.VectorCompanion[DenseVector] with DenseVector
  *
  * @author dramage
  */
-trait DenseVectorConstructors {
-  /** Constructs a DenseVector for the given IndexDomain. */
-  def apply[S:Scalar](domain : IndexDomain) =
-    zeros(domain.size);
-
-  /** Constructs a literal DenseVector. */
-  def apply[V:Scalar](values : V*) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(values.toArray);
-  }
-
-  /** Dense vector containing the given value for all elements. */
-  def fill[V:Scalar](size : Int)(value : V) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(Array.fill(size)(value));
-  }
-
-  /** Dense vector of zeros of the given size. */
-  def zeros[V:Scalar](size : Int) =
-    fill(size)(implicitly[Scalar[V]].zero);
-
-  /** Dense vector of ones of the given size. */
-  def ones[V:Scalar](size : Int) =
-    fill(size)(implicitly[Scalar[V]].one);
-
-  /** Tabulate a vector with the value at each offset given by the function. */
-  def tabulate[V:Scalar](size : Int)(f : (Int => V)) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(Array.tabulate(size)(f));
-  }
-
-  /** A vector of the given size with uniform random values between 0 and 1. */
-  def rand(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
-    tabulate(size)(i => mt.nextDouble);
-  }
-
-  /**
-   * A vector of the given size with normally distributed random values
-   * with mean 0 and standard deviation 1.
-   */
-  def randn(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
-    tabulate(size)(i => mt.nextGaussian);
-  }
-
-  /** A vector of the given size of random integers in the range [0..max). */
-  def randi(imax : Int, size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
-    tabulate(size)(i => mt.nextInt(imax));
-  }
-}
+trait DenseVectorConstructors extends DenseVectorColConstructors;
 
 /**
  * DenseVectors as a row.
@@ -212,7 +176,7 @@ extends DenseVector[V](data)(scalar) with mutable.VectorCol[V] with mutable.Vect
   }
 }
 
-object DenseVectorCol extends mutable.VectorColCompanion[DenseVectorCol] {
+object DenseVectorCol extends mutable.VectorColCompanion[DenseVectorCol] with DenseVectorColConstructors {
   /** Transpose shares the same data. */
   implicit def canTranspose[V] : CanTranspose[DenseVectorCol[V],DenseVectorRow[V]]
   = new CanTranspose[DenseVectorCol[V],DenseVectorRow[V]] {
@@ -233,4 +197,61 @@ object DenseVectorCol extends mutable.VectorColCompanion[DenseVectorCol] {
   override implicit def canAppendVectorColumn[V]
   : CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]
   = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]];
+}
+
+trait DenseVectorColConstructors {
+  /** Constructs a DenseVector for the given IndexDomain. */
+  def apply[S:Scalar](domain : IndexDomain) =
+    zeros(domain.size);
+
+  /** Constructs a literal DenseVector. */
+  def apply[V:Scalar](values : V*) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(values.toArray);
+  }
+
+  /** Dense vector containing the given value for all elements. */
+  def fill[V:Scalar](size : Int)(value : V) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(Array.fill(size)(value));
+  }
+
+  /** Dense vector of zeros of the given size. */
+  def zeros[V:Scalar](size : Int) =
+    fill(size)(implicitly[Scalar[V]].zero);
+
+  /** Dense vector of ones of the given size. */
+  def ones[V:Scalar](size : Int) =
+    fill(size)(implicitly[Scalar[V]].one);
+
+  /** Tabulate a vector with the value at each offset given by the function. */
+  def tabulate[V:Scalar](size : Int)(f : (Int => V)) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(Array.tabulate(size)(f));
+  }
+
+  /**
+   * Returns a vector with numbers from 'from' up to (but not including)
+   * 'until' incrementing by 'by' at each step.
+   */
+  def range(from : Int, until : Int, by : Int = 1) =
+    new DenseVectorCol[Int](Array.range(from, until, by));
+
+  /** A vector of the given size with uniform random values between 0 and 1. */
+  def rand(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(size)(i => mt.nextDouble);
+  }
+
+  /**
+   * A vector of the given size with normally distributed random values
+   * with mean 0 and standard deviation 1.
+   */
+  def randn(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(size)(i => mt.nextGaussian);
+  }
+
+  /** A vector of the given size of random integers in the range [0..max). */
+  def randi(imax : Int, size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(size)(i => mt.nextInt(imax));
+  }
 }
