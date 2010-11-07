@@ -112,7 +112,9 @@ trait Random {
 }
 
 /**
- * Random number generation.
+ * Random number generation.  The seed for the global random number generator
+ * can be set with the system property during Java invocation, e.g. by
+ * -Dscalala.library.random.seed=1l
  *
  * @author dramage
  */
