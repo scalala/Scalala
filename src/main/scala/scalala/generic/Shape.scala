@@ -17,32 +17,37 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
+
 package scalala;
+package generic;
 
 /**
- * Defines i.
+ * Marker trait for the shape of an argument.
  *
  * @author dramage
  */
-package object scalar {
-  val i = Complex.i;
+trait Shape[V,S];
 
-  class RichScalar(value : Double) {
-    def + (c : Complex) : Complex = Complex(value,0) + c;
-    def - (c : Complex) : Complex = Complex(value,0) - c;
-    def * (c : Complex) : Complex = Complex(value,0) * c;
-    def / (c : Complex) : Complex = Complex(value,0) / c;
-  }
+trait LowPriorityShapeImplicits {
+  /** The shape of any scalar is Unit. */
+  @inline implicit def any[S]
+  : Shape[S,Unit] = null;
+}
 
-  implicit def richInt(value : Int) =
-    new RichScalar(value);
+object Shape extends LowPriorityShapeImplicits {
 
-  implicit def richLong(value : Long) =
-    new RichScalar(value);
+  /** Returns a string representation of the shape for the given value. */
+  def shapeOf[V,VS](value : V)(implicit shape : Shape[V,VS], mf : Manifest[VS]) =
+    mf.toString;
 
-  implicit def richFloat(value : Float) =
-    new RichScalar(value);
+  /** The shape of any map is KeyShape=>ValShape. */
+  @inline implicit def map[K,V,KS,VS]
+  (implicit ks : Shape[K,KS], vs : Shape[V,VS])
+  : Shape[Map[K,V],(KS => VS)] = null;
 
-  implicit def richDouble(value : Double) =
-    new RichScalar(value);
+  /** The shape of any array is Unit=>TShape. */
+  @inline implicit def array[T,TS]
+  (implicit ts : Shape[T,TS])
+  : Shape[Array[T],(Unit => TS)] = null;
+
 }

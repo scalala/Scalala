@@ -40,6 +40,12 @@ object CanSub {
   type ArraySparseArrayOutput[A] = Array[A];
   type MapMapBase[K,V1,V2,RV] = MapMapEitherNonZeroOp[K,V1,V2,RV];
 
+  implicit def unaryLeft[V1,RV](implicit cast : CanCast[V1,RV])
+  : UnaryLeft[V1,RV] = new UnaryLeft[V1,RV] { def apply(v : V1) = cast(v); }
+
+  implicit def unaryRight[V2,RV](implicit cast : CanCast[V2,RV], neg : CanNeg[RV,RV])
+  : UnaryRight[V2,RV] = new UnaryRight[V2,RV] { def apply(v : V2) = neg(cast(v)); }
+
   //
   // Primitives
   //
@@ -56,9 +62,6 @@ object CanSub {
   implicit object OpID extends Op[Int,Double,Double]
   { def apply(a : Int, b : Double) = a - b; }
 
-  implicit object OpIC extends Op[Int,Complex,Complex]
-  { def apply(a : Int, b : Complex) = a - b; }
-
   implicit object OpLI extends Op[Long,Int,Long]
   { def apply(a : Long, b : Int) = a - b; }
 
@@ -70,9 +73,6 @@ object CanSub {
 
   implicit object OpLD extends Op[Long,Double,Double]
   { def apply(a : Long, b : Double) = a - b; }
-
-  implicit object OpLC extends Op[Long,Complex,Complex]
-  { def apply(a : Long, b : Complex) = a - b; }
 
   implicit object OpFI extends Op[Float,Int,Float]
   { def apply(a : Float, b : Int) = a - b; }
@@ -86,9 +86,6 @@ object CanSub {
   implicit object OpFD extends Op[Float,Double,Double]
   { def apply(a : Float, b : Double) = a - b; }
 
-  implicit object OpFC extends Op[Float,Complex,Complex]
-  { def apply(a : Float, b : Complex) = a - b; }
-
   implicit object OpDI extends Op[Double,Int,Double]
   { def apply(a : Double, b : Int) = a - b; }
 
@@ -100,24 +97,6 @@ object CanSub {
 
   implicit object OpDD extends Op[Double,Double,Double]
   { def apply(a : Double, b : Double) = a - b; }
-
-  implicit object OpDC extends Op[Double,Complex,Complex]
-  { def apply(a : Double, b : Complex) = a - b; }
-
-  implicit object OpCI extends Op[Complex,Int,Complex]
-  { def apply(a : Complex, b : Int) = a - b; }
-
-  implicit object OpCL extends Op[Complex,Long,Complex]
-  { def apply(a : Complex, b : Long) = a - b; }
-
-  implicit object OpCF extends Op[Complex,Float,Complex]
-  { def apply(a : Complex, b : Float) = a - b; }
-
-  implicit object OpCD extends Op[Complex,Double,Complex]
-  { def apply(a : Complex, b : Double) = a - b; }
-
-  implicit object OpCC extends Op[Complex,Complex,Complex]
-  { def apply(a : Complex, b : Complex) = a - b; }
 
   //
   //
@@ -257,9 +236,15 @@ object CanSub {
   // Scala Maps
   //
 
-  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], sa : Scalar[V1], sb : Scalar[V2]) =
-    new OpMap[K,V1,V2,RV];
+  /** Trait needed for the unary promotion of the left operand. */
+  trait UnaryLeft[V1,RV] extends (V1=>RV);
 
-  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], sa : Scalar[V1], sb : Scalar[V2])
-  extends MapMapBase[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
+  /** Trait needed for the unary promotion of the right operand. */
+  trait UnaryRight[V2,RV] extends (V2=>RV);
+
+  implicit def opMap[K,V1,S1,V2,S2,RV](implicit op : Op[V1,V2,RV], u1 : UnaryLeft[V1,RV], u2 : UnaryRight[V2,RV], s1 : Shape[V1,S1], s2 : Shape[V2,S2], mm : S1 =:= S2)
+  : OpMap[K,V1,V2,RV] = new OpMap[K,V1,V2,RV];
+
+  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], ul : UnaryLeft[V1,RV], ur : UnaryRight[V2,RV])
+  extends MapMapBase[K,V1,V2,RV](op,ul,ur) with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
 }

@@ -20,6 +20,8 @@
 package scalala;
 package scalar;
 
+import scalala.generic.{CanNeg,CanCast,CanAdd,CanMul,CanSub,CanDiv,CanMod,CanPow};
+
 /**
  * Immutable complex numbex number representation backed by doubles
  * for the real and imaginary parts.
@@ -113,7 +115,7 @@ case class Complex(real : Double, imag : Double) {
   }
 }
 
-object Complex {
+object Complex { outer =>
   /**
    * Ordering for complex numbers: orders lexicographically first on
    * the real, then on the imaginary part of the number.
@@ -128,10 +130,28 @@ object Complex {
     }
   }
 
-  implicit object scalar extends Scalar[Complex] {
-    def zero = Complex(0,0);
+  /** Constant Complex(0,0). */
+  val zero = new Complex(0,0);
 
-    def one = Complex(1,0);
+  /** Constant Complex(1,0). */
+  val one = new Complex(1,0);
+
+  /** Constant Complex(NaN, NaN). */
+  val nan = new Complex(Double.NaN, Double.NaN);
+
+  /** Constant Complex(0,1). */
+  val i = new Complex(0,1);
+
+  //
+  // scalar
+  //
+
+  implicit object scalar extends Scalar[Complex] {
+    def zero = outer.zero;
+
+    def one = outer.one;
+
+    def nan = outer.nan;
 
     def ==(a : Complex, b : Complex) = a == b;
 
@@ -167,4 +187,156 @@ object Complex {
     
     val manifest = implicitly[ClassManifest[Complex]];
   }
+
+  //
+  // neg
+  //
+
+  implicit object neg extends CanNeg[Complex,Complex] {
+    override def apply(v : Complex) = -v;
+  }
+
+  //
+  // cast
+  //
+  
+  implicit object castIC extends CanCast[Int,Complex] {
+    override def apply(v : Int) = Complex(v,0);
+  }
+
+  implicit object castLC extends CanCast[Long,Complex] {
+    override def apply(v : Long) = Complex(v,0);
+  }
+
+  implicit object castFC extends CanCast[Float,Complex] {
+    override def apply(v : Float) = Complex(v,0);
+  }
+
+  implicit object castDC extends CanCast[Double,Complex] {
+    override def apply(v : Double) = Complex(v,0);
+  }
+
+  //
+  // add
+  //
+
+  implicit object addIC extends CanAdd[Int,Complex,Complex]
+  { def apply(a : Int, b : Complex) = a + b; }
+
+  implicit object addLC extends CanAdd[Long,Complex,Complex]
+  { def apply(a : Long, b : Complex) = a + b; }
+
+  implicit object addFC extends CanAdd[Float,Complex,Complex]
+  { def apply(a : Float, b : Complex) = a + b; }
+
+  implicit object addDC extends CanAdd[Double,Complex,Complex]
+  { def apply(a : Double, b : Complex) = a + b; }
+
+  implicit object addCI extends CanAdd[Complex,Int,Complex]
+  { def apply(a : Complex, b : Int) = a + b; }
+
+  implicit object addCL extends CanAdd[Complex,Long,Complex]
+  { def apply(a : Complex, b : Long) = a + b; }
+
+  implicit object addCF extends CanAdd[Complex,Float,Complex]
+  { def apply(a : Complex, b : Float) = a + b; }
+
+  implicit object addCD extends CanAdd[Complex,Double,Complex]
+  { def apply(a : Complex, b : Double) = a + b; }
+
+  implicit object addCC extends CanAdd[Complex,Complex,Complex]
+  { def apply(a : Complex, b : Complex) = a + b; }
+
+  //
+  // sub
+  //
+
+  implicit object subIC extends CanSub[Int,Complex,Complex]
+  { def apply(a : Int, b : Complex) = a - b; }
+
+  implicit object subLC extends CanSub[Long,Complex,Complex]
+  { def apply(a : Long, b : Complex) = a - b; }
+
+  implicit object subFC extends CanSub[Float,Complex,Complex]
+  { def apply(a : Float, b : Complex) = a - b; }
+
+  implicit object subDC extends CanSub[Double,Complex,Complex]
+  { def apply(a : Double, b : Complex) = a - b; }
+
+  implicit object subCI extends CanSub[Complex,Int,Complex]
+  { def apply(a : Complex, b : Int) = a - b; }
+
+  implicit object subCL extends CanSub[Complex,Long,Complex]
+  { def apply(a : Complex, b : Long) = a - b; }
+
+  implicit object subCF extends CanSub[Complex,Float,Complex]
+  { def apply(a : Complex, b : Float) = a - b; }
+
+  implicit object subCD extends CanSub[Complex,Double,Complex]
+  { def apply(a : Complex, b : Double) = a - b; }
+
+  implicit object subCC extends CanSub[Complex,Complex,Complex]
+  { def apply(a : Complex, b : Complex) = a - b; }
+
+  //
+  // mul
+  //
+
+  implicit object mulIC extends CanMul[Int,Complex,Complex]
+  { def apply(a : Int, b : Complex) = a * b; }
+
+  implicit object mulLC extends CanMul[Long,Complex,Complex]
+  { def apply(a : Long, b : Complex) = a * b; }
+
+  implicit object mulFC extends CanMul[Float,Complex,Complex]
+  { def apply(a : Float, b : Complex) = a * b; }
+
+  implicit object mulDC extends CanMul[Double,Complex,Complex]
+  { def apply(a : Double, b : Complex) = a * b; }
+
+  implicit object mulCI extends CanMul[Complex,Int,Complex]
+  { def apply(a : Complex, b : Int) = a * b; }
+
+  implicit object mulCL extends CanMul[Complex,Long,Complex]
+  { def apply(a : Complex, b : Long) = a * b; }
+
+  implicit object mulCF extends CanMul[Complex,Float,Complex]
+  { def apply(a : Complex, b : Float) = a * b; }
+
+  implicit object mulCD extends CanMul[Complex,Double,Complex]
+  { def apply(a : Complex, b : Double) = a * b; }
+
+  implicit object mulCC extends CanMul[Complex,Complex,Complex]
+  { def apply(a : Complex, b : Complex) = a * b; }
+
+  //
+  // div
+  //
+
+  implicit object divIC extends CanDiv[Int,Complex,Complex]
+  { def apply(a : Int, b : Complex) = a / b; }
+
+  implicit object divLC extends CanDiv[Long,Complex,Complex]
+  { def apply(a : Long, b : Complex) = a / b; }
+
+  implicit object divFC extends CanDiv[Float,Complex,Complex]
+  { def apply(a : Float, b : Complex) = a / b; }
+
+  implicit object divDC extends CanDiv[Double,Complex,Complex]
+  { def apply(a : Double, b : Complex) = a / b; }
+
+  implicit object divCI extends CanDiv[Complex,Int,Complex]
+  { def apply(a : Complex, b : Int) = a / b; }
+
+  implicit object divCL extends CanDiv[Complex,Long,Complex]
+  { def apply(a : Complex, b : Long) = a / b; }
+
+  implicit object divCF extends CanDiv[Complex,Float,Complex]
+  { def apply(a : Complex, b : Float) = a / b; }
+
+  implicit object divCD extends CanDiv[Complex,Double,Complex]
+  { def apply(a : Complex, b : Double) = a / b; }
+
+  implicit object divCC extends CanDiv[Complex,Complex,Complex]
+  { def apply(a : Complex, b : Complex) = a / b; }
 }

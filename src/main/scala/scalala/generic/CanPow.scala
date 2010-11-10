@@ -40,6 +40,14 @@ object CanPow {
   type ArraySparseArrayOutput[A] = Array[A];
   type MapMapBase[K,V1,V2,RV] = MapMapEitherNonZeroOp[K,V1,V2,RV];
 
+  // left-only is like raising to 0 power, so create ones
+  implicit def unaryLeft[V1,RV](implicit ones : CanCreateOnesLike[V1,RV])
+  : UnaryLeft[V1,RV] = new UnaryLeft[V1,RV] { def apply(v : V1) = ones(v); }
+
+  // right-only is like raising 0 to any power, so create zeros
+  implicit def unaryRight[V2,RV](implicit zeros : CanCreateZerosLike[V2,RV])
+  : UnaryRight[V2,RV] = new UnaryRight[V2,RV] { def apply(v : V2) = zeros(v); }
+
   //
   // Primitives
   //
@@ -230,9 +238,15 @@ object CanPow {
   // Scala Maps
   //
 
-  implicit def opMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], sa : Scalar[V1], sb : Scalar[V2]) =
-    new OpMap[K,V1,V2,RV];
+  /** Trait needed for the unary promotion of the left operand. */
+  trait UnaryLeft[V1,RV] extends (V1=>RV);
 
-  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], sa : Scalar[V1], sb : Scalar[V2])
-  extends MapMapBase[K,V1,V2,RV] with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
+  /** Trait needed for the unary promotion of the right operand. */
+  trait UnaryRight[V2,RV] extends (V2=>RV);
+
+  implicit def opMap[K,V1,S1,V2,S2,RV](implicit op : Op[V1,V2,RV], u1 : UnaryLeft[V1,RV], u2 : UnaryRight[V2,RV], s1 : Shape[V1,S1], s2 : Shape[V2,S2], mm : S1 =:= S2)
+  : OpMap[K,V1,V2,RV] = new OpMap[K,V1,V2,RV];
+
+  class OpMap[K,V1,V2,RV](implicit op : Op[V1,V2,RV], ul : UnaryLeft[V1,RV], ur : UnaryRight[V2,RV])
+  extends MapMapBase[K,V1,V2,RV](op,ul,ur) with Op[Map[K,V1],Map[K,V2],Map[K,RV]];
 }

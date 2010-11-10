@@ -21,6 +21,8 @@ package scalala;
 package generic;
 package collection;
 
+import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
+
 /**
  * Marker for being able to map the values in a value collection.
  *
@@ -62,6 +64,34 @@ object CanMapValues {
   implicit object OpArrayLD extends OpArray[Long,Double];
   implicit object OpArrayFD extends OpArray[Float,Double];
 
+  //
+  // SparseArrays
+  //
+
+  class OpSparseArray[@specialized V, @specialized RV:ClassManifest:DefaultArrayValue]
+  extends Op[SparseArray[V],V,RV,SparseArray[RV]] {
+    def map(from : SparseArray[V], fn : (V=>RV)) =
+      from.map(fn);
+
+    def mapNonZero(from : SparseArray[V], fn : (V => RV)) = {
+      val rv = new SparseArray[RV](from.length, from.activeLength);
+      from.foreachActive((k,v) => rv(k) = fn(v));
+      rv;
+    }
+  }
+
+  implicit def opSparseArray[@specialized V, @specialized RV:ClassManifest:DefaultArrayValue] =
+    new OpSparseArray[V,RV];
+
+  implicit object OpSparseArrayII extends OpSparseArray[Int,Int];
+  implicit object OpSparseArraySS extends OpSparseArray[Short,Short];
+  implicit object OpSparseArrayLL extends OpSparseArray[Long,Long];
+  implicit object OpSparseArrayFF extends OpSparseArray[Float,Float];
+  implicit object OpSparseArrayDD extends OpSparseArray[Double,Double];
+  implicit object OpSparseArrayID extends OpSparseArray[Int,Double];
+  implicit object OpSparseArraySD extends OpSparseArray[Short,Double];
+  implicit object OpSparseArrayLD extends OpSparseArray[Long,Double];
+  implicit object OpSparseArrayFD extends OpSparseArray[Float,Double];
 
   //
   // Scala maps

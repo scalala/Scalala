@@ -61,7 +61,7 @@ object CanMean { // extends LowPriorityCanMean {
   }
 
   /** Computes the mean by starting with zero, adding into it, and dividing into it. */
-  implicit def ZeroInto[V,RV](implicit zero : CanZero[V,RV], addInto : CanAddInto[RV,V], divInto : CanDivInto[RV,Int])
+  implicit def ZeroInto[V,RV](implicit zero : CanCreateZerosLike[V,RV], addInto : CanAddInto[RV,V], divInto : CanDivInto[RV,Int])
   : CanMean[Traversable[V],RV] = new CanMean[Traversable[V],RV] {
     def apply(values : Traversable[V]) : RV = {
       val sum = zero(values.head);

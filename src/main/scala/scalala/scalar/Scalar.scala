@@ -30,6 +30,8 @@ trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
 
   def one : V;
 
+  def nan : V;
+
   def ==(a : V, b : V) : Boolean;
 
   def !=(a : V, b : V) : Boolean;
@@ -67,6 +69,7 @@ object Scalar {
   implicit object ScalarI extends Scalar[Int] {
     def zero = 0;
     def one = 1;
+    def nan = throw new ArithmeticException("Operation resulted in integer-valued NaN");
     def ==(a : Int, b : Int) = a == b;
     def !=(a : Int, b : Int) = a != b;
     def >(a : Int, b : Int) = a > b;
@@ -86,6 +89,7 @@ object Scalar {
   implicit object ScalarS extends Scalar[Short] {
     def zero = 0.asInstanceOf[Short];
     def one = 1.asInstanceOf[Short];
+    def nan = throw new ArithmeticException("Operation resulted in short-valued NaN");
     def ==(a : Short, b : Short) = a == b;
     def !=(a : Short, b : Short) = a != b;
     def >(a : Short, b : Short) = a > b;
@@ -105,6 +109,7 @@ object Scalar {
   implicit object ScalarL extends Scalar[Long] {
     def zero = 0l;
     def one = 1l;
+    def nan = throw new ArithmeticException("Operation resulted in long-valued NaN");
     def ==(a : Long, b : Long) = a == b;
     def !=(a : Long, b : Long) = a != b;
     def >(a : Long, b : Long) = a > b;
@@ -124,6 +129,7 @@ object Scalar {
   implicit object scalarF extends Scalar[Float] {
     def zero = 0.0f;
     def one = 1.0f;
+    def nan = Float.NaN;
     def ==(a : Float, b : Float) = a == b;
     def !=(a : Float, b : Float) = a != b;
     def >(a : Float, b : Float) = a > b;
@@ -143,6 +149,7 @@ object Scalar {
   implicit object scalarD extends Scalar[Double] {
     def zero = 0.0;
     def one = 1.0;
+    def nan = Double.NaN;
     def ==(a : Double, b : Double) = a == b;
     def !=(a : Double, b : Double) = a != b;
     def >(a : Double, b : Double) = a > b;
@@ -162,6 +169,7 @@ object Scalar {
   implicit object scalarB extends Scalar[Boolean] {
     def zero = false;
     def one = true;
+    def nan = throw new ArithmeticException("Operation resulted in boolean-valued NaN");
     def ==(a : Boolean, b : Boolean) = a == b;
     def !=(a : Boolean, b : Boolean) = a != b;
     def >(a : Boolean, b : Boolean) = a > b;
