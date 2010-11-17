@@ -33,6 +33,8 @@ import Tensor.CreateException;
  * 
  * @author dramage
  */
+@serializable
+@SerialVersionUID(1)
 class DenseVector(data : Array[Double]) extends
   DoubleArrayData(data) with Vector with DenseTensor[Int]
   with TensorSelfOp[Int,DenseVector,Shape1Col] {

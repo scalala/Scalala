@@ -37,6 +37,8 @@ import operators.TensorSelfOp;
  * 
  * @author dramage
  */
+@serializable
+@SerialVersionUID(1)
 final class SparseVector(domainSize : Int, initialNonzeros : Int) extends Vector
   with TensorSelfOp[Int,SparseVector,Shape1Col] {
   if (domainSize < 0)

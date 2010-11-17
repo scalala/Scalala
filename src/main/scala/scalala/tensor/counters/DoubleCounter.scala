@@ -32,6 +32,8 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 *
 * @author dlwh
 */
+@serializable
+@SerialVersionUID(1)
 trait BaseDoubleCounter[T] extends Tensor1[T] with TrackedStatistics[T] { outer =>
   /**
   * A counter should be backed by a DoubleValuedMap, of any sort.

@@ -27,6 +27,8 @@ import scala.collection.Set;
  * 
  * @author dramage
  */
+@serializable
+@SerialVersionUID(1)
 abstract class MergeableSet[I]() extends Set[I] {
   private lazy val _size = {
     var s = 0;

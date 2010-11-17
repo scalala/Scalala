@@ -28,6 +28,8 @@ import collection._;
 *
 * @author dlwh
 */
+@serializable
+@SerialVersionUID(1)
 abstract class BasePairedDoubleCounter[K1,K2] 
     extends Tensor2[K1,K2] with TrackedStatistics[(K1,K2)] { outer =>
 
