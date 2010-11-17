@@ -19,10 +19,6 @@
  */
 package scalala.tensor.domain;
 
-import scala.collection.IterableLike;
-import scala.collection.mutable.Builder;
-import scala.collection.generic._;
-
 /**
  * Implementation trait for domains of a DomainFunction, representing
  * a restriction on values of type A.
@@ -32,8 +28,8 @@ import scala.collection.generic._;
 trait DomainLike[@specialized(Int,Long,Float,Double) A, +This<:Domain[A]]
 extends (A => Boolean) {
 
-  /** Returns a shallow copy of this domain. For immutable domains, may return this. */
-  def copy : This;
+  def repr : This =
+    this.asInstanceOf[This];
 
   /** Calls contains(key). */
   final override def apply(key : A) = contains(key);
@@ -66,7 +62,8 @@ extends DomainLike[A,This] {
   def iterator : Iterator[A];
 
   /** Constructs the union of this and the other domain. */
-  def union(that : IterableDomain[A]) : IterableDomain[A];
+  def union(that : IterableDomain[A]) : IterableDomain[A] =
+    UnionDomain(repr, that);
 
   /** Number of elements in the domain. */
   def size : Int;
@@ -103,6 +100,37 @@ trait IterableDomain[@specialized(Int,Long) A]
 extends Domain[A] with IterableDomainLike[A,IterableDomain[A]];
 
 /**
+ * Class representing the union of two domains.
+ *
+ * @author dramage
+ */
+case class UnionDomain[@specialized(Int,Long) A](a : IterableDomain[A], b : IterableDomain[A])
+extends IterableDomain[A] with IterableDomainLike[A,UnionDomain[A]] {
+  override def size = {
+    var s = 0;
+    foreach(k => { s += 1; })
+    s
+  }
+
+  override def foreach[O](fn : A=>O) = {
+    a.foreach(fn);
+    b.foreach(k => if (!a.contains(k)) fn(k));
+  }
+
+  override def iterator =
+    a.iterator ++ b.iterator.filterNot(a.contains);
+
+  override def contains(key : A) : Boolean =
+    a.contains(key) || b.contains(key);
+
+  override def equals(other : Any) = other match {
+    case UnionDomain(a,b) => this.a == a && this.b == b;
+    case that : Domain[_] => super.equals(that);
+    case _ => false;
+  }
+}
+
+/**
  * A domain that explicitly has only one element, i.e. A is not a tuple.
  *
  * @author dramage
@@ -132,17 +160,8 @@ extends Product1Domain[A] with Product1DomainLike[A,SetDomain[A]] {
   override def foreach[O](fn : A=>O) =
     set.foreach(fn);
 
-  override def copy = new SetDomain(Set() ++ set);
-
   override def iterator =
     set.iterator;
-
-  override def union(that : IterableDomain[A]) = {
-    val set = scala.collection.mutable.LinkedHashSet[A]();
-    for (v <- this) set += v;
-    for (v <- that) set += v;
-    SetDomain(set);
-  }
 
   override def contains(key : A) : Boolean =
     set.contains(key);
@@ -172,12 +191,9 @@ extends Product1Domain[Int] with Product1DomainLike[Int,IndexDomain] {
   override def contains(key : Int) =
     key >= 0 && key < size;
 
-  override def copy = this;
-
   override def union(other : IterableDomain[Int]) = other match {
     case that : IndexDomain => IndexDomain(this.size max that.size);
-    case that : SetDomain[_] => that union this;
-    case _ => throw new IllegalArgumentException("Unexpected domain type in union.");
+    case _ => super.union(other);
   }
 
   override def iterator =
@@ -246,9 +262,6 @@ trait Product2Domain
 extends Product2[IterableDomain[A1],IterableDomain[A2]] with IterableDomain[(A1,A2)]
 with Product2DomainLike[A1,A2,IterableDomain[A1],IterableDomain[A2],Product2Domain[A2,A1],Product2Domain[A1,A2]] {
 
-  def copy =
-    Product2Domain[A1,A2](_1.copy,_2.copy);
-
   def transpose =
     Product2Domain[A2,A1](_2,_1);
 
@@ -257,8 +270,7 @@ with Product2DomainLike[A1,A2,IterableDomain[A1],IterableDomain[A2],Product2Doma
 
   override def union(other : IterableDomain[(A1,A2)]) = other match {
     case that : Product2Domain[A1,A2] => Product2Domain(this._1 union that._1, this._2 union that._2);
-    case that : SetDomain[_] => that union this;
-    case _ => throw new IllegalArgumentException("Unexpected domain type in union.");
+    case _ => super.union(other);
   }
 
   override def canEqual(that : Any) =
@@ -289,8 +301,6 @@ with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain]
   override val _1 : IndexDomain = IndexDomain(numRows);
   
   override val _2 : IndexDomain = IndexDomain(numCols);
-
-  override def copy = this;
 
   override def transpose =
     TableDomain(numCols, numRows);
@@ -329,8 +339,6 @@ with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain]
  */
 case class ProductNDomain[@specialized(Int) K](components : Seq[IterableDomain[K]])
 extends IterableDomain[Seq[K]] with IterableDomainLike[Seq[K],ProductNDomain[K]] {
-  override def copy =
-    ProductNDomain(components.map(_.copy));
 
   override def size =
     components.map(_.size).reduceLeft(_ * _);
@@ -340,8 +348,7 @@ extends IterableDomain[Seq[K]] with IterableDomainLike[Seq[K],ProductNDomain[K]]
       require(this.components.size == that.components.size, "Can only take the union of product domains of the same size");
       ProductNDomain((this.components zip that.components) map (tup => tup._1 union tup._2));
     }
-    case that : SetDomain[_] => that union this;
-    case _ => throw new IllegalArgumentException("Unexpected domain type in union.");
+    case _ => super.union(other);
   }
 
   override def foreach[O](fn : (Seq[K] => O)) = {
