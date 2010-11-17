@@ -392,7 +392,7 @@ trait Plotting {
   (implicit xyplot : XYPlot = figures.figure.plot,
    mtv : CanViewAsTensor2[M,Int,Int,V]) {
 
-    import org.jfree.chart.axis.NumberAxis;
+    import org.jfree.chart.axis.{NumberAxis,TickUnits,NumberTickUnit};
 
     val mt = mtv(img);
 
@@ -461,17 +461,22 @@ trait Plotting {
     renderer.setBlockWidth(1);
     renderer.setBlockHeight(1);
 
+    // integer tick units    
+    val units = new TickUnits();
+    units.add(new NumberTickUnit(1, new java.text.DecimalFormat("0"), 5));
+
     xyplot.plot.getRangeAxis.setInverted(true);
     xyplot.plot.getRangeAxis.setLowerBound(miny+offset._2);
     xyplot.plot.getRangeAxis.setUpperBound(maxy+1+offset._2);
-    xyplot.plot.getRangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+    xyplot.plot.getRangeAxis.setStandardTickUnits(units);
+    
     xyplot.plot.getDomainAxis.setLowerBound(minx+offset._1);
     xyplot.plot.getDomainAxis.setUpperBound(maxx+1+offset._1);
-    xyplot.plot.getDomainAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+    xyplot.plot.getDomainAxis.setStandardTickUnits(units);
 
     // set legend
     if (showScale) {
-      val legendAxis = new org.jfree.chart.axis.NumberAxis();
+      val legendAxis = new NumberAxis();
       legendAxis.setLowerBound(staticScale.lower);
       legendAxis.setUpperBound(staticScale.upper);
 
