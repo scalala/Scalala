@@ -30,7 +30,6 @@ import plotting._;
  * @author dramage
  */
 trait Plotting {
-  import plotting._;
 
   /** Returns the default figure set. */
   def figures = Figures.global;
