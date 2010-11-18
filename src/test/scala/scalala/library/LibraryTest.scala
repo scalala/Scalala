@@ -24,7 +24,7 @@ import org.scalacheck._
 import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
-import org.junit.runner.RunWith
+import org.junit.runner.RunWith;
 
 @RunWith(classOf[JUnitRunner])
 class LibraryTest extends FunSuite with Checkers {
