@@ -46,7 +46,6 @@ object CanAssignInto {
         op(a(i), b(i));
         i += 1;
       }
-      i;
     }
   }
 
@@ -63,12 +62,7 @@ object CanAssignInto {
       if (a.length != b.length) {
         throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
       }
-      var i = 0;
-      while (i < a.length) {
-        a(i) = b(i);
-        i += 1;
-      }
-      i;
+      System.arraycopy(b,0,a,0,a.length);
     }
   }
 
