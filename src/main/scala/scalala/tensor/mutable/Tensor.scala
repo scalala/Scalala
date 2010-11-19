@@ -101,17 +101,45 @@ object Tensor extends TensorCompanion[Tensor] {
 
   /** Constructs an open-domain tensor seeded with the given values. */
   def apply[K,V:Scalar](values : (K,V)*) : Tensor[K,V] = {
-    new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
-      override def checkKey(key : K) = true;
-    }
+//    val mI = implicitly[Manifest[Int]];
+//    val mL = implicitly[Manifest[Long]];
+//    val mF = implicitly[Manifest[Float]];
+//    val mD = implicitly[Manifest[Double]];
+//    val mB = implicitly[Manifest[Boolean]];
+//
+//    val types = (implicitly[Manifest[K]],implicitly[Scalar[V]].manifest);
+//
+//    if (types == (mI,mI)) {
+//      val rv = new IntIntImpl().asInstanceOf[Tensor[K,V]];
+//      for ((k,v) <- values) rv(k) = v;
+//      rv;
+//    } else {
+      new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
+        override def checkKey(key : K) = true;
+      }
+//    }
   }
 
   /** Constructs a closed-domain tensor for the given domain. */
   def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor[K,V] = {
-    val d = domain;
-    new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
-      override val domain = d;
-    }
+//    val mI = implicitly[Manifest[Int]];
+//    val mL = implicitly[Manifest[Long]];
+//    val mF = implicitly[Manifest[Float]];
+//    val mD = implicitly[Manifest[Double]];
+//    val mB = implicitly[Manifest[Boolean]];
+//
+//    val types = (implicitly[Manifest[K]],implicitly[Scalar[V]].manifest);
+//
+//    if (types == (mI,mI)) {
+//      val rv = new ClosedDomainIntIntImpl(domain).asInstanceOf[Tensor[K,V]];
+//      for ((k,v) <- values) rv(k) = v;
+//      rv;
+//    } else {
+      val d = domain;
+      new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
+        override val domain = d;
+      }
+//    }
   }
 
   class Impl[A, B](protected var map : scala.collection.Map[A,B])
@@ -142,6 +170,66 @@ object Tensor extends TensorCompanion[Tensor] {
     override def apply(from : Tensor[A,B], keys : Seq[A]) =
       new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
   }
+
+  //
+  // Primitive implementations
+  // 
+
+//  class IntIntImpl extends Tensor[Int,Int] {
+//    import com.carrotsearch.hppc.{IntIntOpenHashMap => OpenHashMap};
+//    import com.carrotsearch.hppc.predicates.{IntPredicate => Predicate};
+//    private type K = Int;
+//    private type V = Int;
+//    
+//    //
+//    // Below this line is copy-and pasted
+//    //
+//
+//    val map = new OpenHashMap();
+//
+//    override val scalar : Scalar[V] = implicitly[Scalar[V]];
+//
+//    /** By default, act like a map. */
+//    override def checkKey(key : K) = true;
+//
+//    /** By default, return map's domain. */
+//    override def domain : IterableDomain[K] = {
+//      val set = map.keySet;
+//      new IterableDomain[K] {
+//        override def foreach[O](f : K => O) = {
+//          set.forEach(new Predicate() { override def apply(arg : K) = { f(arg); true } });
+//        }
+//
+//        override def iterator = new Iterator[K] {
+//          val iter = set.iterator;
+//          override def hasNext =
+//            iter.hasNext;
+//          override def next =
+//            iter.next.value;
+//        }
+//
+//        override def size =
+//          set.size;
+//
+//        override def contains(key : K) =
+//          set.contains(key);
+//      }
+//    }
+//
+//    override def apply(key : K) : V = {
+//      checkKey(key); if (map.containsKey(key)) map.lget() else 0;
+//    }
+//
+//    override def update(key : K, value : V) : Unit = {
+//      checkKey(key); map.put(key, value);
+//    }
+//  }
+//
+//  class ClosedDomainIntIntImpl(override val domain : IterableDomain[Int])
+//  extends IntIntImpl {
+//    override def checkKey(key : Int) =
+//      domain.contains(key);
+//  }
 }
 
 /**

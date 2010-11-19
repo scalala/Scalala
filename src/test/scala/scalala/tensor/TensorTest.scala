@@ -104,12 +104,19 @@ class TensorTest extends FunSuite with Checkers {
     assert(x.argmax === "b");
   }
 
-//  test("Views") {
-//    val x = mkMapTensor();
-//    x("a","b","c") := List(3,4,5);
-//    val view = x.view.mapValues(_ % 2 == 0);
-//    assert(view.isInstanceOf[TensorView[_,_,_]], "runtime");
-//    assert(view.valuesIterator.toList === List(false,true,false), "values");
-//    assert(view.view eq view, "view of view");
+//  test("Addition") {
+//    assert(mutable.Tensor("a"->1,"b"->2) + mutable.Tensor("a"->3) === Tensor("a"->4,"b"->2));
+//    assert(mutable.Tensor("a"->3) + mutable.Tensor("a"->1,"b"->2) === Tensor("a"->4,"b"->2));
 //  }
+//  
+//  test("Subtraction") {
+//    assert(mutable.Tensor("a"->1,"b"->2) - mutable.Tensor("a"->3) === Tensor("a" -> -2, "b" -> 2));
+//    assert(mutable.Tensor("a"->3) - mutable.Tensor("a"->1,"b"->2) === Tensor("a" -> 2, "b" -> -2));
+//  }
+//  
+//  test("Multiplication") {
+//    assert(mutable.Tensor("a"->1,"b"->2) :* mutable.Tensor("a"->3) === Tensor("a"->3));
+//    assert(mutable.Tensor("a"->3) :* mutable.Tensor("a"->1,"b"->2) === Tensor("a"->3));
+//  }
+
 }

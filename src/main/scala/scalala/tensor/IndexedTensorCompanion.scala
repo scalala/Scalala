@@ -24,6 +24,7 @@ import domain._;
 import generic._;
 
 import scalala.generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
+import generic.{CanLT,CanLTE,CanGT,CanGTE,CanEq,CanNe};
 import scalala.generic.collection.{CanMapValues,CanMapKeyValuePairs,CanJoinValues};
 
 /**
@@ -62,4 +63,23 @@ trait IndexedTensorCompanion[K,Bound[V]<:Tensor[K,V]] {
 
   implicit def canPow[V,O,RV](implicit c : CanPow[Tensor[K,V],O,Tensor[K,RV]]) =
     c.asInstanceOf[CanPow[Bound[V],O,Bound[RV]]];
+
+  implicit def canLT[V,O,RV](implicit c : CanLT[Tensor[K,V],O,Tensor[K,RV]]) =
+    c.asInstanceOf[CanLT[Bound[V],O,Bound[RV]]];
+
+  implicit def canLTE[V,O,RV](implicit c : CanLTE[Tensor[K,V],O,Tensor[K,RV]]) =
+    c.asInstanceOf[CanLTE[Bound[V],O,Bound[RV]]];
+
+  implicit def canGT[V,O,RV](implicit c : CanGT[Tensor[K,V],O,Tensor[K,RV]]) =
+    c.asInstanceOf[CanGT[Bound[V],O,Bound[RV]]];
+
+  implicit def canGTE[V,O,RV](implicit c : CanGTE[Tensor[K,V],O,Tensor[K,RV]]) =
+    c.asInstanceOf[CanGTE[Bound[V],O,Bound[RV]]];
+
+  implicit def canEq[V,O,RV](implicit c : CanEq[Tensor[K,V],O,Tensor[K,RV]]) =
+    c.asInstanceOf[CanEq[Bound[V],O,Bound[RV]]];
+
+  implicit def canNe[V,O,RV](implicit c : CanNe[Tensor[K,V],O,Tensor[K,RV]]) =
+    c.asInstanceOf[CanNe[Bound[V],O,Bound[RV]]];
 }
+

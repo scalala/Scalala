@@ -419,20 +419,3 @@ extends BinaryOp[(VA1,VA2,VA3,VA4),(VB1,VB2,VB3,VB4),(RV1,RV2,RV3,RV4)] {
     (op1(a._1,b._1), op2(a._2,b._2), op3(a._3,b._3), op4(a._4, b._4));
 }
 
-/** Construction delegate for A :< B. @author dramage */
-trait CanLT[A,-B,+That] extends BinaryOp[A,B,That];
-
-/** Construction delegate for A :<= B. @author dramage */
-trait CanLTE[A,-B,+That] extends BinaryOp[A,B,That];
-
-/** Construction delegate for A :> B. @author dramage */
-trait CanGT[A,-B,+That] extends BinaryOp[A,B,That];
-
-/** Construction delegate for A :>= B. @author dramage */
-trait CanGTE[A,-B,+That] extends BinaryOp[A,B,That];
-
-/** Construction delegate for A :== B. @author dramage */
-trait CanEq[A,-B,+That] extends BinaryOp[A,B,That];
-
-/** Construction delegate for A :!= B. @author dramage */
-trait CanNe[A,-B,+That] extends BinaryOp[A,B,That];

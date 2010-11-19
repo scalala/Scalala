@@ -24,6 +24,7 @@ import scalar.Scalar;
 
 import domain._;
 import generic.{CanAdd,CanMul,CanSub,CanDiv,CanMod,CanPow};
+import generic.{CanLT,CanLTE,CanGT,CanGTE,CanEq,CanNe};
 import generic.collection._;
 
 import mutable.TensorBuilder;
@@ -538,6 +539,47 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] {
     }
   }
 
+  implicit def canLTScalar[K,V,O,RV,That](implicit op : CanLT[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanLT[Bound[K,V],O,That] = new CanLT[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
+
+  implicit def canLTEScalar[K,V,O,RV,That](implicit op : CanLTE[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanLTE[Bound[K,V],O,That] = new CanLTE[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
+
+  implicit def canGTScalar[K,V,O,RV,That](implicit op : CanGT[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanGT[Bound[K,V],O,That] = new CanGT[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
+
+  implicit def canGTEScalar[K,V,O,RV,That](implicit op : CanGTE[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanGTE[Bound[K,V],O,That] = new CanGTE[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
+
+  implicit def canEqScalar[K,V,O,RV,That](implicit op : CanEq[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanEq[Bound[K,V],O,That] = new CanEq[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
+
+  implicit def canNeScalar[K,V,O,RV,That](implicit op : CanNe[V,O,RV], bf : CanMapValues[Bound[K,V],V,RV,That], so : Scalar[O])
+  : CanNe[Bound[K,V],O,That] = new CanNe[Bound[K,V],O,That] {
+    override def apply(a : Bound[K,V], b : O) = {
+      a.asInstanceOf[TensorLike[K,V,_,Bound[K,V]]].mapValues(v => op(v, b))(bf);
+    }
+  }
 
   //
   // Tensor-Tensor
@@ -603,4 +645,65 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] {
       (a join b)(op)(bfLike);
     }
   }
+
+  implicit def canLTBound[K,V,O,RV,That](implicit op : CanLT[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanLT[Bound[K,V],Bound[K,O],That] = new CanLT[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a join b)(op)(bfLike);
+    }
+  }
+
+  implicit def canLTEBound[K,V,O,RV,That](implicit op : CanLTE[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanLTE[Bound[K,V],Bound[K,O],That] = new CanLTE[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a join b)(op)(bfLike);
+    }
+  }
+
+  implicit def canGTBound[K,V,O,RV,That](implicit op : CanGT[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanGT[Bound[K,V],Bound[K,O],That] = new CanGT[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a join b)(op)(bfLike);
+    }
+  }
+
+  implicit def canGTEBound[K,V,O,RV,That](implicit op : CanGTE[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanGTE[Bound[K,V],Bound[K,O],That] = new CanGTE[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a join b)(op)(bfLike);
+    }
+  }
+
+  implicit def canEqBound[K,V,O,RV,That](implicit op : CanEq[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanEq[Bound[K,V],Bound[K,O],That] = new CanEq[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a join b)(op)(bfLike);
+    }
+  }
+
+  implicit def canNeBound[K,V,O,RV,That](implicit op : CanNe[V,O,RV], bf : CanJoinValues[Bound[K,V],Bound[K,O],V,O,RV,That], so : Scalar[O])
+  : CanNe[Bound[K,V],Bound[K,O],That] = new CanNe[Bound[K,V],Bound[K,O],That] {
+    override def apply(a : Bound[K,V], b : Bound[K,O]) = {
+      val aLike = a.asInstanceOf[Tensor[K,V]];
+      val bLike = b.asInstanceOf[Tensor[K,O]];
+      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V],Tensor[K,O],V,O,RV,That]];
+      (a join b)(op)(bfLike);
+    }
+  }
+  
 }
