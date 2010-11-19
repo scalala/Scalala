@@ -32,6 +32,10 @@ import scalala.collection.sparse.SparseArray;
 trait CanMulColumnBy[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulColumnBy {
+  /** Implicit promotion of CanMul and Scalar to CanMulColumnBy. */
+  implicit def opByScalar[A,B,That](implicit mul : CanMul[A,B,That], sb : Scalar[B]) =
+    new CanMulColumnBy[A,B,That] { override def apply(a : A, b : B) = mul(a,b); }
+
   implicit def CanMulColumnByArrayArray[V1,V2,RV](implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV])
   = new CanMulColumnByArrayArray[V1,V2,RV];
 
@@ -50,3 +54,4 @@ object CanMulColumnBy {
   implicit object CanMulColumnByArrayArrayDI extends CanMulColumnByArrayArray[Double,Int,Double];
   implicit object CanMulColumnByArrayArrayID extends CanMulColumnByArrayArray[Int,Double,Double];
 }
+

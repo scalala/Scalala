@@ -34,6 +34,10 @@ import scalala.operators.MutableWrappedRowOps;
 trait CanMulRowBy[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulRowBy {
+  /** Implicit promotion of CanMul and Scalar to CanMulColumnBy. */
+  implicit def opByScalar[A,B,That](implicit mul : CanMul[A,B,That], sb : Scalar[B]) =
+    new CanMulRowBy[A,B,That] { override def apply(a : A, b : B) = mul(a,b); }
+    
   //
   // Array * Array
   //

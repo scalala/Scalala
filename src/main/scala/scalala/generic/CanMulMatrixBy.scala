@@ -32,6 +32,10 @@ import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 trait CanMulMatrixBy[A,-B,+That] extends BinaryOp[A,B,That];
 
 object CanMulMatrixBy {
+  /** Implicit promotion of CanMul and Scalar to CanMulColumnBy. */
+  implicit def opByScalar[A,B,That](implicit mul : CanMul[A,B,That], sb : Scalar[B]) =
+    new CanMulMatrixBy[A,B,That] { override def apply(a : A, b : B) = mul(a,b); }
+    
   implicit def CanMulArrayMatrixByArray[V1,V2,RV]
   (implicit m : ClassManifest[RV], mul : CanMul[V1,V2,RV],
    add : CanAdd[RV,RV,RV], srv : Scalar[RV]) =
