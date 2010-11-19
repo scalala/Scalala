@@ -63,26 +63,26 @@ trait NumericOps[+This] {
   def :!=[TT>:This,B,That](b : B)(implicit op : CanNe[TT,B,That]) = op(repr,b);
 
   //
-  // Scalar operator aliases
+  // Operator aliases
   //
 
-  /** Alias for :+=(b) */
-  final def +[TT>:This,B,That](b : B)(implicit op : CanAdd[TT,B,That], sb : Scalar[B]) =
+  /** Alias for :+(b) for all b. */
+  final def +[TT>:This,B,That](b : B)(implicit op : CanAdd[TT,B,That]) =
     this.:+[TT,B,That](b);
 
-  /** Alias for :-=(b) */
-  final def -[TT>:This,B,That](b : B)(implicit op : CanSub[TT,B,That], sb : Scalar[B]) =
+  /** Alias for :-(b) for all b. */
+  final def -[TT>:This,B,That](b : B)(implicit op : CanSub[TT,B,That]) =
     this.:-[TT,B,That](b);
 
-  /** Alias for :*=(b) */
+  /** Alias for :*(b) when b is a scalar. */
   final def *[TT>:This,B,That](b : B)(implicit op : CanMul[TT,B,That], sb : Scalar[B]) =
     this.:*[TT,B,That](b);
 
-  /** Alias for :/=(b) */
+  /** Alias for :/(b) when b is a scalar. */
   final def /[TT>:This,B,That](b : B)(implicit op : CanDiv[TT,B,That], sb : Scalar[B]) =
     this.:/[TT,B,That](b);
 
-  /** Alias for :%=(b) */
+  /** Alias for :%(b) when b is a scalar. */
   final def %[TT>:This,B,That](b : B)(implicit op : CanMod[TT,B,That], sb : Scalar[B]) =
     this.:%[TT,B,That](b);
 }
@@ -109,23 +109,23 @@ trait MutableNumericOps[+This] extends NumericOps[This] {
 
   def :^=[TT>:This,B](b : B)(implicit op : CanPowInto[TT,B]) = op(repr,b);
 
-  /** Alias for :+=(b). */
-  final def +=[TT>:This,B](b : B)(implicit op : CanAddInto[TT,B], sb : Scalar[B]) =
+  /** Alias for :+=(b) for all b. */
+  final def +=[TT>:This,B](b : B)(implicit op : CanAddInto[TT,B]) =
     this.:+=[TT,B](b);
 
-  /** Alias for :-=(b). */
-  final def -=[TT>:This,B](b : B)(implicit op : CanSubInto[TT,B], sb : Scalar[B]) =
+  /** Alias for :-=(b) for all b. */
+  final def -=[TT>:This,B](b : B)(implicit op : CanSubInto[TT,B]) =
     this.:-=[TT,B](b);
 
-  /** Alias for :*=(b). */
+  /** Alias for :*=(b) when b is a scalar. */
   final def *=[TT>:This,B](b : B)(implicit op : CanMulInto[TT,B], sb : Scalar[B]) =
     this.:*=[TT,B](b);
 
-  /** Alias for :/=(b). */
+  /** Alias for :/=(b) when b is a scalar. */
   final def /=[TT>:This,B](b : B)(implicit op : CanDivInto[TT,B], sb : Scalar[B]) =
     this.:/=[TT,B](b);
 
-  /** Alias for :%=(b). */
+  /** Alias for :%=(b) when b is a scalar. */
   final def %=[TT>:This,B](b : B)(implicit op : CanModInto[TT,B], sb : Scalar[B]) =
     this.:%=[TT,B](b);
 }
