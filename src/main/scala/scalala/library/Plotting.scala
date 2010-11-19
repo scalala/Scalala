@@ -34,9 +34,9 @@ trait Plotting {
   /** Returns the default figure set. */
   def figures = Figures.global;
 
-  /** Selects and returns the requested figure by index (0-based). */
-  def figure(select:Int = 0)(implicit figures : Figures = figures) : Figure = {
-    if (select > 0) {
+  /** Selects and returns the requested figure by index (1-based). */
+  def figure(select:Int = -1)(implicit figures : Figures = figures) : Figure = {
+    if (select >= 0) {
       figures.figure = select;
       figures.figure.refresh;
     }
@@ -462,7 +462,10 @@ trait Plotting {
 
     // integer tick units    
     val units = new TickUnits();
-    units.add(new NumberTickUnit(1, new java.text.DecimalFormat("0"), 5));
+    val df = new java.text.DecimalFormat("0");
+    for (b <- List(1,2,5); e <- List(0,1,2,3,4,5,6,7,8)) {
+      units.add(new NumberTickUnit(b * math.pow(10,e).toInt, df));
+    }
 
     xyplot.plot.getRangeAxis.setInverted(true);
     xyplot.plot.getRangeAxis.setLowerBound(miny+offset._2);

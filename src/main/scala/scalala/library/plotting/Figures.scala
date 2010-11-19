@@ -30,8 +30,8 @@ class Figures {
   /** Returns the number of the given figure */
   def number(figure : Figure) : Int = figures.indexOf(Some(figure));
 
-  /** Returns the current figure */
-  var figure_ : Int = 0;
+  /** Returns the current figure.  Defaults to 1, but allows 0. */
+  var figure_ : Int = 1;
   def figure : Figure = figures(figure_).get;
   def figure_=(number : Int) : Unit = {
     while (figures.length <= number) {
@@ -46,10 +46,11 @@ class Figures {
   /** Returns the current figure's current plot */
   def plot : XYPlot = figure.plot;
 
-  // Set the current figure to figure 0
-  figure = 0;
+  // Set the current figure to figure 1
+  figure = 1;
 }
 
 object Figures {
   lazy val global = new Figures();
 }
+

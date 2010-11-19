@@ -88,7 +88,7 @@ class Figure(figures : Figures) {
 
   /** Uses the given plot number. */
   def plot_=(number : Int) : Unit = {
-    assert(number >= 0);
+    assert(number >= 0, "Plot number must be non-negative");
     while (plots.length <= number) {
       plots += None;
     }
