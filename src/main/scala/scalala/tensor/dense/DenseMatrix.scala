@@ -41,11 +41,13 @@ import org.netlib.util.intW;
  * @author dramage
  */
 class DenseMatrix[@specialized(Int,Long,Float,Double) B]
-(numRows : Int, numCols : Int, override val data : Array[B])
+(numRows : Int, numCols : Int, data_ : Array[B])
 (implicit override val scalar : Scalar[B])
 extends DenseArrayTensor[(Int,Int),B] with DenseArrayTensorLike[(Int,Int),B,TableDomain,DenseMatrix[B]]
 with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
-  if (numRows * numCols != data.length)
+  override val data = data_ // workaround for https://lampsvn.epfl.ch/trac/scala/ticket/4013
+  
+  if (numRows * numCols != data_.length)
     throw new IllegalArgumentException("data.length must equal numRows*numCols");
 
   override def domain = TableDomain(numRows, numCols);

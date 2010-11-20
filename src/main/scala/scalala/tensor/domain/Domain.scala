@@ -250,6 +250,8 @@ extends IterableDomain[(A1,A2)] with DomainLike[(A1,A2),This] {
       super.equals(base);
     case _ => false;
   }
+  
+  // Workaround for https://lampsvn.epfl.ch/trac/scala/ticket/4012
   protected val superProduct2DomainLike = this
 }
 
