@@ -250,6 +250,7 @@ extends IterableDomain[(A1,A2)] with DomainLike[(A1,A2),This] {
       super.equals(base);
     case _ => false;
   }
+  protected val superProduct2DomainLike = this
 }
 
 /**
@@ -270,7 +271,7 @@ with Product2DomainLike[A1,A2,IterableDomain[A1],IterableDomain[A2],Product2Doma
 
   override def union(other : IterableDomain[(A1,A2)]) = other match {
     case that : Product2Domain[A1,A2] => Product2Domain(this._1 union that._1, this._2 union that._2);
-    case _ => super.union(other);
+    case _ => superProduct2DomainLike.union(other);
   }
 
   override def canEqual(that : Any) =
@@ -327,7 +328,7 @@ with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain]
 
   override def equals(other : Any) = other match {
     case TableDomain(nr,nc) => this.numRows == nr && this.numCols == nc;
-    case that : Domain[_] => super.equals(that);
+    case that : Domain[_] =>  superProduct2DomainLike.equals(that)
     case _ => false;
   }
 }
