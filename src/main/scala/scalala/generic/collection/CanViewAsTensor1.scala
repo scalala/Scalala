@@ -25,7 +25,7 @@ import scalala.collection.sparse.SparseArray;
 
 import scalala.scalar.Scalar;
 import scalala.tensor.Tensor1;
-import scalala.tensor.dense.DenseVector;
+import scalala.tensor.dense.DenseVectorCol;
 import scalala.tensor.sparse.SparseVector;
 
 /**
@@ -44,7 +44,7 @@ object CanViewAsTensor1 {
 
   class ArrayTensor1[V:ClassManifest:Scalar]
   extends CanViewAsTensor1[Array[V],Int,V] {
-    def apply(from : Array[V]) = new DenseVector[V](from);
+    def apply(from : Array[V]) = new DenseVectorCol[V](from);
   }
 
   implicit def mkArrayTensor1[V:ClassManifest:Scalar] =

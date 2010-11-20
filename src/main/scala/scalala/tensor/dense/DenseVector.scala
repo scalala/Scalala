@@ -35,9 +35,7 @@ import scalala.library.Random;
  *
  * @author dramage
  */
-class DenseVector[@specialized(Int,Long,Float,Double) V]
-(override val data : Array[V])
-(implicit override val scalar : Scalar[V])
+trait DenseVector[@specialized(Int,Long,Float,Double) V]
 extends mutable.Vector[V] with mutable.VectorLike[V,DenseVector[V]]
 with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVector[V]] { self =>
 
@@ -134,7 +132,7 @@ trait DenseVectorConstructors extends DenseVectorColConstructors;
 class DenseVectorRow[@specialized(Int,Long,Float,Double) V]
 (override val data : Array[V])
 (implicit override val scalar : Scalar[V])
-extends DenseVector[V](data)(scalar) with mutable.VectorRow[V] with mutable.VectorRowLike[V,DenseVectorRow[V]] {
+extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,DenseVectorRow[V]] {
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
     implicit val mf = implicitly[Scalar[V2]].manifest;
     domain match {
@@ -166,7 +164,7 @@ object DenseVectorRow extends mutable.VectorRowCompanion[DenseVectorRow] {
 class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
 (override val data : Array[V])
 (implicit override val scalar : Scalar[V])
-extends DenseVector[V](data)(scalar) with mutable.VectorCol[V] with mutable.VectorColLike[V,DenseVectorCol[V]]  {
+extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,DenseVectorCol[V]]  {
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
     implicit val mf = implicitly[Scalar[V2]].manifest;
     domain match {
