@@ -52,7 +52,9 @@ final class SparseArray[@specialized T]
   def this(length : Int, initialActiveLength : Int = 3)(implicit m : ClassManifest[T], d : DefaultArrayValue[T]) =
     this(length, new Array[Int](initialActiveLength), new Array[T](initialActiveLength), 0, initialActiveLength)(m, d);
 
-  { // check rep invariants
+  checkInvariants()
+  
+  private def checkInvariants() { // check rep invariants
     require(length >= 0, "Length must be non-negative");
     require(used >= 0 && used <= length, "Used must be <= length and >= 0");
     if (used > 0) {
