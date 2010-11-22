@@ -565,3 +565,4 @@ object DefaultArrayValue {
   implicit def ObjectDefaultArrayValue[T<:AnyRef] =
     refDefault.asInstanceOf[DefaultArrayValue[T]];
 }
+

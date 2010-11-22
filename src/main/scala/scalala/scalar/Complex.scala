@@ -186,6 +186,9 @@ object Complex { outer =>
       a.real.isNaN || a.imag.isNaN;
     
     val manifest = implicitly[ClassManifest[Complex]];
+    
+    val defaultArrayValue =
+      implicitly[scalala.collection.sparse.DefaultArrayValue[Complex]];
   }
 
   //

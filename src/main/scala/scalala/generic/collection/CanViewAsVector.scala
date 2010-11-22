@@ -26,7 +26,7 @@ import scalala.collection.sparse.SparseArray;
 import scalala.scalar.Scalar;
 import scalala.tensor.Vector;
 import scalala.tensor.dense.DenseVectorCol;
-import scalala.tensor.sparse.SparseVector;
+import scalala.tensor.sparse.SparseVectorCol;
 
 /**
  * View something as a Vector.
@@ -63,7 +63,7 @@ object CanViewAsVector {
 
   class SparseArrayVector[V:ClassManifest:Scalar]
   extends CanViewAsVector[SparseArray[V],V] {
-    def apply(from : SparseArray[V]) = new SparseVector[V](from);
+    def apply(from : SparseArray[V]) = new SparseVectorCol[V](from);
   }
 
   implicit def mkSparseArrayVector[V:ClassManifest:Scalar] =

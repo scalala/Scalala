@@ -150,7 +150,7 @@ object DenseVectorRow extends mutable.VectorRowCompanion[DenseVectorRow] {
       new DenseVectorCol(row.data)(row.scalar);
   }
 
-  /** Tighten bound on super to be a dense in return value. */
+  /** Tighten bound on super to be dense in return value. */
   override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
   (implicit slice : CanSliceCol[Matrix[V2],Int,Col], mul : CanMulRowBy[DenseVectorRow[V1],Col,RV], scalar : Scalar[RV]) =
      super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[CanMulRowBy[DenseVectorRow[V1],tensor.Matrix[V2],DenseVectorRow[RV]]];

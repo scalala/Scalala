@@ -353,6 +353,9 @@ class RichArrayVector[V:ClassManifest](override val repr : Array[V])
 extends MutableWrappedColOps[Array[V]] {
   /** Final alias for :+ as a workaround for arrays. */
   final def :+:[B,That](b : B)(implicit op : CanAdd[Array[V],B,That]) = this.:+(b);
+  
+  /** Returns a vector view of this array. */
+  def asVector(implicit s : Scalar[V]) = new scalala.tensor.dense.DenseVectorCol(repr);
 }
 
 /**
@@ -361,7 +364,11 @@ extends MutableWrappedColOps[Array[V]] {
  * @author dramage
  */
 class RichArrayMatrix[V:ClassManifest](override val repr : Array[Array[V]])
-extends MatrixOps[Array[Array[V]]];
+extends MatrixOps[Array[Array[V]]] {
+
+  /** Returns a matrix view of this array. */
+  def asMatrix(implicit s : Scalar[V]) = new scalala.tensor.dense.ArrayArrayMatrix(repr);
+}
 
 /**
  * Numeric operator support for SparseArray vector.
@@ -369,7 +376,11 @@ extends MatrixOps[Array[Array[V]]];
  * @author dramage
  */
 class RichSparseArrayVector[V:ClassManifest:DefaultArrayValue](override val repr : SparseArray[V])
-extends MutableWrappedColOps[SparseArray[V]];
+extends MutableWrappedColOps[SparseArray[V]] {
+
+  /** Returns a vector view of this sparse array. */
+  def asVector(implicit s : Scalar[V]) = new scalala.tensor.sparse.SparseVectorCol(repr);
+}
 
 /**
  * Numeric operator support for solo scalars.  Note: we do not support
@@ -450,3 +461,4 @@ object Implicits {
   implicit def richMap[K,V](value : Map[K,V]) =
     new RichMap[K,V](value);
 }
+

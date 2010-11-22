@@ -20,6 +20,8 @@
 package scalala;
 package scalar;
 
+import scalala.collection.sparse.DefaultArrayValue;
+
 /**
  * Marker trait for scalar values.  Scalars must be immutable.
  *
@@ -63,6 +65,9 @@ trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
 
   /** Returns the class manifest of the scalar type. */
   def manifest : ClassManifest[V];
+  
+  /** Returns the DefaultArrayValue for this type.  Always this.zero. */
+  def defaultArrayValue : DefaultArrayValue[V];
 }
 
 object Scalar {
@@ -84,6 +89,7 @@ object Scalar {
     def toDouble(a : Int) = a;
     def isNaN(a : Int) = false;
     val manifest = implicitly[ClassManifest[Int]];
+    val defaultArrayValue = implicitly[DefaultArrayValue[Int]];
   }
 
   implicit object ScalarS extends Scalar[Short] {
@@ -104,6 +110,7 @@ object Scalar {
     def toDouble(a : Short) = a;
     def isNaN(a : Short) = false;
     val manifest = implicitly[ClassManifest[Short]];
+    val defaultArrayValue = implicitly[DefaultArrayValue[Short]];
   }
 
   implicit object ScalarL extends Scalar[Long] {
@@ -124,6 +131,7 @@ object Scalar {
     def toDouble(a : Long) = a;
     def isNaN(a : Long) = false;
     val manifest = implicitly[ClassManifest[Long]];
+    val defaultArrayValue = implicitly[DefaultArrayValue[Long]];
   }
 
   implicit object scalarF extends Scalar[Float] {
@@ -144,6 +152,7 @@ object Scalar {
     def toDouble(a : Float) = a;
     def isNaN(a : Float) = java.lang.Float.isNaN(a);
     val manifest = implicitly[ClassManifest[Float]];
+    val defaultArrayValue = implicitly[DefaultArrayValue[Float]];
   }
 
   implicit object scalarD extends Scalar[Double] {
@@ -164,6 +173,7 @@ object Scalar {
     def toDouble(a : Double) = a;
     def isNaN(a : Double) = java.lang.Double.isNaN(a);
     val manifest = implicitly[ClassManifest[Double]];
+    val defaultArrayValue = implicitly[DefaultArrayValue[Double]];
   }
 
   implicit object scalarB extends Scalar[Boolean] {
@@ -184,5 +194,11 @@ object Scalar {
     def toDouble(a : Boolean) = if (a) 1.0 else 0.0;
     def isNaN(a : Boolean) = false;
     def manifest = implicitly[ClassManifest[Boolean]];
+    val defaultArrayValue = implicitly[DefaultArrayValue[Boolean]];
   }
+
+  /** The default array value for a scalar is zero. */
+  implicit def defaultArrayValue[V:Scalar] : DefaultArrayValue[V] =
+    implicitly[Scalar[V]].defaultArrayValue;
 }
+
