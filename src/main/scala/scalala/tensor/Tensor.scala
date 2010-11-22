@@ -272,6 +272,7 @@ self =>
   (implicit bf : CanSliceTensor[This, A, I, That]) : That =
     apply(keys.toMap);
 
+  /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : scala.collection.Map[I,A])
   (implicit bf : CanSliceTensor[This, A, I, That]) : That =
     bf(repr, keys);
@@ -402,7 +403,7 @@ self =>
       (this eq that) ||
       (that canEqual this) &&
       (this.domain == that.domain) &&
-      (this.forallNonZero((k,v) => that(k) == v));
+      (this.forall((k,v) => that(k) == v));
     case _ => false;
   }
 
@@ -428,8 +429,6 @@ trait Tensor
 extends TensorLike[A, B, IterableDomain[A], Tensor[A, B]];
 
 object Tensor extends TensorCompanion[Tensor] {
-
-  // private type Bound[K,V] = Tensor[K,V];
 
   class Impl[A,B](values : Map[A,B])(implicit override val scalar : Scalar[B])
   extends Tensor[A,B] {
