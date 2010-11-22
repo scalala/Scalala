@@ -87,7 +87,7 @@ extends TensorLike[A,B,D,This] {
     inner.find(p);
 
   override def findAll(p : B => Boolean) : Iterable[A] =
-    inner.find(p);
+    inner.findAll(p);
 
   override def apply(key : A) : B =
     inner(key);

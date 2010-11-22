@@ -163,9 +163,13 @@ self =>
 
   /** Returns true if and only if the given predicate is true for all elements. */
   def forall(fn : B => Boolean) : Boolean = {
-    if (!fn(scalar.zero)) return false;
-    foreachNonZeroValue(v => if (!fn(v)) return false);
-    return true;
+    if (foreachNonZeroValue(v => if (!fn(v)) return false)) {
+      // this branch only runs when foreachNonZeroValue hits all elements
+      return true;
+    } else {
+      // there were some zeros, so check fn(scalar.zero)
+      return fn(scalar.zero);
+    }
   }
 
   /** Creates a new map containing a transformed copy of this map. */
