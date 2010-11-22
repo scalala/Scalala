@@ -69,14 +69,14 @@ class TensorTest extends FunSuite with Checkers {
   test("Filter values") {
     val x = mkMapTensor();
     x("a","b","c") := List(1,2,3);
-    x(x.find(_ >= 2)) := 0;
+    x(x.findAll(_ >= 2)) := 0;
     assert(x.valuesIterator.toList === List(1,0,0));
   }
 
   test("Find") {
     val x = mkMapTensor();
     x("a","b","c") := List(1,2,3);
-    assert(x.find(_ >= 2).toList === List("b","c"));
+    assert(x.findAll(_ >= 2).toList === List("b","c"));
   }
 
   test("Overlapping slice assignments") {

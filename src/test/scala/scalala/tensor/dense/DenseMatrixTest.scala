@@ -45,7 +45,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     // check column slice.  should be mutable and write-through.
     val x : mutable.VectorCol[Int] = m(::, 1);
-    assert(x === DenseVector(4,4))
+    assert(x === DenseVector(5,5))
     x(1) = 7;
     assert(m(1,1) === 7);
 
@@ -64,9 +64,9 @@ class DenseMatrixTest extends FunSuite with Checkers {
 
     // check static type and write-through
     val t : mutable.Matrix[Int] = m.t;
-    assert(t === DenseMatrix((1,4),(2,3),(5,6)));
+    assert(t === DenseMatrix((1,4),(2,5),(3,6)));
     t(0,0) = 0;
-    assert(m === DenseMatrix((1,2,3),(4,5,6)));
+    assert(m === DenseMatrix((0,2,3),(4,5,6)));
   }
 
   test("Min/Max") {
@@ -111,7 +111,7 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(m.data eq r.data);
     assert(r.numRows === 3);
     assert(r.numCols === 2);
-    assert(r === DenseMatrix((1,2),(3,4),(5,6)));
+    assert(r === DenseMatrix((1,5),(4,3),(2,6)));
   }
 
   test("Solve") {

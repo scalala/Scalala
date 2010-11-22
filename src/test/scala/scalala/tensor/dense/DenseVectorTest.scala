@@ -73,9 +73,9 @@ class DenseVectorTest extends FunSuite with Checkers {
     val x = DenseVector(1,2).t;
     val m = DenseMatrix((1,2,1),(2,7,8));
 
-    // assert return type is a dense column
+    // assert return type is statically a dense row
     val r : DenseVectorRow[Int] = x * m;
-    assert(r === DenseVector(5, 16, 7));
+    assert(r === DenseVector(5, 16, 17));
   }
 
   test("Slice") {
