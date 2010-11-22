@@ -23,7 +23,7 @@ package mutable;
 
 import domain._;
 
-import generic.{CanMul,CanDiv,CanAdd,CanSub,CanPow,CanMod}
+import generic.{CanMul,CanDiv,CanAdd,CanSub,CanPow,CanMod,CanCast}
 import generic.{CanAssignInto,CanMulInto,CanDivInto,CanAddInto,CanSubInto,CanPowInto,CanModInto}
 import generic.collection._;
 
@@ -243,24 +243,14 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] extends tensor.TensorCompanion[
   // Tensor-scalar
   //
 
-  implicit def canAssignScalarInto[K,V](implicit scalar : Scalar[V])
-  : CanAssignInto[Bound[K,V],V] = new CanAssignInto[Bound[K,V],V] {
-    override def apply(a : Bound[K,V], s : V) = {
+  implicit def canAssignScalarInto[K,V1,V2](implicit scalar : Scalar[V2], cast : CanCast[V2,V1])
+  : CanAssignInto[Bound[K,V1],V2] = new CanAssignInto[Bound[K,V1],V2] {
+    override def apply(a : Bound[K,V1], s : V2) = {
+      val casted = cast(s);
       if (s == scalar.zero) {
-        a.transformNonZeroValues(v => s);
+        a.transformNonZeroValues(v => casted);
       } else {
-        a.transformValues(v => s);
-      }
-    }
-  }
-
-  implicit def canAssignScalarInto[K,V,V2](implicit tf : (V2 => V), scalar : Scalar[V2])
-  : CanAssignInto[Bound[K,V],V2] = new CanAssignInto[Bound[K,V],V2] {
-    override def apply(a : Bound[K,V], s : V2) = {
-      if (s == scalar.zero) {
-        a.transformNonZeroValues(v => s);
-      } else {
-        a.transformValues(v => s);
+        a.transformValues(v => casted);
       }
     }
   }
