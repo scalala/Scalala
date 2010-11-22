@@ -47,6 +47,7 @@ self =>
 
   protected type Self = This;
 
+  /** Returns a pointer to this cast as an instance of This. */
   def repr : This = this.asInstanceOf[This];
 
   /** Provides information about the underlying scalar value type B. */
@@ -141,6 +142,32 @@ self =>
     true;
   }
 
+  /** Returns true if and only if the given predicate is true for all elements. */
+  def forall(fn : (A,B) => Boolean) : Boolean = {
+    for (k <- domain) {
+      if (!fn(k, apply(k))) return false;
+    }
+    return true;
+  }
+
+  /** Returns true if and only if the given predicate is true for all non-zero elements. */
+  def forallNonZero(fn : (A,B) => Boolean) : Boolean = {
+    foreachNonZero((k,v) => if (!fn(k,v)) return false);
+    return true;
+  }
+ 
+  /** Returns true if and only if the given predicate is true for all non-zero elements. */
+  def forallNonZero(fn : B => Boolean) : Boolean = {
+    foreachNonZeroValue(v => if (!fn(v)) return false);
+  }
+
+  /** Returns true if and only if the given predicate is true for all elements. */
+  def forall(fn : B => Boolean) : Boolean = {
+    if (!fn(scalar.zero)) return false;
+    foreachNonZeroValue(v => if (!fn(v)) return false);
+    return true;
+  }
+
   /** Creates a new map containing a transformed copy of this map. */
   def map[TT>:This,O,That](f : (A,B) => O)
   (implicit bf : CanMapKeyValuePairs[TT, A, B, O, That]) : That =
@@ -156,6 +183,7 @@ self =>
   (implicit bf : CanMapValues[TT, B, O, That]) : That =
     bf.map(repr.asInstanceOf[TT], f);
 
+  /** Maps all non-zero values. */
   def mapNonZeroValues[TT>:This,O,That](f : B => O)
   (implicit bf : CanMapValues[TT, B, O, That]) : That =
     bf.mapNonZero(repr.asInstanceOf[TT], f);
@@ -168,8 +196,16 @@ self =>
   def valuesIterator : Iterator[B] =
     domain.iterator.map(this);
 
+  /** Returns some key for which the given predicate is true. */
+  def find(p : B => Boolean) : Option[A] = {
+    for (k <- domain) {
+      if (p(apply(k))) return Some(k);
+    }
+    return None;
+  }
+    
   /** Returns the keys for which the given predicate is true. */
-  def find(p : B => Boolean) : Iterable[A] =
+  def findAll(p : B => Boolean) : Iterable[A] =
     domain.filter(this andThen p);
   
   /**
@@ -363,7 +399,7 @@ self =>
       (this eq that) ||
       (that canEqual this) &&
       (this.domain == that.domain) &&
-      (this.foreachNonZero((k,v) => that(k) == v));
+      (this.forallNonZero((k,v) => that(k) == v));
     case _ => false;
   }
 

@@ -64,6 +64,18 @@ extends TensorLike[A,B,D,This] {
 
   override def foreachNonZeroValue[U](fn : (B=>U)) =
     inner.foreachNonZeroValue(fn);
+    
+  override def forall(fn : (A,B) => Boolean) : Boolean =
+    inner.forall(fn);
+
+  override def forallNonZero(fn : (A,B) => Boolean) : Boolean =
+    inner.forallNonZero(fn);
+
+  override def forall(fn : B => Boolean) : Boolean =
+    inner.forall(fn);
+ 
+  override def forallNonZero(fn : B => Boolean) : Boolean =
+    inner.forallNonZero(fn);
 
   override def iterator : Iterator[(A,B)] =
     inner.iterator;
@@ -71,7 +83,10 @@ extends TensorLike[A,B,D,This] {
   override def valuesIterator : Iterator[B] =
     inner.valuesIterator;
 
-  override def find(p : B => Boolean) : Iterable[A] =
+  override def find(p : B => Boolean) : Option[A] =
+    inner.find(p);
+
+  override def findAll(p : B => Boolean) : Iterable[A] =
     inner.find(p);
 
   override def apply(key : A) : B =
