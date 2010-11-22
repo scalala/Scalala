@@ -258,6 +258,11 @@ self =>
   (implicit bf : CanSliceVector[This, A, That]) : That =
     bf(repr, keys);
 
+  /** Creates a view backed by the "true" elements in selected. */
+  def apply[That](selected : Tensor[A,Boolean])
+  (implicit bf : CanSliceVector[This, A, That]) : That =
+    bf(repr, domain.filter(selected).toIndexedSeq);
+
   /** Creates a view backed by the given keys, returning them as a sequence. */
   def apply[That](keys : Traversable[A])
   (implicit bf : CanSliceVector[This, A, That]) : That =
