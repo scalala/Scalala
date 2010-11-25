@@ -21,7 +21,9 @@ package scalala;
 package library;
 package plotting;
 
-import java.awt.Color;
+import java.awt.{Color,Paint,TexturePaint};
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 
 /**
  * Paint scale for for a color-coded dataset.
@@ -39,9 +41,25 @@ sealed trait PaintScale;
  */
 case class StaticPaintScale(lower : Double, upper : Double, gradient : Array[Color] = PaintScale.BlueToRed)
 extends PaintScale {
-  def color(value : Double) = {
-    val index = gradient.length * (value - lower) / (upper - lower);
-    gradient(math.min(gradient.length-1, math.max(0, index.toInt)));
+  // for painting NaN
+  val nanPaint = {
+    val img = new BufferedImage(5,5,BufferedImage.TYPE_INT_ARGB);
+    
+    val gfx = img.getGraphics;
+    gfx.setColor(Color.gray);
+    gfx.drawLine(0,0,4,4);
+    gfx.dispose();
+    
+    new TexturePaint(img, new Rectangle2D.Double(0,0,5,5));
+  }
+  
+  def color(value : Double) : Paint = {
+    if (java.lang.Double.isNaN(value)) {
+      nanPaint
+    } else {
+      val index = gradient.length * (value - lower) / (upper - lower);
+      gradient(math.min(gradient.length-1, math.max(0, index.toInt)));
+    }
   }
 }
 

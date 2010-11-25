@@ -444,15 +444,21 @@ trait Plotting {
         static;
 
       case dynamic : DynamicPaintScale => {
-        val values = items.view.map(item => mt.scalar.toDouble(mt(item._1, item._2)));
-        dynamic(lower = values.min, upper = values.max);
+        val values = items.view.map(item =>
+          mt.scalar.toDouble(mt(item._1, item._2))).filter(!_.isNaN);
+        if (values.isEmpty) {
+          dynamic(lower = Double.NaN, upper = Double.NaN);
+        } else {
+          dynamic(lower = values.min, upper = values.max);
+        }
       }
     }
 
     val paintScale = new org.jfree.chart.renderer.PaintScale {
       override def getLowerBound = staticScale.lower;
       override def getUpperBound = staticScale.upper;
-      override def getPaint(value : Double) = staticScale.color(value);
+      override def getPaint(value : Double) =
+        staticScale.color(value);
     }
 
     renderer.setPaintScale(paintScale);
