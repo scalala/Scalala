@@ -46,8 +46,11 @@ trait Library {
   final def pow(base : Double, exponent : Double) : Double =
     scala.math.pow(base, exponent);
 
+  /** Alias for math.abs. */
+  final def abs(v : Double) : Double = scala.math.abs(v);
+
   /** Alias for x.isNaN. */
-  final def isnan(x : Double) = x.isNaN;
+  final def isnan(x : Double) = java.lang.Double.isNaN(x);
 
   /** Alias for math.sqrt. */
   final def sqrt(x : Double) = scala.math.sqrt(x);
@@ -68,13 +71,13 @@ trait Library {
   // Collection level operations
   //
 
-  /** Take the exp of the given value. */
-  def exp[V,That](value : V)(implicit exp : CanExp[V,That]) : That =
-    exp(value);
-
   /** Take the log of the given value. */
   def log[V,That](value : V)(implicit log : CanLog[V,That]) : That =
     log(value);
+
+  /** Take the exp of the given value. */
+  def exp[V,That](value : V)(implicit exp : CanExp[V,That]) : That =
+    exp(value);
 
   /** Take the n-norm of the given values. */
   def mean[V,That](value : V)(implicit mean : CanMean[V,That]) : That =

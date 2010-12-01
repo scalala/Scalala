@@ -23,6 +23,11 @@ package library;
 import tensor.{Matrix, Vector}
 import tensor.dense.{DenseVector, DenseMatrix}
 
+import scalala.generic.CanMul;
+import scalala.generic.collection.CanViewAsVector;
+import scalala.scalar.Scalar;
+import scalala.tensor.domain.TableDomain;
+
 import org.netlib.lapack._;
 import org.netlib.util.intW;
 
@@ -146,6 +151,48 @@ trait LinearAlgebra {
     require(mat.numCols > 0, "Matrix is empty")
     require(mat.numRows > 0, "Matrix is empty")
   }
+
+  /**
+   * Returns the Kronecker product of the two matrices a and b,
+   * usually denoted a ⊗ b.
+   */
+  def kron[V1,V2,RV](a : Matrix[V1], b : Matrix[V2])(implicit mul : CanMul[V1,V2,RV], s : Scalar[RV]) : Matrix[RV] = {
+    val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows * b.numRows, a.numCols * b.numCols));
+    a.foreachNonZero((ai,aj,av) => b.foreachNonZero((bi,bj,bv) =>
+      builder((ai * b.numRows + bi, aj * b.numCols + bj)) = mul(av, bv)));
+    builder.result.asInstanceOf[Matrix[RV]];
+  }
+  
+  /**
+   * Returns the rank of each element in the given vector, adjusting for
+   * ties.
+   */
+  def ranks[X,V](x : X)(implicit xvt : CanViewAsVector[X,V], ord : Ordering[V]) : Array[Double] = {
+    val a = xvt(x);
+    val as = a.argsort;
+    val rv = new Array[Double](as.length);
+    var i = 0;
+    while (i < as.length) {
+      // count number of tied values at rank i
+      var numTiedValuesAtI = 1;
+      while (i + numTiedValuesAtI < as.length && a(as(i + numTiedValuesAtI)) == a(as(i))) {
+        numTiedValuesAtI += 1;
+      }
+      
+      // set return value for next numTiedValuesAtI indexes in as
+      val rank = 1 + i + (numTiedValuesAtI - 1) / 2.0;
+      var j = 0;
+      while (j < numTiedValuesAtI) {
+        rv(as(i + j)) = rank;
+        j += 1;
+      }
+      
+      i += numTiedValuesAtI;
+    }
+    
+    rv;
+  }
 }
 
 object LinearAlgebra extends LinearAlgebra { }
+
