@@ -126,21 +126,15 @@ trait Plotting {
    * @param y Y-coordinates, co-indexed with x (and indexed by keys of type K).
    * @param style Matlab-like style spec of the series to plot.
    * @param name Name of the series to show in the legend.
-   * @param labels Optional mouse-over tooltips for points.
-   * @param tips Optional mouse-over tooltips for points.
-   *
-   * TODO: compiler bug stops K from being inferred with default values of null
-   * for labels and tips.
+   * @param labels Optional in-graph labels for some points.
+   * @param tips Optional mouse-over tooltips for some points.
    */
   def plot[K,X,XV,Y,YV]
-  (x : X, y : Y, style : Char = '-', name : String = null)
-//   labels : PartialFunction[K,String] = null,
-//   tips : PartialFunction[K,String] = null)
+  (x : X, y : Y, style : Char = '-', name : String = null,
+   labels : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]],
+   tips : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]])
   (implicit xyplot : XYPlot = figures.figure.plot,
    xtv : CanViewAsTensor1[X,K,XV], ytv : CanViewAsTensor1[Y,K,YV]) : Unit = {
-
-    val labels : PartialFunction[K,String] = null;
-    val tips : PartialFunction[K,String] = null;
 
     val series = xyplot.nextSeries;
 
@@ -218,8 +212,8 @@ trait Plotting {
    */
   def scatter[K,X,XV,Y,YV,S,SV,C,CV]
   (x : X, y : Y, size : S, color : C,
-   labels : PartialFunction[K,String],
-   tips : PartialFunction[K,String],
+   labels : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]],
+   tips : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]],
    paintScale : PaintScale = DynamicPaintScale(),
    name : String = null)
   (implicit xyplot : XYPlot = figures.figure.plot,
@@ -386,8 +380,8 @@ trait Plotting {
    showScale : Boolean = true,
    name : String = null,
    offset : (Int,Int) = (0,0),
-   labels : PartialFunction[(Int,Int), String] = null,
-   tips : PartialFunction[(Int,Int), String] = null)
+   labels : PartialFunction[(Int,Int), String] = null.asInstanceOf[PartialFunction[(Int,Int), String]],
+   tips : PartialFunction[(Int,Int), String] = null.asInstanceOf[PartialFunction[(Int,Int), String]])
   (implicit xyplot : XYPlot = figures.figure.plot,
    mtv : CanViewAsTensor2[M,Int,Int,V]) {
 
