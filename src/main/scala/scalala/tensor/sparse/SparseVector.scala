@@ -58,7 +58,16 @@ with mutable.Vector[B] with mutable.VectorLike[B,SparseVector[B]] {
 }
 
 object SparseVector extends mutable.VectorCompanion[SparseVector] {
-  def apply[B:Scalar:ClassManifest:DefaultArrayValue](size : Int)(values : (Int,B)*) =
+  /** Creates a sparse vector literal. */
+  def apply[B:Scalar:ClassManifest:DefaultArrayValue](values : B*) =
+    new SparseVectorCol(SparseArray(values :_*))
+
+  /** Returns a vector of zeros of the given size. */
+  def zeros[B:Scalar:ClassManifest:DefaultArrayValue](size : Int) =
+    create(size)();
+
+  /** Creates a sparse vector of the given size with given initial values. */
+  def create[B:Scalar:ClassManifest:DefaultArrayValue](size : Int)(values : (Int,B)*) =
     new SparseVectorCol(SparseArray.create(size)(values :_*));
 
   /** Tabulate a vector with the value at each offset given by the function. */
