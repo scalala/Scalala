@@ -189,7 +189,8 @@ final class SparseArray[@specialized T]
       if (used > data.length) {
         // need to grow array
         val newLength = {
-          if      (data.length < 0x0400) { data.length * 2 }
+          if      (data.length == 0)     { 4 }
+          else if (data.length < 0x0400) { data.length * 2 }
           else if (data.length < 0x0800) { data.length + 0x0400 }
           else if (data.length < 0x1000) { data.length + 0x0800 }
           else if (data.length < 0x2000) { data.length + 0x1000 }
@@ -197,15 +198,16 @@ final class SparseArray[@specialized T]
           else { data.length + 0x4000 };
         };
 
-        // copy existing data into new arrays
+        // allocate new arrays
         val newIndex = new Array[Int](newLength);
         val newData  = new Array[T](newLength);
+
+        // copy existing data into new arrays
         System.arraycopy(index, 0, newIndex, 0, insertPos);
         System.arraycopy(data, 0, newData, 0, insertPos);
-
         System.arraycopy(index, insertPos, newIndex, insertPos + 1, used - insertPos - 1);
         System.arraycopy(data,  insertPos, newData,  insertPos + 1, used - insertPos - 1);
-
+        
         // update pointers
         index = newIndex;
         data = newData;
@@ -434,7 +436,7 @@ final class SparseArray[@specialized T]
         } else if (that.index(thatI) < this.index(thisI)) {
           if (that.data(thatI) != this.default) return false;
           thatI += 1;
-        } else if (this.index(thisI) == that.index(thatI)) {
+        } else { // this.index(thisI) == that.index(thatI)
           if (this.data(thisI) != that.data(thatI)) return false;
           thisI += 1;
           thatI += 1;
