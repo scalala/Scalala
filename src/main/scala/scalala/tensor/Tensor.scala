@@ -142,6 +142,26 @@ self =>
     true;
   }
 
+  /**
+   * Returns a traversable over the non-zero elements of the domain (and possibly
+   * some that have zeros)
+   */
+  def nonZero:Traversable[(A,B)] = new Traversable[(A,B)] {
+    def foreach[U](f: ((A,B)) => U): Unit = {
+      foreachNonZero((a,b)=>f(a->b));
+    }
+  }
+
+  /**
+   * Returns a traversable over the non-zero values of the domain (and possibly
+   * some that have zeros)
+   */
+  def nonZeroValues:Traversable[B] = new Traversable[B] {
+    def foreach[U](f: (B) => U): Unit = {
+      foreachNonZeroValue(f);
+    }
+  }
+
   /** Returns true if and only if the given predicate is true for all elements. */
   def forall(fn : (A,B) => Boolean) : Boolean = {
     foreach((k,v) => if (!fn(k,v)) return false);
