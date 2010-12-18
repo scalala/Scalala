@@ -36,10 +36,21 @@ object ScalalaConsole {
     }
     fos.close();
 
-    val method = Class.forName("scala.tools.nsc.MainGenericRunner").getMethod(
-      "main", classOf[Array[String]]);
-    val aurg : Array[String] = (Array[String]("-i",file.toString,"-classpath",System.getProperty("java.class.path"))++args)
-    method.invoke(null, aurg:AnyRef);
-    exit(0);
+    // redirect to invoking the standard scala main method
+    val method = Class.forName("scala.tools.nsc.MainGenericRunner").
+      getMethod("main", classOf[Array[String]]);
+
+    // augmented arguments
+    val aurg : Object = (
+      List[String](
+        "-nocompdaemon",
+        "-classpath", System.getProperty("java.class.path"),
+        "-no-specialization",
+        "-usejavacp",
+        "-i", file.getAbsolutePath
+      ) ++ args
+    ).toArray[String];
+
+    method.invoke(null, aurg);
   }
 }

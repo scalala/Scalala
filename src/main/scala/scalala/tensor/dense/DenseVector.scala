@@ -1,208 +1,257 @@
 /*
  * Distributed as part of Scalala, a linear algebra library.
- * 
+ *
  * Copyright (C) 2008- Daniel Ramage
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
-
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA 
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
 package tensor;
 package dense;
 
-import java.util.Arrays;
-import scalala.collection.{MergeableSet, IntSpanSet, DomainException, PartialMap};
-import sparse._;
-import operators._;
-import TensorShapes._;
-import Tensor.CreateException;
+
+import scalar.Scalar;
+import domain.{IterableDomain,IndexDomain};
+import generic.{CanMul,CanMulColumnBy,CanMulRowBy};
+import generic.collection.{CanSliceCol,CanTranspose,CanAppendColumns};
+
+import scalala.library.random.MersenneTwisterFast;
+import scalala.library.Random;
 
 /**
- * A vector backed by a dense array of doubles.
- * 
+ * A vector backed by a dense array.
+ *
  * @author dramage
  */
 @serializable
 @SerialVersionUID(1)
-class DenseVector(data : Array[Double]) extends
-  DoubleArrayData(data) with Vector with DenseTensor[Int]
-  with TensorSelfOp[Int,DenseVector,Shape1Col] {
-  
-  /** Constructor for a vector of zeros of the given size. */
-  def this(size : Int) = this(new Array[Double](size));
-  
+trait DenseVector[@specialized(Int,Long,Float,Double) V]
+extends mutable.Vector[V] with mutable.VectorLike[V,DenseVector[V]]
+with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVector[V]] { self =>
+
   override def size = data.length;
-  
-  override def apply(i : Int) = data(i);
-  override def update(i : Int, value : Double) = data(i) = value;
 
- /** 
-  * Creates a tensor "like" this one, but with zeros everywhere.
-  */
-  def like = new DenseVector(size);
+  override def domain = IndexDomain(data.length);
 
-  override def copy = {
-    val arr = new Array[Double](size);
-    System.arraycopy(data,0,arr,0,size);
-    new DenseVector(arr);
-  }
-  
-  override def dot(other : Tensor1[Int]) : Double = other match {
-    case singleton : SingletonBinaryVector => this.apply(singleton.singleIndex)
-    case dense  : DenseVector  => dot(dense);
-    case binary : SparseBinaryVector => binary.dot(this);
-    case sparse : SparseVector => sparse.dot(this);
-    case hash   : SparseHashVector => hash.dot(this);
-    case _ => super.dot(other);
-  }
-  
-  def dot(that : DenseVector) = {
-    if (this.size != that.size) throw new DomainException();
+  override def apply(key : Int) =
+    data(key);
+
+  override def update(key : Int, value : V) =
+    data(key) = value;
+
+  override def foreach[U](fn : ((Int,V)=>U)) = {
     var i = 0;
-    var sum = 0.0;
     while (i < data.length) {
-      sum += this.data(i) * that.data(i);
+      fn(i,data(i));
       i += 1;
     }
-    sum;
+  }
+
+  override def foreachValue[U](fn : (V=>U)) =
+    data.foreach(fn);
+
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  override def transform(fn : (Int,V)=>V) = {
+    var i = 0;
+    while (i < data.length) {
+      data(i) = fn(i,data(i));
+      i += 1;
+    }
   }
   
-  override def toString() = new DenseMatrix(size, 1, data).toString();
-
-  override def +=(c: Double) {
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  override def transformValues(fn : V=>V) = {
     var i = 0;
-    while(i < data.length) {
-      data(i) += c;
+    while (i < data.length) {
+      data(i) = fn(data(i));
       i += 1;
     }
   }
 
-  override def -=(c: Double) {
-    var i = 0;
-    while(i < data.length) {
-      data(i) -= c;
-      i += 1;
-    }
+  /** Returns a view of this vector as a row. Tightens bound superclass's return value. */
+  override def asRow : DenseVectorRow[V] = this match {
+    case r : DenseVectorRow[_] => this.asInstanceOf[DenseVectorRow[V]];
+    case _ => new DenseVectorRow(this.data);
   }
 
-  override def *=(c: Double) {
-    var i = 0;
-    while(i < data.length) {
-      data(i) *= c;
-      i += 1;
-    }
+  /** Returns a view of this vector as a column. Tightens bound superclass's return value.  */
+  override def asCol : DenseVectorCol[V] = this match {
+    case c : DenseVectorCol[_] => this.asInstanceOf[DenseVectorCol[V]];
+    case _ => new DenseVectorCol(this.data);
   }
-
-  override def /=(c: Double) {
-    var i = 0;
-    while(i < data.length) {
-      data(i) /= c;
-      i += 1;
-    }
-  }
-
-  override def :=  (t : PartialMap[Int,Double]) = t match {
-    case v: DenseVector =>
-      ensure(v)
-      System.arraycopy(v.data,0,this.data,0,this.data.length);
-    case s: SparseVector =>
-      Arrays.fill(this.data,s.default);
-      var offset = 0;
-      while(offset < s.used) {
-        data(s.index(offset)) = s.data(offset);
-        offset+=1;
-      }
-    case _ => super.:=(t);
-  }
-
-  override def :+=  (t : PartialMap[Int,Double]) = t match {
-    case v: Vector =>
-      ensure(t);
-      var i = 0;
-      while(i < size) {
-        this(i) += v(i);
-        i += 1;
-      }
-    case _ => super.:+=(t);
-  }
-
-
-  /** Make Scala happy about inheritance */
-  def :+= [V<:Tensor[Int]]  (op : Vector) { this.:+=(op:PartialMap[Int,Double]); }
-
-  /** Increments each element in this map by the corresponding value as returned by the given operation. */
-  override def :+= [V<:Tensor[Int]] (op : TensorOp[V,_]) : Unit = {
-    op match {
-      case TensorMultScalar(tt, s) if tt.isInstanceOf[DenseVector] && (s != 0) => {
-        val t = tt.asInstanceOf[DenseVector]
-        ensure(t);
-        var i = 0;
-        while(i < size) {
-          this(i) += t(i) * s;
-          i += 1;
-        }
-      }
-      case t:DenseVector => {
-        ensure(t);
-        var i = 0;
-        while(i < size) {
-          this(i) += t(i);
-          i += 1;
-        }
-      }
-      case _ => super.:+=(op);
-    }
-  }
-
-  /** Make Scala happy about inheritance */
-  def :-= [V<:Tensor[Int]]  (op : Vector) { this.:-=(op:PartialMap[Int,Double]); }
-
-  /** Decrements each element in this map by the corresponding value as returned by the given operation. */
-  override def :-= [V<:Tensor[Int]] (op : TensorOp[V,_]) : Unit = {
-    op match {
-      case TensorMultScalar(tt, s) if tt.isInstanceOf[DenseVector] && (s != 0) => {
-        val t = tt.asInstanceOf[DenseVector]
-        ensure(t);
-        var i = 0;
-        while(i < size) {
-          this(i) -= t(i) * s;
-          i += 1;
-        }
-      }
-      case t:DenseVector => {
-        ensure(t);
-        var i = 0;
-        while(i < size) {
-          this(i) -= t(i);
-          i += 1;
-        }
-      }
-      case _ => super.:-=(op);
-    }
-  }
-
 }
 
-object DenseVector {
+object DenseVector extends mutable.VectorCompanion[DenseVector] with DenseVectorConstructors {
+
+//  implicit object DenseVectorCanMapValuesFrom
+//  extends DomainMapCanMapValuesFrom[DenseVector,Int,Double,Double,DenseVector] {
+//    override def apply(from : DenseVector, fn : (Double=>Double)) = {
+//      val data = new Array[Double](from.size);
+//      var i = 0;
+//      while (i < data.length) {
+//        data(i) = fn(from.data(i));
+//        i += 1;
+//      }
+//      new DenseVector(data);
+//    }
+//
+//    override def apply(from : DenseVector, fn : ((Int,Double)=>Double)) = {
+//      val data = new Array[Double](from.size);
+//      var i = 0;
+//      while (i < data.length) {
+//        data(i) = fn(i, from.data(i));
+//        i += 1;
+//      }
+//      new DenseVector(data);
+//    }
+//  }
+}
+
+/**
+ * Constructors for dense vectors.
+ *
+ * @author dramage
+ */
+trait DenseVectorConstructors extends DenseVectorColConstructors;
+
+/**
+ * DenseVectors as a row.
+ *
+ * @author dramage
+ */
+class DenseVectorRow[@specialized(Int,Long,Float,Double) V]
+(override val data : Array[V])
+(implicit override val scalar : Scalar[V])
+extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,DenseVectorRow[V]] {
+  override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
+    implicit val mf = implicitly[Scalar[V2]].manifest;
+    domain match {
+      case that : IndexDomain => new DenseVectorRow(new Array[V2](that.size)).asBuilder;
+      case _ => super.newBuilder[K2,V2](domain);
+    }
+  }
+}
+
+object DenseVectorRow extends mutable.VectorRowCompanion[DenseVectorRow] {
+  /** Transpose shares the same data. */
+  implicit def canTranspose[V] : CanTranspose[DenseVectorRow[V],DenseVectorCol[V]]
+  = new CanTranspose[DenseVectorRow[V],DenseVectorCol[V]] {
+    override def apply(row : DenseVectorRow[V]) =
+      new DenseVectorCol(row.data)(row.scalar);
+  }
+
+  /** Tighten bound on super to be dense in return value. */
+  override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
+  (implicit slice : CanSliceCol[Matrix[V2],Int,Col], mul : CanMulRowBy[DenseVectorRow[V1],Col,RV], scalar : Scalar[RV]) =
+     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[CanMulRowBy[DenseVectorRow[V1],tensor.Matrix[V2],DenseVectorRow[RV]]];
+}
+
+/**
+ * DenseVectors as a column.
+ *
+ * @author dramage
+ */
+class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
+(override val data : Array[V])
+(implicit override val scalar : Scalar[V])
+extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,DenseVectorCol[V]]  {
+  override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
+    implicit val mf = implicitly[Scalar[V2]].manifest;
+    domain match {
+      case that : IndexDomain => new DenseVectorCol(new Array[V2](that.size)).asBuilder;
+      case _ => super.newBuilder[K2,V2](domain);
+    }
+  }
+}
+
+object DenseVectorCol extends mutable.VectorColCompanion[DenseVectorCol] with DenseVectorColConstructors {
+  /** Transpose shares the same data. */
+  implicit def canTranspose[V] : CanTranspose[DenseVectorCol[V],DenseVectorRow[V]]
+  = new CanTranspose[DenseVectorCol[V],DenseVectorRow[V]] {
+    override def apply(row : DenseVectorCol[V]) =
+      new DenseVectorRow(row.data)(row.scalar);
+  }
+
+  /** Tighten bound on super to be a dense in return value. */
+  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : CanMul[V1,V2,RV], scalar : Scalar[RV])
+  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[CanMulColumnBy[DenseVectorCol[V1],tensor.VectorRow[V2],DenseMatrix[RV]]];
+
+  /** Tighten bound on super to be a dense in return value. */
+  override implicit def canAppendMatrixColumns[V]
+  : CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V],DenseMatrix[V]]
+  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V], DenseMatrix[V]]];
+
+  /** Tighten bound on super to be a dense in return value. */
+  override implicit def canAppendVectorColumn[V]
+  : CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]
+  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]];
+}
+
+trait DenseVectorColConstructors {
+  /** Constructs a DenseVector for the given IndexDomain. */
+  def apply[S:Scalar](domain : IndexDomain) =
+    zeros(domain.size);
+
+  /** Constructs a literal DenseVector. */
+  def apply[V:Scalar](values : V*) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(values.toArray);
+  }
+
+  /** Dense vector containing the given value for all elements. */
+  def fill[V:Scalar](size : Int)(value : V) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(Array.fill(size)(value));
+  }
+
+  /** Dense vector of zeros of the given size. */
+  def zeros[V:Scalar](size : Int) =
+    fill(size)(implicitly[Scalar[V]].zero);
+
+  /** Dense vector of ones of the given size. */
+  def ones[V:Scalar](size : Int) =
+    fill(size)(implicitly[Scalar[V]].one);
+
+  /** Tabulate a vector with the value at each offset given by the function. */
+  def tabulate[V:Scalar](size : Int)(f : (Int => V)) = {
+    implicit val mf = implicitly[Scalar[V]].manifest;
+    new DenseVectorCol(Array.tabulate(size)(f));
+  }
+
   /**
-   * Static constructor that creates a dense vector of the given size
-   * initialized by elements from the given values list (looping if
-   * necessary).
+   * Returns a vector with numbers from 'from' up to (but not including)
+   * 'until' incrementing by 'by' at each step.
    */
-  def apply(size : Int)(values : Double*) =
-    new DenseVector(Array.tabulate(size)(i => values(i % values.length)));
-  
-  def apply(map : PartialMap[Int,Double]) =
-    new DenseVector(Array.tabulate(map.size)(i => map(i)));
+  def range(from : Int, until : Int, by : Int = 1) =
+    new DenseVectorCol[Int](Array.range(from, until, by));
+
+  /** A vector of the given size with uniform random values between 0 and 1. */
+  def rand(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(size)(i => mt.nextDouble);
+  }
+
+  /**
+   * A vector of the given size with normally distributed random values
+   * with mean 0 and standard deviation 1.
+   */
+  def randn(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(size)(i => mt.nextGaussian);
+  }
+
+  /** A vector of the given size of random integers in the range [0..max). */
+  def randi(imax : Int, size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
+    tabulate(size)(i => mt.nextInt(imax));
+  }
 }

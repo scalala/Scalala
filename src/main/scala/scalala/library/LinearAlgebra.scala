@@ -1,13 +1,41 @@
+/*
+ * Distributed as part of Scalala, a linear algebra library.
+ *
+ * Copyright (C) 2008- Daniel Ramage
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
+ */
 package scalala;
 package library;
 
 import tensor.{Matrix, Vector}
-import tensor.dense.{DenseVector, Numerics, DenseMatrix}
+import tensor.dense.{DenseVector, DenseMatrix}
+
+import scalala.generic.CanMul;
+import scalala.generic.collection.CanViewAsVector;
+import scalala.scalar.Scalar;
+import scalala.tensor.domain.TableDomain;
+
+import org.netlib.lapack._;
+import org.netlib.util.intW;
 
 /**
- * Basic linear algebraic operations
+ * Basic linear algebraic operations.
+ *
+ * @author dlwh,dramage,retronym
  */
-
 trait LinearAlgebra {
   /**
    * Eigenvalue decomposition (right eigenvectors)
@@ -23,42 +51,52 @@ trait LinearAlgebra {
    *
    * Based on EVD.java from MTJ 0.9.12
    */
-  def eig(m : Matrix): Tuple3[DenseVector, DenseVector, DenseMatrix] = {
-    val (rows,cols) = m.dimensions;
-    require(rows == cols, "Matrix is not square!");
-    requireMatrixNonEmpty(m)
+  def eig(m : Matrix[Double]): (DenseVector[Double], DenseVector[Double], DenseMatrix[Double]) = {
+    require(m.numRows == m.numCols, "Matrix is not square!");
+    requireMatrixNonEmpty(m);
 
-    val n = rows
+    val n = m.numRows;
 
     // Allocate space for the decomposition
-    var Wr = new DenseVector(n)
-    var Wi = new DenseVector(n)
+    var Wr = DenseVector.zeros[Double](n);
+    var Wi = DenseVector.zeros[Double](n);
 
-    var Vr = new DenseMatrix(n,n)
+    var Vr = DenseMatrix.zeros[Double](n,n);
 
     // Find the needed workspace
-    var worksize = Array.ofDim[Double](1);
-    var info = Numerics.lapack.geev(false, true, n, Array.empty[Double], Array.empty[Double],
-      Array.empty[Double], Array.empty[Double], Array.empty[Double], worksize, -1 )
+    val worksize = Array.ofDim[Double](1);
+    val info = new intW(0);
+    LAPACK.getInstance.dgeev(
+      "N", "V", n,
+      Array.empty[Double], math.max(1,n),
+      Array.empty[Double], Array.empty[Double],
+      Array.empty[Double], math.max(1,n),
+      Array.empty[Double], math.max(1,n),
+      worksize, -1, info);
 
     // Allocate the workspace
-    val lwork: Int = if (info != 0)
-      math.max(1,4*n)
+    val lwork: Int = if (info.`val` != 0)
+      math.max(1,4*n);
     else
-      math.max(1,worksize(0).toInt)
+      math.max(1,worksize(0).toInt);
 
-    var work = Array.ofDim[Double](lwork)
+    val work = Array.ofDim[Double](lwork);
 
     // Factor it!
 
-    var A = new DenseMatrix(n,n)
+    val A = new DenseMatrix(n,n,Array.ofDim[Double](n*n));
     A := m
-    info = Numerics.lapack.geev(false, true, n, A.data, Wr.data, Wi.data, Array.empty[Double],
-      Vr.data, work, work.length)
+    LAPACK.getInstance.dgeev(
+      "N", "V", n,
+      A.data, math.max(1,n),
+      Wr.data, Wi.data,
+      Array.empty[Double], math.max(1,n),
+      Vr.data, math.max(1,n),
+      work, work.length, info);
 
-    if (info > 0)
+    if (info.`val` > 0)
       throw new NotConvergedException(NotConvergedException.Reason.Iterations)
-    else if (info < 0)
+    else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
     (Wr, Wi, Vr)
@@ -77,13 +115,13 @@ trait LinearAlgebra {
    * Computes the SVD of a m by n matrix
    * Returns an m*m matrix U, a vector of singular values, and a n*n matrix V'
    */
-  def svd(mat: DenseMatrix):(DenseMatrix,DenseVector,DenseMatrix) = {
+  def svd(mat: DenseMatrix[Double]):(DenseMatrix[Double],DenseVector[Double],DenseMatrix[Double]) = {
     requireMatrixNonEmpty(mat)
-    val m = mat.rows;
-    val n = mat.cols;
-    val S = new DenseVector(m min n);
-    val U = new DenseMatrix(m,m);
-    val Vt = new DenseMatrix(n,n);
+    val m = mat.numRows;
+    val n = mat.numCols;
+    val S = DenseVector.zeros[Double](m min n);
+    val U = DenseMatrix.zeros[Double](m,m);
+    val Vt = DenseMatrix.zeros[Double](n,n);
     val iwork = new Array[Int](8 * (m min n) );
     val workSize = ( 3
                     * math.min(m, n)
@@ -92,22 +130,69 @@ trait LinearAlgebra {
                                * math.min(m, n) + 4 * math.min(m, n))
                    );
     val work = new Array[Double](workSize);
-    import tensor.dense.Numerics.lapack._;
-    val result = gesdd(JobSVD.All,m,n,mat.copy.data,S.data,U.data,Vt.data,work,work.length,iwork);
-    if (result > 0)
+    val info = new intW(0);
+    LAPACK.getInstance.dgesdd(
+      "A", m, n,
+      mat.copy.data, math.max(1,m),
+      S.data, U.data, math.max(1,m),
+      Vt.data, math.max(1,n),
+      work,work.length,iwork, info);
+
+    if (info.`val` > 0)
       throw new NotConvergedException(NotConvergedException.Reason.Iterations)
-    else if (result < 0)
+    else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
     (U,S,Vt);
   }
 
 
-  private def requireMatrixNonEmpty(mat: Matrix): Unit = {
-    require(mat.cols > 0, "Matrix is empty")
-    require(mat.rows > 0, "Matrix is empty")
+  private def requireMatrixNonEmpty[V](mat: Matrix[V]): Unit = {
+    require(mat.numCols > 0, "Matrix is empty")
+    require(mat.numRows > 0, "Matrix is empty")
+  }
+
+  /**
+   * Returns the Kronecker product of the two matrices a and b,
+   * usually denoted a ⊗ b.
+   */
+  def kron[V1,V2,RV](a : Matrix[V1], b : Matrix[V2])(implicit mul : CanMul[V1,V2,RV], s : Scalar[RV]) : Matrix[RV] = {
+    val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows * b.numRows, a.numCols * b.numCols));
+    a.foreachNonZero((ai,aj,av) => b.foreachNonZero((bi,bj,bv) =>
+      builder((ai * b.numRows + bi, aj * b.numCols + bj)) = mul(av, bv)));
+    builder.result.asInstanceOf[Matrix[RV]];
+  }
+  
+  /**
+   * Returns the rank of each element in the given vector, adjusting for
+   * ties.
+   */
+  def ranks[X,V](x : X)(implicit xvt : CanViewAsVector[X,V], ord : Ordering[V]) : Array[Double] = {
+    val a = xvt(x);
+    val as = a.argsort;
+    val rv = new Array[Double](as.length);
+    var i = 0;
+    while (i < as.length) {
+      // count number of tied values at rank i
+      var numTiedValuesAtI = 1;
+      while (i + numTiedValuesAtI < as.length && a(as(i + numTiedValuesAtI)) == a(as(i))) {
+        numTiedValuesAtI += 1;
+      }
+      
+      // set return value for next numTiedValuesAtI indexes in as
+      val rank = 1 + i + (numTiedValuesAtI - 1) / 2.0;
+      var j = 0;
+      while (j < numTiedValuesAtI) {
+        rv(as(i + j)) = rank;
+        j += 1;
+      }
+      
+      i += numTiedValuesAtI;
+    }
+    
+    rv;
   }
 }
 
-
 object LinearAlgebra extends LinearAlgebra { }
+
