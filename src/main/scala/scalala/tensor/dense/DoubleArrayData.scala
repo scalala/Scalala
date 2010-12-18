@@ -26,4 +26,6 @@ package dense;
  * 
  * @author dramage
  */
+@serializable
+@SerialVersionUID(1)
 abstract class DoubleArrayData(final val data : Array[Double]);
