@@ -30,9 +30,6 @@ import domain.IndexDomain;
 trait VectorLike[@specialized(Int,Long,Float,Double) B, +This<:Vector[B]]
 extends Tensor1Like[Int,B,IndexDomain,This] { self =>
 
-  /** Returns the number of elements in the domain of this vector. */
-  def size = domain.size;
-
   protected[this] def mkValueString(value : B) : String =
     value.toString;
 

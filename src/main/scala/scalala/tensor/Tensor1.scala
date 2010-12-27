@@ -38,6 +38,9 @@ trait Tensor1Like
  +D<:IterableDomain[A] with DomainLike[A,D], +This<:Tensor1[A,B]]
 extends TensorLike[A,B,D,This] { self =>
 
+  /** Returns the number of elements in the domain of this vector. */
+  def size = domain.size;
+
   /** Returns the k-norm of this tensor. */
   def norm(n : Double) : Double = {
     if (n == 1) {
