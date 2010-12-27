@@ -115,39 +115,39 @@ trait NumericOps[+This] {
 trait MutableNumericOps[+This] extends NumericOps[This] {
   def repr : This;
 
-  def :=[TT>:This,B](b : B)(implicit op : CanAssignInto[TT,B]) : this.type = {
+  def :=[TT>:This,B](b : B)(implicit op : CanAssignInto[TT,B]) : This = {
     op(repr,b);
-    return this;
+    return repr;
   }
   
-  def :+=[TT>:This,B](b : B)(implicit op : CanAddInto[TT,B]) : this.type = {
+  def :+=[TT>:This,B](b : B)(implicit op : CanAddInto[TT,B]) : This = {
     op(repr,b);
-    return this;
+    return repr;
   }
 
-  def :-=[TT>:This,B](b : B)(implicit op : CanSubInto[TT,B]) : this.type = {
+  def :-=[TT>:This,B](b : B)(implicit op : CanSubInto[TT,B]) : This = {
     op(repr,b);
-    return this;
+    return repr;
   }
 
-  def :*=[TT>:This,B](b : B)(implicit op : CanMulInto[TT,B]) : this.type = {
+  def :*=[TT>:This,B](b : B)(implicit op : CanMulInto[TT,B]) : This = {
     op(repr,b);
-    return this;
+    return repr;
   }
 
-  def :/=[TT>:This,B](b : B)(implicit op : CanDivInto[TT,B]) : this.type = {
+  def :/=[TT>:This,B](b : B)(implicit op : CanDivInto[TT,B]) : This = {
     op(repr,b);
-    return this;
+    return repr;
   }
 
-  def :%=[TT>:This,B](b : B)(implicit op : CanModInto[TT,B]) : this.type = {
+  def :%=[TT>:This,B](b : B)(implicit op : CanModInto[TT,B]) : This = {
     op(repr,b);
-    return this;
+    return repr;
   }
 
-  def :^=[TT>:This,B](b : B)(implicit op : CanPowInto[TT,B]) : this.type = {
+  def :^=[TT>:This,B](b : B)(implicit op : CanPowInto[TT,B]) : This = {
     op(repr,b);
-    return this;
+    return repr;
   }
 
   /** Alias for :+=(b) for all b. */
