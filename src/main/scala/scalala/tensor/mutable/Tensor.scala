@@ -294,7 +294,7 @@ trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] extends tensor.TensorCompanion[
 
   /** Divides each element by the given scale factor. */
   implicit def canPowScalarInto[K,V,O](implicit op : CanPow[V,O,V], so : Scalar[O])
-  : CanDivInto[Bound[K,V],O] = new CanDivInto[Bound[K,V],O] {
+  : CanPowInto[Bound[K,V],O] = new CanPowInto[Bound[K,V],O] {
     override def apply(a : Bound[K,V], b : O) = {
       a.transformValues(v => op(v, b));
     }
