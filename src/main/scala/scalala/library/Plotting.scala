@@ -130,9 +130,9 @@ trait Plotting {
    * @param tips Optional mouse-over tooltips for some points.
    */
   def plot[K,X,XV,Y,YV]
-  (x : X, y : Y, style : Char = '-', name : String = null,
-   labels : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]],
-   tips : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]])
+  (x : X, y : Y, style : Char = '-', name : String = null)
+   // labels : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]],
+   // tips : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]])
   (implicit xyplot : XYPlot = figures.figure.plot,
    xtv : CanViewAsTensor1[X,K,XV], ytv : CanViewAsTensor1[Y,K,YV]) : Unit = {
 
@@ -140,6 +140,9 @@ trait Plotting {
 
     val xt = xtv(x);
     val yt = ytv(y);
+
+    val labels : PartialFunction[K,String] = null;
+    val tips : PartialFunction[K,String] = null;
 
     require(xt.domain == yt.domain, "x and y must have same domain");
 
