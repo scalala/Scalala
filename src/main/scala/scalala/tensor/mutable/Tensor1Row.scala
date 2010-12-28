@@ -62,7 +62,7 @@ object Tensor1Row extends Tensor1RowCompanion[Tensor1Row] {
     }
   }
 
-  class Impl[K,V:Scalar](map : scala.collection.Map[K,V])
+  class Impl[K,V:Scalar](map : scala.collection.mutable.Map[K,V])
   extends Tensor1.Impl[K,V](map) with Tensor1Row[K,V];
 
   class View[K,V](override val inner : Tensor1Col[K,V])

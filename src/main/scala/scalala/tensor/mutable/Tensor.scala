@@ -142,7 +142,7 @@ object Tensor extends TensorCompanion[Tensor] {
 //    }
   }
 
-  class Impl[A, B](protected var map : scala.collection.Map[A,B])
+  class Impl[A, B](protected val map : scala.collection.mutable.Map[A,B])
   (implicit override val scalar : Scalar[B])
   extends Tensor[A, B] {
     override def domain : IterableDomain[A] =
@@ -155,7 +155,7 @@ object Tensor extends TensorCompanion[Tensor] {
 
     override def update(key : A, value : B) = {
       checkKey(key);
-      map = map.updated(key, value);
+      map.update(key, value);
     }
   }
 

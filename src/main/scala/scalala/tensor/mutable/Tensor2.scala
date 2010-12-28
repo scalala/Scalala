@@ -87,7 +87,7 @@ object Tensor2 {
     }
   }
 
-  class Impl[K1,K2,V:Scalar](m : scala.collection.Map[(K1,K2),V])
+  class Impl[K1,K2,V:Scalar](m : scala.collection.mutable.Map[(K1,K2),V])
   extends Tensor.Impl[(K1,K2),V](m) with Tensor2[K1,K2,V] {
     override def domain =
       Product2Domain(
@@ -101,7 +101,7 @@ object Tensor2 {
 
     override def update(k1 : K1, k2 : K2, value : V) = {
       checkKey(k1,k2);
-      map = map.updated((k1,k2), value);
+      map.update((k1,k2), value);
     }
   }
 

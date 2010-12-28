@@ -61,7 +61,7 @@ object Tensor1 extends Tensor1Companion[Tensor1] {
     }
   }
 
-  class Impl[K,V:Scalar](map : scala.collection.Map[K,V])
+  class Impl[K,V:Scalar](map : scala.collection.mutable.Map[K,V])
   extends Tensor.Impl[K,V](map) with Tensor1[K,V];
 }
 
