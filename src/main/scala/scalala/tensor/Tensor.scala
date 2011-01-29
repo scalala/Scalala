@@ -88,13 +88,6 @@ self =>
   //
 
   /**
-   * For-comprension support for "for ((k,v) <- x) ...".
-   * Defers to un-tupled alternate foreach.
-   */
-  def foreach[U](f: ((A,B)) => U) : Unit =
-    this.foreach((k,v) => f((k,v)));
-
-  /**
    * For-comprehension support for "for ((k,v) <- x) yield ..."
    * Defers to un-tupled map.
    */
@@ -330,8 +323,11 @@ self =>
       throw new UnsupportedOperationException("Empty .max");
     }
     var max = valuesIterator.next;
-    foreachValue(v => { if (scalar.>(v,max)) max = v; });
-    return max;
+    if (foreachNonZeroValue(v => { max = scalar.max(max,v) })) {
+      return max;
+    } else {
+      return scalar.max(max, scalar.zero);
+    }
   }
 
   /** Returns the min of the values in this map. */
@@ -340,14 +336,17 @@ self =>
       throw new UnsupportedOperationException("Empty .min");
     }
     var min = valuesIterator.next;
-    foreachValue(v => { if (scalar.<(v,min)) min = v; })
-    return min;
+    if (foreachNonZeroValue(v => { min = scalar.min(min,v); })) {
+      return min;
+    } else {
+      return scalar.min(min, scalar.zero)
+    }
   }
 
   /** Returns the sum of the values in this map. */
   def sum : B = {
     var sum = scalar.zero;
-    foreachValue(v => sum = scalar.+(sum,v));
+    foreachNonZeroValue(v => sum = scalar.+(sum,v));
     return sum;
   }
 

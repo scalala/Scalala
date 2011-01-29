@@ -22,6 +22,8 @@ package tensor;
 
 import domain.IndexDomain;
 
+import scalala.generic.collection.CanFilterValues;
+
 /**
  * Vectors are Tensor1's on the non-negative integers.
  *
@@ -29,6 +31,19 @@ import domain.IndexDomain;
  */
 trait VectorLike[@specialized(Int,Long,Float,Double) B, +This<:Vector[B]]
 extends Tensor1Like[Int,B,IndexDomain,This] { self =>
+
+  //
+  // for comprehensions
+  //
+  
+  /**
+   * For-comprension support for "for (v <- x) ...".
+   */
+  def foreach[U](f : B => U) : Unit =
+    this.foreach((k,v) => f(v));
+  
+  def filter[TT>:This,That](f : B => Boolean)(implicit cf : CanFilterValues[TT,B,That]) =
+    cf.filter(repr, f);
 
   protected[this] def mkValueString(value : B) : String =
     value.toString;
