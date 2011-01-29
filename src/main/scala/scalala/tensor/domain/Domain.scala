@@ -275,7 +275,9 @@ with Product2DomainLike[A1,A2,IterableDomain[A1],IterableDomain[A2],Product2Doma
     _1.size * _2.size;
 
   override def union(other : IterableDomain[(A1,A2)]) = other match {
-    case that : Product2Domain[A1,A2] => Product2Domain(this._1 union that._1, this._2 union that._2);
+    case that : Product2Domain[_,_] =>
+      { val casted = that.asInstanceOf[Product2Domain[A1,A2]];
+        Product2Domain(this._1 union casted._1, this._2 union casted._2); }
     case _ => superProduct2DomainLike.union(other);
   }
 
@@ -350,9 +352,10 @@ extends IterableDomain[Seq[K]] with IterableDomainLike[Seq[K],ProductNDomain[K]]
     components.map(_.size).reduceLeft(_ * _);
 
   override def union(other : IterableDomain[Seq[K]]) = other match {
-    case that : ProductNDomain[K] => {
-      require(this.components.size == that.components.size, "Can only take the union of product domains of the same size");
-      ProductNDomain((this.components zip that.components) map (tup => tup._1 union tup._2));
+    case that : ProductNDomain[_] => {
+      val casted = that.asInstanceOf[ProductNDomain[K]];
+      require(this.components.size == casted.components.size, "Can only take the union of product domains of the same size");
+      ProductNDomain((this.components zip casted.components) map (tup => tup._1 union tup._2));
     }
     case _ => super.union(other);
   }

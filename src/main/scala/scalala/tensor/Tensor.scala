@@ -398,11 +398,12 @@ self =>
    * that each function returns the same value.
    */
   override def equals(other : Any) : Boolean = other match {
-    case that: Tensor[A,B] =>
+    case that: Tensor[_,_] =>
       (this eq that) ||
       (that canEqual this) &&
       (this.domain == that.domain) &&
-      (this.forall((k,v) => that(k) == v));
+      ({ val casted = that.asInstanceOf[Tensor[A,B]];
+         this.forall((k,v) => casted(k) == v) });
     case _ => false;
   }
 
