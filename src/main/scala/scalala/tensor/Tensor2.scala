@@ -55,14 +55,35 @@ extends TensorLike[(A1,A2),B,D,This] with operators.MatrixOps[This] {
   /* final */ override def apply(pos : (A1,A2)) : B =
     apply(pos._1, pos._2);
 
-  def apply[TT>:This,That](i : Seq[A1], j : Seq[A2])(implicit bf : CanSliceMatrix[TT,A1,A2,That]) : That =
-    bf.apply(repr, i, j);
-
+  /** Select all columns within a given row. */
   def apply[TT>:This,That](i : A1, j : SelectAll)(implicit bf : CanSliceRow[TT,A1,That]) : That =
     bf.apply(repr, i);
 
+  /** Select all rows within a given column. */
   def apply[TT>:This,That](i : SelectAll, j : A2)(implicit bf : CanSliceCol[TT,A2,That]) : That =
     bf.apply(repr, j);
+
+  /** Select a sub-matrix of the requested rows and columns. */
+  def apply[TT>:This,That](i : Seq[A1], j : Seq[A2])(implicit bf : CanSliceMatrix[TT,A1,A2,That]) : That =
+    bf.apply(repr, i, j);
+
+  /** Select all columns for a specified set of rows. */
+  def apply[TT>:This,That](i : Seq[A1], j : SelectAll)(implicit bf : CanSliceMatrix[TT,A1,A2,That]) : That =
+    bf.apply(repr, i, domain._2.toIndexedSeq);
+
+  /** Select all rows for a specified set of columns. */
+  def apply[TT>:This,That](i : SelectAll, j : Seq[A2])(implicit bf : CanSliceMatrix[TT,A1,A2,That]) : That =
+    bf.apply(repr, domain._1.toIndexedSeq, j);
+
+  /** Select specified columns within a row. */
+  def apply[TT>:This,That1,That2](i : A1, j : IndexedSeq[A2])
+  (implicit s1 : CanSliceRow[TT,A1,That1], s2 : CanSliceVector[That1,A2,That2]) : That2 =
+    s2.apply(s1.apply(repr, i), j);
+
+  /** Select specified rows within a column. */
+  def apply[TT>:This,That1,That2](i : IndexedSeq[A1], j : A2)
+  (implicit s1 : CanSliceCol[TT,A2,That1], s2 : CanSliceVector[That1,A1,That2]) : That2 =
+    s2.apply(s1.apply(repr, j), i);
 
   /** Tranforms all key value pairs in this map by applying the given function. */
   def foreach[U](fn : (A1,A2,B)=>U) =

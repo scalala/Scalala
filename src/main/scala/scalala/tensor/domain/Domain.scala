@@ -188,6 +188,9 @@ extends Product1Domain[Int] with Product1DomainLike[Int,IndexDomain] {
     }
   }
 
+  override def toIndexedSeq =
+    Range(0,size);
+    
   override def contains(key : Int) =
     key >= 0 && key < size;
 
