@@ -281,7 +281,6 @@ final class SparseArray[@specialized T]
     use(newIndex, newData, nz);
   }
 
-
   /** Use the given index and data arrays, of which the first inUsed are valid. */
   private def use(inIndex : Array[Int], inData : Array[T], inUsed : Int) = {
     // no need to rep-check since method is private and all callers satisfy
@@ -311,40 +310,89 @@ final class SparseArray[@specialized T]
 
   /**
    * Maps all values.  If f(this.default) is not equal to the new default
-   * value, the result will be dense (and much less efficient than just
-   * storing an Array).
+   * value, the result may be an efficiently dense (or almost dense) paired
+   * array.
    */
   def map[B:ClassManifest:DefaultArrayValue](f : T=>B) : SparseArray[B] = {
-    if (default == null || f(default) == implicitly[DefaultArrayValue[B]].value) {
+    val newDefault = implicitly[DefaultArrayValue[B]].value;
+    if (used < length && f(default) == newDefault) {
+      // some default values but f(default) is still default
       val newIndex = new Array[Int](used);
       val newData = new Array[B](used);
-      var i = 0;
+      var i = 0; var o = 0;
       while (i < used) {
-        newIndex(i) = index(i);
-        newData(i) = f(data(i));
+        newIndex(o) = index(i);
+        val newValue = f(data(i));
+        if (newValue != newDefault) {
+          newData(o) = newValue;
+          o += 1;
+        }
         i += 1;
       }
-      new SparseArray[B](length, newIndex, newData, used, initialActiveLength);
+      new SparseArray[B](length, newIndex, newData, o, initialActiveLength);
     } else {
-      val mappedDefault = f(default);
-      val newIndex = Array.range(0, length);
+      // no default values stored or f(default) is non-default
+      val newDefault = f(default);
+      val newIndex = new Array[Int](length);
       val newData = new Array[B](length);
       var i = 0;
       var o = 0;
       while (i < used) {
         while (o < index(i)) {
-          newData(o) = mappedDefault;
+          newIndex(o) = o;
+          newData(o) = newDefault;
           o += 1;
         }
+        newIndex(o) = o;
         newData(o) = f(data(i));
         o += 1;
         i += 1;
       }
       while (o < length) {
-        newData(o) = mappedDefault;
+        newIndex(o) = o;
+        newData(o) = newDefault;
         o += 1;
       }
-      new SparseArray[B](length, newIndex, newData, length, initialActiveLength);
+      val rv = new SparseArray[B](length, newIndex, newData, length, initialActiveLength);
+      rv.compact;
+      rv;
+    }
+  }
+
+  /**
+   * Filter's the array by removing all values for which f is false.
+   */
+  def filter(f : T=>Boolean) : SparseArray[T] = {
+    val newIndex = new Array[Int](used);
+    val newData = new Array[T](used);
+    var i = 0; var o = 0;
+    while (i < used) {
+      if (f(data(i))) {
+        newIndex(o) = index(i) - (i - o);
+        newData(o) = data(i);
+        o += 1;
+      }
+      i += 1;
+    }
+
+    if (f(default)) {
+      // if default values are accepted, assume we're full length.
+      var newLength = length - (i - o);
+      
+      // ... and subtract from that length how many defined tail elements
+      // were filtered ...
+      var ii = used - 1;
+      while (ii >= 0 && index(ii) > newIndex(o) && index(ii) == newLength - 1) {
+        ii -= 1;
+        newLength -= 1;
+      }
+      new SparseArray[T](newLength, newIndex, newData, o, initialActiveLength);
+    } else {
+      // if default values are not accepted, return a "dense" array by
+      // setting each position in newIndex consecutively to forget missing
+      // values
+      val newLength = o;
+      new SparseArray[T](newLength, Array.range(0,newLength), newData.take(newLength), newLength, initialActiveLength);
     }
   }
 
