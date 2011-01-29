@@ -1,7 +1,8 @@
 .manager/
+workspace.xml
 bin/
 docs/
 target/
-workspace.xml
-lib_managed
-project/boot
+lib_managed/
+src_managed/
+project/boot/
