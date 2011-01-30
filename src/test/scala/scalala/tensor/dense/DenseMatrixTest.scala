@@ -31,29 +31,41 @@ import org.junit.runner.RunWith
 class DenseMatrixTest extends FunSuite with Checkers {
 
   test("Slicing") {
-    val m = DenseMatrix.zeros[Int](2,3);
-
-    // the slice should be mutable
-    val s : mutable.Matrix[Int] = m((0 to 1), (1 to 2));
-
-    // update slices
-    m((0 to 1), (1 to 2)) := 1;
-    m((0 to 1), (0 to 1)) :+= 4;
-
-    // check write-through
-    assert(m.data.toList === List(4, 4, 5, 5, 1, 1));
-
-    // check column slice.  should be mutable and write-through.
-    val x : mutable.VectorCol[Int] = m(::, 1);
-    assert(x === DenseVector(5,5))
-    x(1) = 7;
-    assert(m(1,1) === 7);
-
-    // check row slice.  should be mutable and write-through.
-    val y : mutable.VectorRow[Int] = m(0, ::);
-    assert(y === DenseVector(4,5,1).t);
-    y(0) = -1;
-    assert(m(0,0) === -1);
+    val m = DenseMatrix((0,1,2),(3,4,5));
+    
+    // slice sub-matrix
+    val s1 : mutable.Matrix[Int] = m(0 to 1, 1 to 2);
+    assert(s1 === DenseMatrix((1,2),(4,5)));
+    s1 += 1;
+    assert(m === DenseMatrix((0,2,3),(3,5,6)));
+    
+    // slice row
+    val s2 : mutable.VectorRow[Int] = m(0, ::);
+    assert(s2 === DenseVector(0,2,3));
+    s2 *= 2;
+    assert(m === DenseMatrix((0,4,6),(3,5,6)));
+    
+    // slice column
+    val s3 : mutable.VectorCol[Int] = m(::, 1);
+    assert(s3 === DenseVector(4,5));
+    s3 -= 1;
+    assert(m === DenseMatrix((0,3,6),(3,4,6)));
+    
+    // slice rows
+    val s4 : mutable.Matrix[Int] = m(1 to 1, ::);
+    assert(s4 === DenseMatrix((3,4,6)));
+    
+    // slice columns
+    val s5 : mutable.Matrix[Int] = m(::, 1 to 2);
+    assert(s5 === DenseMatrix((3,6),(4,6)));
+    
+    // slice part of a row
+    m(0, 1 to 2) += 1;
+    assert(m === DenseMatrix((0,4,7),(3,4,6)));
+    
+    // slice part of a column
+    m(0 to 1, 0) += 3;
+    assert(m === DenseMatrix((3,4,7),(6,4,6)));
   }
 
   test("Transpose") {
@@ -65,8 +77,8 @@ class DenseMatrixTest extends FunSuite with Checkers {
     // check static type and write-through
     val t : mutable.Matrix[Int] = m.t;
     assert(t === DenseMatrix((1,4),(2,5),(3,6)));
-    t(0,0) = 0;
-    assert(m === DenseMatrix((0,2,3),(4,5,6)));
+    t(0,1) = 0;
+    assert(m === DenseMatrix((1,2,3),(0,5,6)));
   }
 
   test("Min/Max") {
