@@ -290,6 +290,14 @@ final class SparseArray[@specialized T]
     index = inIndex;
     used = inUsed;
   }
+  
+  /** Sets this array to be a copy of the given other array. */
+  def set(that : SparseArray[T]) = {
+    if (this.length != that.length) {
+      throw new IllegalArgumentException("SparseArrays must be the same length");
+    }
+    use(that.index.clone, that.data.clone, that.used);
+  }
 
   private def checkrep() {
     if (index == null || data == null)

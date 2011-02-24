@@ -62,7 +62,16 @@ object CanAssignInto {
       if (a.length != b.length) {
         throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
       }
-      System.arraycopy(b,0,a,0,a.length);
+      try {
+        System.arraycopy(b,0,a,0,a.length);
+      } catch {
+        case _ =>
+          var i = 0;
+          while (i < a.length) {
+            a(i) = fn(b(i));
+            i += 1;
+          }
+      }
     }
   }
 
@@ -91,4 +100,48 @@ object CanAssignInto {
   implicit object IntoArrayScalarII extends IntoArrayScalar[Int,Int];
   implicit object IntoArrayScalarDD extends IntoArrayScalar[Double,Double];
   implicit object IntoArrayScalarDI extends IntoArrayScalar[Double,Int];
+  
+  implicit def mkIntoSparseArraySparseArray[V1,V2](implicit fn : V2=>V1, s1 : Scalar[V1], s2 : Scalar[V2])
+  = new IntoSparseArraySparseArray[V1,V2];
+
+  class IntoSparseArraySparseArray
+  [@specialized(Int,Long,Float,Double) V1,
+   @specialized(Int,Long,Float,Double) V2]
+  (implicit fn : V2=>V1, s1 : Scalar[V1], s2 : Scalar[V2])
+  extends CanAssignInto[SparseArray[V1],SparseArray[V2]] {
+    override def apply(a : SparseArray[V1], b : SparseArray[V2]) {
+      if (a.length != b.length) {
+        throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+      }
+      if (s1.manifest == s2.manifest) {
+        a.set(b.asInstanceOf[SparseArray[V1]]);
+      } else {
+        a.clear;
+        b.foreachActive((k : Int, v : V2) => a(k) = fn(v));
+      }
+    }
+  }
+
+  implicit object IntoSparseArraySparseArrayII extends IntoSparseArraySparseArray[Int,Int];
+  implicit object IntoSparseArraySparseArrayDD extends IntoSparseArraySparseArray[Double,Double];
+  implicit object IntoSparseArraySparseArrayDI extends IntoSparseArraySparseArray[Double,Int];
+
+  implicit def mkIntoSparseArrayScalar[V1,V2](implicit fn : V2=>V1, sb : Scalar[V2])
+  = new IntoSparseArrayScalar[V1,V2];
+
+  class IntoSparseArrayScalar
+  [@specialized(Int,Long,Float,Double) V1,
+   @specialized(Int,Long,Float,Double) V2]
+  (implicit fn : V2 => V1, s2 : Scalar[V2])
+  extends CanAssignInto[SparseArray[V1],V2] {
+    override def apply(a : SparseArray[V1], b : V2) = {
+      val value = fn(b);
+      a.transform(v => value);
+    }
+  }
+
+  implicit object IntoSparseArrayScalarII extends IntoSparseArrayScalar[Int,Int];
+  implicit object IntoSparseArrayScalarDI extends IntoSparseArrayScalar[Double,Int];
+  implicit object IntoSparseArrayScalarDD extends IntoSparseArrayScalar[Double,Double];
 }
+
