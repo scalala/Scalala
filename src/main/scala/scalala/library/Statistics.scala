@@ -22,12 +22,23 @@ package library;
 
 import generic.collection.{CanViewAsVector};
 
+import math._;
+import Numerics._;
+import LinearAlgebra._;
+
 /**
  * Matlab-like statistical methods.
  *
  * @author dramage
  */
 trait Statistics {
+  private val sqrt2 = sqrt(2);
+
+  /**
+   * Computes the cumulative density function of the value x.
+   */
+  def normcdf(x: Double, mu : Double = 0.0, sigma : Double = 1.0) =
+    .5 * (1 + erf((x - mu) / sqrt2 / sigma));
 
   /**
    * Computes the Pearson correlation coefficient between the two vectors.
@@ -115,6 +126,16 @@ trait Statistics {
     
     return numer / math.sqrt((denom - xdenom) * (denom - ydenom));
   }
+  
+//  def mannwhitneyu(a : Seq[Double], b : Seq[Double]) = {
+//    val merged = (a.map(_ -> 'a') ++ b.map(_ -> 'b')).sortWith(_._1 < _._1);
+//    val ranked = ranks(merged.toArray.map(_._1));
+//    val aU = (for ((v,r) <- (merged.iterator zip ranked.iterator); if v._2 == 'a') yield r).sum - (a.size * (a.size + 1) / 2);
+//    val bU = (for ((v,r) <- (merged.iterator zip ranked.iterator); if v._2 == 'b') yield r).sum - (b.size * (b.size + 1) / 2);
+//    val (bigU,smallU) = if (aU > bU) (aU,bU) else (bU,aU);
+//    val sd = math.sqrt(a.size * b.size * (a.size + b.size + 1) / 12.0);
+//    (aU, normcdf(-abs((bigU - a.size * b.size / 2.0) / sd)));
+//  }
   
   /** Returns n choose k, how many ways to pick k objects from n. */
   def nchoosek(n : Int, k : Int) : Long = {
