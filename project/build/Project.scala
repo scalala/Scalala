@@ -3,10 +3,12 @@ import java.util.jar.Attributes.Name._
 
 
 class Project(info: ProjectInfo) extends ProguardProject(info) {
+  val scalaNlp = "ScalaNLP Maven2" at "http://repo.scalanlp.org/repo"
   val ondexRepo = "ondex" at "http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public"
   val scalaToolsSnapshots = "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
   // lazy val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
   // val publishTo = "Local Nexus" at "http://localhost:8081/nexus/content/repositories/snapshots" 
+
 
   val Jline = "jline" % "jline" % "0.9.94"
   val NetlibJava = "netlib" % "netlib-java" % "0.9.2"
