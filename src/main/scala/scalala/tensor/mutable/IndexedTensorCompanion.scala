@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import generic.{CanAssignInto,CanAddInto,CanSubInto,CanMulInto,CanDivInto,CanPowInto,CanModInto};
+import scalala.operators.{BinaryUpdateOp,OpType,UnaryOp,OpSet,OpCast};
 
 /**
  * Base companion methods for tensors that have a known key type,
@@ -33,24 +33,7 @@ import generic.{CanAssignInto,CanAddInto,CanSubInto,CanMulInto,CanDivInto,CanPow
  * @author dramage
  */
 trait IndexedTensorCompanion[K,Bound[V]<:Tensor[K,V]] extends tensor.IndexedTensorCompanion[K,Bound] {
-  implicit def canAssignInto[V,O](implicit c : CanAssignInto[Tensor[K,V],O]) =
-    c.asInstanceOf[CanAssignInto[Bound[V],O]];
-
-  implicit def canAddInto[V,O](implicit c : CanAddInto[Tensor[K,V],O]) =
-    c.asInstanceOf[CanAddInto[Bound[V],O]];
-
-  implicit def canSubInto[V,O](implicit c : CanSubInto[Tensor[K,V],O]) =
-    c.asInstanceOf[CanSubInto[Bound[V],O]];
-
-  implicit def canMulInto[V,O](implicit c : CanMulInto[Tensor[K,V],O]) =
-    c.asInstanceOf[CanMulInto[Bound[V],O]];
-
-  implicit def canDivInto[V,O](implicit c : CanDivInto[Tensor[K,V],O]) =
-    c.asInstanceOf[CanDivInto[Bound[V],O]];
-
-  implicit def canModInto[V,O](implicit c : CanModInto[Tensor[K,V],O]) =
-    c.asInstanceOf[CanModInto[Bound[V],O]];
-
-  implicit def canPowInto[V,O](implicit c : CanPowInto[Tensor[K,V],O]) =
-    c.asInstanceOf[CanPowInto[Bound[V],O]];
+//  implicit def binaryUpdateOp[V1,V2,Op<:OpType](implicit c : BinaryUpdateOp[Tensor[K,V1],V2,Op]) =
+//    c.asInstanceOf[BinaryUpdateOp[Bound[V1],V2,Op]];
 }
+

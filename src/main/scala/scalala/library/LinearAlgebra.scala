@@ -23,10 +23,10 @@ package library;
 import tensor.{Matrix, Vector}
 import tensor.dense.{DenseVector, DenseMatrix}
 
-import scalala.generic.CanMul;
 import scalala.generic.collection.CanViewAsVector;
 import scalala.scalar.Scalar;
 import scalala.tensor.domain.TableDomain;
+import scalala.operators._;
 
 import org.netlib.lapack._;
 import org.netlib.util.intW;
@@ -156,7 +156,7 @@ trait LinearAlgebra {
    * Returns the Kronecker product of the two matrices a and b,
    * usually denoted a ⊗ b.
    */
-  def kron[V1,V2,RV](a : Matrix[V1], b : Matrix[V2])(implicit mul : CanMul[V1,V2,RV], s : Scalar[RV]) : Matrix[RV] = {
+  def kron[V1,V2,RV](a : Matrix[V1], b : Matrix[V2])(implicit mul : BinaryOp[V1,V2,OpMul,RV], s : Scalar[RV]) : Matrix[RV] = {
     val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows * b.numRows, a.numCols * b.numCols));
     a.foreachNonZero((ai,aj,av) => b.foreachNonZero((bi,bj,bv) =>
       builder((ai * b.numRows + bi, aj * b.numCols + bj)) = mul(av, bv)));

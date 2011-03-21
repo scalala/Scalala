@@ -23,8 +23,7 @@ package tensor;
 import domain._;
 import generic._;
 
-import scalala.generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
-import generic.{CanLT,CanLTE,CanGT,CanGTE,CanEq,CanNe};
+import scalala.operators._;
 import scalala.generic.collection.{CanMapValues,CanMapKeyValuePairs,CanJoinValues};
 
 /**
@@ -40,46 +39,13 @@ trait IndexedTensorCompanion[K,Bound[V]<:Tensor[K,V]] {
   implicit def canMapValues[V,RV](implicit c : CanMapValues[Tensor[K,V],V,RV,Tensor[K,RV]]) =
     c.asInstanceOf[CanMapValues[Bound[V],V,RV,Bound[RV]]];
 
-  implicit def canKeyValuePairs[V,RV](implicit c : CanMapKeyValuePairs[Tensor[K,V],(Int,Int),V,RV,Tensor[K,RV]]) =
+  implicit def canMapKeyValuePairs[V,RV](implicit c : CanMapKeyValuePairs[Tensor[K,V],(Int,Int),V,RV,Tensor[K,RV]]) =
     c.asInstanceOf[CanMapKeyValuePairs[Bound[V],K,V,RV,Bound[RV]]];
 
   implicit def canJoinValues[V1,V2,RV](implicit c : CanJoinValues[Tensor[K,V1],Tensor[(Int,Int),V2],V1,V2,RV,Tensor[K,RV]]) =
     c.asInstanceOf[CanJoinValues[Bound[V1],Tensor[(Int,Int),V2],V1,V2,RV,Tensor[K,RV]]];
 
-  implicit def canAdd[V,O,RV](implicit c : CanAdd[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanAdd[Bound[V],O,Bound[RV]]];
-
-  implicit def canSub[V,O,RV](implicit c : CanSub[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanSub[Bound[V],O,Bound[RV]]];
-
-  implicit def canMul[V,O,RV](implicit c : CanMul[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanMul[Bound[V],O,Bound[RV]]];
-
-  implicit def canDiv[V,O,RV](implicit c : CanDiv[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanDiv[Bound[V],O,Bound[RV]]];
-
-  implicit def canMod[V,O,RV](implicit c : CanMod[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanMod[Bound[V],O,Bound[RV]]];
-
-  implicit def canPow[V,O,RV](implicit c : CanPow[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanPow[Bound[V],O,Bound[RV]]];
-
-  implicit def canLT[V,O,RV](implicit c : CanLT[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanLT[Bound[V],O,Bound[RV]]];
-
-  implicit def canLTE[V,O,RV](implicit c : CanLTE[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanLTE[Bound[V],O,Bound[RV]]];
-
-  implicit def canGT[V,O,RV](implicit c : CanGT[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanGT[Bound[V],O,Bound[RV]]];
-
-  implicit def canGTE[V,O,RV](implicit c : CanGTE[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanGTE[Bound[V],O,Bound[RV]]];
-
-  implicit def canEq[V,O,RV](implicit c : CanEq[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanEq[Bound[V],O,Bound[RV]]];
-
-  implicit def canNe[V,O,RV](implicit c : CanNe[Tensor[K,V],O,Tensor[K,RV]]) =
-    c.asInstanceOf[CanNe[Bound[V],O,Bound[RV]]];
+  implicit def binaryOp[V1,V2,Op<:OpType,RV](implicit c : BinaryOp[Tensor[K,V1],V2,Op,Tensor[K,RV]]) =
+    c.asInstanceOf[BinaryOp[Bound[V1],V2,Op,Bound[RV]]];
 }
 

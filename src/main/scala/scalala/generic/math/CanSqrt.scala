@@ -24,12 +24,16 @@ package math;
 
 import collection.CanMapValues;
 
+import scalala.operators.{UnaryOp,OpType};
+
+trait OpSqrt extends OpType;
+
 /**
  * Constructiond delegate for sqrt(A).
  *
  * @author dramage
  */
-trait CanSqrt[-A,+RV] extends UnaryOp[A,RV];
+trait CanSqrt[-A,+RV] extends UnaryOp[A,OpSqrt,RV];
 
 object CanSqrt {
   implicit object OpI extends CanSqrt[Int,Double] {
@@ -60,3 +64,4 @@ object CanSqrt {
   implicit object OpArrayF extends OpMapValues[Array[Float],Float,Double,Array[Double]]()(OpF,CanMapValues.OpArrayFD);
   implicit object OpArrayD extends OpMapValues[Array[Double],Double,Double,Array[Double]]()(OpD,CanMapValues.OpArrayDD);
 }
+

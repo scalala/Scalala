@@ -24,8 +24,9 @@ package dense;
 
 import scalar.Scalar;
 import domain.{IterableDomain,IndexDomain};
-import generic.{CanMul,CanMulColumnBy,CanMulRowBy};
-import generic.collection.{CanSliceCol,CanTranspose,CanAppendColumns};
+import generic.collection.{CanSliceCol,CanAppendColumns};
+
+import scalala.operators._;
 
 import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
@@ -144,16 +145,16 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
 
 object DenseVectorRow extends mutable.VectorRowCompanion[DenseVectorRow] {
   /** Transpose shares the same data. */
-  implicit def canTranspose[V] : CanTranspose[DenseVectorRow[V],DenseVectorCol[V]]
-  = new CanTranspose[DenseVectorRow[V],DenseVectorCol[V]] {
+  implicit def canTranspose[V] : UnaryOp[DenseVectorRow[V],OpTranspose,DenseVectorCol[V]]
+  = new UnaryOp[DenseVectorRow[V],OpTranspose,DenseVectorCol[V]] {
     override def apply(row : DenseVectorRow[V]) =
       new DenseVectorCol(row.data)(row.scalar);
   }
 
   /** Tighten bound on super to be dense in return value. */
   override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
-  (implicit slice : CanSliceCol[Matrix[V2],Int,Col], mul : CanMulRowBy[DenseVectorRow[V1],Col,RV], scalar : Scalar[RV]) =
-     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[CanMulRowBy[DenseVectorRow[V1],tensor.Matrix[V2],DenseVectorRow[RV]]];
+  (implicit slice : CanSliceCol[Matrix[V2],Int,Col], mul : BinaryOp[DenseVectorRow[V1],Col,OpMulRowVectorBy,RV], scalar : Scalar[RV]) =
+     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[BinaryOp[DenseVectorRow[V1],tensor.Matrix[V2],OpMulRowVectorBy,DenseVectorRow[RV]]];
 }
 
 /**
@@ -176,25 +177,25 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
 
 object DenseVectorCol extends mutable.VectorColCompanion[DenseVectorCol] with DenseVectorColConstructors {
   /** Transpose shares the same data. */
-  implicit def canTranspose[V] : CanTranspose[DenseVectorCol[V],DenseVectorRow[V]]
-  = new CanTranspose[DenseVectorCol[V],DenseVectorRow[V]] {
+  implicit def canTranspose[V] : UnaryOp[DenseVectorCol[V],OpTranspose,DenseVectorRow[V]]
+  = new UnaryOp[DenseVectorCol[V],OpTranspose,DenseVectorRow[V]] {
     override def apply(row : DenseVectorCol[V]) =
       new DenseVectorRow(row.data)(row.scalar);
   }
 
   /** Tighten bound on super to be a dense in return value. */
-  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : CanMul[V1,V2,RV], scalar : Scalar[RV])
-  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[CanMulColumnBy[DenseVectorCol[V1],tensor.VectorRow[V2],DenseMatrix[RV]]];
+  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : BinaryOp[V1,V2,OpMul,RV], scalar : Scalar[RV])
+  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[BinaryOp[DenseVectorCol[V1],tensor.VectorRow[V2],OpMulColVectorBy,DenseMatrix[RV]]];
 
-  /** Tighten bound on super to be a dense in return value. */
-  override implicit def canAppendMatrixColumns[V]
-  : CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V],DenseMatrix[V]]
-  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V], DenseMatrix[V]]];
-
-  /** Tighten bound on super to be a dense in return value. */
-  override implicit def canAppendVectorColumn[V]
-  : CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]
-  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]];
+//  /** Tighten bound on super to be a dense in return value. */
+//  override implicit def canAppendMatrixColumns[V]
+//  : CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V],DenseMatrix[V]]
+//  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V], DenseMatrix[V]]];
+//
+//  /** Tighten bound on super to be a dense in return value. */
+//  override implicit def canAppendVectorColumn[V]
+//  : CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]
+//  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]];
 }
 
 trait DenseVectorColConstructors {
@@ -253,3 +254,4 @@ trait DenseVectorColConstructors {
     tabulate(size)(i => mt.nextInt(imax));
   }
 }
+

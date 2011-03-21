@@ -21,9 +21,10 @@ package scalala;
 package tensor;
 
 import domain.{DomainException,IndexDomain,TableDomain}
-import generic.{CanAdd,CanMulMatrixBy,CanMulRowBy};
 import generic.collection._;
 import scalar.Scalar;
+
+import scalala.operators._;
 
 /**
  * Implementation trait for a matrix.
@@ -46,7 +47,7 @@ self =>
   }
 
   /** Returns the sum of the diagonal elements of this matrix. */
-  def trace(implicit add : CanAdd[B,B,B]) = {
+  def trace(implicit add : BinaryOp[B,B,OpAdd,B]) = {
     var rv = this(0,0);
     var i = 1;
     var n = math.min(numRows, numCols);
@@ -102,8 +103,8 @@ extends Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
 object Matrix extends MatrixCompanion[Matrix] {
-  implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B], Matrix[B]] =
-  new CanTranspose[Matrix[B], Matrix[B]] {
+  implicit def canTranspose[B:Scalar] : UnaryOp[Matrix[B],OpTranspose,Matrix[B]] =
+  new UnaryOp[Matrix[B],OpTranspose,Matrix[B]] {
     override def apply(from : Matrix[B]) = {
       if (from.isInstanceOf[MatrixTranspose[_,_]]) {
         from.asInstanceOf[MatrixTranspose[_,_]].underlying.asInstanceOf[Matrix[B]]
@@ -196,10 +197,10 @@ trait MatrixCompanion[Bound[V]<:Matrix[V]]
 extends IndexedTensorCompanion[(Int,Int),Bound] {
   implicit def canMulMatrixByCol[V1,V2,RV]
   (implicit sr : CanSliceRow[Bound[V1],Int,VectorRow[V1]],
-   mul : CanMulRowBy[VectorRow[V1],VectorCol[V2],RV],
+   mul : BinaryOp[VectorRow[V1],VectorCol[V2],OpMulRowVectorBy,RV],
    scalar : Scalar[RV])
-  : CanMulMatrixBy[Bound[V1], VectorCol[V2], VectorCol[RV]] =
-  new CanMulMatrixBy[Bound[V1], VectorCol[V2], VectorCol[RV]] {
+  : BinaryOp[Bound[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] =
+  new BinaryOp[Bound[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] {
     override def apply(a : Bound[V1], b : VectorCol[V2]) = {
       val builder = a.newBuilder[Int,RV](IndexDomain(a.numRows));
       var i = 0;
@@ -214,10 +215,10 @@ extends IndexedTensorCompanion[(Int,Int),Bound] {
   implicit def canMulMatrixByMatrix[V1,V2,RV]
   (implicit sr : CanSliceRow[Bound[V1],Int,VectorRow[V1]],
    sc : CanSliceCol[Matrix[V2],Int,VectorCol[V2]],
-   mul : CanMulRowBy[VectorRow[V1],VectorCol[V2],RV],
+   mul : BinaryOp[VectorRow[V1],VectorCol[V2],OpMulRowVectorBy,RV],
    scalar : Scalar[RV])
-  : CanMulMatrixBy[Bound[V1], Matrix[V2], Matrix[RV]] =
-  new CanMulMatrixBy[Bound[V1], Matrix[V2], Matrix[RV]] {
+  : BinaryOp[Bound[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] =
+  new BinaryOp[Bound[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] {
     override def apply(a : Bound[V1], b : Matrix[V2]) = {
       val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows, b.numCols));
       var i = 0;
@@ -233,29 +234,30 @@ extends IndexedTensorCompanion[(Int,Int),Bound] {
     }
   }
 
-  implicit def canAppendMatrixColumns[V]
-  : CanAppendColumns[Bound[V],Matrix[V],Matrix[V]]
-  = new CanAppendColumns[Bound[V],Matrix[V],Matrix[V]] {
-    override def apply(a : Bound[V], b : Matrix[V]) = {
-      require(a.numRows == b.numRows, "Arguments must have same number of rows");
-      implicit val sv = a.scalar;
-      val builder = a.newBuilder[(Int,Int),V](TableDomain(a.numRows, a.numCols+b.numCols));
-      a.foreachNonZero((i,j,v) => builder((i,j)) = v);
-      b.foreachNonZero((i,j,v) => builder((i,j+a.numCols)) = v);
-      builder.result.asInstanceOf[Matrix[V]];
-    }
-  }
-
-  implicit def canAppendVectorColumn[V]
-  : CanAppendColumns[Bound[V],VectorCol[V],Matrix[V]]
-  = new CanAppendColumns[Bound[V],VectorCol[V],Matrix[V]] {
-    override def apply(a : Bound[V], b : VectorCol[V]) = {
-      require(a.numRows == b.size, "Arguments must have same number of rows");
-      implicit val sv = a.scalar;
-      val builder = a.newBuilder[(Int,Int),V](TableDomain(a.numRows, a.numCols+1));
-      a.foreachNonZero((i,j,v) => builder((i,j)) = v);
-      b.foreachNonZero((i,v) => builder((i,a.numCols)) = v);
-      builder.result.asInstanceOf[Matrix[V]];
-    }
-  }
+//  implicit def canAppendMatrixColumns[V]
+//  : CanAppendColumns[Bound[V],Matrix[V],Matrix[V]]
+//  = new CanAppendColumns[Bound[V],Matrix[V],Matrix[V]] {
+//    override def apply(a : Bound[V], b : Matrix[V]) = {
+//      require(a.numRows == b.numRows, "Arguments must have same number of rows");
+//      implicit val sv = a.scalar;
+//      val builder = a.newBuilder[(Int,Int),V](TableDomain(a.numRows, a.numCols+b.numCols));
+//      a.foreachNonZero((i,j,v) => builder((i,j)) = v);
+//      b.foreachNonZero((i,j,v) => builder((i,j+a.numCols)) = v);
+//      builder.result.asInstanceOf[Matrix[V]];
+//    }
+//  }
+//
+//  implicit def canAppendVectorColumn[V]
+//  : CanAppendColumns[Bound[V],VectorCol[V],Matrix[V]]
+//  = new CanAppendColumns[Bound[V],VectorCol[V],Matrix[V]] {
+//    override def apply(a : Bound[V], b : VectorCol[V]) = {
+//      require(a.numRows == b.size, "Arguments must have same number of rows");
+//      implicit val sv = a.scalar;
+//      val builder = a.newBuilder[(Int,Int),V](TableDomain(a.numRows, a.numCols+1));
+//      a.foreachNonZero((i,j,v) => builder((i,j)) = v);
+//      b.foreachNonZero((i,v) => builder((i,a.numCols)) = v);
+//      builder.result.asInstanceOf[Matrix[V]];
+//    }
+//  }
 }
+

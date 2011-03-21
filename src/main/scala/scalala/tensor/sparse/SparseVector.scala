@@ -22,11 +22,12 @@ package tensor;
 package sparse;
 
 import domain.{IterableDomain,IndexDomain};
-import generic.{CanMul,CanMulColumnBy,CanMulRowBy};
-import generic.collection.{CanSliceCol,CanTranspose,CanAppendColumns};
+import generic.collection.{CanSliceCol,CanAppendColumns};
 
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 import scalala.scalar.Scalar;
+
+import scalala.operators._;
 
 /**
  * A vector backed by a SparseArray.
@@ -91,16 +92,19 @@ extends SparseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,S
 
 object SparseVectorRow extends mutable.VectorRowCompanion[SparseVectorRow] {
   /** Transpose shares the same data. */
-  implicit def canTranspose[V] : CanTranspose[SparseVectorRow[V],SparseVectorCol[V]]
-  = new CanTranspose[SparseVectorRow[V],SparseVectorCol[V]] {
+  implicit def canTranspose[V] : UnaryOp[SparseVectorRow[V],OpTranspose,SparseVectorCol[V]]
+  = new UnaryOp[SparseVectorRow[V],OpTranspose,SparseVectorCol[V]] {
     override def apply(row : SparseVectorRow[V]) =
       new SparseVectorCol(row.data)(row.scalar);
   }
 
   /** Tighten bound on super to be sparse in return value. */
   override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
-  (implicit slice : CanSliceCol[Matrix[V2],Int,Col], mul : CanMulRowBy[SparseVectorRow[V1],Col,RV], scalar : Scalar[RV]) =
-     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[CanMulRowBy[SparseVectorRow[V1],tensor.Matrix[V2],SparseVectorRow[RV]]];
+  (implicit slice : CanSliceCol[Matrix[V2],Int,Col],
+   mul : BinaryOp[SparseVectorRow[V1],Col,OpMulRowVectorBy,RV],
+   scalar : Scalar[RV])
+  : BinaryOp[SparseVectorRow[V1],tensor.Matrix[V2],OpMulRowVectorBy,SparseVectorRow[RV]] =
+     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[BinaryOp[SparseVectorRow[V1],tensor.Matrix[V2],OpMulRowVectorBy,SparseVectorRow[RV]]];
 }
 
 
@@ -125,8 +129,8 @@ extends SparseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,S
 
 object SparseVectorCol extends mutable.VectorColCompanion[SparseVectorCol] {
   /** Transpose shares the same data. */
-  implicit def canTranspose[V] : CanTranspose[SparseVectorCol[V],SparseVectorRow[V]]
-  = new CanTranspose[SparseVectorCol[V],SparseVectorRow[V]] {
+  implicit def canTranspose[V] : UnaryOp[SparseVectorCol[V],OpTranspose,SparseVectorRow[V]]
+  = new UnaryOp[SparseVectorCol[V],OpTranspose,SparseVectorRow[V]] {
     override def apply(row : SparseVectorCol[V]) =
       new SparseVectorRow(row.data)(row.scalar);
   }

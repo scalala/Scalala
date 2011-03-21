@@ -30,4 +30,5 @@ import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
  *
  * @author dramage
  */
-trait CanAppendColumns[A,-B,+That] extends BinaryOp[A,B,That];
+trait CanAppendColumns[A,-B,+That] extends Function2[A,B,That];
+

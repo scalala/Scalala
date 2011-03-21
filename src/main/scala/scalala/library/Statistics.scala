@@ -35,6 +35,53 @@ trait Statistics {
   private val sqrt2 = sqrt(2);
 
   /**
+   * Numerically stable one-pass mean computation.
+   *
+   * From http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
+   */
+  def mean[X](data : TraversableOnce[X])(implicit xv : X=>Double) = {
+    var m = 0.0;
+    var k = 0;
+    for (x <- data) {
+      k += 1;
+      m += (x - m) / k;
+    }
+    m;
+  }
+
+  /**
+   * Numerically stable one-pass sample variance computation.
+   * 
+   * From http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
+   */
+  def variance[X](data : TraversableOnce[X])(implicit xv : X=>Double) = {
+    var m = 0.0;
+    var q = 0.0;
+    var k = 0;
+    for (x <- data) {
+      k += 1;
+      if (k == 1) {
+        m = x;
+        q = 0;
+      } else {
+        val xMm = x - m;
+        val xMmDk = xMm / k;
+        m = m + xMmDk;
+        q = q + (k - 1) * xMm * xMmDk
+      }
+    }
+    q / (k - 1);
+  }
+  
+  /**
+   * Numerically stable one-pass standard deviation computation.
+   * 
+   * From http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
+   */
+  def stdev[X](data : TraversableOnce[X])(implicit xv : X=>Double) =
+    math.sqrt(variance(data));
+
+  /**
    * Computes the cumulative density function of the value x.
    */
   def normcdf(x: Double, mu : Double = 0.0, sigma : Double = 1.0) =

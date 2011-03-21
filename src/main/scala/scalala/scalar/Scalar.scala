@@ -20,6 +20,7 @@
 package scalala;
 package scalar;
 
+import scala.annotation.implicitNotFound;
 import scalala.collection.sparse.DefaultArrayValue;
 
 /**
@@ -27,6 +28,7 @@ import scalala.collection.sparse.DefaultArrayValue;
  *
  * @author dramage
  */
+@implicitNotFound(msg="${V} is not a scalar value")
 trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
   def zero : V;
 

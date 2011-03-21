@@ -23,9 +23,10 @@ package tensor;
 import scalar.Scalar;
 
 import domain._;
-import generic.{CanAdd,CanMul,CanMulRowBy};
-import generic.collection.{CanTranspose,CanSliceCol};
+import generic.collection.{CanSliceCol};
 import mutable.TensorBuilder;
+
+import scalala.operators._;
 
 /**
  * Implementation trait for a row vector.
@@ -55,8 +56,8 @@ trait VectorRow[@specialized(Int,Long,Float,Double) B]
 extends Vector[B] with Tensor1Row[Int,B] with VectorRowLike[B,VectorRow[B]];
 
 object VectorRow extends VectorRowCompanion[VectorRow] {
-  implicit def canTranspose[V] : CanTranspose[VectorRow[V],VectorCol[V]]
-  = new CanTranspose[VectorRow[V],VectorCol[V]] {
+  implicit def canTranspose[V] : UnaryOp[VectorRow[V],OpTranspose,VectorCol[V]]
+  = new UnaryOp[VectorRow[V],OpTranspose,VectorCol[V]] {
     override def apply(row : VectorRow[V]) =
       new VectorCol.View[V](row);
   }
@@ -69,19 +70,19 @@ object VectorRow extends VectorRowCompanion[VectorRow] {
 }
 
 trait VectorRowCompanion[Bound[V]<:VectorRow[V]] extends VectorCompanion[Bound] {
-  implicit def canMulVectorRowByCol[V1,V2,RV]
-  (implicit mul : CanMul[V1,V2,RV], add : CanAdd[RV,RV,RV], scalar : Scalar[RV])
-  : CanMulRowBy[Bound[V1],Tensor1Col[Int,V2],RV]
-  = new CanMulRowBy[Bound[V1],Tensor1Col[Int,V2],RV] {
-    override def apply(a : Bound[V1], b : Tensor1Col[Int,V2]) =
-      a dot b;
-  }
+//  implicit def canMulVectorRowByCol[V1,V2,RV]
+//  (implicit mul : BinaryOp[V1,V2,OpMul,RV], add : BinaryOp[RV,RV,OpAdd,RV], scalar : Scalar[RV])
+//  : BinaryOp[Bound[V1],Tensor1Col[Int,V2],OpMulRowVectorBy,RV]
+//  = new BinaryOp[Bound[V1],Tensor1Col[Int,V2],OpMulRowVectorBy,RV] {
+//    override def apply(a : Bound[V1], b : Tensor1Col[Int,V2]) =
+//      a dot b;
+//  }
 
   implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
   (implicit slice : CanSliceCol[Matrix[V2],Int,Col],
-   mul : CanMulRowBy[Bound[V1],Col,RV], scalar : Scalar[RV])
-  : CanMulRowBy[Bound[V1],Matrix[V2],VectorRow[RV]]
-  = new CanMulRowBy[Bound[V1],Matrix[V2],VectorRow[RV]] {
+   mul : BinaryOp[Bound[V1],Col,OpMulRowVectorBy,RV], scalar : Scalar[RV])
+  : BinaryOp[Bound[V1],Matrix[V2],OpMulRowVectorBy,VectorRow[RV]]
+  = new BinaryOp[Bound[V1],Matrix[V2],OpMulRowVectorBy,VectorRow[RV]] {
     override def apply(a : Bound[V1], b : Matrix[V2]) = {
       val rv = a.newBuilder[Int,RV](domain.IndexDomain(b.numCols));
       var j = 0;
@@ -93,3 +94,4 @@ trait VectorRowCompanion[Bound[V]<:VectorRow[V]] extends VectorCompanion[Bound] 
     }
   }
 }
+

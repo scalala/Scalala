@@ -22,9 +22,10 @@ package tensor;
 package mutable;
 
 import domain.{IndexDomain,TableDomain};
-import generic.{CanMulMatrixBy,CanMulRowBy};
 import generic.collection.{CanTranspose,CanSliceRow,CanSliceCol,CanSliceMatrix,CanAppendColumns};
 import scalar.Scalar;
+
+import operators._;
 
 /**
  * Implementation trait for a MutableTensor that is also a tensor.Matrix.
@@ -48,8 +49,8 @@ with Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
 object Matrix extends MatrixCompanion[Matrix] with dense.DenseMatrixConstructors {
-  implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B], Matrix[B]] =
-  new CanTranspose[Matrix[B], Matrix[B]] {
+  implicit def canTranspose[B:Scalar] : UnaryOp[Matrix[B],OpTranspose,Matrix[B]] =
+  new UnaryOp[Matrix[B],OpTranspose,Matrix[B]] {
     override def apply(from : Matrix[B]) = {
       if (from.isInstanceOf[MatrixTranspose[_,_]]) {
         from.asInstanceOf[MatrixTranspose[_,_]].underlying.asInstanceOf[Matrix[B]]
@@ -146,27 +147,28 @@ extends tensor.MatrixCompanion[Bound] with IndexedTensorCompanion[(Int,Int),Boun
   /** Tighten bound on return value to be mutable. */
   override implicit def canMulMatrixByCol[V1,V2,RV]
   (implicit sr : CanSliceRow[Bound[V1],Int,tensor.VectorRow[V1]],
-   mul : CanMulRowBy[tensor.VectorRow[V1],tensor.VectorCol[V2],RV],
+   mul : BinaryOp[tensor.VectorRow[V1],tensor.VectorCol[V2],OpMulRowVectorBy,RV],
    scalar : Scalar[RV])
-  : CanMulMatrixBy[Bound[V1], tensor.VectorCol[V2], VectorCol[RV]] =
-  super.canMulMatrixByCol[V1,V2,RV](sr,mul,scalar).asInstanceOf[CanMulMatrixBy[Bound[V1], tensor.VectorCol[V2], VectorCol[RV]]];
+  : BinaryOp[Bound[V1], tensor.VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] =
+  super.canMulMatrixByCol[V1,V2,RV](sr,mul,scalar).asInstanceOf[BinaryOp[Bound[V1], tensor.VectorCol[V2], OpMulMatrixBy, VectorCol[RV]]];
 
   /** Tighten bound on return value to be mutable. */
   override implicit def canMulMatrixByMatrix[V1,V2,RV]
   (implicit sr : CanSliceRow[Bound[V1],Int,tensor.VectorRow[V1]],
    sc : CanSliceCol[tensor.Matrix[V2],Int,tensor.VectorCol[V2]],
-   mul : CanMulRowBy[tensor.VectorRow[V1],tensor.VectorCol[V2],RV],
+   mul : BinaryOp[tensor.VectorRow[V1],tensor.VectorCol[V2],OpMulRowVectorBy,RV],
    scalar : Scalar[RV])
-  : CanMulMatrixBy[Bound[V1], tensor.Matrix[V2], Matrix[RV]] =
-  super.canMulMatrixByMatrix[V1,V2,RV](sr,sc,mul,scalar).asInstanceOf[CanMulMatrixBy[Bound[V1], tensor.Matrix[V2], Matrix[RV]]];
+  : BinaryOp[Bound[V1], tensor.Matrix[V2], OpMulMatrixBy, Matrix[RV]] =
+  super.canMulMatrixByMatrix[V1,V2,RV](sr,sc,mul,scalar).asInstanceOf[BinaryOp[Bound[V1], tensor.Matrix[V2], OpMulMatrixBy, Matrix[RV]]];
 
-  /** Tighten bound on return value to be mutable. */
-  override implicit def canAppendMatrixColumns[V]
-  : CanAppendColumns[Bound[V],tensor.Matrix[V],Matrix[V]]
-  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.Matrix[V], Matrix[V]]];
-
-  /** Tighten bound on return value to be mutable. */
-  override implicit def canAppendVectorColumn[V]
-  : CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]
-  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]];
+//  /** Tighten bound on return value to be mutable. */
+//  override implicit def canAppendMatrixColumns[V]
+//  : CanAppendColumns[Bound[V],tensor.Matrix[V],Matrix[V]]
+//  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.Matrix[V], Matrix[V]]];
+//
+//  /** Tighten bound on return value to be mutable. */
+//  override implicit def canAppendVectorColumn[V]
+//  : CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]
+//  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]];
 }
+

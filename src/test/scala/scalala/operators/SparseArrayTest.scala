@@ -26,8 +26,6 @@ import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.junit.runner.RunWith
 
-import Implicits._;
-
 @RunWith(classOf[JUnitRunner])
 class SparseArrayTest extends FunSuite with Checkers {
 
@@ -67,10 +65,10 @@ class SparseArrayTest extends FunSuite with Checkers {
     val a = mk(1,2,3);
 
     assert((a :+ 1.0).toList === List(2.0,3.0,4.0));
-    assert((1.0 :+ a).toList === List(2.0,3.0,4.0));
     assert((a :- 1).toList === List(0,1,2));
     assert((a :* 3.0).toList === List(3.0,6.0,9.0));
     assert((a :/ 2.0).toList === List(0.5,1.0,1.5));
     assert((a :% 2).toList === List(1,0,1));
   }
 }
+

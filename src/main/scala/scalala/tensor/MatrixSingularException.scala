@@ -17,37 +17,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-
 package scalala;
-package generic;
+package tensor;
 
 /**
- * Marker trait for the shape of an argument.
+ * Thrown when trying to sovle using a singular matrix.
  *
  * @author dramage
  */
-trait Shape[V,S];
-
-trait LowPriorityShapeImplicits {
-  /** The shape of any scalar is Unit. */
-  @inline implicit def any[S]
-  : Shape[S,Unit] = null;
+class MatrixSingularException(msg : String) extends RuntimeException(msg) {
+  def this() = this(null);
 }
 
-object Shape extends LowPriorityShapeImplicits {
 
-  /** Returns a string representation of the shape for the given value. */
-  def shapeOf[V,VS](value : V)(implicit shape : Shape[V,VS], mf : Manifest[VS]) =
-    mf.toString;
-
-  /** The shape of any map is KeyShape=>ValShape. */
-  @inline implicit def map[K,V,KS,VS]
-  (implicit ks : Shape[K,KS], vs : Shape[V,VS])
-  : Shape[Map[K,V],(KS => VS)] = null;
-
-  /** The shape of any array is Unit=>TShape. */
-  @inline implicit def array[T,TS]
-  (implicit ts : Shape[T,TS])
-  : Shape[Array[T],(Unit => TS)] = null;
-
-}

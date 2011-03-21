@@ -23,9 +23,9 @@ package tensor;
 import scalar.Scalar;
 
 import domain._;
-import generic.{CanAdd,CanMul,CanMulColumnBy};
-import generic.collection.CanTranspose;
 import mutable.TensorBuilder;
+
+import scalala.operators._;
 
 /**
  * Implementation trait for a one-axis tensor shaped as a row.
@@ -55,8 +55,8 @@ trait Tensor1Col[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V
 extends Tensor1[K,V] with Tensor1ColLike[K,V,IterableDomain[K],Tensor1Col[K,V]];
 
 object Tensor1Col extends Tensor1ColCompanion[Tensor1Col] {
-  implicit def canTranspose[K,V] : CanTranspose[Tensor1Col[K,V],Tensor1Row[K,V]]
-  = new CanTranspose[Tensor1Col[K,V],Tensor1Row[K,V]] {
+  implicit def canTranspose[K,V] : UnaryOp[Tensor1Col[K,V],OpTranspose,Tensor1Row[K,V]]
+  = new UnaryOp[Tensor1Col[K,V],OpTranspose,Tensor1Row[K,V]] {
     override def apply(col : Tensor1Col[K,V]) =
       new Tensor1Row.View[K,V](col);
   }
@@ -69,3 +69,4 @@ object Tensor1Col extends Tensor1ColCompanion[Tensor1Col] {
 }
 
 trait Tensor1ColCompanion[Bound[K,V]<:Tensor1Col[K,V]] extends Tensor1Companion[Bound];
+
