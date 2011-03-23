@@ -34,9 +34,9 @@ import org.netlib.util.intW;
 /**
  * Basic linear algebraic operations.
  *
- * @author dlwh,dramage,retronym
+ * @author dlwh,dramage,retronym,afwlehmann
  */
-trait LinearAlgebra {
+object LinearAlgebra {
   /**
    * Eigenvalue decomposition (right eigenvectors)
    *
@@ -162,7 +162,7 @@ trait LinearAlgebra {
       builder((ai * b.numRows + bi, aj * b.numCols + bj)) = mul(av, bv)));
     builder.result.asInstanceOf[Matrix[RV]];
   }
-  
+
   /**
    * Returns the rank of each element in the given vector, adjusting for
    * ties.
@@ -178,7 +178,7 @@ trait LinearAlgebra {
       while (i + numTiedValuesAtI < as.length && a(as(i + numTiedValuesAtI)) == a(as(i))) {
         numTiedValuesAtI += 1;
       }
-      
+
       // set return value for next numTiedValuesAtI indexes in as
       val rank = 1 + i + (numTiedValuesAtI - 1) / 2.0;
       var j = 0;
@@ -186,13 +186,164 @@ trait LinearAlgebra {
         rv(as(i + j)) = rank;
         j += 1;
       }
-      
+
       i += numTiedValuesAtI;
     }
-    
+
     rv;
   }
+
+  // AFAIK in Scala we try to avoid Exceptions. As an alternative to the
+  // following approach (like e.g. used in Scala's parser library), we
+  // could (almost) as well work with the Option class.
+  abstract class LinAlgResult[+T]
+
+  case class LinAlgSuccess[T](result: T) extends LinAlgResult[T]
+
+  case class LinAlgError(msg: String) extends LinAlgResult[Nothing]
+
+  object LinAlgError {
+    object MatrixEmpty
+      extends LinAlgError("Matrix is empty!")
+
+    object MatrixNotSquare
+      extends LinAlgError("Matrix is not square!")
+
+    object MatrixNotSymmetric
+      extends LinAlgError("Matrix is not symmetric!")
+
+    object MatrixNotPositiveDefinite
+      extends LinAlgError("Matrix is not positive definite!")
+
+    object AlgorithmNotConverged
+      extends LinAlgError("Algorithm did not converge!")
+  }
+
+  /**
+   * True iff the given matrix X is symmetric.
+   */
+  private def isMatrixSymmetric[T](X: Matrix[T]): Boolean = {
+    if (X.numRows != X.numCols)
+      return false
+
+    for (i <- 1 until X.numRows; j <- 0 until i)
+      if (X(i, j) != X(j, i))
+        return false
+
+    true
+  }
+
+  /**
+   * True iff the given matrix X isn't empty.
+   */
+  private def isMatrixEmpty(X: Matrix[_]): Boolean =
+    X.numRows <= 0 && X.numCols <= 0
+
+  /**
+   * The lower triangular part of the given real symmetric matrix X. Note that
+   * no check will be performed regarding the symmetry of X.
+   */
+  def lowerTriangular[T: Scalar](X: Matrix[T]): DenseMatrix[T] = {
+      val N = X.numRows
+      val builder = X.newBuilder[(Int, Int), T](TableDomain(N, N))
+      for (i <- 0 until N; j <- 0 to i)
+        builder((i,j)) = X(i,j)
+      builder.result.asInstanceOf[DenseMatrix[T]]
+  }
+
+  /**
+   * The lower triangular part of the given real symmetric matrix X. Note that
+   * no check will be performed regarding the symmetry of X.
+   */
+  def upperTriangular[T: Scalar](X: Matrix[T]): DenseMatrix[T] = {
+      val N = X.numRows
+      val builder = X.newBuilder[(Int, Int), T](TableDomain(N, N))
+      for (i <- 0 until N; j <- i until N)
+        builder((i,j)) = X(i,j)
+      builder.result.asInstanceOf[DenseMatrix[T]]
+  }
+
+  /**
+   * Computes the cholesky decomposition A of the given real symmetric
+   * positive definite matrix X such that X = A A^T.
+   *
+   * XXX: For higher dimensionalities, the return value really should be a
+   *      sparse matrix due to its inherent lower triangular nature.
+   */
+  def cholesky(X: Matrix[Double]): LinAlgResult[Matrix[Double]] = {
+    if (isMatrixEmpty(X))
+      return LinAlgError.MatrixEmpty
+
+    // As LAPACK doesn't check if the given matrix is in fact symmetric,
+    // we have to do it here (or get rid of this time-waster as long as
+    // the caller of this function is clearly aware that only the lower
+    // triangular portion of the given matrix is used and there is no
+    // check for symmetry).
+    if (!isMatrixSymmetric(X))
+      return LinAlgError.MatrixNotSymmetric
+
+    // Copy the lower triangular part of X. LAPACK will store the result in A
+    val A: DenseMatrix[Double] = lowerTriangular(X)
+
+    val N = X.numRows
+    val info = new intW(0);
+    LAPACK.getInstance.dpotrf(
+      "L" /* lower triangular */,
+      N /* number of rows */, A.data, math.max(1, N) /* LDA */,
+      info
+    )
+    // A value of info.`val` < 0 would tell us that the i-th argument
+    // of the call to dpotrf was erroneous (where i == |info.`val`|).
+    assert(info.`val` >= 0)
+
+    if (info.`val` > 0)
+      LinAlgError.MatrixNotPositiveDefinite
+    else
+      LinAlgSuccess(A)
+  }
+
+  /**
+   * Computes all eigenvalues (and optionally right eigenvectors) of the given
+   * real symmetric matrix X.
+   */
+  def eigSym(X: Matrix[Double], rightEigenvectors: Boolean):
+    LinAlgResult[(Vector[Double], Option[Matrix[Double]])] =
+  {
+    if (isMatrixEmpty(X))
+      return LinAlgError.MatrixEmpty
+
+    // As LAPACK doesn't check if the given matrix is in fact symmetric,
+    // we have to do it here (or get rid of this time-waster as long as
+    // the caller of this function is clearly aware that only the lower
+    // triangular portion of the given matrix is used and there is no
+    // check for symmetry).
+    if (!isMatrixSymmetric(X))
+      return LinAlgError.MatrixNotSymmetric
+
+    // Copy the lower triangular part of X. LAPACK will store the result in A.
+    val A     = lowerTriangular(X)
+
+    val N     = X.numRows
+    val evs   = DenseVector.zeros[Double](N)
+    val lwork = math.max(1, 3*N-1)
+    val work  = Array.ofDim[Double](lwork)
+    val info  = new intW(0);
+    LAPACK.getInstance.dsyev(
+      if (rightEigenvectors) "V" else "N" /* eigenvalues N, eigenvalues & eigenvectors "V" */,
+      "L" /* lower triangular */,
+      N /* number of rows */, A.data, math.max(1, N) /* LDA */,
+      evs.data,
+      work /* workspace */, lwork /* workspace size */,
+      info
+    )
+    // A value of info.`val` < 0 would tell us that the i-th argument
+    // of the call to dsyev was erroneous (where i == |info.`val`|).
+    assert(info.`val` >= 0)
+
+    if (info.`val` > 0)
+      LinAlgError.AlgorithmNotConverged
+    else
+      LinAlgSuccess((evs, if (rightEigenvectors) Some(A) else None))
+  }
+
 }
-
-object LinearAlgebra extends LinearAlgebra { }
-
