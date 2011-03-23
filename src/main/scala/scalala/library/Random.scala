@@ -17,10 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
+
 package scalala;
 package library;
 
-import random.MersenneTwisterFast;
+import random.MersenneTwisterFast
+import tensor.{::, Matrix}
+import tensor.dense.DenseMatrix
 
 /**
  * <p>Random number generation.  This class uses the MersenneTwisterFast
@@ -41,10 +44,11 @@ import random.MersenneTwisterFast;
  * block.  Therefore, calling a vector constructor is substantially faster
  * than calling rand() many times.</p>
  *
- * @author dramage
+ * @author dramage,afwlehmann
  */
 trait Random {
-  /** Returns a psuedo-random number from the interval 0 to 1. */
+
+  /** Returns a pseudo-random number from the interval 0 to 1. */
   def rand()(implicit mt : MersenneTwisterFast) : Double = mt.synchronized {
     mt.nextDouble;
   }
@@ -92,6 +96,54 @@ trait Random {
       m(i)(j) = mt.nextGaussian;
     }
     return m;
+  }
+
+  // Avoid exceptions.
+  abstract class RandomResult[+T]
+
+  case class RandomSuccess[T](result: T) extends RandomResult[T]
+
+  case class RandomError(msg: String) extends RandomResult[Nothing]
+
+  object RandomError {
+    object MalformedCovarianceMatrix
+      extends RandomError("Malformed covariance matrix!")
+
+    object InvalidDimensions
+      extends RandomError("Invalid dimensions!")
+
+    object IllegalArgument
+      extends RandomError("Illegal argument!")
+  }
+
+  /**
+   * Computes a matrix whose columns represent samples drawn from a multivariate
+   * Gaussian distribution obeying both the given mean `mu' and covariance
+   * matrix `Sigma'.
+   */
+  def randn(mu: Vector[Double], Sigma: Matrix[Double], numSamples: Int):
+    RandomResult[Matrix[Double]] =
+  {
+    if (numSamples < 1)
+      return RandomError.IllegalArgument
+
+    if (mu.size != Sigma.numCols)
+      return RandomError.InvalidDimensions
+
+    LinearAlgebra.cholesky(Sigma) match {
+      case LinearAlgebra.LinAlgError(_) =>
+        RandomError.MalformedCovarianceMatrix
+
+      case LinearAlgebra.LinAlgSuccess(sqrtSigma: DenseMatrix[Double]) =>
+        val samples: DenseMatrix[Double] =
+          sqrtSigma * DenseMatrix.randn(mu.size, numSamples)
+        // Due to the row-major storage order of (dense) matrices it's probably
+        // best to use row-wise scalar addition instead of column-wise vector
+        // addition:
+        for (i <- 0 until mu.size)
+          samples(i,::) += mu(i)
+        RandomSuccess(samples)
+    }
   }
 
   /** Returns a random integer in the range [0..max). */
