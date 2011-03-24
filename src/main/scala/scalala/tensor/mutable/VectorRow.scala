@@ -24,7 +24,7 @@ package mutable;
 import scalar.Scalar;
 
 import domain._;
-import generic.collection.{CanTranspose,CanSliceCol};
+import generic.collection.CanSliceCol;
 
 import scalala.operators._;
 
@@ -46,9 +46,9 @@ trait VectorRow[@specialized(Int,Long,Float,Double) V]
 extends tensor.VectorRow[V] with Tensor1Row[Int,V] with Vector[V]
 with VectorRowLike[V,VectorRow[V]];
 
-object VectorRow extends VectorRowCompanion[VectorRow] {
-  implicit def canTranspose[V] : UnaryOp[VectorRow[V],OpTranspose,VectorCol[V]]
-  = new UnaryOp[VectorRow[V],OpTranspose,VectorCol[V]] {
+object VectorRow {
+  implicit def canTranspose[V] : CanTranspose[VectorRow[V],VectorCol[V]]
+  = new CanTranspose[VectorRow[V],VectorCol[V]] {
     override def apply(col : VectorRow[V]) =
       new VectorCol.View[V](col);
   }
@@ -57,14 +57,5 @@ object VectorRow extends VectorRowCompanion[VectorRow] {
   extends VectorProxy[V,Vector[V]] with tensor.VectorProxy[V,Vector[V]] with VectorRow[V] with VectorLike[V,View[V]] {
     override def repr : View[V] = this;
   }
-}
-
-trait VectorRowCompanion[Bound[V]<:VectorRow[V]]
-extends tensor.VectorRowCompanion[Bound] with VectorCompanion[Bound] {
-  /** Tighten bound on return value. */
-  override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
-  (implicit slice : CanSliceCol[tensor.Matrix[V2],Int,Col], mul : BinaryOp[Bound[V1],Col,OpMulRowVectorBy,RV], scalar : Scalar[RV])
-  : BinaryOp[Bound[V1],tensor.Matrix[V2],OpMulRowVectorBy,VectorRow[RV]] =
-     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[BinaryOp[Bound[V1],tensor.Matrix[V2],OpMulRowVectorBy,VectorRow[RV]]];
 }
 

@@ -183,7 +183,5 @@ extends tensor.Vector[B] with Tensor1[Int,B]
 with VectorLike[B,Vector[B]];
 
 
-object Vector extends VectorCompanion[Vector] with dense.DenseVectorConstructors;
+object Vector extends dense.DenseVectorConstructors;
 
-trait VectorCompanion[Bound[V]<:Vector[V]]
-extends tensor.VectorCompanion[Bound] with IndexedTensorCompanion[Int,Bound];

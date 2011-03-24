@@ -45,7 +45,7 @@ trait Tensor1
 extends tensor.Tensor1[K,V] with Tensor[K,V]
 with Tensor1Like[K,V,IterableDomain[K],Tensor1[K,V]];
 
-object Tensor1 extends Tensor1Companion[Tensor1] {
+object Tensor1 {
   /** Constructs an open-domain tensor seeded with the given values. */
   def apply[K,V:Scalar](values : (K,V)*) : Tensor1[K,V] = {
     new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
@@ -65,5 +65,3 @@ object Tensor1 extends Tensor1Companion[Tensor1] {
   extends Tensor.Impl[K,V](map) with Tensor1[K,V];
 }
 
-trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V]]
-extends tensor.Tensor1Companion[Bound] with TensorCompanion[Bound];

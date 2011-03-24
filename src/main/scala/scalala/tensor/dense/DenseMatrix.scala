@@ -113,7 +113,7 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
     new DenseMatrix[B](numRows, numCols, data.clone);
 }
 
-object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrixConstructors {
+object DenseMatrix extends DenseMatrixConstructors {
 
   //
   // Capabilities
@@ -262,33 +262,6 @@ object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrix
       new DenseVectorCol[Double](rv.data);
     }
   }
-
-  /** Tighten bound on return value to be dense. */
-  override implicit def canMulMatrixByCol[V1,V2,RV]
-  (implicit sr : CanSliceRow[DenseMatrix[V1],Int,tensor.VectorRow[V1]],
-   mul : BinaryOp[tensor.VectorRow[V1],tensor.VectorCol[V2],OpMulRowVectorBy,RV],
-   scalar : Scalar[RV])
-  : BinaryOp[DenseMatrix[V1], tensor.VectorCol[V2], OpMulMatrixBy, DenseVectorCol[RV]] =
-  super.canMulMatrixByCol[V1,V2,RV](sr,mul,scalar).asInstanceOf[BinaryOp[DenseMatrix[V1], tensor.VectorCol[V2], OpMulMatrixBy, DenseVectorCol[RV]]];
-
-  /** Tighten bound on return value to be dense. */
-  override implicit def canMulMatrixByMatrix[V1,V2,RV]
-  (implicit sr : CanSliceRow[DenseMatrix[V1],Int,tensor.VectorRow[V1]],
-   sc : CanSliceCol[tensor.Matrix[V2],Int,tensor.VectorCol[V2]],
-   mul : BinaryOp[tensor.VectorRow[V1],tensor.VectorCol[V2],OpMulRowVectorBy,RV],
-   scalar : Scalar[RV])
-  : BinaryOp[DenseMatrix[V1], tensor.Matrix[V2], OpMulMatrixBy, DenseMatrix[RV]] =
-  super.canMulMatrixByMatrix[V1,V2,RV](sr,sc,mul,scalar).asInstanceOf[BinaryOp[DenseMatrix[V1], tensor.Matrix[V2], OpMulMatrixBy, DenseMatrix[RV]]];
-
-//  /** Tighten bound on return value to be dense. */
-//  override implicit def canAppendMatrixColumns[V]
-//  : CanAppendColumns[DenseMatrix[V],tensor.Matrix[V],DenseMatrix[V]]
-//  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[DenseMatrix[V],tensor.Matrix[V], DenseMatrix[V]]];
-//
-//  /** Tighten bound on return value to be dense. */
-//  override implicit def canAppendVectorColumn[V]
-//  : CanAppendColumns[DenseMatrix[V],tensor.VectorCol[V],DenseMatrix[V]]
-//  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[DenseMatrix[V],tensor.VectorCol[V],DenseMatrix[V]]];
 }
 
 /**

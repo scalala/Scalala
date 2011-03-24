@@ -21,9 +21,6 @@
 package scalala;
 package operators;
 
-import generic._;
-import generic.collection.{CanTranspose,CanAppendColumns};
-
 import scalala.scalar.Scalar;
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
@@ -111,7 +108,7 @@ trait NumericOps[+This] {
 trait MutableNumericOps[+This] extends NumericOps[This] {
   def repr : This;
 
-  def :=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSet]) : This = {
+  def :=[TT>:This,B](b : B)(implicit op : CanSet[TT,B]) : This = {
     op(repr,b);
     return repr;
   }
@@ -180,9 +177,10 @@ trait ColOps[+This] extends NumericOps[This] {
   def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulColVectorBy,That]) : That =
     op(repr, b);
 
-  def t[TT>:This,That](implicit op : UnaryOp[TT,OpTranspose,That]) =
+  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
 }
+
 
 /**
  * Secialized shaped numeric operations for rows.
@@ -193,7 +191,7 @@ trait RowOps[+This] extends NumericOps[This] {
   def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulRowVectorBy,That]) : That =
     op(repr, b);
 
-  def t[TT>:This,That](implicit op : UnaryOp[TT,OpTranspose,That]) =
+  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
 }
 
@@ -209,7 +207,7 @@ trait MatrixOps[+This] extends NumericOps[This] {
   def \[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSolveMatrixBy,That]) =
     op.apply(repr,b);
 
-  def t[TT>:This,That](implicit op : UnaryOp[TT,OpTranspose,That]) =
+  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
 }
 
@@ -239,7 +237,6 @@ trait WrappedColOps[+This] extends NumericOps[This] {
 trait MutableWrappedColOps[+This] extends WrappedColOps[This] with MutableNumericOps[This] {
   override def t : MutableWrappedRowOps[This] = MutableWrappedRowOps(repr);
 }
-
 
 /**
  * Secialized NumericOps with shaped operations taking A is a row.

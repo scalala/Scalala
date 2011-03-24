@@ -85,7 +85,7 @@ extends TensorLike[A,B,D,This] { self =>
 trait Tensor1[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
 extends Tensor[A,B] with Tensor1Like[A,B,IterableDomain[A],Tensor1[A,B]];
 
-object Tensor1 extends Tensor1Companion[Tensor1] {
+object Tensor1 {
   def apply[K,V:Scalar](keys : (K,V)*) : Tensor1Col[K,V] = {
     val m = keys.toMap;
     val s = implicitly[Scalar[V]];
@@ -97,9 +97,3 @@ object Tensor1 extends Tensor1Companion[Tensor1] {
   }
 }
 
-/**
- * Default companion for Tensor1.
- * 
- * @author dramage
- */
-trait Tensor1Companion[Bound[K,V]<:Tensor1[K,V]] extends TensorCompanion[Bound];

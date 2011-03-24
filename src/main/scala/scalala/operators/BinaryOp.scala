@@ -75,6 +75,9 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   implicit object OpModII extends BinaryOp[Int,Int,OpMod,Int]
     { def apply(a : Int, b : Int) = a % b; }
   
+  implicit object OpPowII extends BinaryOp[Int,Int,OpPow,Double]
+    { def apply(a : Int, b : Int) = math.pow(a,b); }
+  
   implicit object OpLTII extends BinaryOp[Int,Int,OpLT,Boolean]
     { def apply(a : Int, b : Int) = a < b; }
   
@@ -110,6 +113,9 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   implicit object OpModLL extends BinaryOp[Long,Long,OpMod,Long]
     { def apply(a : Long, b : Long) = a % b; }
   
+  implicit object OpPowLL extends BinaryOp[Long,Long,OpPow,Double]
+    { def apply(a : Long, b : Long) = math.pow(a,b); }
+  
   implicit object OpLTLL extends BinaryOp[Long,Long,OpLT,Boolean]
     { def apply(a : Long, b : Long) = a < b; }
   
@@ -144,6 +150,9 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   
   implicit object OpModFF extends BinaryOp[Float,Float,OpMod,Float]
     { def apply(a : Float, b : Float) = a % b; }
+  
+  implicit object OpPowFF extends BinaryOp[Float,Float,OpPow,Double]
+    { def apply(a : Float, b : Float) = math.pow(a,b); }
   
   implicit object OpLTFF extends BinaryOp[Float,Float,OpLT,Boolean]
     { def apply(a : Float, b : Float) = a < b; }
@@ -295,6 +304,22 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
     
   implicit object OpCastFD extends UnaryOp[Float,OpCast,Double]
     { def apply(v : Float) : Double = v; }
+    
+  //
+  // Promote regular scalar multiplications to shaped multiplications
+  //
+  
+  implicit def promoteScalarMulToMulRowVectorBy[A,B,RV]
+  (implicit op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
+  = op.asInstanceOf[BinaryOp[A,B,OpMulRowVectorBy,RV]];
+
+  implicit def promoteScalarMulToMulColVectorBy[A,B,RV]
+  (implicit op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
+  = op.asInstanceOf[BinaryOp[A,B,OpMulColVectorBy,RV]];
+
+  implicit def promoteScalarMulToMulMatrixBy[A,B,RV]
+  (implicit op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
+  = op.asInstanceOf[BinaryOp[A,B,OpMulMatrixBy,RV]];
     
   //
   // Tuples
@@ -527,42 +552,4 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
 //  def apply(a : Map[K,V1], b : Map[K,V2]) =
 //    (a.keySet & b.keySet).map(k => (k,op(a(k),b(k)))).toMap;
 //}
-//
-///**
-// * Base of operators on tuples.
-// *
-// * @author dramage
-// */
-//class Tuple2Tuple2Op[VA1,VA2,VB1,VB2,RV1,RV2]
-//(implicit op1 : BinaryOp[VA1,VB1,RV1], op2 : BinaryOp[VA2,VB2,RV2])
-//extends BinaryOp[(VA1,VA2),(VB1,VB2),(RV1,RV2)] {
-//  def apply(a : (VA1,VA2), b : (VB1,VB2)) =
-//    (op1(a._1,b._1), op2(a._2,b._2));
-//}
-//
-///**
-// * Base of operators on tuples.
-// *
-// * @author dramage
-// */
-//class Tuple3Tuple3Op[VA1,VA2,VA3,VB1,VB2,VB3,RV1,RV2,RV3]
-//(implicit op1 : BinaryOp[VA1,VB1,RV1], op2 : BinaryOp[VA2,VB2,RV2],
-// op3 : BinaryOp[VA3,VB3,RV3])
-//extends BinaryOp[(VA1,VA2,VA3),(VB1,VB2,VB3),(RV1,RV2,RV3)] {
-//  def apply(a : (VA1,VA2,VA3), b : (VB1,VB2,VB3)) =
-//    (op1(a._1,b._1), op2(a._2,b._2), op3(a._3,b._3));
-//}
-//
-///**
-// * Base of operators on tuples.
-// *
-// * @author dramage
-// */
-//class Tuple4Tuple4Op[VA1,VA2,VA3,VA4,VB1,VB2,VB3,VB4,RV1,RV2,RV3,RV4]
-//(implicit op1 : BinaryOp[VA1,VB1,RV1], op2 : BinaryOp[VA2,VB2,RV2],
-// op3 : BinaryOp[VA3,VB3,RV3], op4 : BinaryOp[VA4,VB4,RV4])
-//extends BinaryOp[(VA1,VA2,VA3,VA4),(VB1,VB2,VB3,VB4),(RV1,RV2,RV3,RV4)] {
-//  def apply(a : (VA1,VA2,VA3,VA4), b : (VB1,VB2,VB3,VB4)) =
-//    (op1(a._1,b._1), op2(a._2,b._2), op3(a._3,b._3), op4(a._4, b._4));
-//}
-//
+

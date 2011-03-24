@@ -24,6 +24,7 @@ import scalar.Scalar;
 
 import domain._;
 import generic.collection._;
+import operators.CanTranspose;
 
 /**
  * Implementation trait for tensors indexed by two keys, such as Matrices.

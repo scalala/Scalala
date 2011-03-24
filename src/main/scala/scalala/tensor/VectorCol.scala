@@ -43,9 +43,9 @@ extends VectorLike[B,This] with Tensor1ColLike[Int,B,IndexDomain,This];
 trait VectorCol[@specialized(Int,Long,Float,Double) B]
 extends Vector[B] with Tensor1Col[Int,B] with VectorColLike[B,VectorCol[B]];
 
-object VectorCol extends VectorColCompanion[VectorCol] {
-  implicit def canTranspose[V] : UnaryOp[VectorCol[V],OpTranspose,VectorRow[V]]
-  = new UnaryOp[VectorCol[V],OpTranspose,VectorRow[V]] {
+object VectorCol {
+  implicit def canTranspose[V] : CanTranspose[VectorCol[V],VectorRow[V]]
+  = new CanTranspose[VectorCol[V],VectorRow[V]] {
     override def apply(col : VectorCol[V]) =
       new VectorRow.View[V](col);
   }
@@ -55,14 +55,12 @@ object VectorCol extends VectorColCompanion[VectorCol] {
   with VectorLike[V,View[V]] {
     override def repr : View[V] = this;
   }
-}
-
-trait VectorColCompanion[Bound[V]<:VectorCol[V]] extends VectorCompanion[Bound] {
+  
   implicit def canMulVectorColByRow[V1,V2,RV]
   (implicit mul : BinaryOp[V1,V2,OpMul,RV], scalar : Scalar[RV])
-  : BinaryOp[Bound[V1],VectorRow[V2],OpMulColVectorBy,Matrix[RV]]
-  = new BinaryOp[Bound[V1],VectorRow[V2],OpMulColVectorBy,Matrix[RV]] {
-    override def apply(a : Bound[V1], b : VectorRow[V2]) = {
+  : BinaryOp[VectorCol[V1],VectorRow[V2],OpMulColVectorBy,Matrix[RV]]
+  = new BinaryOp[VectorCol[V1],VectorRow[V2],OpMulColVectorBy,Matrix[RV]] {
+    override def apply(a : VectorCol[V1], b : VectorRow[V2]) = {
       val builder = a.newBuilder(TableDomain(a.domain.size, b.domain.size));
       a.foreachNonZero((i,va) => b.foreachNonZero((j,vb) => builder((i,j)) = mul(va,vb)));
       builder.result.asInstanceOf[Matrix[RV]];

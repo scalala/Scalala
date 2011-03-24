@@ -21,6 +21,8 @@
 package scalala;
 package operators;
 
+import scalala.scalar.Scalar;
+
 /**
  * Marker trait for some operation, be it UnaryOp, BinaryOp, or
  * BinaryUpdateOp.
@@ -121,6 +123,13 @@ trait OpNe  extends OpType;
 trait OpSet extends OpType;
 
 /**
+ * Set a value with A := B.
+ *
+ * @author dramage
+ */
+trait CanSet[-A,-B] extends BinaryUpdateOp[A,B,OpSet];
+
+/**
  * Type marker for UnaryOp -A.
  *
  * @author dramage
@@ -135,11 +144,25 @@ trait OpNeg extends OpType;
 trait OpCast extends OpType;
 
 /**
+ * Cast a value from type A to B.
+ *
+ * @author dramage
+ */
+trait CanCast[-A,+B] extends UnaryOp[A,OpCast,B];
+
+/**
  * Type marker for UnaryOp to take the transpose of A.
  *
  * @author dramage
  */
 trait OpTranspose extends OpType;
+
+/**
+ * Transpose of a shaped value.
+ *
+ * @author dramage
+ */
+trait CanTranspose[-From,+To] extends UnaryOp[From,OpTranspose,To];
 
 /**
  * Type marker for BinaryOp A * B when A is a row.

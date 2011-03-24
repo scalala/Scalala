@@ -21,10 +21,9 @@ package scalala;
 package tensor;
 package mutable;
 
-import scalala.tensor.domain._;
-import scalala.generic.collection.CanTranspose;
-
+import tensor.domain._;
 import scalar.Scalar;
+import operators.CanTranspose;
 
 /**
  * Implementation trait for mutable Tensor1Col instances.
@@ -46,7 +45,7 @@ trait Tensor1Col
 extends tensor.Tensor1Col[K,V] with Tensor1[K,V]
 with Tensor1ColLike[K,V,IterableDomain[K],Tensor1Col[K,V]];
 
-object Tensor1Col extends Tensor1ColCompanion[Tensor1Col] {
+object Tensor1Col {
   /** Constructs an open-domain tensor seeded with the given values. */
   def apply[K,V:Scalar](values : (K,V)*) : Tensor1Col[K,V] = {
     new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
@@ -78,5 +77,3 @@ object Tensor1Col extends Tensor1ColCompanion[Tensor1Col] {
   }
 }
 
-trait Tensor1ColCompanion[Bound[K,V]<:Tensor1Col[K,V]]
-extends tensor.Tensor1ColCompanion[Bound] with Tensor1Companion[Bound];

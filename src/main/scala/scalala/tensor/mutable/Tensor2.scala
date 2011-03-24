@@ -107,8 +107,8 @@ object Tensor2 {
     }
   }
 
-  implicit def canTranspose[A2,A1,B:Scalar] : UnaryOp[Tensor2[A1,A2,B],OpTranspose,Tensor2[A2,A1,B]]
-  = new UnaryOp[Tensor2[A1,A2,B],OpTranspose,Tensor2[A2,A1,B]] {
+  implicit def canTranspose[A2,A1,B:Scalar] : CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]]
+  = new CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]] {
     override def apply(from : Tensor2[A1,A2,B]) = {
       if (from.isInstanceOf[Tensor2Transpose[_,_,_,_]]) {
         from.asInstanceOf[Tensor2Transpose[_,_,_,_]].underlying.asInstanceOf[Tensor2[A2,A1,B]];

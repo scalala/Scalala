@@ -22,9 +22,8 @@ package tensor;
 package mutable;
 
 import domain._;
-import generic.collection.CanTranspose;
-
 import scalar.Scalar;
+import operators.CanTranspose;
 
 /**
  * Implementation trait for mutable Tensor1Row instances.
@@ -46,7 +45,7 @@ trait Tensor1Row
 extends tensor.Tensor1Row[K,V] with Tensor1[K,V]
 with Tensor1RowLike[K,V,IterableDomain[K],Tensor1Row[K,V]];
 
-object Tensor1Row extends Tensor1RowCompanion[Tensor1Row] {
+object Tensor1Row {
   /** Constructs an open-domain tensor seeded with the given values. */
   def apply[K,V:Scalar](values : (K,V)*) : Tensor1Row[K,V] = {
     new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
@@ -72,5 +71,3 @@ object Tensor1Row extends Tensor1RowCompanion[Tensor1Row] {
   }
 }
 
-trait Tensor1RowCompanion[Bound[K,V]<:Tensor1Row[K,V]]
-extends tensor.Tensor1RowCompanion[Bound] with Tensor1Companion[Bound];
