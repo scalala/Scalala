@@ -20,16 +20,19 @@
 package scalala;
 package library;
 
-import generic.collection.{CanViewAsVector};
 
-import math._;
-import Numerics._;
-import LinearAlgebra._;
+
+import math._
+import Numerics._
+import operators.Implicits._
+import generic.collection.CanViewAsVector
+import tensor.{Matrix, Vector}
+import tensor.dense.{DenseVector, DenseMatrix}
 
 /**
  * Matlab-like statistical methods.
  *
- * @author dramage
+ * @author dramage,afwlehmann
  */
 trait Statistics {
 
@@ -48,6 +51,60 @@ trait Statistics {
       m += (x - m) / k;
     }
     m;
+  }
+
+  object Axis extends Enumeration {
+    val Horizontal, Vertical = Value
+  }
+
+  /**
+   * Mean vector of the given matrix along the specified axis.
+   */
+  def mean[@specialized T](X: Matrix[T], axis: Axis.Value)(implicit xv: T => Double):
+    DenseVector[Double] =
+  {
+    // TODO: This calculation of the mean is rather slow. It should
+    //       be transformed into several while loops.
+    axis match {
+      case Axis.Horizontal =>
+        var mu = DenseVector.zeros[Double](X.numRows)
+        X foreach ( (idx, value) =>
+          mu(idx._1) += (value - mu(idx._1)) / (idx._2 + 1)
+        )
+        mu
+
+      case Axis.Vertical =>
+        var mu = DenseVector.zeros[Double](X.numCols)
+        X foreach ( (idx, value) =>
+          mu(idx._2) += (value - mu(idx._2)) / (idx._1 + 1)
+        )
+        mu.t
+    }
+  }
+
+  /**
+   * The covariance matrix and mean of the given dataset X where each column
+   * of X represents one sample of a multivariate random distribution.
+   * In case the mean of the dataset is already known it can be passed in as
+   * the `muPrecalc' argument.
+   */
+  def covariance[@specialized T](X: Matrix[T], muPrecalc: Vector[T] = null)
+                                (implicit xv: T => Double):
+    (Matrix[Double], Vector[Double]) =
+  {
+    require(X.numRows > 0 && X.numCols > 0, "Matrix is empty!")
+
+    val mu = muPrecalc match {
+      case v: Vector[T] => DenseVector.tabulate[Double](muPrecalc.size)(muPrecalc(_))
+      case _ => mean(X, Axis.Horizontal)
+    }
+
+    val XminusMu = DenseMatrix.tabulate[Double](X.numRows, X.numCols)(
+      (i, j) => X(i,j) - mu(i)
+    )
+    val Sigma: DenseMatrix[Double] = XminusMu * XminusMu.t / (X.numCols-1)
+
+    (Sigma, mu)
   }
 
   /**
@@ -223,7 +280,6 @@ trait Statistics {
     }
     rv;
   }
-
 
 }
 
