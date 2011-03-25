@@ -37,6 +37,19 @@ import org.netlib.util.intW;
  * @author dlwh,dramage,retronym,afwlehmann
  */
 object LinearAlgebra {
+
+  class NotConvergedException(val reason: NotConvergedException.Reason.Value, msg: String = "")
+    extends Exception(msg) {}
+
+  object NotConvergedException {
+    object Reason extends Enumeration {
+      val Iterations, Divergence, Breakdown = Value
+    }
+  }
+
+  class MatrixNotSymmetricException
+    extends IllegalArgumentException("Matrix is not symmetric!")
+
   /**
    * Eigenvalue decomposition (right eigenvectors)
    *
@@ -102,15 +115,6 @@ object LinearAlgebra {
     (Wr, Wi, Vr)
   }
 
-  class NotConvergedException (val reason: NotConvergedException.Reason.Value, msg: String = "")
-          extends Exception(msg) { }
-
-  object NotConvergedException {
-    object Reason extends Enumeration {
-      val Iterations, Divergence, Breakdown = Value
-    }
-  }
-
   /**
    * Computes the SVD of a m by n matrix
    * Returns an m*m matrix U, a vector of singular values, and a n*n matrix V'
@@ -145,7 +149,6 @@ object LinearAlgebra {
 
     (U,S,Vt);
   }
-
 
   private def requireMatrixNonEmpty[V](mat: Matrix[V]): Unit = {
     require(mat.numCols > 0, "Matrix is empty")
@@ -191,32 +194,6 @@ object LinearAlgebra {
     }
 
     rv;
-  }
-
-  // AFAIK in Scala we try to avoid Exceptions. As an alternative to the
-  // following approach (like e.g. used in Scala's parser library), we
-  // could (almost) as well work with the Option class.
-  abstract class LinAlgResult[+T]
-
-  case class LinAlgSuccess[T](result: T) extends LinAlgResult[T]
-
-  case class LinAlgError(msg: String) extends LinAlgResult[Nothing]
-
-  object LinAlgError {
-    object MatrixEmpty
-      extends LinAlgError("Matrix is empty!")
-
-    object MatrixNotSquare
-      extends LinAlgError("Matrix is not square!")
-
-    object MatrixNotSymmetric
-      extends LinAlgError("Matrix is not symmetric!")
-
-    object MatrixNotPositiveDefinite
-      extends LinAlgError("Matrix is not positive definite!")
-
-    object AlgorithmNotConverged
-      extends LinAlgError("Algorithm did not converge!")
   }
 
   /**
@@ -270,9 +247,8 @@ object LinearAlgebra {
    * XXX: For higher dimensionalities, the return value really should be a
    *      sparse matrix due to its inherent lower triangular nature.
    */
-  def cholesky(X: Matrix[Double]): LinAlgResult[Matrix[Double]] = {
-    if (isMatrixEmpty(X))
-      return LinAlgError.MatrixEmpty
+  def cholesky(X: Matrix[Double]): DenseMatrix[Double] = {
+    requireMatrixNonEmpty(X)
 
     // As LAPACK doesn't check if the given matrix is in fact symmetric,
     // we have to do it here (or get rid of this time-waster as long as
@@ -280,7 +256,7 @@ object LinearAlgebra {
     // triangular portion of the given matrix is used and there is no
     // check for symmetry).
     if (!isMatrixSymmetric(X))
-      return LinAlgError.MatrixNotSymmetric
+      throw new MatrixNotSymmetricException
 
     // Copy the lower triangular part of X. LAPACK will store the result in A
     val A: DenseMatrix[Double] = lowerTriangular(X)
@@ -297,9 +273,9 @@ object LinearAlgebra {
     assert(info.`val` >= 0)
 
     if (info.`val` > 0)
-      LinAlgError.MatrixNotPositiveDefinite
-    else
-      LinAlgSuccess(A)
+      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+
+    A
   }
 
   /**
@@ -307,10 +283,9 @@ object LinearAlgebra {
    * real symmetric matrix X.
    */
   def eigSym(X: Matrix[Double], rightEigenvectors: Boolean):
-    LinAlgResult[(Vector[Double], Option[Matrix[Double]])] =
+    (Vector[Double], Option[Matrix[Double]]) =
   {
-    if (isMatrixEmpty(X))
-      return LinAlgError.MatrixEmpty
+    requireMatrixNonEmpty(X)
 
     // As LAPACK doesn't check if the given matrix is in fact symmetric,
     // we have to do it here (or get rid of this time-waster as long as
@@ -318,7 +293,7 @@ object LinearAlgebra {
     // triangular portion of the given matrix is used and there is no
     // check for symmetry).
     if (!isMatrixSymmetric(X))
-      return LinAlgError.MatrixNotSymmetric
+      throw new MatrixNotSymmetricException
 
     // Copy the lower triangular part of X. LAPACK will store the result in A.
     val A     = lowerTriangular(X)
@@ -341,9 +316,9 @@ object LinearAlgebra {
     assert(info.`val` >= 0)
 
     if (info.`val` > 0)
-      LinAlgError.AlgorithmNotConverged
-    else
-      LinAlgSuccess((evs, if (rightEigenvectors) Some(A) else None))
+      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+
+    (evs, if (rightEigenvectors) Some(A) else None)
   }
 
 }
