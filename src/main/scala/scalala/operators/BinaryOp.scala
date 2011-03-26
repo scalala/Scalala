@@ -32,8 +32,8 @@ import scalala.scalar.Scalar;
  * @author dramage
  */
 @implicitNotFound(msg="Could not find a way to ${O} values of type ${A} and ${B}")
-trait BinaryOp[@specialized -A, @specialized -B, O<:OpType, +That]
-extends ((A,B) => That);
+trait BinaryOp[@specialized -A, @specialized -B, O<:OpType, +To]
+extends ((A,B) => To);
 
 trait LowPriorityBinaryOpImplicits {
   /**

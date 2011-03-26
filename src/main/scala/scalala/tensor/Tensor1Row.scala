@@ -45,6 +45,9 @@ extends Tensor1Like[K,V,D,This] with operators.RowOps[This] { self =>
     case _ =>
       super.newBuilder[K2,V2](domain);
   }
+  
+  def t : Tensor1Col[K,V] =
+    new Tensor1Col.View[K,V](repr);
 }
 
 /**
@@ -56,12 +59,6 @@ trait Tensor1Row[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V
 extends Tensor1[K,V] with Tensor1RowLike[K,V,IterableDomain[K],Tensor1Row[K,V]];
 
 object Tensor1Row {
-  implicit def canTranspose[K,V] : CanTranspose[Tensor1Row[K,V],Tensor1Col[K,V]]
-  = new CanTranspose[Tensor1Row[K,V],Tensor1Col[K,V]] {
-    override def apply(row : Tensor1Row[K,V]) =
-      new Tensor1Col.View[K,V](row);
-  }
-
   class View[K,V](override val inner : Tensor1Col[K,V])
   extends Tensor1Proxy[K,V,Tensor1Col[K,V]] with Tensor1Row[K,V]
   with Tensor1Like[K,V,IterableDomain[K],View[K,V]] {

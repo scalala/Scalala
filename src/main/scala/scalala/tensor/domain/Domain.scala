@@ -68,6 +68,9 @@ extends DomainLike[A,This] {
   /** Number of elements in the domain. */
   def size : Int;
 
+  def product[B,That<:IterableDomain[B]](that : That) =
+    Product2Domain(repr,that);
+
   def toIndexedSeq =
     iterator.toIndexedSeq;
 
@@ -186,6 +189,11 @@ extends Product1Domain[Int] with Product1DomainLike[Int,IndexDomain] {
       fn(i);
       i += 1;
     }
+  }
+
+  override def product[B,That<:IterableDomain[B]](that : That) = that match {
+    case IndexDomain(otherSize) => TableDomain(size,otherSize);
+    case _ => super.product[B,That](that);
   }
 
   override def toIndexedSeq =

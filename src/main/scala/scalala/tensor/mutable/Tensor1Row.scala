@@ -23,7 +23,6 @@ package mutable;
 
 import domain._;
 import scalar.Scalar;
-import operators.CanTranspose;
 
 /**
  * Implementation trait for mutable Tensor1Row instances.
@@ -33,7 +32,11 @@ import operators.CanTranspose;
 trait Tensor1RowLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +D<:IterableDomain[K] with DomainLike[K,D], +This<:Tensor1Row[K,V]]
-extends tensor.Tensor1RowLike[K,V,D,This] with Tensor1Like[K,V,D,This];
+extends tensor.Tensor1RowLike[K,V,D,This] with Tensor1Like[K,V,D,This] {
+
+  override def t : Tensor1Col[K,V] =
+    new Tensor1Col.View[K,V](repr);
+}
 
 /**
  * Mutable tensor.Tensor1.

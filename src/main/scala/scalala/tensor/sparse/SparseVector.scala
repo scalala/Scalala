@@ -88,17 +88,10 @@ extends SparseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,S
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
+  
+  override def t : SparseVectorCol[V] =
+    new SparseVectorCol(data)(scalar);
 }
-
-object SparseVectorRow {
-  /** Transpose shares the same data. */
-  implicit def canTranspose[V] : CanTranspose[SparseVectorRow[V],SparseVectorCol[V]]
-  = new CanTranspose[SparseVectorRow[V],SparseVectorCol[V]] {
-    override def apply(row : SparseVectorRow[V]) =
-      new SparseVectorCol(row.data)(row.scalar);
-  }
-}
-
 
 /**
  * SparseVectors as a column.
@@ -117,14 +110,8 @@ extends SparseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,S
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
-}
-
-object SparseVectorCol {
-  /** Transpose shares the same data. */
-  implicit def canTranspose[V] : CanTranspose[SparseVectorCol[V],SparseVectorRow[V]]
-  = new CanTranspose[SparseVectorCol[V],SparseVectorRow[V]] {
-    override def apply(row : SparseVectorCol[V]) =
-      new SparseVectorRow(row.data)(row.scalar);
-  }
+  
+  override def t : SparseVectorRow[V] =
+    new SparseVectorRow(data)(scalar);
 }
 

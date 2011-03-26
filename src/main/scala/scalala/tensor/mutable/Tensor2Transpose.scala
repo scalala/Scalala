@@ -47,6 +47,9 @@ self =>
 
   override def update(i : A2, j : A1, value : B) =
     underlying.update(j, i, value);
+  
+  override def t : Coll =
+    underlying;
 }
 
 /**

@@ -58,6 +58,9 @@ with TensorLike[(A1,A2),B,D,This] { self =>
   /** Fixed alias for transform((k1,k2,v) => f((k1,k2),v)) */
   /* final */ override def transform(f : ((A1,A2),B)=>B) =
     transform((k1,k2,v) => f((k1,k2),v));
+    
+  override def t : Tensor2[A2,A1,B] =
+    new Tensor2Transpose.Impl[A2,A1,B,This](repr)
 }
 
 /**
@@ -104,17 +107,6 @@ object Tensor2 {
     override def update(k1 : K1, k2 : K2, value : V) = {
       checkKey(k1,k2);
       map.update((k1,k2), value);
-    }
-  }
-
-  implicit def canTranspose[A2,A1,B:Scalar] : CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]]
-  = new CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]] {
-    override def apply(from : Tensor2[A1,A2,B]) = {
-      if (from.isInstanceOf[Tensor2Transpose[_,_,_,_]]) {
-        from.asInstanceOf[Tensor2Transpose[_,_,_,_]].underlying.asInstanceOf[Tensor2[A2,A1,B]];
-      } else {
-        new Tensor2Transpose.Impl[A2,A1,B,Tensor2[A1,A2,B]](from);
-      }
     }
   }
 

@@ -33,9 +33,12 @@ import operators._;
  * @author dramage
  */
 trait MatrixLike
-[@specialized(Int,Long,Float,Double,Boolean) B, +This<:Matrix[B]]
-extends tensor.MatrixLike[B,This]
-with Tensor2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,This];
+[@specialized(Int,Long,Float,Double,Boolean) V, +This<:Matrix[V]]
+extends tensor.MatrixLike[V,This]
+with Tensor2Like[Int,Int,V,IndexDomain,IndexDomain,TableDomain,TableDomain,This] {
+  override def t : Matrix[V] =
+    new MatrixTranspose.Impl[V,This](repr);
+}
 
 /**
  * MutableTensor that is also a tensor.Matrix.
@@ -49,17 +52,6 @@ with Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
 object Matrix extends dense.DenseMatrixConstructors {
-  implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B],Matrix[B]] =
-  new CanTranspose[Matrix[B],Matrix[B]] {
-    override def apply(from : Matrix[B]) = {
-      if (from.isInstanceOf[MatrixTranspose[_,_]]) {
-        from.asInstanceOf[MatrixTranspose[_,_]].underlying.asInstanceOf[Matrix[B]]
-      } else {
-        new MatrixTranspose.Impl[B,Matrix[B]](from);
-      }
-    }
-  }
-
   implicit def canSliceRow[V:Scalar] : CanSliceRow[Matrix[V],Int,VectorRow[V]]
   = new CanSliceRow[Matrix[V],Int,VectorRow[V]] {
     override def apply(from : Matrix[V], row : Int) =

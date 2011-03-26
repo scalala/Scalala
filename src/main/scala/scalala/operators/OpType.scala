@@ -158,13 +158,6 @@ trait CanCast[-A,+B] extends UnaryOp[A,OpCast,B];
 trait OpTranspose extends OpType;
 
 /**
- * Transpose of a shaped value.
- *
- * @author dramage
- */
-trait CanTranspose[-From,+To] extends UnaryOp[From,OpTranspose,To];
-
-/**
  * Type marker for BinaryOp A * B when A is a row.
  *
  * @author dramage

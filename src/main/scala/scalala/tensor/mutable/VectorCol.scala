@@ -35,7 +35,11 @@ import scalala.operators._;
  */
 trait VectorColLike[@specialized(Int,Long,Float,Double) V, +This<:VectorCol[V]]
 extends tensor.VectorColLike[V,This]
-with Tensor1ColLike[Int,V,IndexDomain,This] with VectorLike[V,This];
+with Tensor1ColLike[Int,V,IndexDomain,This] with VectorLike[V,This] {
+
+  override def t : VectorRow[V] =
+    new VectorRow.View[V](repr);
+}
 
 /**
  * Mutable tensor.VectorCol.
@@ -47,12 +51,6 @@ extends tensor.VectorCol[V] with Tensor1Col[Int,V] with Vector[V]
 with VectorColLike[V,VectorCol[V]];
 
 object VectorCol {
-  implicit def canTranspose[V] : CanTranspose[VectorCol[V],VectorRow[V]]
-  = new CanTranspose[VectorCol[V],VectorRow[V]] {
-    override def apply(col : VectorCol[V]) =
-      new VectorRow.View[V](col);
-  }
-
   class View[V](override val inner : Vector[V])
   extends VectorProxy[V,Vector[V]] with tensor.VectorProxy[V,Vector[V]] with VectorCol[V] with VectorLike[V,View[V]] {
     override def repr : View[V] = this;

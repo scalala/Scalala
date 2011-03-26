@@ -33,8 +33,8 @@ import scalala.operators._;
  *
  * @author dramage
  */
-trait VectorRowLike[@specialized(Int,Long,Float,Double) B, +This<:VectorRow[B]]
-extends VectorLike[B,This] with Tensor1RowLike[Int,B,IndexDomain,This] {
+trait VectorRowLike[@specialized(Int,Long,Float,Double) V, +This<:VectorRow[V]]
+extends VectorLike[V,This] with Tensor1RowLike[Int,V,IndexDomain,This] {
 
   // TODO: improve this method to make it more Vector-like
   override def toString = {
@@ -45,6 +45,9 @@ extends VectorLike[B,This] with Tensor1RowLike[Int,B,IndexDomain,This] {
       rv;
     }
   }
+  
+  override def t : VectorCol[V] =
+    new VectorCol.View[V](repr);
 }
 
 /**
@@ -52,16 +55,10 @@ extends VectorLike[B,This] with Tensor1RowLike[Int,B,IndexDomain,This] {
  *
  * @author dramage
  */
-trait VectorRow[@specialized(Int,Long,Float,Double) B]
-extends Vector[B] with Tensor1Row[Int,B] with VectorRowLike[B,VectorRow[B]];
+trait VectorRow[@specialized(Int,Long,Float,Double) V]
+extends Vector[V] with Tensor1Row[Int,V] with VectorRowLike[V,VectorRow[V]];
 
 object VectorRow {
-  implicit def canTranspose[V] : CanTranspose[VectorRow[V],VectorCol[V]]
-  = new CanTranspose[VectorRow[V],VectorCol[V]] {
-    override def apply(row : VectorRow[V]) =
-      new VectorCol.View[V](row);
-  }
-
   class View[V](override val inner : Vector[V])
   extends VectorProxy[V,Vector[V]] with VectorRow[V]
   with VectorLike[V,View[V]] {

@@ -46,7 +46,8 @@ self =>
 
   override def apply(i : A2, j : A1) = underlying.apply(j, i);
 
-  def transpose = underlying;
+  override def t : Coll =
+    underlying;
 }
 
 /**

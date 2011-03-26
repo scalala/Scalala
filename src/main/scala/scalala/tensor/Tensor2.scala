@@ -24,7 +24,6 @@ import scalar.Scalar;
 
 import domain._;
 import generic.collection._;
-import operators.CanTranspose;
 
 /**
  * Implementation trait for tensors indexed by two keys, such as Matrices.
@@ -106,6 +105,9 @@ extends TensorLike[(A1,A2),B,D,This] with operators.MatrixOps[This] {
     case that : Tensor2[_,_,_] => true;
     case _ => false;
   }
+  
+  def t : Tensor2[A2,A1,B] =
+    new Tensor2Transpose.Impl[A2,A1,B,This](repr);
 }
 
 /**
@@ -120,17 +122,6 @@ extends Tensor[(A1,A2),B]
 with Tensor2Like[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Tensor2[A1,A2,B]]
 
 object Tensor2 {
-  implicit def canTranspose[A2,A1,B:Scalar] : CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]]
-  = new CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]] {
-    override def apply(from : Tensor2[A1,A2,B]) = {
-      if (from.isInstanceOf[Tensor2Transpose[_,_,_,_]]) {
-        from.asInstanceOf[Tensor2Transpose[_,_,_,_]].underlying.asInstanceOf[Tensor2[A2,A1,B]];
-      } else {
-        new Tensor2Transpose.Impl[A2,A1,B,Tensor2[A1,A2,B]](from);
-      }
-    }
-  }
-
   implicit def canSliceRow[A1,A2,B:Scalar] : CanSliceRow[Tensor2[A1,A2,B],A1,Tensor1Row[A2,B]]
   = new CanSliceRow[Tensor2[A1,A2,B],A1,Tensor1Row[A2,B]] {
     override def apply(from : Tensor2[A1,A2,B], row : A1) =

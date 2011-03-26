@@ -141,19 +141,15 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
+  
+  override def t : DenseVectorCol[V] =
+    new DenseVectorCol(data)(scalar);
 }
 
 object DenseVectorRow {
   def apply[@specialized(Int,Long,Float,Double) V:Scalar](domain : IndexDomain) = {
     implicit val m = implicitly[Scalar[V]].manifest;
     new DenseVectorRow(new Array[V](domain.size));
-  }
-
-  /** Transpose shares the same data. */
-  implicit def canTranspose[V] : CanTranspose[DenseVectorRow[V],DenseVectorCol[V]]
-  = new CanTranspose[DenseVectorRow[V],DenseVectorCol[V]] {
-    override def apply(row : DenseVectorRow[V]) =
-      new DenseVectorCol(row.data)(row.scalar);
   }
 }
 
@@ -173,16 +169,12 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
+  
+  override def t : DenseVectorRow[V] =
+    new DenseVectorRow(data)(scalar);
 }
 
 object DenseVectorCol extends DenseVectorColConstructors {
-  /** Transpose shares the same data. */
-  implicit def canTranspose[V] : CanTranspose[DenseVectorCol[V],DenseVectorRow[V]]
-  = new CanTranspose[DenseVectorCol[V],DenseVectorRow[V]] {
-    override def apply(row : DenseVectorCol[V]) =
-      new DenseVectorRow(row.data)(row.scalar);
-  }
-
 //  /** Tighten bound on super to be a dense in return value. */
 //  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : BinaryOp[V1,V2,OpMul,RV], scalar : Scalar[RV])
 //  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[BinaryOp[DenseVectorCol[V1],tensor.VectorRow[V2],OpMulColVectorBy,DenseMatrix[RV]]];

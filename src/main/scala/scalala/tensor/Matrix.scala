@@ -96,6 +96,9 @@ self =>
     case that : Matrix[_] => true;
     case _ => false;
   }
+  
+  override def t : Matrix[B] =
+    new MatrixTranspose.Impl[B,Matrix[B]](repr);
 }
 
 trait Matrix[@specialized(Int,Long,Float,Double) B]
@@ -103,17 +106,6 @@ extends Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
 object Matrix {
-  implicit def canTranspose[B:Scalar] : CanTranspose[Matrix[B],Matrix[B]] =
-  new CanTranspose[Matrix[B],Matrix[B]] {
-    override def apply(from : Matrix[B]) = {
-      if (from.isInstanceOf[MatrixTranspose[_,_]]) {
-        from.asInstanceOf[MatrixTranspose[_,_]].underlying.asInstanceOf[Matrix[B]]
-      } else {
-        new MatrixTranspose.Impl[B,Matrix[B]](from);
-      }
-    }
-  }
-
   implicit def canSliceRow[V:Scalar] : CanSliceRow[Matrix[V],Int,VectorRow[V]]
   = new CanSliceRow[Matrix[V],Int,VectorRow[V]] {
     override def apply(from : Matrix[V], row : Int) =
