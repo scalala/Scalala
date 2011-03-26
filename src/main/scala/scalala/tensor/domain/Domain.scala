@@ -62,14 +62,15 @@ extends DomainLike[A,This] {
   def iterator : Iterator[A];
 
   /** Constructs the union of this and the other domain. */
-  def union(that : IterableDomain[A]) : IterableDomain[A] =
-    UnionDomain(repr, that);
+  def union(that : IterableDomain[A]) : IterableDomain[A] = {
+    new IterableDomain[A] with UnionDomainLike[A,IterableDomain[A]] {
+      override def a = repr;
+      override def b = that;
+    }
+  }
 
   /** Number of elements in the domain. */
   def size : Int;
-
-  def product[B,That<:IterableDomain[B]](that : That) =
-    Product2Domain(repr,that);
 
   def toIndexedSeq =
     iterator.toIndexedSeq;
@@ -103,12 +104,15 @@ trait IterableDomain[@specialized(Int,Long) A]
 extends Domain[A] with IterableDomainLike[A,IterableDomain[A]];
 
 /**
- * Class representing the union of two domains.
+ * Trait that represents the onion of two domains.
  *
  * @author dramage
  */
-case class UnionDomain[@specialized(Int,Long) A](a : IterableDomain[A], b : IterableDomain[A])
-extends IterableDomain[A] with IterableDomainLike[A,UnionDomain[A]] {
+trait UnionDomainLike[@specialized(Int,Long) A, +This<:IterableDomain[A]]
+extends IterableDomainLike[A, This] {
+  def a : IterableDomain[A];
+  def b : IterableDomain[A];
+  
   override def size = {
     var s = 0;
     foreach(k => { s += 1; })
@@ -127,9 +131,8 @@ extends IterableDomain[A] with IterableDomainLike[A,UnionDomain[A]] {
     a.contains(key) || b.contains(key);
 
   override def equals(other : Any) = other match {
-    case UnionDomain(a,b) => this.a == a && this.b == b;
-    case that : Domain[_] => super.equals(that);
-    case _ => false;
+    case that : UnionDomainLike[_,_] => this.a == that.a && this.b == that.b;
+    case _ => super.equals(other);
   }
 }
 
@@ -138,16 +141,34 @@ extends IterableDomain[A] with IterableDomainLike[A,UnionDomain[A]] {
  *
  * @author dramage
  */
-trait Product1DomainLike[@specialized(Int,Long) A, +This<:Product1Domain[A]]
-extends IterableDomainLike[A,This];
+trait Domain1Like[@specialized(Int,Long) A, +This<:Domain1[A]]
+extends IterableDomainLike[A,This] {
+
+  /** Constructs the union of this and the other domain. */
+  override def union(that : IterableDomain[A]) : IterableDomain[A] = that match {
+    case d1 : Domain1[_] => this.union(d1.asInstanceOf[Domain1[A]]);
+    case _ => super.union(that);
+  }
+
+  /** Constructs the union of this and the other domain. */
+  def union(that : Domain1[A]) : Domain1[A] = {
+    new Domain1[A] with UnionDomainLike[A,Domain1[A]] {
+      override def a = repr;
+      override def b = that;
+    }
+  }
+
+  def product[B,That<:Domain1[B]](that : That) =
+    Domain2(repr,that);
+}
 
 /**
  * A domain that explicitly has only one element, i.e. A is not a tuple.
  *
  * @author dramage
  */
-trait Product1Domain[@specialized(Int,Long) A]
-extends IterableDomain[A] with Product1DomainLike[A,Product1Domain[A]];
+trait Domain1[@specialized(Int,Long) A]
+extends IterableDomain[A] with Domain1Like[A,Domain1[A]];
 
 /**
  * The domain of elements from a specific set.
@@ -155,7 +176,7 @@ extends IterableDomain[A] with Product1DomainLike[A,Product1Domain[A]];
  * @author dramage
  */
 case class SetDomain[@specialized(Int,Long) A](set : scala.collection.Set[A])
-extends Product1Domain[A] with Product1DomainLike[A,SetDomain[A]] {
+extends Domain1[A] with Domain1Like[A,SetDomain[A]] {
 
   override def size =
     set.size;
@@ -182,7 +203,7 @@ extends Product1Domain[A] with Product1DomainLike[A,SetDomain[A]] {
  * @author dramage
  */
 case class IndexDomain(override val size : Int)
-extends Product1Domain[Int] with Product1DomainLike[Int,IndexDomain] {
+extends Domain1[Int] with Domain1Like[Int,IndexDomain] {
   override def foreach[O](fn : Int=>O) = {
     var i = 0;
     while (i < size) {
@@ -191,7 +212,7 @@ extends Product1Domain[Int] with Product1DomainLike[Int,IndexDomain] {
     }
   }
 
-  override def product[B,That<:IterableDomain[B]](that : That) = that match {
+  override def product[B,That<:Domain1[B]](that : That) = that match {
     case IndexDomain(otherSize) => TableDomain(size,otherSize);
     case _ => super.product[B,That](that);
   }
@@ -223,18 +244,27 @@ extends Product1Domain[Int] with Product1DomainLike[Int,IndexDomain] {
  *
  * @author dramage
  */
-trait Product2DomainLike
+trait Domain2Like
 [@specialized(Int,Long) A1, @specialized(Int,Long) A2,
- +D1 <: IterableDomain[A1] with DomainLike[A1,D1],
- +D2 <: IterableDomain[A2] with DomainLike[A2,D2],
- +Transpose <: Product2DomainLike[A2,A1,D2,D1,This,Transpose],
- +This <: Product2DomainLike[A1,A2,D1,D2,Transpose,This]]
+ +D1 <: Domain1[A1] with Domain1Like[A1,D1],
+ +D2 <: Domain1[A2] with Domain1Like[A2,D2],
+ +Transpose <: Domain2Like[A2,A1,D2,D1,This,Transpose],
+ +This <: Domain2Like[A1,A2,D1,D2,Transpose,This]]
 extends IterableDomain[(A1,A2)] with DomainLike[(A1,A2),This] {
   /** Row-space domain. */
   def _1 : D1;
 
   /** Col-space domain. */
   def _2 : D2;
+
+  /** Constructs the union of this and the other domain. */
+  override def union(that : IterableDomain[(A1,A2)]) : IterableDomain[(A1,A2)] = that match {
+    case d1 : Domain2[_,_] => {
+      val casted = d1.asInstanceOf[Domain2[A1,A2]];
+      Domain2(this._1 union casted._1, this._2 union casted._2);
+    }
+    case _ => super.union(that);
+  }
 
   /** Returns the transpose of this domain. */
   def transpose : Transpose;
@@ -255,15 +285,10 @@ extends IterableDomain[(A1,A2)] with DomainLike[(A1,A2),This] {
     contains(tup._1, tup._2);
 
   override def equals(other : Any) = other match {
-    case that : Product2Domain[_,_] =>
+    case that : Domain2[_,_] =>
       this._1 == that._1 && this._2 == that._2;
-    case base : Domain[_] =>
-      super.equals(base);
-    case _ => false;
+    case _ => super.equals(other);
   }
-  
-  // Workaround for https://lampsvn.epfl.ch/trac/scala/ticket/4012
-  protected val superProduct2DomainLike = this
 }
 
 /**
@@ -271,48 +296,41 @@ extends IterableDomain[(A1,A2)] with DomainLike[(A1,A2),This] {
  *
  * @author dramage
  */
-trait Product2Domain
+trait Domain2
 [@specialized(Int,Long) A1, @specialized(Int,Long) A2]
-extends Product2[IterableDomain[A1],IterableDomain[A2]] with IterableDomain[(A1,A2)]
-with Product2DomainLike[A1,A2,IterableDomain[A1],IterableDomain[A2],Product2Domain[A2,A1],Product2Domain[A1,A2]] {
+extends Product2[Domain1[A1],Domain1[A2]] with IterableDomain[(A1,A2)]
+with Domain2Like[A1,A2,Domain1[A1],Domain1[A2],Domain2[A2,A1],Domain2[A1,A2]] {
 
   def transpose =
-    Product2Domain[A2,A1](_2,_1);
+    Domain2[A2,A1](_2,_1);
 
   override def size =
     _1.size * _2.size;
 
-  override def union(other : IterableDomain[(A1,A2)]) = other match {
-    case that : Product2Domain[_,_] =>
-      { val casted = that.asInstanceOf[Product2Domain[A1,A2]];
-        Product2Domain(this._1 union casted._1, this._2 union casted._2); }
-    case _ => superProduct2DomainLike.union(other);
-  }
-
   override def canEqual(that : Any) =
-    that.isInstanceOf[Product2Domain[_,_]];
+    that.isInstanceOf[Domain2[_,_]];
 
   override def toString =
-    "Product2Domain("+_1.toString+","+_2.toString+")";
+    "Domain2("+_1.toString+","+_2.toString+")";
 }
 
-object Product2Domain {
-  def apply[A1,A2](d1 : IterableDomain[A1], d2 : IterableDomain[A2])
-  : Product2Domain[A1,A2] = new Impl(d1,d2);
+object Domain2 {
+  def apply[A1,A2](d1 : Domain1[A1], d2 : Domain1[A2])
+  : Domain2[A1,A2] = new Impl(d1,d2);
 
   class Impl[@specialized(Int,Long) A1, @specialized(Int,Long) A2]
-  (override val _1 : IterableDomain[A1], override val _2 : IterableDomain[A2])
-  extends Product2Domain[A1,A2];
+  (override val _1 : Domain1[A1], override val _2 : Domain1[A2])
+  extends Domain2[A1,A2];
 }
 
 /**
- * An immutable Product2Domain indexed by rows and columns.
+ * An immutable Domain2 indexed by rows and columns.
  *
  * @author dramage
  */
 case class TableDomain(numRows : Int, numCols : Int)
-extends Product2[IndexDomain,IndexDomain] with Product2Domain[Int,Int]
-with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain] {
+extends Product2[IndexDomain,IndexDomain] with Domain2[Int,Int]
+with Domain2Like[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain] {
 
   override val _1 : IndexDomain = IndexDomain(numRows);
   
@@ -333,8 +351,9 @@ with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain]
     }
   }
 
-  override def union(other : IterableDomain[(Int,Int)]) = other match {
-    case that : TableDomain => TableDomain(this.numRows max that.numRows, this.numCols max that.numCols);
+  override def union(other : IterableDomain[(Int,Int)]) : IterableDomain[(Int,Int)] = other match {
+    case that : TableDomain =>
+      TableDomain(this.numRows max that.numRows, this.numCols max that.numCols);
     case _ => super.union(other);
   }
 
@@ -343,8 +362,7 @@ with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain]
 
   override def equals(other : Any) = other match {
     case TableDomain(nr,nc) => this.numRows == nr && this.numCols == nc;
-    case that : Domain[_] =>  superProduct2DomainLike.equals(that)
-    case _ => false;
+    case _ => super.equals(other);
   }
 }
 
@@ -353,17 +371,17 @@ with Product2DomainLike[Int,Int,IndexDomain,IndexDomain,TableDomain,TableDomain]
  *
  * @author dramage
  */
-case class ProductNDomain[@specialized(Int) K](components : Seq[IterableDomain[K]])
-extends IterableDomain[Seq[K]] with IterableDomainLike[Seq[K],ProductNDomain[K]] {
+case class DomainN[@specialized(Int) K](components : Seq[IterableDomain[K]])
+extends IterableDomain[Seq[K]] with IterableDomainLike[Seq[K],DomainN[K]] {
 
   override def size =
     components.map(_.size).reduceLeft(_ * _);
 
   override def union(other : IterableDomain[Seq[K]]) = other match {
-    case that : ProductNDomain[_] => {
-      val casted = that.asInstanceOf[ProductNDomain[K]];
+    case that : DomainN[_] => {
+      val casted = that.asInstanceOf[DomainN[K]];
       require(this.components.size == casted.components.size, "Can only take the union of product domains of the same size");
-      ProductNDomain((this.components zip casted.components) map (tup => tup._1 union tup._2));
+      DomainN((this.components zip casted.components) map (tup => tup._1 union tup._2));
     }
     case _ => super.union(other);
   }
@@ -401,7 +419,7 @@ extends IterableDomain[Seq[K]] with IterableDomainLike[Seq[K],ProductNDomain[K]]
     (components.length == k.length) && (components zip k).forall(tup => tup._1 contains tup._2);
 
   override def equals(other : Any) = other match {
-    case that : ProductNDomain[_] =>
+    case that : DomainN[_] =>
       this.components == that.components
     case base : Domain[_] =>
       super.equals(base);

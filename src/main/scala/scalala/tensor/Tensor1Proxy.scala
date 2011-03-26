@@ -33,7 +33,7 @@ import scalala.operators._;
  */
 trait Tensor1ProxyLike
 [@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B,
- +D<:IterableDomain[A] with DomainLike[A,D], Inner<:Tensor1[A,B], +This<:Tensor1[A,B]]
+ +D<:Domain1[A] with Domain1Like[A,D], Inner<:Tensor1[A,B], +This<:Tensor1[A,B]]
 extends TensorProxyLike[A,B,D,Inner,This] with Tensor1Like[A,B,D,This] {
   override def norm(n : Double) =
     inner.norm(n);
@@ -49,5 +49,5 @@ extends TensorProxyLike[A,B,D,Inner,This] with Tensor1Like[A,B,D,This] {
  */
 trait Tensor1Proxy
 [@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B, Inner<:Tensor1[A,B]]
-extends TensorProxy[A,B,Inner] with Tensor1[A,B] with Tensor1ProxyLike[A,B,IterableDomain[A],Inner,Tensor1Proxy[A,B,Inner]];
+extends TensorProxy[A,B,Inner] with Tensor1[A,B] with Tensor1ProxyLike[A,B,Domain1[A],Inner,Tensor1Proxy[A,B,Inner]];
 

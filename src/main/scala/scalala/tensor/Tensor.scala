@@ -63,11 +63,11 @@ self =>
   : TensorBuilder[NK,NV,Tensor[NK,NV]] = domain match {
     case that : IndexDomain =>
       mutable.Vector(that)(implicitly[Scalar[NV]]).asBuilder;
-    case that : Product1Domain[_] =>
+    case that : Domain1[_] =>
       mutable.Tensor1(that)(implicitly[Scalar[NV]]).asBuilder;
     case that : TableDomain =>
       mutable.Matrix(that)(implicitly[Scalar[NV]]).asBuilder;
-    case that : Product2Domain[_,_] =>
+    case that : Domain2[_,_] =>
       mutable.Tensor2(that)(implicitly[Scalar[NV]]).asBuilder;
       // TODO: add this in when we have a mutable.TensorN
 //    case that : ProductNDomain[_] =>

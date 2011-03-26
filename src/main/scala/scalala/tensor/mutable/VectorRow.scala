@@ -50,6 +50,9 @@ extends tensor.VectorRow[V] with Tensor1Row[Int,V] with Vector[V]
 with VectorRowLike[V,VectorRow[V]];
 
 object VectorRow {
+  def apply[V:Scalar](domain : IndexDomain) =
+    dense.DenseVectorRow[V](domain);
+
   class View[V](override val inner : Vector[V])
   extends VectorProxy[V,Vector[V]] with tensor.VectorProxy[V,Vector[V]] with VectorRow[V] with VectorLike[V,View[V]] {
     override def repr : View[V] = this;

@@ -31,7 +31,7 @@ import scalar.Scalar;
  */
 trait Tensor1ColLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:IterableDomain[K] with DomainLike[K,D], +This<:Tensor1Col[K,V]]
+ +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1Col[K,V]]
 extends tensor.Tensor1ColLike[K,V,D,This] with Tensor1Like[K,V,D,This] {
 
   override def t : Tensor1Row[K,V] =
@@ -46,7 +46,7 @@ extends tensor.Tensor1ColLike[K,V,D,This] with Tensor1Like[K,V,D,This] {
 trait Tensor1Col
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
 extends tensor.Tensor1Col[K,V] with Tensor1[K,V]
-with Tensor1ColLike[K,V,IterableDomain[K],Tensor1Col[K,V]];
+with Tensor1ColLike[K,V,Domain1[K],Tensor1Col[K,V]];
 
 object Tensor1Col {
   /** Constructs an open-domain tensor seeded with the given values. */
@@ -57,7 +57,7 @@ object Tensor1Col {
   }
 
   /** Constructs a closed-domain tensor for the given domain. */
-  def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor1Col[K,V] = {
+  def apply[K,V:Scalar](domain : Domain1[K]) : Tensor1Col[K,V] = {
     val d = domain;
     new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
       override val domain = d;
@@ -69,7 +69,7 @@ object Tensor1Col {
 
   class View[K,V](override val inner : Tensor1Row[K,V])
   extends Tensor1Proxy[K,V,Tensor1Row[K,V]] with Tensor1Col[K,V]
-  with Tensor1Like[K,V,IterableDomain[K],View[K,V]] {
+  with Tensor1Like[K,V,Domain1[K],View[K,V]] {
     override def repr : View[K,V] = this;
   }
 }

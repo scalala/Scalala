@@ -30,7 +30,7 @@ import domain._;
  * @author dramage
  */
 trait TensorNLike[@specialized(Int) K, @specialized(Int,Long,Float,Double,Boolean) V, +This<:TensorN[K,V]]
-extends TensorLike[Seq[K],V,ProductNDomain[K],This] {
+extends TensorLike[Seq[K],V,DomainN[K],This] {
   /** Gets the value indexed by (i,j). */
   /* final */ def apply(k : K*) : V =
     apply(k : Seq[K]);

@@ -35,10 +35,10 @@ trait DomainForImplicitsLevel0 {
 
 trait DomainForImplicitsLevel1 extends DomainForImplicitsLevel0 {
   implicit def domainForTensor1[K,T](implicit view : T => Tensor1[K,_])
-  : DomainFor[T,IterableDomain[K]] = null;
+  : DomainFor[T,Domain1[K]] = null;
 
   implicit def domainForTensor2[K1,K2,T](implicit view : T => Tensor2[K1,K2,_])
-  : DomainFor[T,Product2Domain[K1,K2]] = null;
+  : DomainFor[T,Domain2[K1,K2]] = null;
 }
 
 object DomainFor extends DomainForImplicitsLevel1 {

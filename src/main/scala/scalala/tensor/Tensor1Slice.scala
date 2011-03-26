@@ -28,12 +28,12 @@ import domain._;
  * @author dramage
  */
 trait Tensor1SliceLike
-[@specialized(Int,Long) A1, +D1<:IterableDomain[A1] with DomainLike[A1,D1],
- @specialized(Int,Long) A2, +D2<:IterableDomain[A2] with DomainLike[A2,D2],
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:Tensor[A1,B],
- +This<:Tensor1Slice[A1,A2,B,Coll]]
-extends TensorSliceLike[A1, D1, A2, D2, B, Coll, This]
-with Tensor1Like[A2, B, D2, This];
+[@specialized(Int,Long) K1, +D1<:IterableDomain[K1] with DomainLike[K1,D1],
+ @specialized(Int,Long) K2, +D2<:Domain1[K2] with Domain1Like[K2,D2],
+ @specialized(Int,Long,Float,Double,Boolean) V, +Coll<:Tensor[K1,V],
+ +This<:Tensor1Slice[K1,K2,V,Coll]]
+extends TensorSliceLike[K1, D1, K2, D2, V, Coll, This]
+with Tensor1Like[K2, V, D2, This];
 
 /**
  * A Tensor1 view of a slice of keys from a Tensor.
@@ -41,7 +41,8 @@ with Tensor1Like[A2, B, D2, This];
  * @author dramage
  */
 trait Tensor1Slice
-[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:Tensor[A1,B]]
-extends TensorSlice[A1,A2,B,Coll] with Tensor1[A2,B]
-with Tensor1SliceLike[A1, IterableDomain[A1], A2, IterableDomain[A2], B, Coll, Tensor1Slice[A1, A2, B, Coll]];
+[@specialized(Int,Long) K1, @specialized(Int,Long) K2,
+ @specialized(Int,Long,Float,Double,Boolean) V, +Coll<:Tensor[K1,V]]
+extends TensorSlice[K1,K2,V,Coll] with Tensor1[K2,V]
+with Tensor1SliceLike[K1, IterableDomain[K1], K2, Domain1[K2], V, Coll, Tensor1Slice[K1, K2, V, Coll]];
+

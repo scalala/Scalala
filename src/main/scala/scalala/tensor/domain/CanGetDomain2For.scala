@@ -22,29 +22,29 @@ package tensor;
 package domain;
 
 /**
- * Marker trait for statically getting the Product2Domain for two
+ * Marker trait for statically getting the Domain2 for two
  * input domains.
  *
  * @author dramage
  */
-trait CanGetProduct2DomainFor[-A,-B,RV] extends ((A,B) => RV);
+trait CanGetDomain2For[-A,-B,RV] extends ((A,B) => RV);
 
-trait CanGetProduct2DomainForImplicitsLevel0 {
+trait CanGetDomain2ForImplicitsLevel0 {
   implicit def domainForGeneral[K1,K2]
-  : CanGetProduct2DomainFor[IterableDomain[K1],IterableDomain[K2],Product2Domain[K1,K2]]
-  = new CanGetProduct2DomainFor[IterableDomain[K1],IterableDomain[K2],Product2Domain[K1,K2]] {
-    def apply(a : IterableDomain[K1], b : IterableDomain[K2]) =
-      a.product[K2,IterableDomain[K2]](b);
+  : CanGetDomain2For[Domain1[K1],Domain1[K2],Domain2[K1,K2]]
+  = new CanGetDomain2For[Domain1[K1],Domain1[K2],Domain2[K1,K2]] {
+    def apply(a : Domain1[K1], b : Domain1[K2]) =
+      a.product[K2,Domain1[K2]](b);
   }
 }
 
-trait CanGetProduct2DomainForImplicitsLevel1 extends CanGetProduct2DomainForImplicitsLevel0 {
+trait CanGetDomain2ForImplicitsLevel1 extends CanGetDomain2ForImplicitsLevel0 {
   implicit object DomainForIndexIndex 
-  extends CanGetProduct2DomainFor[IndexDomain,IndexDomain,TableDomain] {
+  extends CanGetDomain2For[IndexDomain,IndexDomain,TableDomain] {
     override def apply(a : IndexDomain, b : IndexDomain) =
       TableDomain(a.size, b.size);
   }
 }
 
-object CanGetProduct2DomainFor extends CanGetProduct2DomainForImplicitsLevel1;
+object CanGetDomain2For extends CanGetDomain2ForImplicitsLevel1;
 

@@ -37,7 +37,7 @@ trait CanBuildTensorFrom[-From, Domain, K, V, +To] {
 }
 
 /**
- * Base level implicits take any tensor.
+ * Base level implicits take any tensor and any domain.
  *
  * @author dramage
  */
@@ -45,92 +45,130 @@ trait CanBuildTensorFromImplicitsLevel0 {
   implicit def canBuildTensorFromTensor[K,V:Scalar]
   : CanBuildTensorFrom[Tensor[_,_], IterableDomain[K], K, V, mutable.Tensor[K,V]]
   = new CanBuildTensorFrom[Tensor[_,_], IterableDomain[K], K, V, mutable.Tensor[K,V]] {
-    override def apply(from : Tensor[_,_], domain : IterableDomain[K]) = {
-      domain match {
-        case d : IndexDomain => DenseVectorCol(d).asBuilder;
-        case d : TableDomain => DenseMatrix(d).asBuilder;
-        case _ => mutable.Tensor[K,V](domain).asBuilder;
-      }
-    }
+    override def apply(from : Tensor[_,_], domain : IterableDomain[K]) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[K,V,mutable.Tensor[K,V]]];
   }
 }
 
 /**
  * Implicits that take any shaped tensor (Tensor1Row, Tensor1Col, Tensor2)
- * and return a similarly shaped tensor.
+ * and a shaped domain and return a similarly shaped tensor.
  *
  * @author dramage
  */
 trait CanBuildTensorFromImplicitsLevel1 extends CanBuildTensorFromImplicitsLevel0 {
   implicit def canBuildTensor1RowFromTensor1Row[K,V:Scalar]
-  : CanBuildTensorFrom[Tensor1Row[_,_], IterableDomain[K], K, V, mutable.Tensor1Row[K,V]]
-  = new CanBuildTensorFrom[Tensor1Row[_,_], IterableDomain[K], K, V, mutable.Tensor1Row[K,V]] {
-    override def apply(from : Tensor1Row[_,_], domain : IterableDomain[K]) = {
-      domain match {
-        case d : IndexDomain => DenseVectorRow[V](d).asBuilder;
-        case _ => mutable.Tensor1Row[K,V](domain).asBuilder;
-      }
-    }
+  : CanBuildTensorFrom[Tensor1Row[_,_], Domain1[K], K, V, mutable.Tensor1Row[K,V]]
+  = new CanBuildTensorFrom[Tensor1Row[_,_], Domain1[K], K, V, mutable.Tensor1Row[K,V]] {
+    override def apply(from : Tensor1Row[_,_], domain : Domain1[K]) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[K,V,mutable.Tensor1Row[K,V]]];
   }
   
   implicit def canBuildTensor1ColFromTensor1Row[K,V:Scalar]
-  : CanBuildTensorFrom[Tensor1Col[_,_], IterableDomain[K], K, V, mutable.Tensor1Col[K,V]]
-  = new CanBuildTensorFrom[Tensor1Col[_,_], IterableDomain[K], K, V, mutable.Tensor1Col[K,V]] {
-    override def apply(from : Tensor1Col[_,_], domain : IterableDomain[K]) = {
-      domain match {
-        case d : IndexDomain => DenseVectorCol[V](d).asBuilder;
-        case _ => mutable.Tensor1Col[K,V](domain).asBuilder;
-      }
-    }
+  : CanBuildTensorFrom[Tensor1Col[_,_], Domain1[K], K, V, mutable.Tensor1Col[K,V]]
+  = new CanBuildTensorFrom[Tensor1Col[_,_], Domain1[K], K, V, mutable.Tensor1Col[K,V]] {
+    override def apply(from : Tensor1Col[_,_], domain : Domain1[K]) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[K,V,mutable.Tensor1Col[K,V]]];
   }
 
   implicit def canBuildTensor2FromTensor[K1,K2,V:Scalar]
-  : CanBuildTensorFrom[Tensor[_,_], Product2Domain[K1,K2], (K1,K2), V, mutable.Tensor2[K1,K2,V]]
-  = new CanBuildTensorFrom[Tensor[_,_], Product2Domain[K1,K2], (K1,K2), V, mutable.Tensor2[K1,K2,V]] {
-    override def apply(from : Tensor[_,_], domain : Product2Domain[K1,K2]) = {
-      domain match {
-        case d : TableDomain => DenseMatrix[V](d).asBuilder;
-        case _ => mutable.Tensor2[K1,K2,V](domain).asBuilder;
-      }
-    }
+  : CanBuildTensorFrom[Tensor[_,_], Domain2[K1,K2], (K1,K2), V, mutable.Tensor2[K1,K2,V]]
+  = new CanBuildTensorFrom[Tensor[_,_], Domain2[K1,K2], (K1,K2), V, mutable.Tensor2[K1,K2,V]] {
+    override def apply(from : Tensor[_,_], domain : Domain2[K1,K2]) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[(K1,K2),V,mutable.Tensor2[K1,K2,V]]];
   }
 }
 
 /**
- * Implicits that make a default dense (column) vector from an IndexDomain
- * or matrix from a table domain.
+ * Implicits that take any tensor and a vector/matrix domain and return a
+ * vector or matrix.
  *
  * @author dramage
  */
 trait CanBuildTensorFromImplicitsLevel2 extends CanBuildTensorFromImplicitsLevel1 {
-  implicit def canBuildVectorFromTensor[V:Scalar]
-  : CanBuildTensorFrom[Tensor[_,_], IndexDomain, Int, V, DenseVectorCol[V]]
-  = new CanBuildTensorFrom[Tensor[_,_], IndexDomain, Int, V, DenseVectorCol[V]] {
+  implicit def canBuildVectorColFromTensor[V:Scalar]
+  : CanBuildTensorFrom[Tensor[_,_], IndexDomain, Int, V, mutable.VectorCol[V]]
+  = new CanBuildTensorFrom[Tensor[_,_], IndexDomain, Int, V, mutable.VectorCol[V]] {
     override def apply(from : Tensor[_,_], domain : IndexDomain) =
-      DenseVectorCol[V](domain).asBuilder;
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[Int,V,mutable.VectorCol[V]]];
   }
   
   implicit def canBuildMatrixFromTensor[V:Scalar]
-  : CanBuildTensorFrom[Tensor[_,_], TableDomain, (Int,Int), V, DenseMatrix[V]]
-  = new CanBuildTensorFrom[Tensor[_,_], TableDomain, (Int,Int), V, DenseMatrix[V]] {
+  : CanBuildTensorFrom[Tensor[_,_], TableDomain, (Int,Int), V, mutable.Matrix[V]]
+  = new CanBuildTensorFrom[Tensor[_,_], TableDomain, (Int,Int), V, mutable.Matrix[V]] {
     override def apply(from : Tensor[_,_], domain : TableDomain) =
-      DenseMatrix[V](domain).asBuilder;
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[(Int,Int),V,mutable.Matrix[V]]];
   }
 }
 
 /**
- * Implicits that make a default dense (row) vector from an IndexDomain.
+ * Keep row shape in Level 2.
  *
  * @author dramage
  */
-trait CanBuildTensorFromImplicitsLevel3 extends CanBuildTensorFromImplicitsLevel2 {
-  implicit def canBuildVectorRowFromTensorRow[V:Scalar]
-  : CanBuildTensorFrom[Tensor1Row[_,_], IndexDomain, Int, V, DenseVectorRow[V]]
-  = new CanBuildTensorFrom[Tensor1Row[_,_], IndexDomain, Int, V, DenseVectorRow[V]] {
+trait CanBuildTensorFromImplicitsLevel2Row extends CanBuildTensorFromImplicitsLevel2 {
+  implicit def canBuildVectorRowFromTensor1Row[V:Scalar]
+  : CanBuildTensorFrom[Tensor1Row[_,_], IndexDomain, Int, V, mutable.VectorRow[V]]
+  = new CanBuildTensorFrom[Tensor1Row[_,_], IndexDomain, Int, V, mutable.VectorRow[V]] {
     override def apply(from : Tensor1Row[_,_], domain : IndexDomain) =
-      DenseVectorRow[V](domain).asBuilder;
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[Int,V,mutable.VectorRow[V]]];
   }
 }
 
-object CanBuildTensorFrom extends CanBuildTensorFromImplicitsLevel3;
+/**
+ * Implicits that keep the type and shape of common input vectors and matrices.
+ *
+ * @author dramage
+ */
+trait CanBuildTensorFromImplicitsLevel3 extends CanBuildTensorFromImplicitsLevel2Row {
+  import dense._;
+  import sparse._;
+  
+  implicit def canBuildDenseVectorColFromDenseTensor[V:Scalar]
+  : CanBuildTensorFrom[DenseArrayTensor[_,_], IndexDomain, Int, V, DenseVectorCol[V]]
+  = new CanBuildTensorFrom[DenseArrayTensor[_,_], IndexDomain, Int, V, DenseVectorCol[V]] {
+    override def apply(from : DenseArrayTensor[_,_], domain : IndexDomain) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[Int,V,DenseVectorCol[V]]];
+  }
+  
+  implicit def canBuildDenseMatrixFromDenseTensor[V:Scalar]
+  : CanBuildTensorFrom[DenseArrayTensor[_,_], TableDomain, (Int,Int), V, DenseMatrix[V]]
+  = new CanBuildTensorFrom[DenseArrayTensor[_,_], TableDomain, (Int,Int), V, DenseMatrix[V]] {
+    override def apply(from : DenseArrayTensor[_,_], domain : TableDomain) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[(Int,Int),V,DenseMatrix[V]]];
+  }
+  
+  implicit def canBuildSparseVectorColFromSparseTensor[V:Scalar]
+  : CanBuildTensorFrom[SparseArrayTensor[_,_], IndexDomain, Int, V, SparseVectorCol[V]]
+  = new CanBuildTensorFrom[SparseArrayTensor[_,_], IndexDomain, Int, V, SparseVectorCol[V]] {
+    override def apply(from : SparseArrayTensor[_,_], domain : IndexDomain) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[Int,V,SparseVectorCol[V]]];
+  }
+}
+
+/**
+ * Keep row shape in Level 3.
+ *
+ * @author dramage
+ */
+trait CanBuildTensorFromImplicitsLevel3Row extends CanBuildTensorFromImplicitsLevel3 {
+  import dense._;
+  import sparse._;
+
+  implicit def canBuildDenseVectorRowFromDenseVectorRow[V:Scalar]
+  : CanBuildTensorFrom[DenseVectorRow[_], IndexDomain, Int, V, DenseVectorRow[V]]
+  = new CanBuildTensorFrom[DenseVectorRow[_], IndexDomain, Int, V, DenseVectorRow[V]] {
+    override def apply(from : DenseVectorRow[_], domain : IndexDomain) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[Int,V,DenseVectorRow[V]]];
+  }
+
+  implicit def canBuildSparseVectorRowFromSparseVectorRow[V:Scalar]
+  : CanBuildTensorFrom[SparseVectorRow[_], IndexDomain, Int, V, SparseVectorRow[V]]
+  = new CanBuildTensorFrom[SparseVectorRow[_], IndexDomain, Int, V, SparseVectorRow[V]] {
+    override def apply(from : SparseVectorRow[_], domain : IndexDomain) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[Int,V,SparseVectorRow[V]]];
+  }
+}
+
+object CanBuildTensorFrom extends CanBuildTensorFromImplicitsLevel3Row;
 

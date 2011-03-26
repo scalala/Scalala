@@ -32,7 +32,7 @@ import scalar.Scalar;
  */
 trait Tensor1Like
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:IterableDomain[K] with DomainLike[K,D], +This<:Tensor1[K,V]]
+ +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1[K,V]]
 extends tensor.Tensor1Like[K,V,D,This] with TensorLike[K,V,D,This];
 
 /**
@@ -43,7 +43,7 @@ extends tensor.Tensor1Like[K,V,D,This] with TensorLike[K,V,D,This];
 trait Tensor1
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
 extends tensor.Tensor1[K,V] with Tensor[K,V]
-with Tensor1Like[K,V,IterableDomain[K],Tensor1[K,V]];
+with Tensor1Like[K,V,Domain1[K],Tensor1[K,V]];
 
 object Tensor1 {
   /** Constructs an open-domain tensor seeded with the given values. */
@@ -54,7 +54,7 @@ object Tensor1 {
   }
 
   /** Constructs a closed-domain tensor for the given domain. */
-  def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor1[K,V] = {
+  def apply[K,V:Scalar](domain : Domain1[K]) : Tensor1[K,V] = {
     val d = domain;
     new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
       override val domain = d;
@@ -62,6 +62,9 @@ object Tensor1 {
   }
 
   class Impl[K,V:Scalar](map : scala.collection.mutable.Map[K,V])
-  extends Tensor.Impl[K,V](map) with Tensor1[K,V];
+  extends Tensor.Impl[K,V](map) with Tensor1[K,V] {
+    override def domain : Domain1[K] =
+      SetDomain(map.keySet);
+  }
 }
 

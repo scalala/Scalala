@@ -20,12 +20,11 @@
 package scalala;
 package tensor;
 
-import scalar.Scalar;
-
 import domain._;
 import mutable.TensorBuilder;
 
-import generic.collection.{CanSliceCol,CanBuildTensorFrom};
+import scalala.generic.collection.{CanSliceCol,CanBuildTensorFrom};
+import scalala.scalar.Scalar;
 import scalala.operators._;
 
 /**
@@ -35,12 +34,12 @@ import scalala.operators._;
  */
 trait Tensor1RowLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:IterableDomain[K] with DomainLike[K,D], +This<:Tensor1Row[K,V]]
+ +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1Row[K,V]]
 extends Tensor1Like[K,V,D,This] with operators.RowOps[This] { self =>
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = domain match {
     case that : IndexDomain =>
-      mutable.Vector[V2](that).t.asBuilder;
-    case that : Product1Domain[_] =>
+      mutable.VectorRow[V2](that).asBuilder;
+    case that : Domain1[_] =>
       mutable.Tensor1Row[K2,V2](that).asBuilder;
     case _ =>
       super.newBuilder[K2,V2](domain);
@@ -56,12 +55,12 @@ extends Tensor1Like[K,V,D,This] with operators.RowOps[This] { self =>
  * @author dramage
  */
 trait Tensor1Row[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
-extends Tensor1[K,V] with Tensor1RowLike[K,V,IterableDomain[K],Tensor1Row[K,V]];
+extends Tensor1[K,V] with Tensor1RowLike[K,V,Domain1[K],Tensor1Row[K,V]];
 
 object Tensor1Row {
   class View[K,V](override val inner : Tensor1Col[K,V])
   extends Tensor1Proxy[K,V,Tensor1Col[K,V]] with Tensor1Row[K,V]
-  with Tensor1Like[K,V,IterableDomain[K],View[K,V]] {
+  with Tensor1Like[K,V,Domain1[K],View[K,V]] {
     override def repr : View[K,V] = this;
   }
   
@@ -73,7 +72,7 @@ object Tensor1Row {
       a dot b;
   }
 
-  implicit def canMulTensor1RowByMatrix[K1,K2,V1,V2,Col,RV,ThisA,ThisB,D2<:IterableDomain[K2] with DomainLike[K2,D2],That]
+  implicit def canMulTensor1RowByMatrix[K1,K2,V1,V2,Col,RV,ThisA,ThisB,D2<:Domain1[K2] with Domain1Like[K2,D2],That]
   (implicit viewA : ThisA => Tensor1Row[K1,V1],
    viewB : ThisB => Tensor2Like[K1,K2,V2,_,D2,_,_,_],
    slice : CanSliceCol[ThisB,K2,Col],
@@ -82,9 +81,9 @@ object Tensor1Row {
   : BinaryOp[ThisA,ThisB,OpMulRowVectorBy,That]
   = new BinaryOp[ThisA,ThisB,OpMulRowVectorBy,That] {
     override def apply(a : ThisA, b : ThisB) = {
-      val domain = b.domain.asInstanceOf[Product2Domain[_,_]]._2.asInstanceOf[D2];
+      val domain = b.domain.asInstanceOf[Domain2[_,_]]._2.asInstanceOf[D2];
       val builder : mutable.TensorBuilder[K2,RV,That] = bf(a, domain);
-      for (j <- domain.asInstanceOf[IterableDomain[K2]]) {
+      for (j <- domain.asInstanceOf[Domain1[K2]]) {
         builder(j) = mul(a, slice(b, j));
       }
       builder.result;

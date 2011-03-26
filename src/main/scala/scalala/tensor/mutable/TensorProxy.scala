@@ -68,7 +68,7 @@ extends tensor.TensorProxy[A,B,Inner] with Tensor[A,B] with TensorProxyLike[A,B,
 trait Tensor1ProxyLike
 [@specialized(Int, Long) K,
  @specialized(Int, Long, Float, Double, Boolean) V,
- +D<:IterableDomain[K] with DomainLike[K,D],
+ +D<:Domain1[K] with Domain1Like[K,D],
  Inner <: Tensor1[K,V],
  +This <: Tensor1[K,V]]
 extends tensor.Tensor1ProxyLike[K,V,D,Inner,This]
@@ -85,7 +85,7 @@ trait Tensor1Proxy
  Inner <: Tensor1[K,V]]
 extends tensor.Tensor1Proxy[K,V,Inner]
    with TensorProxy[K,V,Inner] with Tensor1[K,V]
-   with Tensor1ProxyLike[K,V,IterableDomain[K],Inner,Tensor1Proxy[K,V,Inner]];
+   with Tensor1ProxyLike[K,V,Domain1[K],Inner,Tensor1Proxy[K,V,Inner]];
 
 /**
  * A proxy for a mutable Vector.
