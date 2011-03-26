@@ -20,16 +20,16 @@
 package scalala;
 package library;
 
-import tensor.{Matrix, Vector}
+import org.netlib.lapack._
+import org.netlib.util.intW
+
+import operators._
+import scalar.Scalar
+import generic.collection.CanViewAsVector
+import tensor.domain.TableDomain
+import tensor.{Matrix, MatrixSingularException}
 import tensor.dense.{DenseVector, DenseMatrix}
 
-import scalala.generic.collection.CanViewAsVector;
-import scalala.scalar.Scalar;
-import scalala.tensor.domain.TableDomain;
-import scalala.operators._;
-
-import org.netlib.lapack._;
-import org.netlib.util.intW;
 
 /**
  * Basic linear algebraic operations.
@@ -50,6 +50,28 @@ object LinearAlgebra {
   class MatrixNotSymmetricException
     extends IllegalArgumentException("Matrix is not symmetric!")
 
+  class MatrixNotSquareException
+    extends IllegalArgumentException("Matrix is not square!")
+
+  class MatrixEmptyException
+    extends IllegalArgumentException("Matrix is empty!")
+
+  @inline private def requireNonEmptyMatrix[V](mat: Matrix[V]) =
+    if (mat.numCols == 0 || mat.numRows == 0)
+      throw new MatrixEmptyException
+
+  @inline private def requireSquareMatrix[V](mat: Matrix[V]) =
+    if (mat.numRows != mat.numCols)
+      throw new MatrixNotSquareException
+
+  @inline private def requireSymmetricMatrix[V](mat: Matrix[V]) = {
+    requireSquareMatrix(mat)
+
+    for (i <- 0 until mat.numRows; j <- 0 until i)
+      if (mat(i,j) != mat(j,i))
+        throw new MatrixNotSymmetricException
+  }
+
   /**
    * Eigenvalue decomposition (right eigenvectors)
    *
@@ -65,8 +87,8 @@ object LinearAlgebra {
    * Based on EVD.java from MTJ 0.9.12
    */
   def eig(m : Matrix[Double]): (DenseVector[Double], DenseVector[Double], DenseMatrix[Double]) = {
-    require(m.numRows == m.numCols, "Matrix is not square!");
-    requireMatrixNonEmpty(m);
+    requireNonEmptyMatrix(m)
+    requireSquareMatrix(m)
 
     val n = m.numRows;
 
@@ -120,7 +142,8 @@ object LinearAlgebra {
    * Returns an m*m matrix U, a vector of singular values, and a n*n matrix V'
    */
   def svd(mat: DenseMatrix[Double]):(DenseMatrix[Double],DenseVector[Double],DenseMatrix[Double]) = {
-    requireMatrixNonEmpty(mat)
+    requireNonEmptyMatrix(mat)
+
     val m = mat.numRows;
     val n = mat.numCols;
     val S = DenseVector.zeros[Double](m min n);
@@ -148,11 +171,6 @@ object LinearAlgebra {
       throw new IllegalArgumentException()
 
     (U,S,Vt);
-  }
-
-  private def requireMatrixNonEmpty[V](mat: Matrix[V]): Unit = {
-    require(mat.numCols > 0, "Matrix is empty")
-    require(mat.numRows > 0, "Matrix is empty")
   }
 
   /**
@@ -197,26 +215,6 @@ object LinearAlgebra {
   }
 
   /**
-   * True iff the given matrix X is symmetric.
-   */
-  private def isMatrixSymmetric[T](X: Matrix[T]): Boolean = {
-    if (X.numRows != X.numCols)
-      return false
-
-    for (i <- 1 until X.numRows; j <- 0 until i)
-      if (X(i, j) != X(j, i))
-        return false
-
-    true
-  }
-
-  /**
-   * True iff the given matrix X isn't empty.
-   */
-  private def isMatrixEmpty(X: Matrix[_]): Boolean =
-    X.numRows <= 0 && X.numCols <= 0
-
-  /**
    * The lower triangular part of the given real symmetric matrix X. Note that
    * no check will be performed regarding the symmetry of X.
    */
@@ -248,21 +246,20 @@ object LinearAlgebra {
    *      sparse matrix due to its inherent lower triangular nature.
    */
   def cholesky(X: Matrix[Double]): DenseMatrix[Double] = {
-    requireMatrixNonEmpty(X)
+    requireNonEmptyMatrix(X)
 
     // As LAPACK doesn't check if the given matrix is in fact symmetric,
     // we have to do it here (or get rid of this time-waster as long as
     // the caller of this function is clearly aware that only the lower
     // triangular portion of the given matrix is used and there is no
     // check for symmetry).
-    if (!isMatrixSymmetric(X))
-      throw new MatrixNotSymmetricException
+    requireSymmetricMatrix(X)
 
     // Copy the lower triangular part of X. LAPACK will store the result in A
     val A: DenseMatrix[Double] = lowerTriangular(X)
 
     val N = X.numRows
-    val info = new intW(0);
+    val info = new intW(0)
     LAPACK.getInstance.dpotrf(
       "L" /* lower triangular */,
       N /* number of rows */, A.data, math.max(1, N) /* LDA */,
@@ -283,17 +280,16 @@ object LinearAlgebra {
    * real symmetric matrix X.
    */
   def eigSym(X: Matrix[Double], rightEigenvectors: Boolean):
-    (Vector[Double], Option[Matrix[Double]]) =
+    (DenseVector[Double], Option[DenseMatrix[Double]]) =
   {
-    requireMatrixNonEmpty(X)
+    requireNonEmptyMatrix(X)
 
     // As LAPACK doesn't check if the given matrix is in fact symmetric,
     // we have to do it here (or get rid of this time-waster as long as
     // the caller of this function is clearly aware that only the lower
     // triangular portion of the given matrix is used and there is no
     // check for symmetry).
-    if (!isMatrixSymmetric(X))
-      throw new MatrixNotSymmetricException
+    requireSymmetricMatrix(X)
 
     // Copy the lower triangular part of X. LAPACK will store the result in A.
     val A     = lowerTriangular(X)
@@ -302,7 +298,7 @@ object LinearAlgebra {
     val evs   = DenseVector.zeros[Double](N)
     val lwork = math.max(1, 3*N-1)
     val work  = Array.ofDim[Double](lwork)
-    val info  = new intW(0);
+    val info  = new intW(0)
     LAPACK.getInstance.dsyev(
       if (rightEigenvectors) "V" else "N" /* eigenvalues N, eigenvalues & eigenvectors "V" */,
       "L" /* lower triangular */,
@@ -321,4 +317,103 @@ object LinearAlgebra {
     (evs, if (rightEigenvectors) Some(A) else None)
   }
 
+  /**
+   * Computes the LU factorization of the given real M-by-N matrix X such that
+   * X = P * L * U where P is a permutation matrix (row exchanges).
+   *
+   * Upon completion, a tuple consisting of a matrix A and an integer array P.
+   *
+   * The upper triangular portion of A resembles U whereas the lower triangular portion of
+   * A resembles L up to but not including the diagonal elements of L which are
+   * all equal to 1.
+   *
+   * For 0 <= i < M, each element P(i) denotes whether row i of the matrix X
+   * was exchanged with row P(i-1) during computation (the offset is caused by
+   * the internal call to LAPACK).
+   */
+  def LU[T](X: Matrix[T])(implicit td: T => Double): (DenseMatrix[Double], Array[Int]) = {
+    requireNonEmptyMatrix(X)
+
+    val M    = X.numRows
+    val N    = X.numCols
+    val Y    = DenseMatrix.tabulate[Double](M,N)(X(_,_))
+    val ipiv = Array.ofDim[Int](math.min(M,N))
+    val info = new intW(0)
+    LAPACK.getInstance.dgetrf(
+      M /* numRows */, N /* numCols */,
+      Y.data, math.max(1,M) /* LDA */,
+      ipiv /* pivot indices */,
+      info
+    )
+    // A value of info.`val` < 0 would tell us that the i-th argument
+    // of the call to dsyev was erroneous (where i == |info.`val`|).
+    assert(info.`val` >= 0)
+
+    (Y, ipiv)
+  }
+
+  /**
+   * Computes the determinant of the given real matrix.
+   */
+  def det[T](X: Matrix[T])(implicit td: T => Double): Double = {
+    requireSquareMatrix(X)
+
+    // For triangular N-by-N matrices X, the determinant of X equals the product
+    // of the diagonal elements X(i,i) where 0 <= i < N.
+    // Since det(AB) = det(A) * det(B), the LU factorization is well-suited for
+    // the computation of the determinant of general N-by-N matrices.
+    val (m, ipiv) = LU(X)
+    val numExchangedRows = (0 /: ipiv)(_ + math.min(1,_))
+    var acc = if (numExchangedRows % 2 == 1) 1.0 else -1.0
+    for (i <- 0 until m.numRows)
+      acc *= m(i,i)
+
+    acc
+  }
+
+  /**
+   * Computes the inverse of a given real matrix.
+   */
+  def inv[T](X: Matrix[T])(implicit td: T => Double): DenseMatrix[Double] = {
+    requireSquareMatrix(X)
+
+    val (m, ipiv) = LU(X)
+    val N         = m.numRows
+    val lwork     = math.max(1, N)
+    val work      = Array.ofDim[Double](lwork)
+    val info      = new intW(0)
+    LAPACK.getInstance.dgetri(
+      N, m.data, math.max(1, N) /* LDA */,
+      ipiv,
+      work /* workspace */, lwork /* workspace size */,
+      info
+    )
+    assert(info.`val` >= 0, "Malformed argument %d (LAPACK)".format(-info.`val`))
+
+    if (info.`val` > 0)
+      throw new MatrixSingularException
+
+    m
+  }
+
+  /**
+   * Computes the Moore-Penrose pseudo inverse of the given real matrix X.
+   */
+  def pinv[T](X: Matrix[T])(implicit td: T => Double): DenseMatrix[Double] = {
+    requireNonEmptyMatrix(X)
+
+    // The pseudo inverse is nothing but the least-squares solution to AX=B,
+    // hence:
+    //       d/dX 1/2 (AX-B)^2 = A^T (AX-B)
+    // Solving A^T (AX-B) = 0 for X yields
+    //       A^T AX = A^T B
+    //    =>      X = (A^T A)^(-1) A^T B
+
+    // TODO: Couldn't get inv(X.t * X) * X.t to work because I was unable
+    //       to get the right implicit matrix multiplication operator.
+    //       This is probably rather easy to fix.
+
+    val Y = DenseMatrix.tabulate[Double](X.numRows,X.numCols)(X(_,_))
+    inv(Y.t * Y) * Y.t
+  }
 }
