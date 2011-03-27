@@ -413,15 +413,55 @@ extends MutableNumericOps[M];
  * @author dramage
  */
 class RichSeq[S<:scala.collection.Seq[_]](override val repr : S)
-extends MutableNumericOps[S];
+extends MutableNumericOps[S] {
+//  TODO: add me when we can reliably get the value type from the collection
+//
+//  /** Constructs a new vector view of this sequence. */
+//  def toVector(implicit s : Scalar[V]) = {
+//    implicit val mf = s.manifest;
+//    new RichArray(repr.toArray).asVector;
+//  }
+//
+//  /**
+//   * Constructs a new matrix view of this sequence.
+//   * If only one of rows or cols is specified, infers the other.
+//   */
+//  def toMatrix(rows : Int = -1, cols : Int = -1)(implicit s : Scalar[V]) = {
+//    implicit val mf = s.manifest;
+//    new RichArray(repr.toArray).asMatrix(rows, cols);
+//  }
+}
 
 /**
  * Adds rich math operators to an array.
  *
  * @author dramage
  */
-class RichArray[V](override val repr : Array[V])
-extends MutableNumericOps[Array[V]];
+class RichArray[@specialized V](override val repr : Array[V])
+extends MutableNumericOps[Array[V]] {
+  /** Constructs a view of this array as a column vector. */
+  def asVector(implicit s : Scalar[V]) =
+    new scalala.tensor.dense.DenseVectorCol(repr);
+    
+  /**
+   * Constructs a view of this array as a matrix of the given dimensions.
+   * If only one of rows or cols is specified, infers the other.
+   */
+  def asMatrix(rows : Int = -1, cols : Int = -1)(implicit s : Scalar[V]) = {
+    require(rows > 0 || cols > 0, "Must specify either rows or cols to view as matrix.");
+    val r = if (rows >= 0) rows else {
+      require(repr.length % cols == 0, "Input length does not evenly divide by requested number of cols");
+     repr.length / cols;
+    };
+    
+    val c = if (cols >= 0) cols else {
+      require(repr.length % rows == 0, "Input length does not evenly divide by requested number of rows");
+     repr.length / rows;
+    };
+    
+    new scalala.tensor.dense.DenseMatrix(r, c, repr);
+  }
+}
 
 /**
  * Adds rich math operators to functions.
