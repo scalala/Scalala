@@ -25,7 +25,7 @@ import domain._;
 
 import scalala.generic.collection._;
 import scalala.scalar.Scalar;
-import scalala.operators.{BinaryOp,BinaryUpdateOp,OpType,UnaryOp,CanSet,CanCast};
+import scalala.operators.{BinaryOp,BinaryUpdateOp,OpType,UnaryOp,OpSet,CanCast};
 
 /**
  * Implementation trait for TensorLike.  Supports assigning,
@@ -190,8 +190,9 @@ object Tensor {
     }
   }
   
-  implicit def opSetTensor[K,V] : CanSet[Tensor[K,V],tensor.Tensor[K,V]]
-  = new CanSet[Tensor[K,V],tensor.Tensor[K,V]] {
+  implicit def opSetTensor[K,V] : BinaryUpdateOp[Tensor[K,V],tensor.Tensor[K,V],OpSet]
+  = new BinaryUpdateOp[Tensor[K,V],tensor.Tensor[K,V],OpSet] {
+    def opType = OpSet;
     override def apply(a : Tensor[K,V], b : tensor.Tensor[K,V]) = {
       a.checkDomain(b.domain);
       a.transform((k,v) => b(k));
@@ -199,8 +200,9 @@ object Tensor {
   }
   
   implicit def opSetTensorCast[K,V1,V2](implicit cast : CanCast[V2,V1])
-  : CanSet[Tensor[K,V1],tensor.Tensor[K,V2]]
-  = new CanSet[Tensor[K,V1],tensor.Tensor[K,V2]] {
+  : BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],OpSet]
+  = new BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],OpSet] {
+    def opType = OpSet;
     override def apply(a : Tensor[K,V1], b : tensor.Tensor[K,V2]) = {
       a.checkDomain(b.domain);
       a.transform((k,v) => cast(b(k)));
@@ -208,8 +210,9 @@ object Tensor {
   }
   
   implicit def opSetScalar[K,V:Scalar]
-  : CanSet[Tensor[K,V],V]
-  = new CanSet[Tensor[K,V],V] {
+  : BinaryUpdateOp[Tensor[K,V],V,OpSet]
+  = new BinaryUpdateOp[Tensor[K,V],V,OpSet] {
+    def opType = OpSet;
     override def apply(a : Tensor[K,V], b : V) = {
       a.transform((k,v) => b);
     }
@@ -217,8 +220,9 @@ object Tensor {
   
   implicit def opSetScalarCast[K,V1,V2]
   (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
-  : CanSet[Tensor[K,V1],V2]
-  = new CanSet[Tensor[K,V1],V2] {
+  : BinaryUpdateOp[Tensor[K,V1],V2,OpSet]
+  = new BinaryUpdateOp[Tensor[K,V1],V2,OpSet] {
+    def opType = OpSet;
     override def apply(a : Tensor[K,V1], b : V2) = {
       val v = cast(b);
       a.transform((k,v) => v);

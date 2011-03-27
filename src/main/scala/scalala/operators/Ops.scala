@@ -108,7 +108,7 @@ trait NumericOps[+This] {
 trait MutableNumericOps[+This] extends NumericOps[This] {
   def repr : This;
 
-  def :=[TT>:This,B](b : B)(implicit op : CanSet[TT,B]) : This = {
+  def :=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSet]) : This = {
     op(repr,b);
     return repr;
   }

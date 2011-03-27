@@ -136,15 +136,6 @@ trait OpSet extends OpType;
 object OpSet extends OpSet;
 
 /**
- * Set a value with A := B.
- *
- * @author dramage
- */
-trait CanSet[-A,-B] extends BinaryUpdateOp[A,B,OpSet] {
-  def opType = OpSet;
-}
-
-/**
  * Type marker for UnaryOp -A.
  *
  * @author dramage
