@@ -27,7 +27,8 @@ import operators._
 import scalar.Scalar
 import generic.collection.CanViewAsVector
 import tensor.domain.TableDomain
-import tensor.{Matrix, MatrixSingularException}
+import tensor.MatrixSingularException
+import tensor.Matrix
 import tensor.dense.{DenseVector, DenseMatrix}
 
 
@@ -38,8 +39,8 @@ import tensor.dense.{DenseVector, DenseMatrix}
  */
 object LinearAlgebra {
 
-  class NotConvergedException(val reason: NotConvergedException.Reason.Value, msg: String = "")
-    extends Exception(msg) {}
+  case class NotConvergedException(val reason: NotConvergedException.Reason.Value, msg: String = "")
+    extends Exception(msg)
 
   object NotConvergedException {
     object Reason extends Enumeration {
@@ -47,13 +48,13 @@ object LinearAlgebra {
     }
   }
 
-  class MatrixNotSymmetricException
+  case class MatrixNotSymmetricException()
     extends IllegalArgumentException("Matrix is not symmetric!")
 
-  class MatrixNotSquareException
+  case class MatrixNotSquareException()
     extends IllegalArgumentException("Matrix is not square!")
 
-  class MatrixEmptyException
+  case class MatrixEmptyException()
     extends IllegalArgumentException("Matrix is empty!")
 
   @inline private def requireNonEmptyMatrix[V](mat: Matrix[V]) =
@@ -215,8 +216,8 @@ object LinearAlgebra {
   }
 
   /**
-   * The lower triangular part of the given real symmetric matrix X. Note that
-   * no check will be performed regarding the symmetry of X.
+   * The lower triangular portion of the given real quadratic matrix X. Note
+   * that no check will be performed regarding the symmetry of X.
    */
   def lowerTriangular[T: Scalar](X: Matrix[T]): DenseMatrix[T] = {
       val N = X.numRows
@@ -227,8 +228,8 @@ object LinearAlgebra {
   }
 
   /**
-   * The lower triangular part of the given real symmetric matrix X. Note that
-   * no check will be performed regarding the symmetry of X.
+   * The upper triangular portion of the given real quadratic matrix X. Note
+   * that no check will be performed regarding the symmetry of X.
    */
   def upperTriangular[T: Scalar](X: Matrix[T]): DenseMatrix[T] = {
       val N = X.numRows
@@ -412,7 +413,7 @@ object LinearAlgebra {
     // TODO: Couldn't get inv(X.t * X) * X.t to work because I was unable
     //       to get the right implicit matrix multiplication operator.
     //       This is probably rather easy to fix.
-
+    //
     val Y = DenseMatrix.tabulate[Double](X.numRows,X.numCols)(X(_,_))
     inv(Y.t * Y) * Y.t
   }

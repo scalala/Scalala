@@ -105,10 +105,15 @@ trait Random {
    *
    * @throws NotConvergedException in case of a malformed covariance matrix
    */
-  def randn(mu: Vector[Double], Sigma: Matrix[Double], numSamples: Int): Matrix[Double] =
-  {
+  def randn(mu: Vector[Double], Sigma: Matrix[Double], numSamples: Int): DenseMatrix[Double] = {
     if (numSamples < 1)
       throw new IllegalArgumentException
+
+    require(Sigma.numRows == Sigma.numCols, "Matrix is not square!")
+    for (i <- 0 until Sigma.numRows; j <- 0 until i) {
+      if (Sigma(i,j) != Sigma(j,i))
+        throw new IllegalArgumentException
+    }
 
     if (mu.size != Sigma.numCols)
       throw new IllegalArgumentException

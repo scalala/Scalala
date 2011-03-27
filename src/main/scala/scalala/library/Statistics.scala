@@ -25,9 +25,9 @@ package library;
 import math._
 import Numerics._
 import operators.Implicits._
-import generic.collection.CanViewAsVector
-import tensor.{Matrix, Vector}
+import tensor.{::, Matrix, Vector}
 import tensor.dense.{DenseVector, DenseMatrix}
+import generic.collection.{CanSliceCol, CanViewAsVector}
 
 /**
  * Matlab-like statistical methods.
@@ -85,26 +85,27 @@ trait Statistics {
   /**
    * The covariance matrix and mean of the given dataset X where each column
    * of X represents one sample of a multivariate random distribution.
-   * In case the mean of the dataset is already known it can be passed in as
-   * the `muPrecalc' argument.
    */
-  def covariance[@specialized T](X: Matrix[T], muPrecalc: Vector[T] = null)
-                                (implicit xv: T => Double):
-    (Matrix[Double], Vector[Double]) =
+  def covariance[T](X: Matrix[T])
+                   (implicit cvv: CanViewAsVector[Vector[T],Double],
+                             css: CanSliceCol[Matrix[T],Int,Vector[Double]],
+                              td: T => Double):
+    (DenseMatrix[Double], DenseVector[Double]) =
   {
-    require(X.numRows > 0 && X.numCols > 0, "Matrix is empty!")
+    if (X.numRows <= 0 || X.numCols < 2)
+      throw new IllegalArgumentException
 
-    val mu = muPrecalc match {
-      case v: Vector[T] => DenseVector.tabulate[Double](muPrecalc.size)(muPrecalc(_))
-      case _ => mean(X, Axis.Horizontal)
+    val N     = X.numRows
+    var mu    = DenseVector.tabulate[Double](N)(X(_,0))
+    var Sigma = DenseMatrix.zeros[Double](N, N)
+    var K     = 0.0
+    for (i <- 1 until X.numCols; val xMinusMu = X(::,i) - mu) {
+      K     += 1
+      mu    += xMinusMu / K
+      Sigma += xMinusMu * xMinusMu.t * (1. - 1. / K)
     }
 
-    val XminusMu = DenseMatrix.tabulate[Double](X.numRows, X.numCols)(
-      (i, j) => X(i,j) - mu(i)
-    )
-    val Sigma: DenseMatrix[Double] = XminusMu * XminusMu.t / (X.numCols-1)
-
-    (Sigma, mu)
+    (Sigma / K, mu)
   }
 
   /**
