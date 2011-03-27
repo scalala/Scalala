@@ -18,29 +18,32 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
 package scalala;
-package generic;
-package collection;
-
-import scalala.tensor.domain._;
+package tensor;
+package domain;
 
 /**
- * Marker for being able to get the domain (keys) of a collection.
+ * Marker trait for statically building a Domain2 for two input domains.
  *
  * @author dramage
  */
-trait CanGetDomain[-Coll, @specialized(Int,Long) K] {
-  def apply(coll : Coll) : Domain[K];
-}
+trait CanBuildDomain2[-A,-B,RV] extends ((A,B) => RV);
 
-object CanGetDomain {
-  implicit object OpArray extends CanGetDomain[Array[_],Int] {
-    def apply(v : Array[_]) = IndexDomain(v.length);
-  }
-
-  implicit def opMap[K,V] = new OpMap[K,V];
-
-  class OpMap[K,V] extends CanGetDomain[scala.collection.Map[K,V],K] {
-    def apply(v : scala.collection.Map[K,V]) = SetDomain(v.keySet);
+trait CanBuildDomain2ImplicitsLevel0 {
+  implicit def buildGeneral[K1,K2]
+  : CanBuildDomain2[Domain1[K1],Domain1[K2],Domain2[K1,K2]]
+  = new CanBuildDomain2[Domain1[K1],Domain1[K2],Domain2[K1,K2]] {
+    def apply(a : Domain1[K1], b : Domain1[K2]) =
+      a.product[K2,Domain1[K2]](b);
   }
 }
+
+trait CanBuildDomain2ImplicitsLevel1 extends CanBuildDomain2ImplicitsLevel0 {
+  implicit object BuildIndexIndex 
+  extends CanBuildDomain2[IndexDomain,IndexDomain,TableDomain] {
+    override def apply(a : IndexDomain, b : IndexDomain) =
+      TableDomain(a.size, b.size);
+  }
+}
+
+object CanBuildDomain2 extends CanBuildDomain2ImplicitsLevel1;
 

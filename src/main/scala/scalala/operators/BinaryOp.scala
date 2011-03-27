@@ -294,7 +294,7 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   //
   
   implicit def promoteScalarMulToMulRowVectorBy[A,B,RV]
-  (implicit view : A=>scalala.tensor.Tensor1Row[_,A],
+  (implicit view : A=>scalala.tensor.Tensor1Row[_,_],
    op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
   : BinaryOp[A,B,OpMulRowVectorBy,RV]
   = new BinaryOp[A,B,OpMulRowVectorBy,RV] {
@@ -302,7 +302,7 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   }
 
   implicit def promoteScalarMulToMulColVectorBy[A,B,RV]
-  (implicit view : A=>scalala.tensor.Tensor1Col[_,A],
+  (implicit view : A=>scalala.tensor.Tensor1Col[_,_],
    op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
   : BinaryOp[A,B,OpMulColVectorBy,RV]
   = new BinaryOp[A,B,OpMulColVectorBy,RV] {
@@ -310,7 +310,7 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   }
 
   implicit def promoteScalarMulToMulMatrixBy[A,B,RV]
-  (implicit view : A=>scalala.tensor.Tensor2[_,_,A],
+  (implicit view : A=>scalala.tensor.Tensor2[_,_,_],
    op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
   : BinaryOp[A,B,OpMulMatrixBy,RV]
   = new BinaryOp[A,B,OpMulMatrixBy,RV] {

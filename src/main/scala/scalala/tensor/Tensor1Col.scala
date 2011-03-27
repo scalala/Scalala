@@ -67,7 +67,8 @@ object Tensor1Col {
   
   implicit def canMulTensor1ColByRow[K1,K2,V1,V2,RV,A,DA,B,DB,DThat,That]
   (implicit viewA : A=>Tensor1Col[K1,V1], viewB : B=>Tensor1Row[K2,V2],
-   dA : DomainFor[A,DA], dB : DomainFor[B,DB], dThat : CanGetDomain2For[DA,DB,DThat],
+   dA : CanGetDomain[A,DA], dB : CanGetDomain[B,DB],
+   dThat : CanBuildDomain2[DA,DB,DThat],
    mul : BinaryOp[V1,V2,OpMul,RV],
    bf : CanBuildTensorFrom[A, DThat, (K1,K2), RV, That])
   : BinaryOp[A,B,OpMulColVectorBy,That]

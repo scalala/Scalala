@@ -459,7 +459,7 @@ object Tensor {
   }
 
   implicit def canMapValues[K, V, RV, This, D, That]
-  (implicit view : This=>Tensor[K,V], d : DomainFor[This,D],
+  (implicit view : This=>Tensor[K,V], d : CanGetDomain[This,D],
    bf : CanBuildTensorFrom[This, D, K, RV, That],
    s : Scalar[RV])
   : CanMapValues[This,V,RV,That]
@@ -477,7 +477,7 @@ object Tensor {
   }
 
   implicit def canMapKeyValuePairs[K, V, RV, This, D, That]
-  (implicit view : This=>Tensor[K,V], d : DomainFor[This,D],
+  (implicit view : This=>Tensor[K,V], d : CanGetDomain[This,D],
    bf : CanBuildTensorFrom[This, D, K, RV, That],
    s : Scalar[RV])
   : CanMapKeyValuePairs[This,K,V,RV,That]
@@ -495,7 +495,7 @@ object Tensor {
   }
 
   implicit def canJoin[K, V1, V2, RV, This, D, That]
-  (implicit view : This=>Tensor[K,V1], d : DomainFor[This,D],
+  (implicit view : This=>Tensor[K,V1], d : CanGetDomain[This,D],
    bf : CanBuildTensorFrom[This, D, K, RV, That],
    s : Scalar[RV])
   : CanJoinValues[This, Tensor[K,V2], V1, V2, RV, That] =

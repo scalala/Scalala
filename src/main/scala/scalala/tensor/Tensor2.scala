@@ -23,7 +23,9 @@ package tensor;
 import scalar.Scalar;
 
 import domain._;
-import generic.collection._;
+
+import scalala.generic.collection._;
+import scalala.operators._;
 
 /**
  * Implementation trait for tensors indexed by two keys, such as Matrices.
@@ -139,6 +141,60 @@ object Tensor2 {
   = new CanSliceMatrix[Tensor2[A1,A2,B],A1,A2,Matrix[B]] {
     override def apply(from : Tensor2[A1,A2,B], keys1 : Seq[A1], keys2 : Seq[A2]) =
       new MatrixSliceImpl[A1,A2,B,Tensor2[A1,A2,B]](from, keys1, keys2);
+  }
+
+  implicit def canMulTensor2ByTensor1Col[
+    @specialized(Int) K1, @specialized(Int) K2,
+    @specialized(Int,Double) V1, A, AR, ADomainRow, ADomainCol, ADomain,
+    @specialized(Int,Double) V2, B, BD,
+    @specialized(Int,Double) RV, That]
+  (implicit
+   viewA : A=>Tensor2[K1,K2,V1],
+   sliceA : CanSliceRow[A,K1,AR],
+   domainA : CanGetDomain2[A,ADomainRow,ADomainCol,ADomain],
+   viewB : B=>Tensor1Col[K2,V2],
+   mul : BinaryOp[AR,B,OpMulRowVectorBy,RV],
+   bf : CanBuildTensorFrom[B,ADomainRow,K1,RV,That],
+   scalar : Scalar[RV])
+  : BinaryOp[A, B, OpMulMatrixBy, That] =
+  new BinaryOp[A, B, OpMulMatrixBy, That] {
+    override def opType = OpMulMatrixBy;
+    override def apply(a : A, b : B) = {
+      val builder = bf(b, domainA._1(a));
+      for (i <- a.domain._1) {
+        builder(i) = mul(sliceA(a,i), b);
+      }
+      builder.result;
+    }
+  }
+
+  implicit def canMulMatrixByMatrix[
+   @specialized(Int) K1, @specialized(Int) K2, @specialized(Int) K3,
+   @specialized(Int,Double) V1, A, ARow, ADomainRow, InnerDomain, ADomain,
+   @specialized(Int,Double) V2, B, BCol, BDomainCol, BDomain,
+   @specialized(Int,Double) RV, RDomain, That]
+  (implicit
+    viewA : A=>Tensor2[K1,K2,V1],
+    sliceA : CanSliceRow[A,K1,ARow],
+    domainA : CanGetDomain2[A,ADomainRow,InnerDomain,ADomain],
+    viewB : B=>Tensor2[K2,K3,V2],
+    sliceB : CanSliceCol[B,K3,BCol],
+    domainB : CanGetDomain2[B,InnerDomain,BDomainCol,BDomain],
+    mul : BinaryOp[ARow,BCol,OpMulRowVectorBy,RV],
+    domainR : CanBuildDomain2[ADomainRow,BDomainCol,RDomain],
+    bf : CanBuildTensorFrom[A,RDomain,(K1,K3),RV,That],
+    scalar : Scalar[RV])
+  : BinaryOp[A, B, OpMulMatrixBy, That] =
+  new BinaryOp[A, B, OpMulMatrixBy, That] {
+    override def opType = OpMulMatrixBy;
+    override def apply(a : A, b : B) = {
+      val domain = domainR(domainA._1(a), domainB._2(b));
+      val builder = bf(a, domain);
+      for (i <- a.domain._1; j <- b.domain._2) {
+        builder((i,j)) = mul(sliceA(a,i), sliceB(b,j));
+      }
+      builder.result;
+    }
   }
 
   trait RowSliceLike[A1,A2,B,+Coll<:Tensor2[A1,A2,B],+This<:RowSlice[A1,A2,B,Coll]]
