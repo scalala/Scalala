@@ -25,7 +25,7 @@ import domain._;
 
 import scalala.generic.collection._;
 import scalala.scalar.Scalar;
-import scalala.operators.{BinaryOp,BinaryUpdateOp,OpType,UnaryOp,OpCast,CanSet};
+import scalala.operators.{BinaryOp,BinaryUpdateOp,OpType,UnaryOp,CanSet,CanCast};
 
 /**
  * Implementation trait for TensorLike.  Supports assigning,
@@ -173,6 +173,7 @@ object Tensor {
   (implicit op : BinaryOp[V1,V2,Op,V1], s : Scalar[V2])
   : BinaryUpdateOp[Tensor[K,V1],V2,Op]
   = new BinaryUpdateOp[Tensor[K,V1],V2,Op] {
+    override def opType = op.opType;
     override def apply(a : Tensor[K,V1], b : V2) = {
       a.transformValues(v => op(v, b));
     }
@@ -182,6 +183,7 @@ object Tensor {
   (implicit op : BinaryOp[V1,V2,Op,V1])
   : BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],Op]
   = new BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],Op] {
+    override def opType = op.opType;
     override def apply(a : Tensor[K,V1], b : tensor.Tensor[K,V2]) = {
       a.checkDomain(b.domain);
       a.transform((k,v) => op(v,b(k)));
@@ -196,7 +198,7 @@ object Tensor {
     }
   }
   
-  implicit def opSetTensorCast[K,V1,V2](implicit cast : UnaryOp[V2,OpCast,V1])
+  implicit def opSetTensorCast[K,V1,V2](implicit cast : CanCast[V2,V1])
   : CanSet[Tensor[K,V1],tensor.Tensor[K,V2]]
   = new CanSet[Tensor[K,V1],tensor.Tensor[K,V2]] {
     override def apply(a : Tensor[K,V1], b : tensor.Tensor[K,V2]) = {
@@ -214,7 +216,7 @@ object Tensor {
   }
   
   implicit def opSetScalarCast[K,V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
   : CanSet[Tensor[K,V1],V2]
   = new CanSet[Tensor[K,V1],V2] {
     override def apply(a : Tensor[K,V1], b : V2) = {

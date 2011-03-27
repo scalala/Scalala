@@ -163,6 +163,7 @@ object DenseMatrix extends DenseMatrixConstructors {
 
   implicit object DenseMatrixCanSolveDenseMatrix
   extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpSolveMatrixBy,DenseMatrix[Double]] {
+    override def opType = OpSolveMatrixBy;
     override def apply(A : DenseMatrix[Double], B : DenseMatrix[Double]) = {
       require(A.numRows == B.numRows,
               "Non-conformant matrix sizes");
@@ -257,6 +258,7 @@ object DenseMatrix extends DenseMatrixConstructors {
 
   implicit object DenseMatrixCanSolveDenseVector
   extends BinaryOp[DenseMatrix[Double],DenseVectorCol[Double],OpSolveMatrixBy,DenseVectorCol[Double]] {
+    override def opType = OpSolveMatrixBy;
     override def apply(a : DenseMatrix[Double], b : DenseVectorCol[Double]) = {
       val rv = a \ new DenseMatrix[Double](b.size, 1, b.data);
       new DenseVectorCol[Double](rv.data);

@@ -190,6 +190,7 @@ object Matrix {
    scalar : Scalar[RV])
   : BinaryOp[Matrix[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] =
   new BinaryOp[Matrix[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] {
+    override def opType = OpMulMatrixBy;
     override def apply(a : Matrix[V1], b : VectorCol[V2]) = {
       val builder = a.newBuilder[Int,RV](IndexDomain(a.numRows));
       var i = 0;
@@ -208,6 +209,7 @@ object Matrix {
    scalar : Scalar[RV])
   : BinaryOp[Matrix[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] =
   new BinaryOp[Matrix[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] {
+    override def opType = OpMulMatrixBy;
     override def apply(a : Matrix[V1], b : Matrix[V2]) = {
       val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows, b.numCols));
       var i = 0;

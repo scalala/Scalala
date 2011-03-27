@@ -31,7 +31,9 @@ import scalala.scalar.Scalar;
  */
 @implicitNotFound(msg="Could not find a way to ${O} ${B} into ${A}")
 trait BinaryUpdateOp[@specialized -A, @specialized -B, O<:OpType]
-extends ((A,B) => Unit);
+extends ((A,B) => Unit) {
+  def opType : O;
+}
 
 /**
  * Very low priority implicits.
@@ -157,6 +159,7 @@ trait BinaryUpdateOpImplicitsLevel1 extends BinaryUpdateOpImplicitsLevel0 {
   (implicit op : BinaryOp[V1,V2,O,V1], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[scala.collection.mutable.Seq[V1], scala.collection.Seq[V2], O]
   = new BinaryUpdateOp[scala.collection.mutable.Seq[V1], scala.collection.Seq[V2], O] {
+    def opType = op.opType;
     def apply(a : scala.collection.mutable.Seq[V1], b : scala.collection.Seq[V2]) = {
       require(a.size == b.size, "Inputs must be the same length");
       var i = 0;
@@ -186,6 +189,7 @@ trait BinaryUpdateOpImplicitsLevel1 extends BinaryUpdateOpImplicitsLevel0 {
   (implicit op : BinaryOp[V1,V2,O,V1], s : Scalar[V2])
   : BinaryUpdateOp[scala.collection.mutable.Seq[V1], V2, O]
   = new BinaryUpdateOp[scala.collection.mutable.Seq[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : scala.collection.mutable.Seq[V1], b : V2) = {
       var i = 0;
       for (v <- a) {
@@ -218,6 +222,7 @@ trait BinaryUpdateOpImplicitsLevel1 extends BinaryUpdateOpImplicitsLevel0 {
   (implicit op : BinaryOp[V1,V2,O,V1], s1 : Scalar[V1], s2 : Scalar[V2])
   : BinaryUpdateOp[scala.collection.mutable.Map[K,V1], scala.collection.Map[K,V2], O]
   = new BinaryUpdateOp[scala.collection.mutable.Map[K,V1], scala.collection.Map[K,V2], O] {
+    def opType = op.opType;
     def apply(a : scala.collection.mutable.Map[K,V1], b : scala.collection.Map[K,V2]) = {
       for (k <- a.keySet) {
         a(k) = op(a(k), b.getOrElse(k,s2.zero));
@@ -251,6 +256,7 @@ trait BinaryUpdateOpImplicitsLevel1 extends BinaryUpdateOpImplicitsLevel0 {
   (implicit op : BinaryOp[V1,V2,O,V1], s : Scalar[V2])
   : BinaryUpdateOp[scala.collection.mutable.Map[K,V1], V2, O]
   = new BinaryUpdateOp[scala.collection.mutable.Map[K,V1], V2, O] {
+    def opType = op.opType;
     def apply(a : scala.collection.mutable.Map[K,V1], b : V2) =
       a.transform((k,v) => op(v, b));
   }
@@ -275,6 +281,7 @@ trait BinaryUpdateOpImplicitsLevel1 extends BinaryUpdateOpImplicitsLevel0 {
   (implicit op : BinaryOp[V1,V2,O,V1], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[Array[V1], Array[V2], O]
   = new BinaryUpdateOp[Array[V1], Array[V2], O] {
+    def opType = op.opType;
     def apply(a : Array[V1], b : Array[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -300,6 +307,7 @@ trait BinaryUpdateOpImplicitsLevel1 extends BinaryUpdateOpImplicitsLevel0 {
   (implicit op : BinaryOp[V1,V2,O,V1], s : Scalar[V2])
   : BinaryUpdateOp[Array[V1], V2, O]
   = new BinaryUpdateOp[Array[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : Array[V1], b : V2) = {
       var i = 0;
       while (i < a.length) {
@@ -334,6 +342,7 @@ object BinaryUpdateOp extends BinaryUpdateOpImplicitsLevel1 {
    c1 : CompatibleShape[VA1,VB1], c2 : CompatibleShape[VA2,VB2])
   : BinaryUpdateOp[(VA1,VA2), (VB1,VB2), O]
   = new BinaryUpdateOp[(VA1,VA2), (VB1,VB2), O] {
+    def opType = op1.opType;
     def apply(a : (VA1,VA2), b : (VB1,VB2)) = {
       op1(a._1,b._1);
       op2(a._2,b._2);
@@ -345,6 +354,7 @@ object BinaryUpdateOp extends BinaryUpdateOpImplicitsLevel1 {
    s : Scalar[VB])
   : BinaryUpdateOp[(VA1,VA2), VB, O]
   = new BinaryUpdateOp[(VA1,VA2), VB, O] {
+    def opType = op1.opType;
     def apply(a : (VA1,VA2), b : VB) = {
       op1(a._1,b);
       op2(a._2,b);
@@ -360,6 +370,7 @@ object BinaryUpdateOp extends BinaryUpdateOpImplicitsLevel1 {
   (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[scala.collection.Seq[V1], scala.collection.Seq[V2], O]
   = new BinaryUpdateOp[scala.collection.Seq[V1], scala.collection.Seq[V2], O] {
+    def opType = op.opType;
     def apply(a : scala.collection.Seq[V1], b : scala.collection.Seq[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       for ((av,bv) <- (a.iterator zip b.iterator)) {
@@ -373,6 +384,7 @@ object BinaryUpdateOp extends BinaryUpdateOpImplicitsLevel1 {
   (implicit op : BinaryUpdateOp[V1,V2,O], s : Scalar[V2])
   : BinaryUpdateOp[scala.collection.Seq[V1], V2, O]
   = new BinaryUpdateOp[scala.collection.Seq[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : scala.collection.Seq[V1], b : V2) = {
       for (v <- a) {
         op(v, b);
@@ -390,6 +402,7 @@ object BinaryUpdateOp extends BinaryUpdateOpImplicitsLevel1 {
   (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[scala.collection.Map[K,V1], scala.collection.Map[K,V2], O]
   = new BinaryUpdateOp[scala.collection.Map[K,V1], scala.collection.Map[K,V2], O] {
+    def opType = op.opType;
     def apply(a : scala.collection.Map[K,V1], b : scala.collection.Map[K,V2]) = {
       for (k <- a.keySet) {
         op(a(k),b(k));
@@ -407,6 +420,7 @@ object BinaryUpdateOp extends BinaryUpdateOpImplicitsLevel1 {
   (implicit op : BinaryUpdateOp[V1,V2,O], s : Scalar[V2])
   : BinaryUpdateOp[scala.collection.Map[K,V1], V2, O]
   = new BinaryUpdateOp[scala.collection.Map[K,V1], V2, O] {
+    def opType = op.opType;
     def apply(a : scala.collection.Map[K,V1], b : V2) = {
       for (v <- a.values) {
         op(v,b);
@@ -424,6 +438,7 @@ object BinaryUpdateOp extends BinaryUpdateOpImplicitsLevel1 {
   (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[Array[V1], Array[V2], O]
   = new BinaryUpdateOp[Array[V1], Array[V2], O] {
+    def opType = op.opType;
     def apply(a : Array[V1], b : Array[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -438,6 +453,7 @@ object BinaryUpdateOp extends BinaryUpdateOpImplicitsLevel1 {
   (implicit op : BinaryUpdateOp[V1,V2,O], s : Scalar[V2])
   : BinaryUpdateOp[Array[V1], V2, O]
   = new BinaryUpdateOp[Array[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : Array[V1], b : V2) = {
       var i = 0;
       while (i < a.length) {

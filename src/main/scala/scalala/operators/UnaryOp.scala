@@ -31,61 +31,30 @@ import scala.collection.generic.CanBuildFrom;
  */
 @implicitNotFound(msg="Could not find a way to ${O} value of type ${This}")
 trait UnaryOp[@specialized -This, O<:OpType, +That]
-extends (This => That);
+extends (This => That) {
+  def opType : O;
+}
 
 object UnaryOp {
-  //
-  // Casting
-  //
-
-  implicit object OpCastII extends UnaryOp[Int,OpCast,Int]
-    { override def apply(v : Int) = v; }
-
-  implicit object OpCastIL extends UnaryOp[Int,OpCast,Long]
-    { override def apply(v : Int) = v; }
-
-  implicit object OpCastIF extends UnaryOp[Int,OpCast,Float]
-    { override def apply(v : Int) = v; }
-
-  implicit object OpCastID extends UnaryOp[Int,OpCast,Double]
-    { override def apply(v : Int) = v; }
-
-  implicit object OpCastLL extends UnaryOp[Long,OpCast,Long]
-    { override def apply(v : Long) = v; }
-
-  implicit object OpCastLD extends UnaryOp[Long,OpCast,Double]
-    { override def apply(v : Long) = v; }
-
-  implicit object OpCastFF extends UnaryOp[Float,OpCast,Float]
-    { override def apply(v : Float) = v; }
-
-  implicit object OpCastFD extends UnaryOp[Float,OpCast,Double]
-    { override def apply(v : Float) = v; }
-
-  implicit object OpCastDD extends UnaryOp[Double,OpCast,Double]
-    { override def apply(v : Double) = v; }
-
-  implicit def OpCastIdentity[V] : UnaryOp[V,OpCast,V] = new UnaryOp[V,OpCast,V]
-    { override def apply(v : V) = v; }
   
   //
   // Negation
   //
   
   implicit object OpNegI extends UnaryOp[Int,OpNeg,Int]
-    { def apply(v : Int) = -v; }
+    { def opType = OpNeg; def apply(v : Int) = -v; }
 
   implicit object OpNegS extends UnaryOp[Short,OpNeg,Short]
-    { def apply(v : Short) = (-v).asInstanceOf[Short]; }
+    { def opType = OpNeg; def apply(v : Short) = (-v).asInstanceOf[Short]; }
 
   implicit object OpNegL extends UnaryOp[Long,OpNeg,Long]
-    { def apply(v : Long) = -v; }
+    { def opType = OpNeg; def apply(v : Long) = -v; }
 
   implicit object OpNegF extends UnaryOp[Float,OpNeg,Float]
-    { def apply(v : Float) = -v; }
+    { def opType = OpNeg; def apply(v : Float) = -v; }
 
   implicit object OpNegD extends UnaryOp[Double,OpNeg,Double]
-    { def apply(v : Double) = -v; }
+    { def opType = OpNeg; def apply(v : Double) = -v; }
     
     
   //
@@ -96,6 +65,7 @@ object UnaryOp {
   (implicit op1 : UnaryOp[V1,O,RV1], op2 : UnaryOp[V2,O,RV2])
   : UnaryOp[(V1,V2),O,(RV1,RV2)]
   = new UnaryOp[(V1,V2),O,(RV1,RV2)] {
+    def opType = op1.opType;
     def apply(v : (V1,V2)) = (op1(v._1), op2(v._2));
   }
 
@@ -104,6 +74,7 @@ object UnaryOp {
    op3 : UnaryOp[V3,O,RV3])
   : UnaryOp[(V1,V2,V3),O,(RV1,RV2,RV3)]
   = new UnaryOp[(V1,V2,V3),O,(RV1,RV2,RV3)] {
+    def opType = op1.opType;
     def apply(v : (V1,V2,V3)) = (op1(v._1), op2(v._2), op3(v._3));
   }
   
@@ -116,6 +87,7 @@ object UnaryOp {
     op : UnaryOp[V,O,RV], bf : CanBuildFrom[M,(K,RV),That])
   : UnaryOp[M, O, That]
   = new UnaryOp[M, O, That] {
+    def opType = op.opType;
     def apply(m : M) = {
       val builder = bf(m);
       for ((k,v) <- m) {
@@ -134,6 +106,7 @@ object UnaryOp {
    bf : CanBuildFrom[S,RV,That])
   : UnaryOp[S,O,That]
   = new UnaryOp[S,O,That] {
+    def opType = op.opType;
     def apply(s : S) = {
       val builder = bf(s);
       for (v <- s) {
@@ -151,6 +124,7 @@ object UnaryOp {
   (implicit op : UnaryOp[V,O,RV], mf : Manifest[RV])
   : UnaryOp[Array[V],O,Array[RV]]
   = new UnaryOp[Array[V],O,Array[RV]] {
+    def opType = op.opType;
     def apply(a : Array[V]) = {
       var rv = new Array[RV](a.length);
       var i = 0;

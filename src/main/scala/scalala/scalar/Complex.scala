@@ -196,22 +196,22 @@ object Complex { outer =>
   //
 
   implicit object Neg extends UnaryOp[Complex,OpNeg,Complex]
-    { def apply(v : Complex) = -v; }
+    { def opType = OpNeg; def apply(v : Complex) = -v; }
 
   //
   // cast
   //
   
-  implicit object CastIC extends UnaryOp[Int,OpCast,Complex]
+  implicit object CastIC extends CanCast[Int,Complex]
     { def apply(v : Int) = Complex(v,0); }
 
-  implicit object CastLC extends UnaryOp[Long,OpCast,Complex]
+  implicit object CastLC extends CanCast[Long,Complex]
     { def apply(v : Long) = Complex(v,0); }
 
-  implicit object CastFC extends UnaryOp[Float,OpCast,Complex]
+  implicit object CastFC extends CanCast[Float,Complex]
     { def apply(v : Float) = Complex(v,0); }
 
-  implicit object CastDC extends UnaryOp[Double,OpCast,Complex]
+  implicit object CastDC extends CanCast[Double,Complex]
     { def apply(v : Double) = Complex(v,0); }
 
   //
@@ -219,123 +219,123 @@ object Complex { outer =>
   //
 
   implicit object AddCC extends BinaryOp[Complex,Complex,OpAdd,Complex]
-  { def apply(a : Complex, b : Complex) = a + b; }
+  { def opType = OpAdd; def apply(a : Complex, b : Complex) = a + b; }
 
   implicit object AddIC extends BinaryOp[Int,Complex,OpAdd,Complex]
-  { def apply(a : Int, b : Complex) = a + b; }
+  { def opType = OpAdd; def apply(a : Int, b : Complex) = a + b; }
 
   implicit object AddLC extends BinaryOp[Long,Complex,OpAdd,Complex]
-  { def apply(a : Long, b : Complex) = a + b; }
+  { def opType = OpAdd; def apply(a : Long, b : Complex) = a + b; }
 
   implicit object AddFC extends BinaryOp[Float,Complex,OpAdd,Complex]
-  { def apply(a : Float, b : Complex) = a + b; }
+  { def opType = OpAdd; def apply(a : Float, b : Complex) = a + b; }
 
   implicit object AddDC extends BinaryOp[Double,Complex,OpAdd,Complex]
-  { def apply(a : Double, b : Complex) = a + b; }
+  { def opType = OpAdd; def apply(a : Double, b : Complex) = a + b; }
 
   implicit object AddCI extends BinaryOp[Complex,Int,OpAdd,Complex]
-  { def apply(a : Complex, b : Int) = a + b; }
+  { def opType = OpAdd; def apply(a : Complex, b : Int) = a + b; }
 
   implicit object AddCL extends BinaryOp[Complex,Long,OpAdd,Complex]
-  { def apply(a : Complex, b : Long) = a + b; }
+  { def opType = OpAdd; def apply(a : Complex, b : Long) = a + b; }
 
   implicit object AddCF extends BinaryOp[Complex,Float,OpAdd,Complex]
-  { def apply(a : Complex, b : Float) = a + b; }
+  { def opType = OpAdd; def apply(a : Complex, b : Float) = a + b; }
 
   implicit object AddCD extends BinaryOp[Complex,Double,OpAdd,Complex]
-  { def apply(a : Complex, b : Double) = a + b; }
+  { def opType = OpAdd; def apply(a : Complex, b : Double) = a + b; }
 
   //
   // sub
   //
 
   implicit object SubCC extends BinaryOp[Complex,Complex,OpSub,Complex]
-  { def apply(a : Complex, b : Complex) = a - b; }
+  { def opType = OpSub; def apply(a : Complex, b : Complex) = a - b; }
 
   implicit object SubIC extends BinaryOp[Int,Complex,OpSub,Complex]
-  { def apply(a : Int, b : Complex) = a - b; }
+  { def opType = OpSub; def apply(a : Int, b : Complex) = a - b; }
 
   implicit object SubLC extends BinaryOp[Long,Complex,OpSub,Complex]
-  { def apply(a : Long, b : Complex) = a - b; }
+  { def opType = OpSub; def apply(a : Long, b : Complex) = a - b; }
 
   implicit object SubFC extends BinaryOp[Float,Complex,OpSub,Complex]
-  { def apply(a : Float, b : Complex) = a - b; }
+  { def opType = OpSub; def apply(a : Float, b : Complex) = a - b; }
 
   implicit object SubDC extends BinaryOp[Double,Complex,OpSub,Complex]
-  { def apply(a : Double, b : Complex) = a - b; }
+  { def opType = OpSub; def apply(a : Double, b : Complex) = a - b; }
 
   implicit object SubCI extends BinaryOp[Complex,Int,OpSub,Complex]
-  { def apply(a : Complex, b : Int) = a - b; }
+  { def opType = OpSub; def apply(a : Complex, b : Int) = a - b; }
 
   implicit object SubCL extends BinaryOp[Complex,Long,OpSub,Complex]
-  { def apply(a : Complex, b : Long) = a - b; }
+  { def opType = OpSub; def apply(a : Complex, b : Long) = a - b; }
 
   implicit object SubCF extends BinaryOp[Complex,Float,OpSub,Complex]
-  { def apply(a : Complex, b : Float) = a - b; }
+  { def opType = OpSub; def apply(a : Complex, b : Float) = a - b; }
 
   implicit object SubCD extends BinaryOp[Complex,Double,OpSub,Complex]
-  { def apply(a : Complex, b : Double) = a - b; }
+  { def opType = OpSub; def apply(a : Complex, b : Double) = a - b; }
 
   //
   // mul
   //
 
   implicit object MulCC extends BinaryOp[Complex,Complex,OpMul,Complex]
-  { def apply(a : Complex, b : Complex) = a * b; }
+  { def opType = OpMul; def apply(a : Complex, b : Complex) = a * b; }
 
   implicit object MulIC extends BinaryOp[Int,Complex,OpMul,Complex]
-  { def apply(a : Int, b : Complex) = a * b; }
+  { def opType = OpMul; def apply(a : Int, b : Complex) = a * b; }
 
   implicit object MulLC extends BinaryOp[Long,Complex,OpMul,Complex]
-  { def apply(a : Long, b : Complex) = a * b; }
+  { def opType = OpMul; def apply(a : Long, b : Complex) = a * b; }
 
   implicit object MulFC extends BinaryOp[Float,Complex,OpMul,Complex]
-  { def apply(a : Float, b : Complex) = a * b; }
+  { def opType = OpMul; def apply(a : Float, b : Complex) = a * b; }
 
   implicit object MulDC extends BinaryOp[Double,Complex,OpMul,Complex]
-  { def apply(a : Double, b : Complex) = a * b; }
+  { def opType = OpMul; def apply(a : Double, b : Complex) = a * b; }
 
   implicit object MulCI extends BinaryOp[Complex,Int,OpMul,Complex]
-  { def apply(a : Complex, b : Int) = a * b; }
+  { def opType = OpMul; def apply(a : Complex, b : Int) = a * b; }
 
   implicit object MulCL extends BinaryOp[Complex,Long,OpMul,Complex]
-  { def apply(a : Complex, b : Long) = a * b; }
+  { def opType = OpMul; def apply(a : Complex, b : Long) = a * b; }
 
   implicit object MulCF extends BinaryOp[Complex,Float,OpMul,Complex]
-  { def apply(a : Complex, b : Float) = a * b; }
+  { def opType = OpMul; def apply(a : Complex, b : Float) = a * b; }
 
   implicit object MulCD extends BinaryOp[Complex,Double,OpMul,Complex]
-  { def apply(a : Complex, b : Double) = a * b; }
+  { def opType = OpMul; def apply(a : Complex, b : Double) = a * b; }
 
   //
   // div
   //
 
   implicit object DivCC extends BinaryOp[Complex,Complex,OpDiv,Complex]
-  { def apply(a : Complex, b : Complex) = a / b; }
+  { def opType = OpDiv; def apply(a : Complex, b : Complex) = a / b; }
 
   implicit object DivIC extends BinaryOp[Int,Complex,OpDiv,Complex]
-  { def apply(a : Int, b : Complex) = a / b; }
+  { def opType = OpDiv; def apply(a : Int, b : Complex) = a / b; }
 
   implicit object DivLC extends BinaryOp[Long,Complex,OpDiv,Complex]
-  { def apply(a : Long, b : Complex) = a / b; }
+  { def opType = OpDiv; def apply(a : Long, b : Complex) = a / b; }
 
   implicit object DivFC extends BinaryOp[Float,Complex,OpDiv,Complex]
-  { def apply(a : Float, b : Complex) = a / b; }
+  { def opType = OpDiv; def apply(a : Float, b : Complex) = a / b; }
 
   implicit object DivDC extends BinaryOp[Double,Complex,OpDiv,Complex]
-  { def apply(a : Double, b : Complex) = a / b; }
+  { def opType = OpDiv; def apply(a : Double, b : Complex) = a / b; }
 
   implicit object DivCI extends BinaryOp[Complex,Int,OpDiv,Complex]
-  { def apply(a : Complex, b : Int) = a / b; }
+  { def opType = OpDiv; def apply(a : Complex, b : Int) = a / b; }
 
   implicit object DivCL extends BinaryOp[Complex,Long,OpDiv,Complex]
-  { def apply(a : Complex, b : Long) = a / b; }
+  { def opType = OpDiv; def apply(a : Complex, b : Long) = a / b; }
 
   implicit object DivCF extends BinaryOp[Complex,Float,OpDiv,Complex]
-  { def apply(a : Complex, b : Float) = a / b; }
+  { def opType = OpDiv; def apply(a : Complex, b : Float) = a / b; }
 
   implicit object DivCD extends BinaryOp[Complex,Double,OpDiv,Complex]
-  { def apply(a : Complex, b : Double) = a / b; }
+  { def opType = OpDiv; def apply(a : Complex, b : Double) = a / b; }
 }
 

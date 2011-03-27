@@ -581,9 +581,9 @@ object SparseArray extends SparseArrayOps {
 trait LowerPrioritySparseArrayOps {
   /** Set sparse array with corresponding values from another array. */
   implicit def OpSetSparseArraySparseArrayCast[V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
-  : BinaryUpdateOp[SparseArray[V1],SparseArray[V2],OpSet]
-  = new BinaryUpdateOp[SparseArray[V1],SparseArray[V2],OpSet] {
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  : CanSet[SparseArray[V1],SparseArray[V2]]
+  = new CanSet[SparseArray[V1],SparseArray[V2]] {
     def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
       var i = 0;
       while (i < a.length) {
@@ -595,9 +595,9 @@ trait LowerPrioritySparseArrayOps {
   
   /** Set sparse array with casted corresponding values from another array. */
   implicit def OpSetSparseArrayArrayCast[V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
-  : BinaryUpdateOp[SparseArray[V1],Array[V2],OpSet]
-  = new BinaryUpdateOp[SparseArray[V1],Array[V2],OpSet] {
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  : CanSet[SparseArray[V1],Array[V2]]
+  = new CanSet[SparseArray[V1],Array[V2]] {
     def apply(a : SparseArray[V1], b : Array[V2]) = {
       var i = 0;
       while (i < a.length) {
@@ -609,9 +609,9 @@ trait LowerPrioritySparseArrayOps {
   
   /** Set array to casted scalar. */
   implicit def OpSetSparseArrayScalarCast[V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
-  : BinaryUpdateOp[SparseArray[V1],V2,OpSet]
-  = new BinaryUpdateOp[SparseArray[V1],V2,OpSet] {
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  : CanSet[SparseArray[V1],V2]
+  = new CanSet[SparseArray[V1],V2] {
     def apply(a : SparseArray[V1], b : V2) = { 
       val v = cast(b);
       var i = 0;
@@ -629,6 +629,7 @@ trait LowPrioritySparseArrayOps {
   (implicit op : BinaryOp[V1,V2,O,V1], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[SparseArray[V1], SparseArray[V2], O]
   = new BinaryUpdateOp[SparseArray[V1], SparseArray[V2], O] {
+    def opType = op.opType;
     def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -641,8 +642,8 @@ trait LowPrioritySparseArrayOps {
   
   /** Set array with corresponding values from another array. */
   implicit def OpSetSparseArraySparseArray[V](implicit s : Scalar[V])
-  : BinaryUpdateOp[SparseArray[V],SparseArray[V],OpSet]
-  = new BinaryUpdateOp[SparseArray[V],SparseArray[V],OpSet] {
+  : CanSet[SparseArray[V],SparseArray[V]]
+  = new CanSet[SparseArray[V],SparseArray[V]] {
     def apply(a : SparseArray[V], b : SparseArray[V]) = { 
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -658,6 +659,7 @@ trait LowPrioritySparseArrayOps {
   (implicit op : BinaryOp[V1,V2,O,V1], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[SparseArray[V1], Array[V2], O]
   = new BinaryUpdateOp[SparseArray[V1], Array[V2], O] {
+    def opType = op.opType;
     def apply(a : SparseArray[V1], b : Array[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -670,8 +672,8 @@ trait LowPrioritySparseArrayOps {
   
   /** Set sparse array with corresponding values from another array. */
   implicit def OpSetSparseArrayArray[V](implicit s : Scalar[V])
-  : BinaryUpdateOp[SparseArray[V],Array[V],OpSet]
-  = new BinaryUpdateOp[SparseArray[V],Array[V],OpSet] {
+  : CanSet[SparseArray[V],Array[V]]
+  = new CanSet[SparseArray[V],Array[V]] {
     def apply(a : SparseArray[V], b : Array[V]) = { 
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -687,6 +689,7 @@ trait LowPrioritySparseArrayOps {
   (implicit op : BinaryOp[V1,V2,O,V1], s : Scalar[V2])
   : BinaryUpdateOp[SparseArray[V1], V2, O]
   = new BinaryUpdateOp[SparseArray[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : SparseArray[V1], b : V2) = {
       var i = 0;
       while (i < a.length) {
@@ -698,8 +701,8 @@ trait LowPrioritySparseArrayOps {
   
   /** Set sparse array with scalar. */
   implicit def OpSetSparseArrayScalar[V](implicit s : Scalar[V], dv : DefaultArrayValue[V])
-  : BinaryUpdateOp[SparseArray[V],V,OpSet]
-  = new BinaryUpdateOp[SparseArray[V],V,OpSet] {
+  : CanSet[SparseArray[V],V]
+  = new CanSet[SparseArray[V],V] {
     def apply(a : SparseArray[V], b : V) = {
       if (b == dv.value) {
         a.clear();
@@ -724,6 +727,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
   (implicit op : UnaryOp[V,O,RV], dv : DefaultArrayValue[RV], mf : Manifest[RV])
   : UnaryOp[SparseArray[V],O,SparseArray[RV]]
   = new UnaryOp[SparseArray[V],O,SparseArray[RV]] {
+    def opType = op.opType;
     def apply(a : SparseArray[V]) =
       a.map(op);
   }
@@ -736,6 +740,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
   (implicit op : BinaryOp[V1,V2,O,RV], s : Scalar[V2], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
   : BinaryOp[SparseArray[V1], V2, O, SparseArray[RV]]
   = new BinaryOp[SparseArray[V1], V2, O, SparseArray[RV]] {
+    def opType = op.opType;
     def apply(a : SparseArray[V1], b : V2) =
       a.map(v => op(v, b));
   }
@@ -744,6 +749,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
   (implicit op : BinaryOp[V1,V2,O,RV], s : Scalar[V1], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
   : BinaryOp[V1, SparseArray[V2], O, SparseArray[RV]]
   = new BinaryOp[V1, SparseArray[V2], O, SparseArray[RV]] {
+    def opType = op.opType;
     def apply(a : V1, b : SparseArray[V2]) =
       b.map(v => op(a, v));
   }
@@ -752,6 +758,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
   (implicit op : BinaryOp[V1,V2,O,RV], c : CompatibleShape[V1,V2], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
   : BinaryOp[SparseArray[V1],SparseArray[V2],O,SparseArray[RV]]
   = new BinaryOp[SparseArray[V1],SparseArray[V2],O,SparseArray[RV]] {
+    def opType = op.opType;
     def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
       // TODO: optimize
       if (try { op(a.default, b.default) == dv.value } catch { case _ => false; }) {
@@ -842,6 +849,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
    d2 : DefaultArrayValue[V2], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
   : BinaryOp[SparseArray[V1],Array[V2],O,SparseArray[RV]]
   = new BinaryOp[SparseArray[V1],Array[V2],O,SparseArray[RV]] {
+    def opType = op.opType;
     def apply(a : SparseArray[V1], b : Array[V2]) = {
       // TODO: optimize
       allToSparse(a, b);
@@ -887,6 +895,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
    d1 : DefaultArrayValue[V1], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
   : BinaryOp[Array[V1],SparseArray[V2],O,SparseArray[RV]]
   = new BinaryOp[Array[V1],SparseArray[V2],O,SparseArray[RV]] {
+    def opType = op.opType;
     def apply(a : Array[V1], b : SparseArray[V2]) = {
       // TODO: optimize
       allToSparse(a, b);
@@ -932,6 +941,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
   (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[SparseArray[V1], SparseArray[V2], O]
   = new BinaryUpdateOp[SparseArray[V1], SparseArray[V2], O] {
+    def opType = op.opType;
     def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -947,6 +957,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
   (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[SparseArray[V1], Array[V2], O]
   = new BinaryUpdateOp[SparseArray[V1], Array[V2], O] {
+    def opType = op.opType;
     def apply(a : SparseArray[V1], b : Array[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -962,6 +973,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
   (implicit op : BinaryUpdateOp[V1,V2,O], s : Scalar[V2])
   : BinaryUpdateOp[SparseArray[V1], V2, O]
   = new BinaryUpdateOp[SparseArray[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : SparseArray[V1], b : V2) = {
       var i = 0;
       while (i < a.length) {

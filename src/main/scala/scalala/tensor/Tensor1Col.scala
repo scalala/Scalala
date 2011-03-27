@@ -71,6 +71,7 @@ object Tensor1Col {
    bf : CanBuildTensorFrom[A, DThat, (K1,K2), RV, That])
   : BinaryOp[A,B,OpMulColVectorBy,That]
   = new BinaryOp[A,B,OpMulColVectorBy,That] {
+    override def opType = OpMulColVectorBy;
     override def apply(a : A, b : B) = {
       val builder = bf(a, dThat(a.domain.asInstanceOf[DA], b.domain.asInstanceOf[DB]));
       a.foreachNonZero((i,va) => b.foreachNonZero((j,vb) => builder((i,j)) = mul(va,vb)));

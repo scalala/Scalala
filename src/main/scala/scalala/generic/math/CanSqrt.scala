@@ -27,13 +27,16 @@ import collection.CanMapValues;
 import scalala.operators.{UnaryOp,OpType};
 
 trait OpSqrt extends OpType;
+object OpSqrt extends OpSqrt;
 
 /**
  * Constructiond delegate for sqrt(A).
  *
  * @author dramage
  */
-trait CanSqrt[-A,+RV] extends UnaryOp[A,OpSqrt,RV];
+trait CanSqrt[-A,+RV] extends UnaryOp[A,OpSqrt,RV] {
+  def opType = OpSqrt;
+}
 
 object CanSqrt {
   implicit object OpI extends CanSqrt[Int,Double] {

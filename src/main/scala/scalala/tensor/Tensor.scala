@@ -20,14 +20,13 @@
 package scalala;
 package tensor;
 
-import scalar.Scalar;
-
 import domain._;
 import generic.collection._;
 
 import mutable.TensorBuilder;
 
-import scalala.operators.{UnaryOp,BinaryOp,OpType};
+import scalala.operators._;
+import scalala.scalar.Scalar;
 
 /**
  * A Tensor is a map from keys A (with a domain) to numeric scalar values B.
@@ -540,8 +539,14 @@ object Tensor {
    bf : CanJoinValues[This,Tensor[K,V2],V1,V2,RV,That])
   : BinaryOp[This,Tensor[K,V2],Op,That]
   = new BinaryOp[This,Tensor[K,V2],Op,That] {
-    override def apply(a : This, b : Tensor[K,V2]) =
-      bf.joinAll(a, b, op);
+    override def opType = op.opType;
+    override def apply(a : This, b : Tensor[K,V2]) = {
+      if (op == OpMul || op == OpAdd || op == OpSub) {
+        bf.joinEitherNonZero(a, b, op)
+      } else {
+        bf.joinAll(a, b, op);
+      }
+    }
   }
 
   implicit def opTensorScalar[K,V1,V2,Op<:OpType,RV,This,That]
@@ -551,8 +556,14 @@ object Tensor {
    s : Scalar[V2])
   : BinaryOp[This,V2,Op,That]
   = new BinaryOp[This,V2,Op,That] {
-    override def apply(a : This, b : V2) =
-      bf.map(a, v => op(v, b));
+    override def opType = op.opType;
+    override def apply(a : This, b : V2) = {
+      if (op == OpMul && !s.isNaN(b)) {
+        bf.mapNonZero(a, v => op(v, b));
+      } else {
+        bf.map(a, v => op(v, b));
+      }
+    }
   }
 
   implicit def opScalarTensor[K,V1,V2,Op<:OpType,RV,This,That]
@@ -562,8 +573,14 @@ object Tensor {
    s : Scalar[V1])
   : BinaryOp[V1,This,Op,That]
   = new BinaryOp[V1,This,Op,That] {
-    override def apply(a : V1, b : This) =
-      bf.map(b, v => op(a, v));
+    override def opType = op.opType;
+    override def apply(a : V1, b : This) = {
+      if (op == OpMul && !s.isNaN(a)) {
+        bf.mapNonZero(b, v => op(a, v));
+      } else {
+        bf.map(b, v => op(a, v));
+      }
+    }
   }
 }
 

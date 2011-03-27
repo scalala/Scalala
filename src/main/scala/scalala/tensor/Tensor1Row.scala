@@ -68,6 +68,7 @@ object Tensor1Row {
   (implicit mul : BinaryOp[V1,V2,OpMul,RV], add : BinaryOp[RV,RV,OpAdd,RV], scalar : Scalar[RV])
   : BinaryOp[Tensor1Row[K,V1],Tensor1Col[K,V2],OpMulRowVectorBy,RV]
   = new BinaryOp[Tensor1Row[K,V1],Tensor1Col[K,V2],OpMulRowVectorBy,RV] {
+    override def opType = OpMulRowVectorBy;
     override def apply(a : Tensor1Row[K,V1], b : Tensor1Col[K,V2]) =
       a dot b;
   }
@@ -80,6 +81,7 @@ object Tensor1Row {
    bf : CanBuildTensorFrom[ThisA,D2,K2,RV,That])
   : BinaryOp[ThisA,ThisB,OpMulRowVectorBy,That]
   = new BinaryOp[ThisA,ThisB,OpMulRowVectorBy,That] {
+    override def opType = OpMulRowVectorBy;
     override def apply(a : ThisA, b : ThisB) = {
       val domain = b.domain.asInstanceOf[Domain2[_,_]]._2.asInstanceOf[D2];
       val builder : mutable.TensorBuilder[K2,RV,That] = bf(a, domain);
