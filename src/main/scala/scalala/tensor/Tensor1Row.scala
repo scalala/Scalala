@@ -62,6 +62,7 @@ object Tensor1Row {
   extends Tensor1Proxy[K,V,Tensor1Col[K,V]] with Tensor1Row[K,V]
   with Tensor1Like[K,V,Domain1[K],View[K,V]] {
     override def repr : View[K,V] = this;
+    override def t : Tensor1Col[K,V] = inner;
   }
   
   implicit def canMulTensor1RowByCol[K,V1,V2,RV]
