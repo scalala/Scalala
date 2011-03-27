@@ -44,11 +44,3 @@ object CanGetDomain {
   }
 }
 
-/**
- * Marker for being able to get the domain (keys) of a collection.
- *
- * @author dramage
- */
-trait CanGetProduct2Domain[-Coll, @specialized(Int,Long) K1, @specialized(Int,Long) K2] {
-  def apply(coll : Coll) : Product2Domain[K1,K2]
-}

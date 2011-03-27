@@ -25,7 +25,7 @@ import domain._;
 
 import scalala.generic.collection._;
 import scalala.scalar.Scalar;
-import scalala.operators.{BinaryOp,BinaryUpdateOp,OpType,OpSet,UnaryOp,OpCast};
+import scalala.operators.{BinaryOp,BinaryUpdateOp,OpType,UnaryOp,OpSet,CanCast};
 
 /**
  * Implementation trait for TensorLike.  Supports assigning,
@@ -95,7 +95,7 @@ trait Tensor
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
 extends tensor.Tensor[A,B] with TensorLike[A,B,IterableDomain[A],Tensor[A,B]];
 
-object Tensor extends TensorCompanion[Tensor] {
+object Tensor {
 
   /** Constructs an open-domain tensor seeded with the given values. */
   def apply[K,V:Scalar](values : (K,V)*) : Tensor[K,V] = {
@@ -169,6 +169,67 @@ object Tensor extends TensorCompanion[Tensor] {
       new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
   }
 
+  implicit def opUpdateTensorScalar[K,V1,V2,Op<:OpType]
+  (implicit op : BinaryOp[V1,V2,Op,V1], s : Scalar[V2])
+  : BinaryUpdateOp[Tensor[K,V1],V2,Op]
+  = new BinaryUpdateOp[Tensor[K,V1],V2,Op] {
+    override def opType = op.opType;
+    override def apply(a : Tensor[K,V1], b : V2) = {
+      a.transformValues(v => op(v, b));
+    }
+  }
+
+  implicit def opUpdateTensorTensor[K,V1,V2,Op<:OpType]
+  (implicit op : BinaryOp[V1,V2,Op,V1])
+  : BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],Op]
+  = new BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],Op] {
+    override def opType = op.opType;
+    override def apply(a : Tensor[K,V1], b : tensor.Tensor[K,V2]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => op(v,b(k)));
+    }
+  }
+  
+  implicit def opSetTensor[K,V] : BinaryUpdateOp[Tensor[K,V],tensor.Tensor[K,V],OpSet]
+  = new BinaryUpdateOp[Tensor[K,V],tensor.Tensor[K,V],OpSet] {
+    def opType = OpSet;
+    override def apply(a : Tensor[K,V], b : tensor.Tensor[K,V]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => b(k));
+    }
+  }
+  
+  implicit def opSetTensorCast[K,V1,V2](implicit cast : CanCast[V2,V1])
+  : BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],OpSet]
+  = new BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],OpSet] {
+    def opType = OpSet;
+    override def apply(a : Tensor[K,V1], b : tensor.Tensor[K,V2]) = {
+      a.checkDomain(b.domain);
+      a.transform((k,v) => cast(b(k)));
+    }
+  }
+  
+  implicit def opSetScalar[K,V:Scalar]
+  : BinaryUpdateOp[Tensor[K,V],V,OpSet]
+  = new BinaryUpdateOp[Tensor[K,V],V,OpSet] {
+    def opType = OpSet;
+    override def apply(a : Tensor[K,V], b : V) = {
+      a.transform((k,v) => b);
+    }
+  }
+  
+  implicit def opSetScalarCast[K,V1,V2]
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  : BinaryUpdateOp[Tensor[K,V1],V2,OpSet]
+  = new BinaryUpdateOp[Tensor[K,V1],V2,OpSet] {
+    def opType = OpSet;
+    override def apply(a : Tensor[K,V1], b : V2) = {
+      val v = cast(b);
+      a.transform((k,v) => v);
+    }
+  }
+
+
   //
   // Primitive implementations
   // 
@@ -228,66 +289,5 @@ object Tensor extends TensorCompanion[Tensor] {
 //    override def checkKey(key : Int) =
 //      domain.contains(key);
 //  }
-}
-
-/**
- * Companion for mutable tensors.
- *
- * @author dramage
- */
-trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] extends tensor.TensorCompanion[Bound] {
-  implicit def opUpdateTensorScalar[K,V1,V2,Op<:OpType]
-  (implicit op : BinaryOp[V1,V2,Op,V1], s : Scalar[V2])
-  : BinaryUpdateOp[Bound[K,V1],V2,Op]
-  = new BinaryUpdateOp[Bound[K,V1],V2,Op] {
-    override def apply(a : Bound[K,V1], b : V2) = {
-      a.transformValues(v => op(v, b));
-    }
-  }
-
-  implicit def opUpdateTensorTensor[K,V1,V2,Op<:OpType]
-  (implicit op : BinaryOp[V1,V2,Op,V1])
-  : BinaryUpdateOp[Bound[K,V1],tensor.Tensor[K,V2],Op]
-  = new BinaryUpdateOp[Bound[K,V1],tensor.Tensor[K,V2],Op] {
-    override def apply(a : Bound[K,V1], b : tensor.Tensor[K,V2]) = {
-      a.checkDomain(b.domain);
-      a.transform((k,v) => op(v,b(k)));
-    }
-  }
-  
-  implicit def opSetTensor[K,V] : BinaryUpdateOp[Bound[K,V],tensor.Tensor[K,V],OpSet]
-  = new BinaryUpdateOp[Bound[K,V],tensor.Tensor[K,V],OpSet] {
-    override def apply(a : Bound[K,V], b : tensor.Tensor[K,V]) = {
-      a.checkDomain(b.domain);
-      a.transform((k,v) => b(k));
-    }
-  }
-  
-  implicit def opSetTensorCast[K,V1,V2](implicit cast : UnaryOp[V2,OpCast,V1])
-  : BinaryUpdateOp[Bound[K,V1],tensor.Tensor[K,V2],OpSet]
-  = new BinaryUpdateOp[Bound[K,V1],tensor.Tensor[K,V2],OpSet] {
-    override def apply(a : Bound[K,V1], b : tensor.Tensor[K,V2]) = {
-      a.checkDomain(b.domain);
-      a.transform((k,v) => cast(b(k)));
-    }
-  }
-  
-  implicit def opSetScalar[K,V:Scalar]
-  : BinaryUpdateOp[Bound[K,V],V,OpSet]
-  = new BinaryUpdateOp[Bound[K,V],V,OpSet] {
-    override def apply(a : Bound[K,V], b : V) = {
-      a.transform((k,v) => b);
-    }
-  }
-  
-  implicit def opSetScalarCast[K,V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
-  : BinaryUpdateOp[Bound[K,V1],V2,OpSet]
-  = new BinaryUpdateOp[Bound[K,V1],V2,OpSet] {
-    override def apply(a : Bound[K,V1], b : V2) = {
-      val v = cast(b);
-      a.transform((k,v) => v);
-    }
-  }
 }
 

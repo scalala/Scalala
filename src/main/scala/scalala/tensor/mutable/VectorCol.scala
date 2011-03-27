@@ -35,7 +35,11 @@ import scalala.operators._;
  */
 trait VectorColLike[@specialized(Int,Long,Float,Double) V, +This<:VectorCol[V]]
 extends tensor.VectorColLike[V,This]
-with Tensor1ColLike[Int,V,IndexDomain,This] with VectorLike[V,This];
+with Tensor1ColLike[Int,V,IndexDomain,This] with VectorLike[V,This] {
+
+  override def t : VectorRow[V] =
+    new VectorRow.View[V](repr);
+}
 
 /**
  * Mutable tensor.VectorCol.
@@ -46,33 +50,10 @@ trait VectorCol[@specialized(Int,Long,Float,Double) V]
 extends tensor.VectorCol[V] with Tensor1Col[Int,V] with Vector[V]
 with VectorColLike[V,VectorCol[V]];
 
-object VectorCol extends VectorColCompanion[VectorCol] {
-  implicit def canTranspose[V] : UnaryOp[VectorCol[V],OpTranspose,VectorRow[V]]
-  = new UnaryOp[VectorCol[V],OpTranspose,VectorRow[V]] {
-    override def apply(col : VectorCol[V]) =
-      new VectorRow.View[V](col);
-  }
-
+object VectorCol {
   class View[V](override val inner : Vector[V])
   extends VectorProxy[V,Vector[V]] with tensor.VectorProxy[V,Vector[V]] with VectorCol[V] with VectorLike[V,View[V]] {
     override def repr : View[V] = this;
   }
-}
-
-trait VectorColCompanion[Bound[V]<:VectorCol[V]]
-extends tensor.VectorColCompanion[Bound] with VectorCompanion[Bound] {
-  /** Tighten bound on super to be a mutable in return value. */
-  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : BinaryOp[V1,V2,OpMul,RV], scalar : Scalar[RV])
-  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[BinaryOp[Bound[V1],tensor.VectorRow[V2],OpMulColVectorBy,Matrix[RV]]];
-
-//  /** Tighten bound on return value to be mutable. */
-//  override implicit def canAppendMatrixColumns[V]
-//  : CanAppendColumns[Bound[V],tensor.Matrix[V],Matrix[V]]
-//  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.Matrix[V], Matrix[V]]];
-//
-//  /** Tighten bound on return value to be mutable. */
-//  override implicit def canAppendVectorColumn[V]
-//  : CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]
-//  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[Bound[V],tensor.VectorCol[V],Matrix[V]]];
 }
 

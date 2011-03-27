@@ -96,24 +96,16 @@ self =>
     case that : Matrix[_] => true;
     case _ => false;
   }
+  
+  override def t : Matrix[B] =
+    new MatrixTranspose.Impl[B,Matrix[B]](repr);
 }
 
 trait Matrix[@specialized(Int,Long,Float,Double) B]
 extends Tensor2[Int,Int,B]
 with MatrixLike[B,Matrix[B]];
 
-object Matrix extends MatrixCompanion[Matrix] {
-  implicit def canTranspose[B:Scalar] : UnaryOp[Matrix[B],OpTranspose,Matrix[B]] =
-  new UnaryOp[Matrix[B],OpTranspose,Matrix[B]] {
-    override def apply(from : Matrix[B]) = {
-      if (from.isInstanceOf[MatrixTranspose[_,_]]) {
-        from.asInstanceOf[MatrixTranspose[_,_]].underlying.asInstanceOf[Matrix[B]]
-      } else {
-        new MatrixTranspose.Impl[B,Matrix[B]](from);
-      }
-    }
-  }
-
+object Matrix {
   implicit def canSliceRow[V:Scalar] : CanSliceRow[Matrix[V],Int,VectorRow[V]]
   = new CanSliceRow[Matrix[V],Int,VectorRow[V]] {
     override def apply(from : Matrix[V], row : Int) =
@@ -191,17 +183,15 @@ object Matrix extends MatrixCompanion[Matrix] {
 
     override val domain = TableDomain(keys1.length, keys2.length);
   }
-}
-
-trait MatrixCompanion[Bound[V]<:Matrix[V]]
-extends IndexedTensorCompanion[(Int,Int),Bound] {
+  
   implicit def canMulMatrixByCol[V1,V2,RV]
-  (implicit sr : CanSliceRow[Bound[V1],Int,VectorRow[V1]],
+  (implicit sr : CanSliceRow[Matrix[V1],Int,VectorRow[V1]],
    mul : BinaryOp[VectorRow[V1],VectorCol[V2],OpMulRowVectorBy,RV],
    scalar : Scalar[RV])
-  : BinaryOp[Bound[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] =
-  new BinaryOp[Bound[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] {
-    override def apply(a : Bound[V1], b : VectorCol[V2]) = {
+  : BinaryOp[Matrix[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] =
+  new BinaryOp[Matrix[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] {
+    override def opType = OpMulMatrixBy;
+    override def apply(a : Matrix[V1], b : VectorCol[V2]) = {
       val builder = a.newBuilder[Int,RV](IndexDomain(a.numRows));
       var i = 0;
       while (i < a.numRows) {
@@ -213,13 +203,14 @@ extends IndexedTensorCompanion[(Int,Int),Bound] {
   }
 
   implicit def canMulMatrixByMatrix[V1,V2,RV]
-  (implicit sr : CanSliceRow[Bound[V1],Int,VectorRow[V1]],
+  (implicit sr : CanSliceRow[Matrix[V1],Int,VectorRow[V1]],
    sc : CanSliceCol[Matrix[V2],Int,VectorCol[V2]],
    mul : BinaryOp[VectorRow[V1],VectorCol[V2],OpMulRowVectorBy,RV],
    scalar : Scalar[RV])
-  : BinaryOp[Bound[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] =
-  new BinaryOp[Bound[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] {
-    override def apply(a : Bound[V1], b : Matrix[V2]) = {
+  : BinaryOp[Matrix[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] =
+  new BinaryOp[Matrix[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] {
+    override def opType = OpMulMatrixBy;
+    override def apply(a : Matrix[V1], b : Matrix[V2]) = {
       val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows, b.numCols));
       var i = 0;
       while (i < a.numRows) {

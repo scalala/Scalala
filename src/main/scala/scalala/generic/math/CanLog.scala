@@ -32,13 +32,16 @@ import scalala.operators.{UnaryOp,OpType};
  * @author dramage
  */
 trait OpLog extends operators.OpType;
+object OpLog extends OpLog;
 
 /**
  * Constructiond delegate for log(A).
  * 
  * @author dramage
  */
-trait CanLog[-A,+RV] extends UnaryOp[A,OpLog,RV];
+trait CanLog[-A,+RV] extends UnaryOp[A,OpLog,RV] {
+  def opType = OpLog;
+}
 
 object CanLog {
   implicit object OpI extends CanLog[Int,Double] {

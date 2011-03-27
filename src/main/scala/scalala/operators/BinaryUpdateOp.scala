@@ -31,24 +31,27 @@ import scalala.scalar.Scalar;
  */
 @implicitNotFound(msg="Could not find a way to ${O} ${B} into ${A}")
 trait BinaryUpdateOp[@specialized -A, @specialized -B, O<:OpType]
-extends ((A,B) => Unit);
+extends ((A,B) => Unit) {
+  def opType : O;
+}
 
 /**
  * Very low priority implicits.
  *
  * @author dramage
  */
-trait LowerPriorityBinaryUpdateOpImplicits {
+trait BinaryUpdateOpImplicitsLevel0 {
 
   //
   // Seqs
   //
 
   /** Set mutable seq with corresponding value from another seq. */  
-  implicit def OpSetSeqSeqCast[V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  implicit def CanSetSeqSeqCast[V1,V2]
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
   : BinaryUpdateOp[scala.collection.mutable.Seq[V1], scala.collection.Seq[V2], OpSet]
   = new BinaryUpdateOp[scala.collection.mutable.Seq[V1], scala.collection.Seq[V2], OpSet] {
+    def opType = OpSet;
     def apply(a : scala.collection.mutable.Seq[V1], b : scala.collection.Seq[V2]) = {
       var i = 0;
       for (v <- b) {
@@ -60,9 +63,10 @@ trait LowerPriorityBinaryUpdateOpImplicits {
 
   /** Set mutable seq with cast scalar. */  
   implicit def OpSetSeqScalarCast[V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
   : BinaryUpdateOp[scala.collection.mutable.Seq[V1], V2, OpSet]
   = new BinaryUpdateOp[scala.collection.mutable.Seq[V1], V2, OpSet] {
+    def opType = OpSet;
     def apply(a : scala.collection.mutable.Seq[V1], b : V2) = {
       val v = cast(b);
       var i = 0;
@@ -79,9 +83,10 @@ trait LowerPriorityBinaryUpdateOpImplicits {
   
   /** Set mutable map to cast values from another map. */
   implicit def OpSetMapMapCast[K,V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
   : BinaryUpdateOp[scala.collection.mutable.Map[K,V1], scala.collection.Map[K,V2], OpSet]
   = new BinaryUpdateOp[scala.collection.mutable.Map[K,V1], scala.collection.Map[K,V2], OpSet] {
+    def opType = OpSet;
     def apply(a : scala.collection.mutable.Map[K,V1], b : scala.collection.Map[K,V2]) = {
       for (k <- a.keySet) {
         a(k) = cast(b.getOrElse(k, s2.zero));
@@ -96,9 +101,10 @@ trait LowerPriorityBinaryUpdateOpImplicits {
 
   /** Set mutable map to cast scalar. */
   implicit def OpSetMapScalarCast[K,V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
   : BinaryUpdateOp[scala.collection.mutable.Map[K,V1], V2, OpSet]
   = new BinaryUpdateOp[scala.collection.mutable.Map[K,V1], V2, OpSet] {
+    def opType = OpSet;
     def apply(a : scala.collection.mutable.Map[K,V1], b : V2) = {
       val v = cast(b);
       for (k <- a.keySet) {
@@ -113,9 +119,10 @@ trait LowerPriorityBinaryUpdateOpImplicits {
   
   /** Set array with casted values from another array. */
   implicit def OpSetArrayArrayCast[V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
-  : BinaryUpdateOp[Array[V1],Array[V2],OpSet]
-  = new BinaryUpdateOp[Array[V1],Array[V2],OpSet] {
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  : BinaryUpdateOp[Array[V1],Array[V2], OpSet]
+  = new BinaryUpdateOp[Array[V1],Array[V2], OpSet] {
+    def opType = OpSet;
     def apply(a : Array[V1], b : Array[V2]) = {
       var i = 0;
       while (i < a.length) {
@@ -127,9 +134,10 @@ trait LowerPriorityBinaryUpdateOpImplicits {
   
   /** Set array with casted scalar. */
   implicit def OpSetArrayScalarCast[V1,V2]
-  (implicit cast : UnaryOp[V2,OpCast,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
   : BinaryUpdateOp[Array[V1],V2,OpSet]
   = new BinaryUpdateOp[Array[V1],V2,OpSet] {
+    def opType = OpSet;
     def apply(a : Array[V1], b : V2) = { 
       val v = cast(b);
       var i = 0;
@@ -146,7 +154,7 @@ trait LowerPriorityBinaryUpdateOpImplicits {
  *
  * @author dramage
  */
-trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImplicits {
+trait BinaryUpdateOpImplicitsLevel1 extends BinaryUpdateOpImplicitsLevel0 {
   
   //
   // Seqs
@@ -157,6 +165,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   (implicit op : BinaryOp[V1,V2,O,V1], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[scala.collection.mutable.Seq[V1], scala.collection.Seq[V2], O]
   = new BinaryUpdateOp[scala.collection.mutable.Seq[V1], scala.collection.Seq[V2], O] {
+    def opType = op.opType;
     def apply(a : scala.collection.mutable.Seq[V1], b : scala.collection.Seq[V2]) = {
       require(a.size == b.size, "Inputs must be the same length");
       var i = 0;
@@ -171,6 +180,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   implicit def OpSetSeqSeq[V](implicit s : Scalar[V])
   : BinaryUpdateOp[scala.collection.mutable.Seq[V], scala.collection.Seq[V], OpSet]
   = new BinaryUpdateOp[scala.collection.mutable.Seq[V], scala.collection.Seq[V], OpSet] {
+    def opType = OpSet;
     def apply(a : scala.collection.mutable.Seq[V], b : scala.collection.Seq[V]) = {
       require(a.size == b.size, "Inputs must be the same length");
       var i = 0;
@@ -184,8 +194,9 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   /** Update mutable seq with scalar. */
   implicit def OpUpdateSeqScalar[V1,V2,O<:OpType]
   (implicit op : BinaryOp[V1,V2,O,V1], s : Scalar[V2])
-  : BinaryUpdateOp[scala.collection.mutable.Seq[V1], V2, OpSet]
-  = new BinaryUpdateOp[scala.collection.mutable.Seq[V1], V2, OpSet] {
+  : BinaryUpdateOp[scala.collection.mutable.Seq[V1], V2, O]
+  = new BinaryUpdateOp[scala.collection.mutable.Seq[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : scala.collection.mutable.Seq[V1], b : V2) = {
       var i = 0;
       for (v <- a) {
@@ -199,6 +210,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   implicit def OpSetSeqScalar[V](implicit s : Scalar[V])
   : BinaryUpdateOp[scala.collection.mutable.Seq[V], V, OpSet]
   = new BinaryUpdateOp[scala.collection.mutable.Seq[V], V, OpSet] {
+    def opType = OpSet;
     def apply(a : scala.collection.mutable.Seq[V], b : V) = {
       var i = 0;
       while (i < a.length) {
@@ -218,6 +230,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   (implicit op : BinaryOp[V1,V2,O,V1], s1 : Scalar[V1], s2 : Scalar[V2])
   : BinaryUpdateOp[scala.collection.mutable.Map[K,V1], scala.collection.Map[K,V2], O]
   = new BinaryUpdateOp[scala.collection.mutable.Map[K,V1], scala.collection.Map[K,V2], O] {
+    def opType = op.opType;
     def apply(a : scala.collection.mutable.Map[K,V1], b : scala.collection.Map[K,V2]) = {
       for (k <- a.keySet) {
         a(k) = op(a(k), b.getOrElse(k,s2.zero));
@@ -234,6 +247,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   implicit def OpSetMapMap[K,V](implicit s : Scalar[V])
   : BinaryUpdateOp[scala.collection.mutable.Map[K,V], scala.collection.Map[K,V], OpSet]
   = new BinaryUpdateOp[scala.collection.mutable.Map[K,V], scala.collection.Map[K,V], OpSet] {
+    def opType = OpSet;
     def apply(a : scala.collection.mutable.Map[K,V], b : scala.collection.Map[K,V]) = {
       for (k <- a.keySet) {
         a(k) = b.getOrElse(k,s.zero);
@@ -251,6 +265,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   (implicit op : BinaryOp[V1,V2,O,V1], s : Scalar[V2])
   : BinaryUpdateOp[scala.collection.mutable.Map[K,V1], V2, O]
   = new BinaryUpdateOp[scala.collection.mutable.Map[K,V1], V2, O] {
+    def opType = op.opType;
     def apply(a : scala.collection.mutable.Map[K,V1], b : V2) =
       a.transform((k,v) => op(v, b));
   }
@@ -259,6 +274,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   implicit def OpSetMapScalar[K,V](implicit s : Scalar[V])
   : BinaryUpdateOp[scala.collection.mutable.Map[K,V], V, OpSet]
   = new BinaryUpdateOp[scala.collection.mutable.Map[K,V], V, OpSet] {
+    def opType = OpSet;
     def apply(a : scala.collection.mutable.Map[K,V], b : V) = {
       for (k <- a.keySet) {
         a(k) = b;
@@ -275,6 +291,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   (implicit op : BinaryOp[V1,V2,O,V1], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[Array[V1], Array[V2], O]
   = new BinaryUpdateOp[Array[V1], Array[V2], O] {
+    def opType = op.opType;
     def apply(a : Array[V1], b : Array[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -289,6 +306,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   implicit def OpSetArrayArray[V](implicit s : Scalar[V])
   : BinaryUpdateOp[Array[V],Array[V],OpSet]
   = new BinaryUpdateOp[Array[V],Array[V],OpSet] {
+    def opType = OpSet;
     def apply(a : Array[V], b : Array[V]) = { 
       require(a.length == b.length, "Inputs must be the same length");
       System.arraycopy(b, 0, a, 0, a.length);
@@ -300,6 +318,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   (implicit op : BinaryOp[V1,V2,O,V1], s : Scalar[V2])
   : BinaryUpdateOp[Array[V1], V2, O]
   = new BinaryUpdateOp[Array[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : Array[V1], b : V2) = {
       var i = 0;
       while (i < a.length) {
@@ -313,6 +332,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   implicit def OpSetArrayScalar[V](implicit s : Scalar[V])
   : BinaryUpdateOp[Array[V],V,OpSet]
   = new BinaryUpdateOp[Array[V],V,OpSet] {
+    def opType = OpSet;
     def apply(a : Array[V], b : V) = { 
       var i = 0;
       while (i < a.length) {
@@ -323,7 +343,7 @@ trait LowPriorityBinaryUpdateOpImplicits extends LowerPriorityBinaryUpdateOpImpl
   }
 }
 
-object BinaryUpdateOp extends LowPriorityBinaryUpdateOpImplicits {
+object BinaryUpdateOp extends BinaryUpdateOpImplicitsLevel1 {
   
   //
   // Tuples
@@ -334,6 +354,7 @@ object BinaryUpdateOp extends LowPriorityBinaryUpdateOpImplicits {
    c1 : CompatibleShape[VA1,VB1], c2 : CompatibleShape[VA2,VB2])
   : BinaryUpdateOp[(VA1,VA2), (VB1,VB2), O]
   = new BinaryUpdateOp[(VA1,VA2), (VB1,VB2), O] {
+    def opType = op1.opType;
     def apply(a : (VA1,VA2), b : (VB1,VB2)) = {
       op1(a._1,b._1);
       op2(a._2,b._2);
@@ -345,6 +366,7 @@ object BinaryUpdateOp extends LowPriorityBinaryUpdateOpImplicits {
    s : Scalar[VB])
   : BinaryUpdateOp[(VA1,VA2), VB, O]
   = new BinaryUpdateOp[(VA1,VA2), VB, O] {
+    def opType = op1.opType;
     def apply(a : (VA1,VA2), b : VB) = {
       op1(a._1,b);
       op2(a._2,b);
@@ -360,6 +382,7 @@ object BinaryUpdateOp extends LowPriorityBinaryUpdateOpImplicits {
   (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[scala.collection.Seq[V1], scala.collection.Seq[V2], O]
   = new BinaryUpdateOp[scala.collection.Seq[V1], scala.collection.Seq[V2], O] {
+    def opType = op.opType;
     def apply(a : scala.collection.Seq[V1], b : scala.collection.Seq[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       for ((av,bv) <- (a.iterator zip b.iterator)) {
@@ -373,6 +396,7 @@ object BinaryUpdateOp extends LowPriorityBinaryUpdateOpImplicits {
   (implicit op : BinaryUpdateOp[V1,V2,O], s : Scalar[V2])
   : BinaryUpdateOp[scala.collection.Seq[V1], V2, O]
   = new BinaryUpdateOp[scala.collection.Seq[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : scala.collection.Seq[V1], b : V2) = {
       for (v <- a) {
         op(v, b);
@@ -390,6 +414,7 @@ object BinaryUpdateOp extends LowPriorityBinaryUpdateOpImplicits {
   (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[scala.collection.Map[K,V1], scala.collection.Map[K,V2], O]
   = new BinaryUpdateOp[scala.collection.Map[K,V1], scala.collection.Map[K,V2], O] {
+    def opType = op.opType;
     def apply(a : scala.collection.Map[K,V1], b : scala.collection.Map[K,V2]) = {
       for (k <- a.keySet) {
         op(a(k),b(k));
@@ -407,6 +432,7 @@ object BinaryUpdateOp extends LowPriorityBinaryUpdateOpImplicits {
   (implicit op : BinaryUpdateOp[V1,V2,O], s : Scalar[V2])
   : BinaryUpdateOp[scala.collection.Map[K,V1], V2, O]
   = new BinaryUpdateOp[scala.collection.Map[K,V1], V2, O] {
+    def opType = op.opType;
     def apply(a : scala.collection.Map[K,V1], b : V2) = {
       for (v <- a.values) {
         op(v,b);
@@ -424,6 +450,7 @@ object BinaryUpdateOp extends LowPriorityBinaryUpdateOpImplicits {
   (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
   : BinaryUpdateOp[Array[V1], Array[V2], O]
   = new BinaryUpdateOp[Array[V1], Array[V2], O] {
+    def opType = op.opType;
     def apply(a : Array[V1], b : Array[V2]) = {
       require(a.length == b.length, "Inputs must be the same length");
       var i = 0;
@@ -438,6 +465,7 @@ object BinaryUpdateOp extends LowPriorityBinaryUpdateOpImplicits {
   (implicit op : BinaryUpdateOp[V1,V2,O], s : Scalar[V2])
   : BinaryUpdateOp[Array[V1], V2, O]
   = new BinaryUpdateOp[Array[V1], V2, O] {
+    def opType = op.opType;
     def apply(a : Array[V1], b : V2) = {
       var i = 0;
       while (i < a.length) {

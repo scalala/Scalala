@@ -65,7 +65,7 @@ with TensorSliceLike[A1, IterableDomain[A1], A2, IterableDomain[A2], B, Coll, Te
 
 }
 
-object TensorSlice extends TensorSliceCompanion[TensorSliceCompanion.Bound] {
+object TensorSlice {
   class FromKeyMap[A1, A2, B, +Coll<:Tensor[A1, B]]
   (override val underlying : Coll, keymap : scala.collection.Map[A2,A1])
   (override implicit val scalar : Scalar[B])
@@ -75,8 +75,3 @@ object TensorSlice extends TensorSliceCompanion[TensorSliceCompanion.Bound] {
   }
 }
 
-trait TensorSliceCompanion[Bound[K,V] <: TensorSlice[_,K,V,_]] extends TensorCompanion[Bound];
-
-object TensorSliceCompanion {
-  type Bound[K,V] = TensorSlice[_,K,V,_];
-}

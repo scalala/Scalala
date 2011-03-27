@@ -20,12 +20,12 @@
 package scalala;
 package tensor;
 
-import scalar.Scalar;
-
 import domain._;
 import mutable.TensorBuilder;
 
 import scalala.operators._;
+import scalala.scalar.Scalar;
+import scalala.generic.collection.CanBuildTensorFrom;
 
 /**
  * Implementation trait for a one-axis tensor shaped as a row.
@@ -34,16 +34,19 @@ import scalala.operators._;
  */
 trait Tensor1ColLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:IterableDomain[K] with DomainLike[K,D], +This<:Tensor1Col[K,V]]
+ +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1Col[K,V]]
 extends Tensor1Like[K,V,D,This] with operators.ColOps[This] { self =>
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = domain match {
     case that : IndexDomain =>
       mutable.Vector[V2](that).asBuilder;
-    case that : Product1Domain[_] =>
+    case that : Domain1[_] =>
       mutable.Tensor1Col[K2,V2](that).asBuilder;
     case _ =>
       super.newBuilder[K2,V2](domain);
   }
+  
+  def t : Tensor1Row[K,V] =
+    new Tensor1Row.View[K,V](repr);
 }
 
 /**
@@ -52,21 +55,28 @@ extends Tensor1Like[K,V,D,This] with operators.ColOps[This] { self =>
  * @author dramage
  */
 trait Tensor1Col[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
-extends Tensor1[K,V] with Tensor1ColLike[K,V,IterableDomain[K],Tensor1Col[K,V]];
+extends Tensor1[K,V] with Tensor1ColLike[K,V,Domain1[K],Tensor1Col[K,V]];
 
-object Tensor1Col extends Tensor1ColCompanion[Tensor1Col] {
-  implicit def canTranspose[K,V] : UnaryOp[Tensor1Col[K,V],OpTranspose,Tensor1Row[K,V]]
-  = new UnaryOp[Tensor1Col[K,V],OpTranspose,Tensor1Row[K,V]] {
-    override def apply(col : Tensor1Col[K,V]) =
-      new Tensor1Row.View[K,V](col);
-  }
-
+object Tensor1Col {
   class View[K,V](override val inner : Tensor1Row[K,V])
   extends Tensor1Proxy[K,V,Tensor1Row[K,V]] with Tensor1Col[K,V]
-  with Tensor1Like[K,V,IterableDomain[K],View[K,V]] {
+  with Tensor1Like[K,V,Domain1[K],View[K,V]] {
     override def repr : View[K,V] = this;
   }
+  
+  implicit def canMulTensor1ColByRow[K1,K2,V1,V2,RV,A,DA,B,DB,DThat,That]
+  (implicit viewA : A=>Tensor1Col[K1,V1], viewB : B=>Tensor1Row[K2,V2],
+   dA : DomainFor[A,DA], dB : DomainFor[B,DB], dThat : CanGetDomain2For[DA,DB,DThat],
+   mul : BinaryOp[V1,V2,OpMul,RV],
+   bf : CanBuildTensorFrom[A, DThat, (K1,K2), RV, That])
+  : BinaryOp[A,B,OpMulColVectorBy,That]
+  = new BinaryOp[A,B,OpMulColVectorBy,That] {
+    override def opType = OpMulColVectorBy;
+    override def apply(a : A, b : B) = {
+      val builder = bf(a, dThat(a.domain.asInstanceOf[DA], b.domain.asInstanceOf[DB]));
+      a.foreachNonZero((i,va) => b.foreachNonZero((j,vb) => builder((i,j)) = mul(va,vb)));
+      builder.result;
+    }
+  }
 }
-
-trait Tensor1ColCompanion[Bound[K,V]<:Tensor1Col[K,V]] extends Tensor1Companion[Bound];
 

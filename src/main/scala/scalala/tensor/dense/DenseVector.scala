@@ -92,7 +92,7 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
   }
 }
 
-object DenseVector extends mutable.VectorCompanion[DenseVector] with DenseVectorConstructors {
+object DenseVector extends DenseVectorConstructors {
 
 //  implicit object DenseVectorCanMapValuesFrom
 //  extends DomainMapCanMapValuesFrom[DenseVector,Int,Double,Double,DenseVector] {
@@ -141,20 +141,16 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
+  
+  override def t : DenseVectorCol[V] =
+    new DenseVectorCol(data)(scalar);
 }
 
-object DenseVectorRow extends mutable.VectorRowCompanion[DenseVectorRow] {
-  /** Transpose shares the same data. */
-  implicit def canTranspose[V] : UnaryOp[DenseVectorRow[V],OpTranspose,DenseVectorCol[V]]
-  = new UnaryOp[DenseVectorRow[V],OpTranspose,DenseVectorCol[V]] {
-    override def apply(row : DenseVectorRow[V]) =
-      new DenseVectorCol(row.data)(row.scalar);
+object DenseVectorRow {
+  def apply[@specialized(Int,Long,Float,Double) V:Scalar](domain : IndexDomain) = {
+    implicit val m = implicitly[Scalar[V]].manifest;
+    new DenseVectorRow(new Array[V](domain.size));
   }
-
-  /** Tighten bound on super to be dense in return value. */
-  override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
-  (implicit slice : CanSliceCol[Matrix[V2],Int,Col], mul : BinaryOp[DenseVectorRow[V1],Col,OpMulRowVectorBy,RV], scalar : Scalar[RV]) =
-     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[BinaryOp[DenseVectorRow[V1],tensor.Matrix[V2],OpMulRowVectorBy,DenseVectorRow[RV]]];
 }
 
 /**
@@ -173,19 +169,15 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
+  
+  override def t : DenseVectorRow[V] =
+    new DenseVectorRow(data)(scalar);
 }
 
-object DenseVectorCol extends mutable.VectorColCompanion[DenseVectorCol] with DenseVectorColConstructors {
-  /** Transpose shares the same data. */
-  implicit def canTranspose[V] : UnaryOp[DenseVectorCol[V],OpTranspose,DenseVectorRow[V]]
-  = new UnaryOp[DenseVectorCol[V],OpTranspose,DenseVectorRow[V]] {
-    override def apply(row : DenseVectorCol[V]) =
-      new DenseVectorRow(row.data)(row.scalar);
-  }
-
-  /** Tighten bound on super to be a dense in return value. */
-  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : BinaryOp[V1,V2,OpMul,RV], scalar : Scalar[RV])
-  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[BinaryOp[DenseVectorCol[V1],tensor.VectorRow[V2],OpMulColVectorBy,DenseMatrix[RV]]];
+object DenseVectorCol extends DenseVectorColConstructors {
+//  /** Tighten bound on super to be a dense in return value. */
+//  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : BinaryOp[V1,V2,OpMul,RV], scalar : Scalar[RV])
+//  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[BinaryOp[DenseVectorCol[V1],tensor.VectorRow[V2],OpMulColVectorBy,DenseMatrix[RV]]];
 
 //  /** Tighten bound on super to be a dense in return value. */
 //  override implicit def canAppendMatrixColumns[V]

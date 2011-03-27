@@ -38,6 +38,9 @@ extends tensor.MatrixTransposeLike[B,Coll,This]
 with Tensor2TransposeLike[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
 with MatrixLike[B,This] {
   override def domain = underlying.domain.transpose.asInstanceOf[TableDomain];
+  
+  override def t : Coll =
+    underlying;
 }
 
 /**

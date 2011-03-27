@@ -32,13 +32,16 @@ import scalala.operators.{UnaryOp,OpType};
  * @author dramage
  */
 trait OpExp extends operators.OpType;
+object OpExp extends OpExp;
 
 /**
  * Constructiond delegate for exp(A).
  *
  * @author dramage
  */
-trait CanExp[A,+RV] extends UnaryOp[A,OpExp,RV];
+trait CanExp[A,+RV] extends UnaryOp[A,OpExp,RV] {
+  def opType = OpExp;
+}
 
 object CanExp {
   implicit object OpI extends CanExp[Int,Double] {

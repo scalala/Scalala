@@ -92,7 +92,3 @@ trait Vector[@specialized(Int,Long,Float,Double) B]
 extends Tensor1[Int,B]
 with VectorLike[B,Vector[B]];
 
-object Vector extends VectorCompanion[Vector];
-
-
-trait VectorCompanion[Bound[V] <: Vector[V]] extends IndexedTensorCompanion[Int,Bound];

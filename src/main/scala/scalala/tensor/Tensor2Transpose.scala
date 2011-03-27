@@ -32,10 +32,10 @@ import domain._;
 trait Tensor2TransposeLike
 [@specialized(Int) A2, @specialized(Int) A1,
  @specialized(Int,Long,Float,Double,Boolean) B,
- +D2<:IterableDomain[A2] with DomainLike[A2,D2],
- +D1<:IterableDomain[A1] with DomainLike[A1,D1],
- +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
- +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
+ +D2<:Domain1[A2] with Domain1Like[A2,D2],
+ +D1<:Domain1[A1] with Domain1Like[A1,D1],
+ +T<:Domain2Like[A2,A1,D2,D1,D,T],
+ +D<:Domain2Like[A1,A2,D1,D2,T,D],
  +Coll<:Tensor2[A1,A2,B],
  +This<:Tensor2Transpose[A2,A1,B,Coll]]
 extends TensorSliceLike[(A1,A2),D,(A2,A1),T,B,Coll,This]
@@ -46,7 +46,8 @@ self =>
 
   override def apply(i : A2, j : A1) = underlying.apply(j, i);
 
-  def transpose = underlying;
+  override def t : Coll =
+    underlying;
 }
 
 /**
@@ -60,7 +61,7 @@ trait Tensor2Transpose
  +Coll <: Tensor2[A1,A2,B]]
 extends TensorSlice[(A1,A2),(A2,A1),B,Coll]
 with Tensor2[A2,A1,B]
-with Tensor2TransposeLike[A2,A1,B,IterableDomain[A2],IterableDomain[A1],Product2Domain[A2,A1],Product2Domain[A1,A2],Coll,Tensor2Transpose[A2,A1,B,Coll]];
+with Tensor2TransposeLike[A2,A1,B,Domain1[A2],Domain1[A1],Domain2[A2,A1],Domain2[A1,A2],Coll,Tensor2Transpose[A2,A1,B,Coll]];
 
 
 object Tensor2Transpose {

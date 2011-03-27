@@ -20,14 +20,13 @@
 package scalala;
 package tensor;
 
-import scalar.Scalar;
-
 import domain._;
 import generic.collection._;
 
 import mutable.TensorBuilder;
 
-import scalala.operators.{BinaryOp,OpType};
+import scalala.operators._;
+import scalala.scalar.Scalar;
 
 /**
  * A Tensor is a map from keys A (with a domain) to numeric scalar values B.
@@ -45,6 +44,8 @@ extends DomainFunction[A, B, D]
 with operators.NumericOps[This] {
 self =>
 
+  type Domain = D;
+
   protected type Self = This;
 
   /** Returns a pointer to this cast as an instance of This. */
@@ -61,11 +62,11 @@ self =>
   : TensorBuilder[NK,NV,Tensor[NK,NV]] = domain match {
     case that : IndexDomain =>
       mutable.Vector(that)(implicitly[Scalar[NV]]).asBuilder;
-    case that : Product1Domain[_] =>
+    case that : Domain1[_] =>
       mutable.Tensor1(that)(implicitly[Scalar[NV]]).asBuilder;
     case that : TableDomain =>
       mutable.Matrix(that)(implicitly[Scalar[NV]]).asBuilder;
-    case that : Product2Domain[_,_] =>
+    case that : Domain2[_,_] =>
       mutable.Tensor2(that)(implicitly[Scalar[NV]]).asBuilder;
       // TODO: add this in when we have a mutable.TensorN
 //    case that : ProductNDomain[_] =>
@@ -428,7 +429,7 @@ trait Tensor
 [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
 extends TensorLike[A, B, IterableDomain[A], Tensor[A, B]];
 
-object Tensor extends TensorCompanion[Tensor] {
+object Tensor {
 
   class Impl[A,B](values : Map[A,B])(implicit override val scalar : Scalar[B])
   extends Tensor[A,B] {
@@ -456,89 +457,129 @@ object Tensor extends TensorCompanion[Tensor] {
     override def apply(from : Tensor[A,B], keys : Seq[A]) =
       new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
   }
-}
 
-/**
- * Default instances of all capability traits for tensors bounded by
- * Bound.  These implementations use map and join to construct new
- * return values.
- *
- * @author dramage
- */
-trait TensorCompanion[Bound[K,V] <: Tensor[K,V]] {
-
-  implicit def canMapValues[K, V, RV:Scalar]
-  : CanMapValues[Bound[K,V],V,RV,Bound[K,RV]]
-  = new CanMapValues[Bound[K,V],V,RV,Bound[K,RV]] {
-    override def map(from : Bound[K,V], fn : (V=>RV)) = {
-      val builder = from.newBuilder[K,RV](from.domain);
+  implicit def canMapValues[K, V, RV, This, D, That]
+  (implicit view : This=>Tensor[K,V], d : DomainFor[This,D],
+   bf : CanBuildTensorFrom[This, D, K, RV, That],
+   s : Scalar[RV])
+  : CanMapValues[This,V,RV,That]
+  = new CanMapValues[This,V,RV,That] {
+    override def map(from : This, fn : (V=>RV)) = {
+      val builder = bf(from, from.domain.asInstanceOf[D]);
       from.foreach((k,v) => builder(k) = fn(v));
-      builder.result.asInstanceOf[Bound[K,RV]];
+      builder.result;
     }
-    override def mapNonZero(from : Bound[K,V], fn : (V=>RV)) = {
-      val builder = from.newBuilder[K,RV](from.domain);
+    override def mapNonZero(from : This, fn : (V=>RV)) = {
+      val builder = bf(from, from.domain.asInstanceOf[D]);
       from.foreachNonZero((k,v) => builder(k) = fn(v));
-      builder.result.asInstanceOf[Bound[K,RV]];
+      builder.result;
     }
   }
 
-  implicit def canMapKeyValuePairs[K, V, RV:Scalar]
-  : CanMapKeyValuePairs[Bound[K,V],K,V,RV,Bound[K,RV]]
-  = new CanMapKeyValuePairs[Bound[K,V],K,V,RV,Bound[K,RV]] {
-    override def map(from : Bound[K,V], fn : ((K,V)=>RV)) = {
-      val builder = from.newBuilder[K,RV](from.domain);
+  implicit def canMapKeyValuePairs[K, V, RV, This, D, That]
+  (implicit view : This=>Tensor[K,V], d : DomainFor[This,D],
+   bf : CanBuildTensorFrom[This, D, K, RV, That],
+   s : Scalar[RV])
+  : CanMapKeyValuePairs[This,K,V,RV,That]
+  = new CanMapKeyValuePairs[This,K,V,RV,That] {
+    override def map(from : This, fn : ((K,V)=>RV)) = {
+      val builder = bf(from, from.domain.asInstanceOf[D]);
       from.foreach((k,v) => builder(k) = fn(k,v));
-      builder.result.asInstanceOf[Bound[K,RV]];
+      builder.result;
     }
-    override def mapNonZero(from : Bound[K,V], fn : ((K,V)=>RV)) = {
-      val builder = from.newBuilder[K,RV](from.domain);
+    override def mapNonZero(from : This, fn : ((K,V)=>RV)) = {
+      val builder = bf(from, from.domain.asInstanceOf[D]);
       from.foreachNonZero((k,v) => builder(k) = fn(k,v));
-      builder.result.asInstanceOf[Bound[K,RV]];
+      builder.result;
     }
   }
 
-  implicit def canJoin[K, V1, V2, RV:Scalar]
-  : CanJoinValues[Bound[K,V1], Tensor[K,V2], V1, V2, RV, Bound[K,RV]] =
-  new CanJoinValues[Bound[K,V1], Tensor[K,V2], V1, V2, RV, Bound[K,RV]] {
-    override def joinAll(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+  implicit def canJoin[K, V1, V2, RV, This, D, That]
+  (implicit view : This=>Tensor[K,V1], d : DomainFor[This,D],
+   bf : CanBuildTensorFrom[This, D, K, RV, That],
+   s : Scalar[RV])
+  : CanJoinValues[This, Tensor[K,V2], V1, V2, RV, That] =
+  new CanJoinValues[This, Tensor[K,V2], V1, V2, RV, That] {
+    override def joinAll(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
-      val builder = a.newBuilder[K,RV](a.domain union b.domain);
+      val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
       a.foreach((k,aV) => builder(k) = fn(aV,b(k)));
-      builder.result.asInstanceOf[Bound[K,RV]];
+      builder.result;
     }
 
-    override def joinEitherNonZero(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+    override def joinEitherNonZero(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
-      val builder = a.newBuilder[K,RV](a.domain union b.domain);
+      val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
       a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
       b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
-      builder.result.asInstanceOf[Bound[K,RV]];
+      builder.result;
     }
 
-    override def joinBothNonZero(a : Bound[K,V1], b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+    override def joinBothNonZero(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
-      val builder = a.newBuilder[K,RV](a.domain union b.domain);
+      val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
       a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-      builder.result.asInstanceOf[Bound[K,RV]];
+      builder.result;
     }
   }
 
-  implicit def opTensorScalar[K,V1,V2,Op<:OpType,RV,That]
-  (implicit op : BinaryOp[V1,V2,Op,RV], bf : CanMapValues[Bound[K,V1],V1,RV,That], s : Scalar[V2])
-  : BinaryOp[Bound[K,V1],V2,Op,That] = new BinaryOp[Bound[K,V1],V2,Op,That] {
-    override def apply(a : Bound[K,V1], b : V2) = {
-      a.asInstanceOf[TensorLike[K,V1,_,Bound[K,V1]]].mapValues(v => op(v, b))(bf);
+//  implicit def opTensorUnary[K,V,RV,Op<:OpType,This,That]
+//  (implicit view : This=>Tensor[K,V],
+//   op : UnaryOp[V,Op,RV],
+//   bf : CanMapValues[This,V,RV,That])
+//  : UnaryOp[This,Op,That]
+//  = new UnaryOp[This,Op,That] {
+//    override def apply(from : This) =
+//      bf.map(from, op);
+//  }
+
+  implicit def opTensorTensor[K,V1,V2,Op<:OpType,RV,This,That]
+  (implicit view : This=>Tensor[K,V1],
+   op : BinaryOp[V1,V2,Op,RV],
+   bf : CanJoinValues[This,Tensor[K,V2],V1,V2,RV,That])
+  : BinaryOp[This,Tensor[K,V2],Op,That]
+  = new BinaryOp[This,Tensor[K,V2],Op,That] {
+    override def opType = op.opType;
+    override def apply(a : This, b : Tensor[K,V2]) = {
+      if (op == OpMul || op == OpAdd || op == OpSub) {
+        bf.joinEitherNonZero(a, b, op)
+      } else {
+        bf.joinAll(a, b, op);
+      }
     }
   }
 
-  implicit def opTensorTensor[K,V1,V2,Op<:OpType,RV,That]
-  (implicit op : BinaryOp[V1,V2,Op,RV], bf : CanJoinValues[Bound[K,V1],Bound[K,V2],V1,V2,RV,That])
-  : BinaryOp[Bound[K,V1],Bound[K,V2],Op,That] = new BinaryOp[Bound[K,V1],Bound[K,V2],Op,That] {
-    override def apply(a : Bound[K,V1], b : Bound[K,V2]) = {
-      val aLike = a.asInstanceOf[Tensor[K,V1]];
-      val bLike = b.asInstanceOf[Tensor[K,V2]];
-      val bfLike = bf.asInstanceOf[CanJoinValues[Tensor[K,V1],Tensor[K,V2],V1,V2,RV,That]];
-      (a join b)(op)(bfLike);
+  implicit def opTensorScalar[K,V1,V2,Op<:OpType,RV,This,That]
+  (implicit view : This=>Tensor[K,V1],
+   op : BinaryOp[V1,V2,Op,RV],
+   bf : CanMapValues[This,V1,RV,That],
+   s : Scalar[V2])
+  : BinaryOp[This,V2,Op,That]
+  = new BinaryOp[This,V2,Op,That] {
+    override def opType = op.opType;
+    override def apply(a : This, b : V2) = {
+      if (op == OpMul && !s.isNaN(b)) {
+        bf.mapNonZero(a, v => op(v, b));
+      } else {
+        bf.map(a, v => op(v, b));
+      }
+    }
+  }
+
+  implicit def opScalarTensor[K,V1,V2,Op<:OpType,RV,This,That]
+  (implicit view : This=>Tensor[K,V2],
+   op : BinaryOp[V1,V2,Op,RV],
+   bf : CanMapValues[This,V2,RV,That],
+   s : Scalar[V1])
+  : BinaryOp[V1,This,Op,That]
+  = new BinaryOp[V1,This,Op,That] {
+    override def opType = op.opType;
+    override def apply(a : V1, b : This) = {
+      if (op == OpMul && !s.isNaN(a)) {
+        bf.mapNonZero(b, v => op(a, v));
+      } else {
+        bf.map(b, v => op(a, v));
+      }
     }
   }
 }

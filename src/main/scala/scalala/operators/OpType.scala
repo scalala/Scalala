@@ -21,6 +21,8 @@
 package scalala;
 package operators;
 
+import scalala.scalar.Scalar;
+
 /**
  * Marker trait for some operation, be it UnaryOp, BinaryOp, or
  * BinaryUpdateOp.
@@ -35,6 +37,7 @@ trait OpType;
  * @author dramage
  */
 trait OpAdd extends OpType;
+object OpAdd extends OpAdd;
 
 /**
  * Type marker for BinaryOp A :- B and BinaryUpdateOp A :-= B.
@@ -42,6 +45,7 @@ trait OpAdd extends OpType;
  * @author dramage
  */
 trait OpSub extends OpType;
+object OpSub extends OpSub;
 
 /**
  * Type marker for BinaryOp A :* B and BinaryUpdateOp A :*= B.
@@ -49,6 +53,7 @@ trait OpSub extends OpType;
  * @author dramage
  */
 trait OpMul extends OpType;
+object OpMul extends OpMul;
 
 /**
  * Type marker for BinaryOp A :/ B and BinaryUpdateOp A:/= B.
@@ -56,6 +61,7 @@ trait OpMul extends OpType;
  * @author dramage
  */
 trait OpDiv extends OpType;
+object OpDiv extends OpDiv;
 
 /**
  * Type marker for BinaryOp A :% B and BinaryUpdateOp A:%= B.
@@ -63,6 +69,7 @@ trait OpDiv extends OpType;
  * @author dramage
  */
 trait OpMod extends OpType;
+object OpMod extends OpMod;
 
 /**
  * Type marker for BinaryOp A :^ B and BinaryUpdateOp A:^= B.
@@ -70,6 +77,7 @@ trait OpMod extends OpType;
  * @author dramage
  */
 trait OpPow extends OpType;
+object OpPow extends OpPow;
 
 /**
  * Type marker for BinaryOp A :&lt; B.
@@ -77,6 +85,7 @@ trait OpPow extends OpType;
  * @author dramage
  */
 trait OpLT  extends OpType;
+object OpLT  extends OpLT;
 
 /**
  * Type marker for BinaryOp A :&lt;= B.
@@ -84,6 +93,7 @@ trait OpLT  extends OpType;
  * @author dramage
  */
 trait OpLTE extends OpType;
+object OpLTE extends OpLTE;
 
 /**
  * Type marker for BinaryOp A :&gt; B.
@@ -91,6 +101,7 @@ trait OpLTE extends OpType;
  * @author dramage
  */
 trait OpGT  extends OpType;
+object OpGT  extends OpGT;
 
 /**
  * Type marker for BinaryOp A :&gt;= B.
@@ -98,6 +109,7 @@ trait OpGT  extends OpType;
  * @author dramage
  */
 trait OpGTE extends OpType;
+object OpGTE extends OpGTE;
 
 /**
  * Type marker for BinaryOp A :== B.
@@ -105,6 +117,7 @@ trait OpGTE extends OpType;
  * @author dramage
  */
 trait OpEq  extends OpType;
+object OpEq  extends OpEq;
 
 /**
  * Type marker for BinaryOp A :!= B.
@@ -112,6 +125,7 @@ trait OpEq  extends OpType;
  * @author dramage
  */
 trait OpNe  extends OpType;
+object OpNe  extends OpNe;
 
 /**
  * Type marker for BinaryUpdateOp A := B.
@@ -119,6 +133,7 @@ trait OpNe  extends OpType;
  * @author dramage
  */
 trait OpSet extends OpType;
+object OpSet extends OpSet;
 
 /**
  * Type marker for UnaryOp -A.
@@ -126,13 +141,7 @@ trait OpSet extends OpType;
  * @author dramage
  */
 trait OpNeg extends OpType;
-
-/**
- * Type marker for UnaryOp casting a value to another vaule.
- *
- * @author dramage
- */
-trait OpCast extends OpType;
+object OpNeg extends OpNeg;
 
 /**
  * Type marker for UnaryOp to take the transpose of A.
@@ -140,6 +149,7 @@ trait OpCast extends OpType;
  * @author dramage
  */
 trait OpTranspose extends OpType;
+object OpTranspose extends OpTranspose;
 
 /**
  * Type marker for BinaryOp A * B when A is a row.
@@ -147,6 +157,7 @@ trait OpTranspose extends OpType;
  * @author dramage
  */
 trait OpMulRowVectorBy extends OpType;
+object OpMulRowVectorBy extends OpMulRowVectorBy;
 
 /**
  * Type marker for BinaryOp A * B when A is a column.
@@ -154,6 +165,7 @@ trait OpMulRowVectorBy extends OpType;
  * @author dramage
  */
 trait OpMulColVectorBy extends OpType;
+object OpMulColVectorBy extends OpMulColVectorBy;
 
 /**
  * Type marker for BinaryOp A * B when A is a matrix.
@@ -161,6 +173,7 @@ trait OpMulColVectorBy extends OpType;
  * @author dramage
  */
 trait OpMulMatrixBy extends OpType;
+object OpMulMatrixBy extends OpMulMatrixBy;
 
 /**
  * Type marker for BinaryOp A \ B when A is a matrix.
@@ -168,4 +181,5 @@ trait OpMulMatrixBy extends OpType;
  * @author dramage
  */
 trait OpSolveMatrixBy extends OpType;
+object OpSolveMatrixBy extends OpSolveMatrixBy;
 

@@ -19,30 +19,32 @@
  */
 package scalala;
 package tensor;
-
-import domain._;
+package domain;
 
 /**
- * Implementation trait for a Tensor1 view of a slice of keys from a Tensor.
+ * Marker trait for statically getting the Domain2 for two
+ * input domains.
  *
  * @author dramage
  */
-trait Tensor1SliceLike
-[@specialized(Int,Long) K1, +D1<:IterableDomain[K1] with DomainLike[K1,D1],
- @specialized(Int,Long) K2, +D2<:Domain1[K2] with Domain1Like[K2,D2],
- @specialized(Int,Long,Float,Double,Boolean) V, +Coll<:Tensor[K1,V],
- +This<:Tensor1Slice[K1,K2,V,Coll]]
-extends TensorSliceLike[K1, D1, K2, D2, V, Coll, This]
-with Tensor1Like[K2, V, D2, This];
+trait CanGetDomain2For[-A,-B,RV] extends ((A,B) => RV);
 
-/**
- * A Tensor1 view of a slice of keys from a Tensor.
- *
- * @author dramage
- */
-trait Tensor1Slice
-[@specialized(Int,Long) K1, @specialized(Int,Long) K2,
- @specialized(Int,Long,Float,Double,Boolean) V, +Coll<:Tensor[K1,V]]
-extends TensorSlice[K1,K2,V,Coll] with Tensor1[K2,V]
-with Tensor1SliceLike[K1, IterableDomain[K1], K2, Domain1[K2], V, Coll, Tensor1Slice[K1, K2, V, Coll]];
+trait CanGetDomain2ForImplicitsLevel0 {
+  implicit def domainForGeneral[K1,K2]
+  : CanGetDomain2For[Domain1[K1],Domain1[K2],Domain2[K1,K2]]
+  = new CanGetDomain2For[Domain1[K1],Domain1[K2],Domain2[K1,K2]] {
+    def apply(a : Domain1[K1], b : Domain1[K2]) =
+      a.product[K2,Domain1[K2]](b);
+  }
+}
+
+trait CanGetDomain2ForImplicitsLevel1 extends CanGetDomain2ForImplicitsLevel0 {
+  implicit object DomainForIndexIndex 
+  extends CanGetDomain2For[IndexDomain,IndexDomain,TableDomain] {
+    override def apply(a : IndexDomain, b : IndexDomain) =
+      TableDomain(a.size, b.size);
+  }
+}
+
+object CanGetDomain2For extends CanGetDomain2ForImplicitsLevel1;
 

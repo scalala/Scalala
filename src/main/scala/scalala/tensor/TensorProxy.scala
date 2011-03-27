@@ -47,7 +47,8 @@ extends TensorLike[A,B,D,This] {
   
   override val scalar = inner.scalar;
 
-  override def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK]) : TensorBuilder[NK,NV,Tensor[NK,NV]] =
+  override def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK])
+  : TensorBuilder[NK,NV,Tensor[NK,NV]] =
     inner.newBuilder[NK,NV](domain);
 
   override def foreach[U](fn: (A,B) => U) : Unit =

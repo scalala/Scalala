@@ -21,9 +21,6 @@
 package scalala;
 package operators;
 
-import generic._;
-import generic.collection.{CanTranspose,CanAppendColumns};
-
 import scalala.scalar.Scalar;
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
@@ -180,9 +177,10 @@ trait ColOps[+This] extends NumericOps[This] {
   def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulColVectorBy,That]) : That =
     op(repr, b);
 
-  def t[TT>:This,That](implicit op : UnaryOp[TT,OpTranspose,That]) =
+  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
 }
+
 
 /**
  * Secialized shaped numeric operations for rows.
@@ -193,7 +191,7 @@ trait RowOps[+This] extends NumericOps[This] {
   def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulRowVectorBy,That]) : That =
     op(repr, b);
 
-  def t[TT>:This,That](implicit op : UnaryOp[TT,OpTranspose,That]) =
+  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
 }
 
@@ -209,108 +207,107 @@ trait MatrixOps[+This] extends NumericOps[This] {
   def \[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSolveMatrixBy,That]) =
     op.apply(repr,b);
 
-  def t[TT>:This,That](implicit op : UnaryOp[TT,OpTranspose,That]) =
+  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
 }
 
-/**
- * Specialized column and row tensor ops for wrapped data structures that
- * cannot directly inherit and distinguish between rows and columns in the
- * type system.  This class assumes unwrapped objects are columns and
- * wrapped ones are rows.
- *
- * @author dramage
- */
-trait WrappedColOps[+This] extends NumericOps[This] {
-  def *[TT>:This,B,That](b : WrappedRowOps[B])(implicit op : BinaryOp[TT,B,OpMulColVectorBy,That]) : That =
-    op(repr,b.column);
-
-  def t : WrappedRowOps[This] = WrappedRowOps(repr);
-}
-
-/**
- * A wrapped column tensor whose underyling collection is mutable.  This trait
- * should be used instead of mixing in "WrappedColOps with
- * MutableNumeriCollectionOps" directly, because .t needs to return an instance
- * of MutableRowOps insetad of RowOps.
- *
- * @author dramage
- */
-trait MutableWrappedColOps[+This] extends WrappedColOps[This] with MutableNumericOps[This] {
-  override def t : MutableWrappedRowOps[This] = MutableWrappedRowOps(repr);
-}
-
-
-/**
- * Secialized NumericOps with shaped operations taking A is a row.
- * Note that there is an inherent asymmetry between WrappedColumnTensorOps and
- * WrappedRowOps: because tensors are assumed to be columns until reshaped
- * (e.g. by calling .t), that class extends NumericOps[A].  This
- * class, by contrast, must preserve the fact that the base numeric operations
- * like plus must honor the row shape, and that the return result should also
- * be a row.  Hence this class extends NumericOps[WrappedRowOps[A]]
- * and provides implicit magic in the companion object to wrap the
- * corresponding construction delegates.
- *
- * @author dramage
- */
-trait WrappedRowOps[+This] extends NumericOps[WrappedRowOps[This]] {
-  override def repr : WrappedRowOps[This] = this;
-
-  def column : This;
-
-  def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulRowVectorBy,That]) : That =
-    op(this.column,b);
-
-  /** The transpose returns the underlying value, which assumed to be a column. */
-  def t : This = column;
-}
-
-object WrappedRowOps {
-  def apply[This](v : This) : WrappedRowOps[This] =
-    new WrappedRowOps[This] { override def column = v; }
-
-  class WrappedRowBinaryOp[A,-B,Op<:OpType,+That](implicit op : BinaryOp[A,B,Op,That])
-  extends BinaryOp[WrappedRowOps[A],WrappedRowOps[B],Op,WrappedRowOps[That]] {
-    override def apply(a : WrappedRowOps[A], b : WrappedRowOps[B]) =
-      WrappedRowOps(op(a.column,b.column));
-  }
-
-  implicit def unwrap[A,B,Op<:OpType,That](implicit op : BinaryOp[A,B,Op,That])
-  = new WrappedRowBinaryOp[A,B,Op,That];
-}
-
-/**
- * Specialized WrappedRowOps support for WrappedRows that have mutable
- * underlying collections.
- *
- * @author dramage
- */
-trait MutableWrappedRowOps[+This]
-extends WrappedRowOps[This] with MutableNumericOps[WrappedRowOps[This]];
-
-object MutableWrappedRowOps {
-  def apply[This](v : This) : MutableWrappedRowOps[This] =
-    new MutableWrappedRowOps[This] { override def column = v; }
-
-  class MutableWrappedRowBinaryOp[A,-B,Op<:OpType,+That](implicit op : BinaryOp[A,B,Op,That])
-  extends BinaryOp[MutableWrappedRowOps[A],WrappedRowOps[B],Op,MutableWrappedRowOps[That]] {
-    override def apply(a : MutableWrappedRowOps[A], b : WrappedRowOps[B]) =
-      MutableWrappedRowOps(op(a.column,b.column));
-  }
-
-  class MutableWrappedRowBinaryUpdateOp[A,-B,Op<:OpType](implicit op : BinaryUpdateOp[A,B,Op])
-  extends BinaryUpdateOp[MutableWrappedRowOps[A],WrappedRowOps[B],Op] {
-    override def apply(a : MutableWrappedRowOps[A], b : WrappedRowOps[B]) =
-      op(a.column, b.column);
-  }
-
-  implicit def unwrapBinaryOp[A,B,Op<:OpType,That](implicit op : BinaryOp[A,B,Op,That])
-  = new MutableWrappedRowBinaryOp[A,B,Op,That];
-
-  implicit def unwrapBinaryUpdateOp[A,B,Op<:OpType](implicit op : BinaryUpdateOp[A,B,Op])
-  = new MutableWrappedRowBinaryUpdateOp[A,B,Op];
-}
+// /**
+//  * Specialized column and row tensor ops for wrapped data structures that
+//  * cannot directly inherit and distinguish between rows and columns in the
+//  * type system.  This class assumes unwrapped objects are columns and
+//  * wrapped ones are rows.
+//  *
+//  * @author dramage
+//  */
+// trait WrappedColOps[+This] extends NumericOps[This] {
+//   def *[TT>:This,B,That](b : WrappedRowOps[B])(implicit op : BinaryOp[TT,B,OpMulColVectorBy,That]) : That =
+//     op(repr,b.column);
+// 
+//   def t : WrappedRowOps[This] = WrappedRowOps(repr);
+// }
+// 
+// /**
+//  * A wrapped column tensor whose underyling collection is mutable.  This trait
+//  * should be used instead of mixing in "WrappedColOps with
+//  * MutableNumeriCollectionOps" directly, because .t needs to return an instance
+//  * of MutableRowOps insetad of RowOps.
+//  *
+//  * @author dramage
+//  */
+// trait MutableWrappedColOps[+This] extends WrappedColOps[This] with MutableNumericOps[This] {
+//   override def t : MutableWrappedRowOps[This] = MutableWrappedRowOps(repr);
+// }
+// 
+// /**
+//  * Secialized NumericOps with shaped operations taking A is a row.
+//  * Note that there is an inherent asymmetry between WrappedColumnTensorOps and
+//  * WrappedRowOps: because tensors are assumed to be columns until reshaped
+//  * (e.g. by calling .t), that class extends NumericOps[A].  This
+//  * class, by contrast, must preserve the fact that the base numeric operations
+//  * like plus must honor the row shape, and that the return result should also
+//  * be a row.  Hence this class extends NumericOps[WrappedRowOps[A]]
+//  * and provides implicit magic in the companion object to wrap the
+//  * corresponding construction delegates.
+//  *
+//  * @author dramage
+//  */
+// trait WrappedRowOps[+This] extends NumericOps[WrappedRowOps[This]] {
+//   override def repr : WrappedRowOps[This] = this;
+// 
+//   def column : This;
+// 
+//   def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulRowVectorBy,That]) : That =
+//     op(this.column,b);
+// 
+//   /** The transpose returns the underlying value, which assumed to be a column. */
+//   def t : This = column;
+// }
+// 
+// object WrappedRowOps {
+//   def apply[This](v : This) : WrappedRowOps[This] =
+//     new WrappedRowOps[This] { override def column = v; }
+// 
+//   class WrappedRowBinaryOp[A,-B,Op<:OpType,+That](implicit op : BinaryOp[A,B,Op,That])
+//   extends BinaryOp[WrappedRowOps[A],WrappedRowOps[B],Op,WrappedRowOps[That]] {
+//     override def apply(a : WrappedRowOps[A], b : WrappedRowOps[B]) =
+//       WrappedRowOps(op(a.column,b.column));
+//   }
+// 
+//   implicit def unwrap[A,B,Op<:OpType,That](implicit op : BinaryOp[A,B,Op,That])
+//   = new WrappedRowBinaryOp[A,B,Op,That];
+// }
+// 
+// /**
+//  * Specialized WrappedRowOps support for WrappedRows that have mutable
+//  * underlying collections.
+//  *
+//  * @author dramage
+//  */
+// trait MutableWrappedRowOps[+This]
+// extends WrappedRowOps[This] with MutableNumericOps[WrappedRowOps[This]];
+// 
+// object MutableWrappedRowOps {
+//   def apply[This](v : This) : MutableWrappedRowOps[This] =
+//     new MutableWrappedRowOps[This] { override def column = v; }
+// 
+//   class MutableWrappedRowBinaryOp[A,-B,Op<:OpType,+That](implicit op : BinaryOp[A,B,Op,That])
+//   extends BinaryOp[MutableWrappedRowOps[A],WrappedRowOps[B],Op,MutableWrappedRowOps[That]] {
+//     override def apply(a : MutableWrappedRowOps[A], b : WrappedRowOps[B]) =
+//       MutableWrappedRowOps(op(a.column,b.column));
+//   }
+// 
+//   class MutableWrappedRowBinaryUpdateOp[A,-B,Op<:OpType](implicit op : BinaryUpdateOp[A,B,Op])
+//   extends BinaryUpdateOp[MutableWrappedRowOps[A],WrappedRowOps[B],Op] {
+//     override def apply(a : MutableWrappedRowOps[A], b : WrappedRowOps[B]) =
+//       op(a.column, b.column);
+//   }
+// 
+//   implicit def unwrapBinaryOp[A,B,Op<:OpType,That](implicit op : BinaryOp[A,B,Op,That])
+//   = new MutableWrappedRowBinaryOp[A,B,Op,That];
+// 
+//   implicit def unwrapBinaryUpdateOp[A,B,Op<:OpType](implicit op : BinaryUpdateOp[A,B,Op])
+//   = new MutableWrappedRowBinaryUpdateOp[A,B,Op];
+// }
 
 /**
  * Numeric operator support for numeric arrays.
@@ -318,7 +315,9 @@ object MutableWrappedRowOps {
  * @author dramage
  */
 class RichArrayVector[V:ClassManifest](override val repr : Array[V])
-extends MutableWrappedColOps[Array[V]] {
+extends MutableNumericOps[Array[V]] {
+//extends MutableWrappedColOps[Array[V]] {
+
   /** Returns a vector view of this array. */
   def asVector(implicit s : Scalar[V]) = new scalala.tensor.dense.DenseVectorCol(repr);
 }
@@ -329,7 +328,8 @@ extends MutableWrappedColOps[Array[V]] {
  * @author dramage
  */
 class RichArrayMatrix[V:ClassManifest](override val repr : Array[Array[V]])
-extends MatrixOps[Array[Array[V]]] {
+extends MutableNumericOps[Array[Array[V]]] {
+//extends MatrixOps[Array[Array[V]]] {
 
   /** Returns a matrix view of this array. */
   def asMatrix(implicit s : Scalar[V]) = new scalala.tensor.dense.ArrayArrayMatrix(repr);
@@ -341,7 +341,8 @@ extends MatrixOps[Array[Array[V]]] {
  * @author dramage
  */
 class RichSparseArrayVector[V:ClassManifest:DefaultArrayValue](override val repr : SparseArray[V])
-extends MutableWrappedColOps[SparseArray[V]] {
+extends MutableNumericOps[SparseArray[V]] {
+//extends MutableWrappedColOps[SparseArray[V]] {
 
   /** Returns a vector view of this sparse array. */
   def asVector(implicit s : Scalar[V]) = new scalala.tensor.sparse.SparseVectorCol(repr);

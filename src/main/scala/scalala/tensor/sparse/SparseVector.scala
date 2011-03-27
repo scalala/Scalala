@@ -58,7 +58,7 @@ with mutable.Vector[B] with mutable.VectorLike[B,SparseVector[B]] {
   }
 }
 
-object SparseVector extends mutable.VectorCompanion[SparseVector] {
+object SparseVector {
   /** Creates a sparse vector literal. */
   def apply[B:Scalar:ClassManifest:DefaultArrayValue](values : B*) =
     new SparseVectorCol(SparseArray(values :_*))
@@ -88,25 +88,10 @@ extends SparseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,S
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
+  
+  override def t : SparseVectorCol[V] =
+    new SparseVectorCol(data)(scalar);
 }
-
-object SparseVectorRow extends mutable.VectorRowCompanion[SparseVectorRow] {
-  /** Transpose shares the same data. */
-  implicit def canTranspose[V] : UnaryOp[SparseVectorRow[V],OpTranspose,SparseVectorCol[V]]
-  = new UnaryOp[SparseVectorRow[V],OpTranspose,SparseVectorCol[V]] {
-    override def apply(row : SparseVectorRow[V]) =
-      new SparseVectorCol(row.data)(row.scalar);
-  }
-
-  /** Tighten bound on super to be sparse in return value. */
-  override implicit def canMulVectorRowByMatrix[V1,V2,Col,RV]
-  (implicit slice : CanSliceCol[Matrix[V2],Int,Col],
-   mul : BinaryOp[SparseVectorRow[V1],Col,OpMulRowVectorBy,RV],
-   scalar : Scalar[RV])
-  : BinaryOp[SparseVectorRow[V1],tensor.Matrix[V2],OpMulRowVectorBy,SparseVectorRow[RV]] =
-     super.canMulVectorRowByMatrix[V1,V2,Col,RV](slice,mul,scalar).asInstanceOf[BinaryOp[SparseVectorRow[V1],tensor.Matrix[V2],OpMulRowVectorBy,SparseVectorRow[RV]]];
-}
-
 
 /**
  * SparseVectors as a column.
@@ -125,28 +110,8 @@ extends SparseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,S
       case _ => super.newBuilder[K2,V2](domain);
     }
   }
-}
-
-object SparseVectorCol extends mutable.VectorColCompanion[SparseVectorCol] {
-  /** Transpose shares the same data. */
-  implicit def canTranspose[V] : UnaryOp[SparseVectorCol[V],OpTranspose,SparseVectorRow[V]]
-  = new UnaryOp[SparseVectorCol[V],OpTranspose,SparseVectorRow[V]] {
-    override def apply(row : SparseVectorCol[V]) =
-      new SparseVectorRow(row.data)(row.scalar);
-  }
-
-//  /** Tighten bound on super to be a Sparse in return value. */
-//  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : CanMul[V1,V2,RV], scalar : Scalar[RV])
-//  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[CanMulColumnBy[SparseVectorCol[V1],tensor.VectorRow[V2],SparseMatrix[RV]]];
-//
-//  /** Tighten bound on super to be a Sparse in return value. */
-//  override implicit def canAppendMatrixColumns[V]
-//  : CanAppendColumns[SparseVectorCol[V],tensor.Matrix[V],SparseMatrix[V]]
-//  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[SparseVectorCol[V],tensor.Matrix[V], SparseMatrix[V]]];
-//
-//  /** Tighten bound on super to be a Sparse in return value. */
-//  override implicit def canAppendVectorColumn[V]
-//  : CanAppendColumns[SparseVectorCol[V],tensor.VectorCol[V],SparseMatrix[V]]
-//  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[SparseVectorCol[V],tensor.VectorCol[V],SparseMatrix[V]]];
+  
+  override def t : SparseVectorRow[V] =
+    new SparseVectorRow(data)(scalar);
 }
 
