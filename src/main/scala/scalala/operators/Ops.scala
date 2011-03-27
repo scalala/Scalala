@@ -176,7 +176,7 @@ trait MutableNumericOps[+This] extends NumericOps[This] {
 trait ColOps[+This] extends NumericOps[This] {
   def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulColVectorBy,That]) : That =
     op(repr, b);
-
+  
   def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
 }

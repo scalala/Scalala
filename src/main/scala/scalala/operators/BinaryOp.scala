@@ -294,21 +294,24 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   //
   
   implicit def promoteScalarMulToMulRowVectorBy[A,B,RV]
-  (implicit op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
+  (implicit view : A=>scalala.tensor.Tensor1Row[_,A],
+   op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
   : BinaryOp[A,B,OpMulRowVectorBy,RV]
   = new BinaryOp[A,B,OpMulRowVectorBy,RV] {
     def opType = OpMulRowVectorBy; def apply(a : A, b : B) = op(a,b);
   }
 
   implicit def promoteScalarMulToMulColVectorBy[A,B,RV]
-  (implicit op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
+  (implicit view : A=>scalala.tensor.Tensor1Col[_,A],
+   op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
   : BinaryOp[A,B,OpMulColVectorBy,RV]
   = new BinaryOp[A,B,OpMulColVectorBy,RV] {
     def opType = OpMulColVectorBy; def apply(a : A, b : B) = op(a,b);
   }
 
   implicit def promoteScalarMulToMulMatrixBy[A,B,RV]
-  (implicit op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
+  (implicit view : A=>scalala.tensor.Tensor2[_,_,A],
+   op : BinaryOp[A,B,OpMul,RV], s : Scalar[B])
   : BinaryOp[A,B,OpMulMatrixBy,RV]
   = new BinaryOp[A,B,OpMulMatrixBy,RV] {
     def opType = OpMulMatrixBy; def apply(a : A, b : B) = op(a,b);
