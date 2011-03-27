@@ -31,6 +31,7 @@ import scalala.library.Random;
 
 import scalala.operators._;
 
+import org.netlib.blas._;
 import org.netlib.lapack._;
 import org.netlib.util.intW;
 
@@ -160,6 +161,37 @@ object DenseMatrix extends DenseMatrixConstructors {
   implicit object DenseMatrixCanMapValuesDD extends DenseMatrixCanMapValues[Double,Double];
   implicit object DenseMatrixCanMapValuesII extends DenseMatrixCanMapValues[Int,Int];
   implicit object DenseMatrixCanMapValuesID extends DenseMatrixCanMapValues[Int,Double];
+
+
+//  //
+//  // BLAS and LAPACK routines
+//  //
+//  
+//  implicit object DenseMatrixDMulDenseMatrixD
+//  extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpMulMatrixBy,DenseMatrix[Double]] {
+//    def opType = OpMulMatrixBy;
+//    def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
+//      val rv = DenseMatrix.zeros[Double](a.numRows, b.numCols);
+//      BLAS.getInstance().dgemm("n", "n",
+//        rv.numRows, rv.numCols, a.numCols,
+//        1.0, a.data, a.numRows, b.data, a.numCols,
+//        0.0, rv.data, a.numRows);
+//      rv;
+//    }
+//  }
+//
+//  implicit object DenseMatrixDMulDenseVectorColD
+//  extends BinaryOp[DenseMatrix[Double],DenseVectorCol[Double],OpMulMatrixBy,DenseVectorCol[Double]] {
+//    def opType = OpMulMatrixBy;
+//    def apply(a : DenseMatrix[Double], b : DenseVectorCol[Double]) = {
+//      val rv = DenseVectorCol.zeros[Double](a.numRows);
+//      BLAS.getInstance().dgemv("n",
+//        a.numRows, a.numCols,
+//        1.0, a.data, a.numRows, b.data, 1,
+//        0.0, rv.data, 1);
+//      rv;
+//    }
+//  }
 
   implicit object DenseMatrixCanSolveDenseMatrix
   extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpSolveMatrixBy,DenseMatrix[Double]] {
@@ -294,8 +326,13 @@ trait DenseMatrixConstructors {
   }
 
   /** Creates a dense matrix of zeros of the requested size. */
-  def zeros[V:Scalar](rows : Int, cols : Int) =
-    fill(rows, cols)(implicitly[Scalar[V]].zero);
+  def zeros[V](rows : Int, cols : Int)(implicit s : Scalar[V]) = {
+    if (s.isPrimitive) {
+      new DenseMatrix(rows, cols, s.manifest.newArray(rows * cols));
+    } else {
+      fill(rows, cols)(s.zero);
+    }
+  }
 
   /** Creates a dense matrix of zeros of the requested size. */
   def ones[V:Scalar](rows : Int, cols : Int) =

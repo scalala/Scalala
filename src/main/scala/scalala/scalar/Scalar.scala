@@ -62,6 +62,10 @@ trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
   def max(a : V, b : V) : V =
     if (>=(a,b)) a else b;
 
+  /** Returns true if this is a primitive type. */
+  def isPrimitive : Boolean =
+    ! (manifest <:< implicitly[Manifest[AnyRef]]);
+
   /** Returns the norm of this value, the absolute value as a Double. */
   def norm(a : V) : Double;
 

@@ -208,8 +208,13 @@ trait DenseVectorColConstructors {
   }
 
   /** Dense vector of zeros of the given size. */
-  def zeros[V:Scalar](size : Int) =
-    fill(size)(implicitly[Scalar[V]].zero);
+  def zeros[V](size : Int)(implicit s : Scalar[V]) = {
+    if (s.isPrimitive) {
+      new DenseVectorCol(s.manifest.newArray(size));
+    } else {
+      fill(size)(s.zero);
+    }
+  }
 
   /** Dense vector of ones of the given size. */
   def ones[V:Scalar](size : Int) =
