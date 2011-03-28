@@ -66,7 +66,7 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
                      ( -0.4255, -39.5106, 42.2127,  11.6382, 3.2765),
                      ( -0.6170,  -0.7506, 42.4964,  45.1620, 5.3107),
                      ( -0.0638,  -0.3979, -0.6275,  54.5694, 8.8282))
-    assert(m forall ((idx,v) => math.abs(v-aux(idx._1,idx._2)) < 1e-4))
+    assert(m forall ((idx,v) => math.abs(v-aux(idx)) < 1e-4))
   }
 
   test("det") {
@@ -86,13 +86,13 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
                    (-47,-20, 24,-22),
                    (  3, 17,-45, 23))
     val I = Matrix.eye[Double](4)
-    assert((inv(X) * X) forall ((idx,v) => math.abs(v-I(idx._1,idx._2)) < 1e-15))
+    assert((inv(X) * X) forall ((idx,v) => math.abs(v-I(idx)) < 1e-15))
   }
 
   test("pinv") {
     val X = Matrix((54, 95), (23, 25), (70, 41), (31, 19))
     val I = Matrix.eye[Double](2)
-    assert((pinv(X) * X) forall ((idx,v) => math.abs(v-I(idx._1,idx._2)) < 1e-15))
+    assert((pinv(X) * X) forall ((idx,v) => math.abs(v-I(idx)) < 1e-15))
   }
 
 }
