@@ -17,7 +17,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-package scalala.tensor.domain;
+package scalala.tensor.domain
+
+import collection.TraversableLike
 
 /**
  * Implementation trait for domains of a DomainFunction, representing
@@ -54,12 +56,14 @@ extends DomainLike[A, Domain[A]];
  * @author dramage
  */
 trait IterableDomainLike[@specialized(Int,Long) A, +This<:IterableDomain[A]]
-extends DomainLike[A,This] {
+extends Traversable[A] with DomainLike[A,This]  {
   /** Applies the given function to every element of the domain. */
   def foreach[O](f : A => O);
 
   /** Iterates over the elements of the domain. */
   def iterator : Iterator[A];
+
+  override def repr = this.asInstanceOf[This];
 
   /** Constructs the union of this and the other domain. */
   def union(that : IterableDomain[A]) : IterableDomain[A] = {
@@ -72,20 +76,8 @@ extends DomainLike[A,This] {
   /** Number of elements in the domain. */
   def size : Int;
 
-  def toIndexedSeq =
-    iterator.toIndexedSeq;
-
   def toArray(implicit mf : Manifest[A]) =
     iterator.toArray;
-
-  def filter(fn : A => Boolean) : List[A] =
-    iterator.filter(fn).toList;
-
-  def max(implicit ord : Ordering[A]) =
-    iterator.max(ord);
-
-  def min(implicit ord : Ordering[A]) =
-    iterator.min(ord);
 
   override def equals(other : Any) = other match {
     case that : IterableDomain[_] =>
@@ -101,7 +93,7 @@ extends DomainLike[A,This] {
  * @author dramage
  */
 trait IterableDomain[@specialized(Int,Long) A]
-extends Domain[A] with IterableDomainLike[A,IterableDomain[A]];
+extends Domain[A] with Iterable[A] with IterableDomainLike[A,IterableDomain[A]];
 
 /**
  * Trait that represents the onion of two domains.
@@ -217,8 +209,7 @@ extends Domain1[Int] with Domain1Like[Int,IndexDomain] {
     case _ => super.product[B,That](that);
   }
 
-  override def toIndexedSeq =
-    Range(0,size);
+  override def toIndexedSeq[B>:Int] = Range(0,size);
     
   override def contains(key : Int) =
     key >= 0 && key < size;
