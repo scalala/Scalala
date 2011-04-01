@@ -22,8 +22,6 @@ package tensor;
 package mutable;
 
 import domain._;
-import generic.collection.CanTranspose;
-
 import scalar.Scalar;
 
 /**
@@ -33,8 +31,12 @@ import scalar.Scalar;
  */
 trait Tensor1RowLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:IterableDomain[K] with DomainLike[K,D], +This<:Tensor1Row[K,V]]
-extends tensor.Tensor1RowLike[K,V,D,This] with Tensor1Like[K,V,D,This];
+ +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1Row[K,V]]
+extends tensor.Tensor1RowLike[K,V,D,This] with Tensor1Like[K,V,D,This] {
+
+  override def t : Tensor1Col[K,V] =
+    new Tensor1Col.View[K,V](repr);
+}
 
 /**
  * Mutable tensor.Tensor1.
@@ -44,9 +46,9 @@ extends tensor.Tensor1RowLike[K,V,D,This] with Tensor1Like[K,V,D,This];
 trait Tensor1Row
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
 extends tensor.Tensor1Row[K,V] with Tensor1[K,V]
-with Tensor1RowLike[K,V,IterableDomain[K],Tensor1Row[K,V]];
+with Tensor1RowLike[K,V,Domain1[K],Tensor1Row[K,V]];
 
-object Tensor1Row extends Tensor1RowCompanion[Tensor1Row] {
+object Tensor1Row {
   /** Constructs an open-domain tensor seeded with the given values. */
   def apply[K,V:Scalar](values : (K,V)*) : Tensor1Row[K,V] = {
     new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
@@ -55,22 +57,21 @@ object Tensor1Row extends Tensor1RowCompanion[Tensor1Row] {
   }
 
   /** Constructs a closed-domain tensor for the given domain. */
-  def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor1Row[K,V] = {
+  def apply[K,V:Scalar](domain : Domain1[K]) : Tensor1Row[K,V] = {
     val d = domain;
     new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
       override val domain = d;
     }
   }
 
-  class Impl[K,V:Scalar](map : scala.collection.Map[K,V])
+  class Impl[K,V:Scalar](map : scala.collection.mutable.Map[K,V])
   extends Tensor1.Impl[K,V](map) with Tensor1Row[K,V];
 
   class View[K,V](override val inner : Tensor1Col[K,V])
   extends Tensor1Proxy[K,V,Tensor1Col[K,V]] with Tensor1Row[K,V]
-  with Tensor1Like[K,V,IterableDomain[K],View[K,V]] {
+  with Tensor1Like[K,V,Domain1[K],View[K,V]] {
     override def repr : View[K,V] = this;
+    override def t : Tensor1Col[K,V] = inner;
   }
 }
 
-trait Tensor1RowCompanion[Bound[K,V]<:Tensor1Row[K,V]]
-extends tensor.Tensor1RowCompanion[Bound] with Tensor1Companion[Bound];

@@ -17,10 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
+
 package scalala;
 package library;
 
-import random.MersenneTwisterFast;
+import random.MersenneTwisterFast
+import tensor.{::, Matrix, Vector}
+import tensor.dense.DenseMatrix
 
 /**
  * <p>Random number generation.  This class uses the MersenneTwisterFast
@@ -41,10 +44,11 @@ import random.MersenneTwisterFast;
  * block.  Therefore, calling a vector constructor is substantially faster
  * than calling rand() many times.</p>
  *
- * @author dramage
+ * @author dramage,afwlehmann
  */
 trait Random {
-  /** Returns a psuedo-random number from the interval 0 to 1. */
+
+  /** Returns a pseudo-random number from the interval 0 to 1. */
   def rand()(implicit mt : MersenneTwisterFast) : Double = mt.synchronized {
     mt.nextDouble;
   }
@@ -92,6 +96,48 @@ trait Random {
       m(i)(j) = mt.nextGaussian;
     }
     return m;
+  }
+
+  /**
+   * Computes a matrix whose columns represent samples drawn from a multivariate
+   * Gaussian distribution obeying both the given mean `mu' and covariance
+   * matrix `Sigma'.
+   *
+   * @throws NotConvergedException in case of a malformed covariance matrix
+   */
+  def randn(mu: Vector[Double], Sigma: Matrix[Double], numSamples: Int): DenseMatrix[Double] = {
+    if (numSamples < 1)
+      throw new IllegalArgumentException
+
+    require(Sigma.numRows == Sigma.numCols, "Matrix is not square!")
+    for (i <- 0 until Sigma.numRows; j <- 0 until i) {
+      if (Sigma(i,j) != Sigma(j,i))
+        throw new IllegalArgumentException
+    }
+
+    if (mu.size != Sigma.numCols)
+      throw new IllegalArgumentException
+
+    // Assuming multivariate samples with zero mean, the general form of
+    // the covariance matrix is X X^T where the scale factor 1/(N-1) has
+    // been left out for improved readabilty.
+    // Let Y = AX, then Y Y^T = (AX) (AX)^T = A (X X^T) A^T.
+    // In case of a random matrix X where each element of X has been
+    // drawn from a standard normal distribution, and where thus all
+    // random variables are i.i.d. it holds that X X^T = I (identity)
+    // yielding A (X X^T) A^T = A A^T.
+    // So we're looking for a "square root" A of the given covariance
+    // matrix Sigma:
+    val sqrtSigma = LinearAlgebra.cholesky(Sigma)
+    val samples: DenseMatrix[Double] =
+      sqrtSigma * DenseMatrix.randn(mu.size, numSamples)
+    // Due to the row-major storage order of (dense) matrices it's probably
+    // best to use row-wise scalar addition instead of column-wise vector
+    // addition:
+    for (i <- 0 until mu.size)
+      samples(i, ::) += mu(i)
+
+    samples
   }
 
   /** Returns a random integer in the range [0..max). */

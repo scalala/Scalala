@@ -20,6 +20,7 @@
 package scalala;
 package scalar;
 
+import scala.annotation.implicitNotFound;
 import scalala.collection.sparse.DefaultArrayValue;
 
 /**
@@ -27,6 +28,7 @@ import scalala.collection.sparse.DefaultArrayValue;
  *
  * @author dramage
  */
+@implicitNotFound(msg="${V} is not a scalar value")
 trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
   def zero : V;
 
@@ -53,6 +55,16 @@ trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
   def *(a : V, b : V) : V;
 
   def /(a : V, b : V) : V;
+
+  def min(a : V, b : V) : V =
+    if (<=(a,b)) a else b;
+
+  def max(a : V, b : V) : V =
+    if (>=(a,b)) a else b;
+
+  /** Returns true if this is a primitive type. */
+  def isPrimitive : Boolean =
+    ! (manifest <:< implicitly[Manifest[AnyRef]]);
 
   /** Returns the norm of this value, the absolute value as a Double. */
   def norm(a : V) : Double;

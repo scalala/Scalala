@@ -20,14 +20,131 @@
 package scalala;
 package library;
 
-import generic.collection.{CanViewAsVector};
+
+
+import math._
+import Numerics._
+import operators.Implicits._
+import tensor.{::, Matrix, Vector}
+import tensor.dense.{DenseVector, DenseMatrix}
+import generic.collection.{CanSliceCol, CanViewAsVector}
 
 /**
  * Matlab-like statistical methods.
  *
- * @author dramage
+ * @author dramage,afwlehmann
  */
 trait Statistics {
+
+  private val sqrt2 = sqrt(2);
+
+  /**
+   * Numerically stable one-pass mean computation.
+   *
+   * From http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
+   */
+  def mean[X](data : TraversableOnce[X])(implicit xv : X=>Double) = {
+    var m = 0.0;
+    var k = 0;
+    for (x <- data) {
+      k += 1;
+      m += (x - m) / k;
+    }
+    m;
+  }
+
+  object Axis extends Enumeration {
+    val Horizontal, Vertical = Value
+  }
+
+  /**
+   * Mean vector of the given matrix along the specified axis.
+   */
+  def mean[@specialized T](X: Matrix[T], axis: Axis.Value)(implicit xv: T => Double):
+    DenseVector[Double] =
+  {
+    // TODO: This calculation of the mean is rather slow. It should
+    //       be transformed into several while loops.
+    axis match {
+      case Axis.Horizontal =>
+        var mu = DenseVector.zeros[Double](X.numRows)
+        X foreach ( (idx, value) =>
+          mu(idx._1) += (value - mu(idx._1)) / (idx._2 + 1)
+        )
+        mu
+
+      case Axis.Vertical =>
+        var mu = DenseVector.zeros[Double](X.numCols)
+        X foreach ( (idx, value) =>
+          mu(idx._2) += (value - mu(idx._2)) / (idx._1 + 1)
+        )
+        mu.t
+    }
+  }
+
+  /**
+   * The covariance matrix and mean of the given dataset X where each column
+   * of X represents one sample of a multivariate random distribution.
+   */
+  def covariance[T](X: Matrix[T])
+                   (implicit cvv: CanViewAsVector[Vector[T],Double],
+                             css: CanSliceCol[Matrix[T],Int,Vector[Double]],
+                              td: T => Double):
+    (DenseMatrix[Double], DenseVector[Double]) =
+  {
+    if (X.numRows <= 0 || X.numCols < 2)
+      throw new IllegalArgumentException
+
+    val N     = X.numRows
+    var mu    = DenseVector.tabulate[Double](N)(X(_,0))
+    var Sigma = DenseMatrix.zeros[Double](N, N)
+    var K     = 0.0
+    for (i <- 1 until X.numCols; val xMinusMu = X(::,i) - mu) {
+      K     += 1
+      mu    += xMinusMu / K
+      Sigma += xMinusMu * xMinusMu.t * (1. - 1. / K)
+    }
+
+    (Sigma / K, mu)
+  }
+
+  /**
+   * Numerically stable one-pass sample variance computation.
+   *
+   * From http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
+   */
+  def variance[X](data : TraversableOnce[X])(implicit xv : X=>Double) = {
+    var m = 0.0;
+    var q = 0.0;
+    var k = 0;
+    for (x <- data) {
+      k += 1;
+      if (k == 1) {
+        m = x;
+        q = 0;
+      } else {
+        val xMm = x - m;
+        val xMmDk = xMm / k;
+        m = m + xMmDk;
+        q = q + (k - 1) * xMm * xMmDk
+      }
+    }
+    q / (k - 1);
+  }
+
+  /**
+   * Numerically stable one-pass standard deviation computation.
+   *
+   * From http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
+   */
+  def stddev[X](data : TraversableOnce[X])(implicit xv : X=>Double) =
+    math.sqrt(variance(data));
+
+  /**
+   * Computes the cumulative density function of the value x.
+   */
+  def normcdf(x: Double, mu : Double = 0.0, sigma : Double = 1.0) =
+    .5 * (1 + erf((x - mu) / sqrt2 / sigma));
 
   /**
    * Computes the Pearson correlation coefficient between the two vectors.
@@ -41,12 +158,12 @@ trait Statistics {
     @inline implicit def xvtod(v : XV) = _x.scalar.toDouble(v);
     @inline implicit def yvtod(v : YV) = _y.scalar.toDouble(v);
     require(_x.size == _y.size, "Vectors must have same length");
-    
+
     val N = _x.size;
     if (N == 0) {
       return Double.NaN;
     }
-    
+
     var sum_sq_x = 0.0;
     var sum_sq_y = 0.0;
     var sum_coproduct = 0.0;
@@ -69,7 +186,7 @@ trait Statistics {
     val cov_x_y = sum_coproduct / N;
     return cov_x_y / (pop_sd_x * pop_sd_y);
   }
-  
+
   /**
    * Computes Kendall's Tau correlation coefficient between the two vectors
    * x and y.  The measure is a correlation based on ranks, essentially counting
@@ -84,16 +201,16 @@ trait Statistics {
     val _x = xvt(x); @inline implicit def xvtod(v : XV) = _x.scalar.toDouble(v);
     val _y = yvt(y); @inline implicit def yvtod(v : YV) = _y.scalar.toDouble(v);
     require(_x.size == _y.size, "Vectors must have same length");
-    
+
     val N = _x.size;
     if (N == 0) {
       return Double.NaN;
     }
-    
+
     // keep track of ties in x and in y
     val xties = new scala.collection.mutable.HashMap[Double,scala.collection.mutable.HashSet[Int]];
     val yties = new scala.collection.mutable.HashMap[Double,scala.collection.mutable.HashSet[Int]];
-   
+
     var numer = 0.0;
     for (i <- 0 until N; j <- 0 until i) {
       if (_x(i) == _x(j)) {
@@ -108,27 +225,37 @@ trait Statistics {
       }
       numer += math.signum(_x(i) - _x(j)) * math.signum(_y(i) - _y(j));
     }
-    
+
     var denom = N * (N - 1.0) / 2.0;
     var xdenom = xties.valuesIterator.map(s => s.size * (s.size - 1.0)).sum / 2.0;
     var ydenom = yties.valuesIterator.map(s => s.size * (s.size - 1.0)).sum / 2.0;
-    
+
     return numer / math.sqrt((denom - xdenom) * (denom - ydenom));
   }
-  
+
+//  def mannwhitneyu(a : Seq[Double], b : Seq[Double]) = {
+//    val merged = (a.map(_ -> 'a') ++ b.map(_ -> 'b')).sortWith(_._1 < _._1);
+//    val ranked = ranks(merged.toArray.map(_._1));
+//    val aU = (for ((v,r) <- (merged.iterator zip ranked.iterator); if v._2 == 'a') yield r).sum - (a.size * (a.size + 1) / 2);
+//    val bU = (for ((v,r) <- (merged.iterator zip ranked.iterator); if v._2 == 'b') yield r).sum - (b.size * (b.size + 1) / 2);
+//    val (bigU,smallU) = if (aU > bU) (aU,bU) else (bU,aU);
+//    val sd = math.sqrt(a.size * b.size * (a.size + b.size + 1) / 12.0);
+//    (aU, normcdf(-abs((bigU - a.size * b.size / 2.0) / sd)));
+//  }
+
   /** Returns n choose k, how many ways to pick k objects from n. */
   def nchoosek(n : Int, k : Int) : Long = {
     var aa = 0.0;
     var ai = k+1;
     while (ai <= n) aa += math.log(ai);
-    
+
     var bb = 0.0;
     var bi = 2;
     while (bi <= n-k) bb += math.log(bi);
-    
+
     math.exp(aa - bb).round;
   }
-  
+
   /** Returns n factorial, the number of orderings of n objects. */
   def factorial(n : Int) : Long = {
     var i = n;
@@ -139,7 +266,7 @@ trait Statistics {
     }
     rv;
   }
-  
+
   /**
    * Returns the cumulative distribution function of the binomial evaluated
    * at x; i.e. returns the probability that at most x draws out of n draws
@@ -154,13 +281,12 @@ trait Statistics {
     }
     rv;
   }
-  
-  
+
 }
 
 /**
  * An object with access to the Statistics trait members.
- * 
+ *
  * @author dramage
  */
 object Statistics extends Statistics { }

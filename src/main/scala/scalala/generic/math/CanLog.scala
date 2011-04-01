@@ -24,12 +24,24 @@ package math;
 
 import collection.CanMapValues;
 
+import scalala.operators.{UnaryOp,OpType};
+
+/**
+ * Operator type for exp(A).
+ *
+ * @author dramage
+ */
+trait OpLog extends operators.OpType;
+object OpLog extends OpLog;
+
 /**
  * Constructiond delegate for log(A).
  * 
  * @author dramage
  */
-trait CanLog[-A,+RV] extends UnaryOp[A,RV];
+trait CanLog[-A,+RV] extends UnaryOp[A,OpLog,RV] {
+  def opType = OpLog;
+}
 
 object CanLog {
   implicit object OpI extends CanLog[Int,Double] {
@@ -60,3 +72,4 @@ object CanLog {
   implicit object OpArrayF extends OpMapValues[Array[Float],Float,Double,Array[Double]]()(OpF,CanMapValues.OpArrayFD);
   implicit object OpArrayD extends OpMapValues[Array[Double],Double,Double,Array[Double]]()(OpD,CanMapValues.OpArrayDD);
 }
+

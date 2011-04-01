@@ -23,7 +23,9 @@ package tensor;
 import scalar.Scalar;
 
 import domain._;
-import generic.collection._;
+
+import scalala.generic.collection._;
+import scalala.operators._;
 
 /**
  * Implementation trait for tensors indexed by two keys, such as Matrices.
@@ -33,10 +35,10 @@ import generic.collection._;
 trait Tensor2Like
 [@specialized(Int) A1, @specialized(Int) A2,
  @specialized(Int,Long,Float,Double,Boolean) B,
- +D1<:IterableDomain[A1] with DomainLike[A1,D1],
- +D2<:IterableDomain[A2] with DomainLike[A2,D2],
- +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
- +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+ +D1<:Domain1[A1] with Domain1Like[A1,D1],
+ +D2<:Domain1[A2] with Domain1Like[A2,D2],
+ +D<:Domain2Like[A1,A2,D1,D2,T,D],
+ +T<:Domain2Like[A2,A1,D2,D1,D,T],
  +This<:Tensor2[A1,A2,B]]
 extends TensorLike[(A1,A2),B,D,This] with operators.MatrixOps[This] {
   def checkKey(k1 : A1, k2 : A2) : Unit = {
@@ -55,14 +57,35 @@ extends TensorLike[(A1,A2),B,D,This] with operators.MatrixOps[This] {
   /* final */ override def apply(pos : (A1,A2)) : B =
     apply(pos._1, pos._2);
 
-  def apply[TT>:This,That](i : Seq[A1], j : Seq[A2])(implicit bf : CanSliceMatrix[TT,A1,A2,That]) : That =
-    bf.apply(repr, i, j);
-
+  /** Select all columns within a given row. */
   def apply[TT>:This,That](i : A1, j : SelectAll)(implicit bf : CanSliceRow[TT,A1,That]) : That =
     bf.apply(repr, i);
 
+  /** Select all rows within a given column. */
   def apply[TT>:This,That](i : SelectAll, j : A2)(implicit bf : CanSliceCol[TT,A2,That]) : That =
     bf.apply(repr, j);
+
+  /** Select a sub-matrix of the requested rows and columns. */
+  def apply[TT>:This,That](i : Seq[A1], j : Seq[A2])(implicit bf : CanSliceMatrix[TT,A1,A2,That]) : That =
+    bf.apply(repr, i, j);
+
+  /** Select all columns for a specified set of rows. */
+  def apply[TT>:This,That](i : Seq[A1], j : SelectAll)(implicit bf : CanSliceMatrix[TT,A1,A2,That]) : That =
+    bf.apply(repr, i, domain._2.toIndexedSeq);
+
+  /** Select all rows for a specified set of columns. */
+  def apply[TT>:This,That](i : SelectAll, j : Seq[A2])(implicit bf : CanSliceMatrix[TT,A1,A2,That]) : That =
+    bf.apply(repr, domain._1.toIndexedSeq, j);
+
+  /** Select specified columns within a row. */
+  def apply[TT>:This,That1,That2](i : A1, j : IndexedSeq[A2])
+  (implicit s1 : CanSliceRow[TT,A1,That1], s2 : CanSliceVector[That1,A2,That2]) : That2 =
+    s2.apply(s1.apply(repr, i), j);
+
+  /** Select specified rows within a column. */
+  def apply[TT>:This,That1,That2](i : IndexedSeq[A1], j : A2)
+  (implicit s1 : CanSliceCol[TT,A2,That1], s2 : CanSliceVector[That1,A1,That2]) : That2 =
+    s2.apply(s1.apply(repr, j), i);
 
   /** Tranforms all key value pairs in this map by applying the given function. */
   def foreach[U](fn : (A1,A2,B)=>U) =
@@ -84,6 +107,9 @@ extends TensorLike[(A1,A2),B,D,This] with operators.MatrixOps[This] {
     case that : Tensor2[_,_,_] => true;
     case _ => false;
   }
+  
+  def t : Tensor2[A2,A1,B] =
+    new Tensor2Transpose.Impl[A2,A1,B,This](repr);
 }
 
 /**
@@ -95,20 +121,9 @@ trait Tensor2
 [@specialized(Int) A1, @specialized(Int) A2,
  @specialized(Int,Long,Float,Double,Boolean) B]
 extends Tensor[(A1,A2),B]
-with Tensor2Like[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Tensor2[A1,A2,B]]
+with Tensor2Like[A1,A2,B,Domain1[A1],Domain1[A2],Domain2[A1,A2],Domain2[A2,A1],Tensor2[A1,A2,B]]
 
 object Tensor2 {
-  implicit def canTranspose[A2,A1,B:Scalar] : CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]]
-  = new CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]] {
-    override def apply(from : Tensor2[A1,A2,B]) = {
-      if (from.isInstanceOf[Tensor2Transpose[_,_,_,_]]) {
-        from.asInstanceOf[Tensor2Transpose[_,_,_,_]].underlying.asInstanceOf[Tensor2[A2,A1,B]];
-      } else {
-        new Tensor2Transpose.Impl[A2,A1,B,Tensor2[A1,A2,B]](from);
-      }
-    }
-  }
-
   implicit def canSliceRow[A1,A2,B:Scalar] : CanSliceRow[Tensor2[A1,A2,B],A1,Tensor1Row[A2,B]]
   = new CanSliceRow[Tensor2[A1,A2,B],A1,Tensor1Row[A2,B]] {
     override def apply(from : Tensor2[A1,A2,B], row : A1) =
@@ -128,8 +143,62 @@ object Tensor2 {
       new MatrixSliceImpl[A1,A2,B,Tensor2[A1,A2,B]](from, keys1, keys2);
   }
 
+  implicit def canMulTensor2ByTensor1Col[
+    @specialized(Int) K1, @specialized(Int) K2,
+    @specialized(Int,Double) V1, A, AR, ADomainRow, ADomainCol, ADomain,
+    @specialized(Int,Double) V2, B, BD,
+    @specialized(Int,Double) RV, That]
+  (implicit
+   viewA : A=>Tensor2[K1,K2,V1],
+   sliceA : CanSliceRow[A,K1,AR],
+   domainA : CanGetDomain2[A,ADomainRow,ADomainCol,ADomain],
+   viewB : B=>Tensor1Col[K2,V2],
+   mul : BinaryOp[AR,B,OpMulRowVectorBy,RV],
+   bf : CanBuildTensorFrom[B,ADomainRow,K1,RV,That],
+   scalar : Scalar[RV])
+  : BinaryOp[A, B, OpMulMatrixBy, That] =
+  new BinaryOp[A, B, OpMulMatrixBy, That] {
+    override def opType = OpMulMatrixBy;
+    override def apply(a : A, b : B) = {
+      val builder = bf(b, domainA._1(a));
+      for (i <- a.domain._1) {
+        builder(i) = mul(sliceA(a,i), b);
+      }
+      builder.result;
+    }
+  }
+
+  implicit def canMulMatrixByMatrix[
+   @specialized(Int) K1, @specialized(Int) K2, @specialized(Int) K3,
+   @specialized(Int,Double) V1, A, ARow, ADomainRow, InnerDomain, ADomain,
+   @specialized(Int,Double) V2, B, BCol, BDomainCol, BDomain,
+   @specialized(Int,Double) RV, RDomain, That]
+  (implicit
+    viewA : A=>Tensor2[K1,K2,V1],
+    sliceA : CanSliceRow[A,K1,ARow],
+    domainA : CanGetDomain2[A,ADomainRow,InnerDomain,ADomain],
+    viewB : B=>Tensor2[K2,K3,V2],
+    sliceB : CanSliceCol[B,K3,BCol],
+    domainB : CanGetDomain2[B,InnerDomain,BDomainCol,BDomain],
+    mul : BinaryOp[ARow,BCol,OpMulRowVectorBy,RV],
+    domainR : CanBuildDomain2[ADomainRow,BDomainCol,RDomain],
+    bf : CanBuildTensorFrom[A,RDomain,(K1,K3),RV,That],
+    scalar : Scalar[RV])
+  : BinaryOp[A, B, OpMulMatrixBy, That] =
+  new BinaryOp[A, B, OpMulMatrixBy, That] {
+    override def opType = OpMulMatrixBy;
+    override def apply(a : A, b : B) = {
+      val domain = domainR(domainA._1(a), domainB._2(b));
+      val builder = bf(a, domain);
+      for (i <- a.domain._1; j <- b.domain._2) {
+        builder((i,j)) = mul(sliceA(a,i), sliceB(b,j));
+      }
+      builder.result;
+    }
+  }
+
   trait RowSliceLike[A1,A2,B,+Coll<:Tensor2[A1,A2,B],+This<:RowSlice[A1,A2,B,Coll]]
-  extends Tensor1SliceLike[(A1,A2),IterableDomain[(A1,A2)],A2,IterableDomain[A2],B,Coll,This] with Tensor1RowLike[A2,B,IterableDomain[A2],This] {
+  extends Tensor1SliceLike[(A1,A2),IterableDomain[(A1,A2)],A2,Domain1[A2],B,Coll,This] with Tensor1RowLike[A2,B,Domain1[A2],This] {
     def row : A1;
     override val domain = underlying.domain._2;
     override def lookup(key : A2) = (row,key);
@@ -144,7 +213,7 @@ object Tensor2 {
   extends RowSlice[A1,A2,B,Coll];
 
   trait ColSliceLike[A1,A2,B,+Coll<:Tensor2[A1,A2,B],+This<:ColSlice[A1,A2,B,Coll]]
-  extends Tensor1SliceLike[(A1,A2),IterableDomain[(A1,A2)],A1,IterableDomain[A1],B,Coll,This] with Tensor1ColLike[A1,B,IterableDomain[A1],This] {
+  extends Tensor1SliceLike[(A1,A2),IterableDomain[(A1,A2)],A1,Domain1[A1],B,Coll,This] with Tensor1ColLike[A1,B,Domain1[A1],This] {
     def col : A2;
     override val domain = underlying.domain._1;
     override def lookup(key : A1) = (key,col);
@@ -161,10 +230,10 @@ object Tensor2 {
   trait MatrixSliceLike
   [@specialized(Int) A1, @specialized(Int) A2,
    @specialized(Int,Long,Float,Double,Boolean) B,
-   +D1<:IterableDomain[A1] with DomainLike[A1,D1],
-   +D2<:IterableDomain[A2] with DomainLike[A2,D2],
-   +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
-   +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+   +D1<:Domain1[A1] with Domain1Like[A1,D1],
+   +D2<:Domain1[A2] with Domain1Like[A2,D2],
+   +D<:Domain2Like[A1,A2,D1,D2,T,D],
+   +T<:Domain2Like[A2,A1,D2,D1,D,T],
    +Coll<:Tensor2[A1,A2,B],
    +This<:MatrixSlice[A1,A2,B,Coll]]
   extends TensorSliceLike[(A1,A2),D,(Int,Int),TableDomain,B,Coll,This]
@@ -186,7 +255,7 @@ object Tensor2 {
    +Coll<:Tensor2[A1,A2,B]]
   extends TensorSlice[(A1,A2),(Int,Int),B,Coll]
   with Matrix[B]
-  with MatrixSliceLike[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Coll,MatrixSlice[A1,A2,B,Coll]];
+  with MatrixSliceLike[A1,A2,B,Domain1[A1],Domain1[A2],Domain2[A1,A2],Domain2[A2,A1],Coll,MatrixSlice[A1,A2,B,Coll]];
 
   class MatrixSliceImpl[A1, A2, B, +Coll<:Tensor2[A1,A2,B]]
   (override val underlying : Coll, val keys1 : Seq[A1], val keys2 : Seq[A2])
@@ -198,3 +267,4 @@ object Tensor2 {
     override val domain = TableDomain(keys1.length, keys2.length);
   }
 }
+

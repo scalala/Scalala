@@ -21,8 +21,6 @@ package scalala;
 package tensor;
 package dense;
 
-import generic.{CanMulMatrixBy,CanMulRowBy};
-import generic.{CanSolveMatrix,MatrixSingularException};
 import generic.collection._;
 
 import domain.TableDomain;
@@ -31,6 +29,9 @@ import scalar.Scalar;
 import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
 
+import scalala.operators._;
+
+import org.netlib.blas._;
 import org.netlib.lapack._;
 import org.netlib.util.intW;
 
@@ -113,7 +114,7 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
     new DenseMatrix[B](numRows, numCols, data.clone);
 }
 
-object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrixConstructors {
+object DenseMatrix extends DenseMatrixConstructors {
 
   //
   // Capabilities
@@ -161,8 +162,40 @@ object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrix
   implicit object DenseMatrixCanMapValuesII extends DenseMatrixCanMapValues[Int,Int];
   implicit object DenseMatrixCanMapValuesID extends DenseMatrixCanMapValues[Int,Double];
 
+
+//  //
+//  // BLAS and LAPACK routines
+//  //
+//  
+//  implicit object DenseMatrixDMulDenseMatrixD
+//  extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpMulMatrixBy,DenseMatrix[Double]] {
+//    def opType = OpMulMatrixBy;
+//    def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
+//      val rv = DenseMatrix.zeros[Double](a.numRows, b.numCols);
+//      BLAS.getInstance().dgemm("n", "n",
+//        rv.numRows, rv.numCols, a.numCols,
+//        1.0, a.data, a.numRows, b.data, a.numCols,
+//        0.0, rv.data, a.numRows);
+//      rv;
+//    }
+//  }
+//
+//  implicit object DenseMatrixDMulDenseVectorColD
+//  extends BinaryOp[DenseMatrix[Double],DenseVectorCol[Double],OpMulMatrixBy,DenseVectorCol[Double]] {
+//    def opType = OpMulMatrixBy;
+//    def apply(a : DenseMatrix[Double], b : DenseVectorCol[Double]) = {
+//      val rv = DenseVectorCol.zeros[Double](a.numRows);
+//      BLAS.getInstance().dgemv("n",
+//        a.numRows, a.numCols,
+//        1.0, a.data, a.numRows, b.data, 1,
+//        0.0, rv.data, 1);
+//      rv;
+//    }
+//  }
+
   implicit object DenseMatrixCanSolveDenseMatrix
-  extends CanSolveMatrix[DenseMatrix[Double],DenseMatrix[Double],DenseMatrix[Double]] {
+  extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpSolveMatrixBy,DenseMatrix[Double]] {
+    override def opType = OpSolveMatrixBy;
     override def apply(A : DenseMatrix[Double], B : DenseMatrix[Double]) = {
       require(A.numRows == B.numRows,
               "Non-conformant matrix sizes");
@@ -256,39 +289,13 @@ object DenseMatrix extends mutable.MatrixCompanion[DenseMatrix] with DenseMatrix
   }
 
   implicit object DenseMatrixCanSolveDenseVector
-  extends CanSolveMatrix[DenseMatrix[Double],DenseVectorCol[Double],DenseVectorCol[Double]] {
+  extends BinaryOp[DenseMatrix[Double],DenseVectorCol[Double],OpSolveMatrixBy,DenseVectorCol[Double]] {
+    override def opType = OpSolveMatrixBy;
     override def apply(a : DenseMatrix[Double], b : DenseVectorCol[Double]) = {
       val rv = a \ new DenseMatrix[Double](b.size, 1, b.data);
       new DenseVectorCol[Double](rv.data);
     }
   }
-
-  /** Tighten bound on return value to be dense. */
-  override implicit def canMulMatrixByCol[V1,V2,RV]
-  (implicit sr : CanSliceRow[DenseMatrix[V1],Int,tensor.VectorRow[V1]],
-   mul : CanMulRowBy[tensor.VectorRow[V1],tensor.VectorCol[V2],RV],
-   scalar : Scalar[RV])
-  : CanMulMatrixBy[DenseMatrix[V1], tensor.VectorCol[V2], DenseVectorCol[RV]] =
-  super.canMulMatrixByCol[V1,V2,RV](sr,mul,scalar).asInstanceOf[CanMulMatrixBy[DenseMatrix[V1], tensor.VectorCol[V2], DenseVectorCol[RV]]];
-
-  /** Tighten bound on return value to be dense. */
-  override implicit def canMulMatrixByMatrix[V1,V2,RV]
-  (implicit sr : CanSliceRow[DenseMatrix[V1],Int,tensor.VectorRow[V1]],
-   sc : CanSliceCol[tensor.Matrix[V2],Int,tensor.VectorCol[V2]],
-   mul : CanMulRowBy[tensor.VectorRow[V1],tensor.VectorCol[V2],RV],
-   scalar : Scalar[RV])
-  : CanMulMatrixBy[DenseMatrix[V1], tensor.Matrix[V2], DenseMatrix[RV]] =
-  super.canMulMatrixByMatrix[V1,V2,RV](sr,sc,mul,scalar).asInstanceOf[CanMulMatrixBy[DenseMatrix[V1], tensor.Matrix[V2], DenseMatrix[RV]]];
-
-  /** Tighten bound on return value to be dense. */
-  override implicit def canAppendMatrixColumns[V]
-  : CanAppendColumns[DenseMatrix[V],tensor.Matrix[V],DenseMatrix[V]]
-  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[DenseMatrix[V],tensor.Matrix[V], DenseMatrix[V]]];
-
-  /** Tighten bound on return value to be dense. */
-  override implicit def canAppendVectorColumn[V]
-  : CanAppendColumns[DenseMatrix[V],tensor.VectorCol[V],DenseMatrix[V]]
-  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[DenseMatrix[V],tensor.VectorCol[V],DenseMatrix[V]]];
 }
 
 /**
@@ -319,8 +326,13 @@ trait DenseMatrixConstructors {
   }
 
   /** Creates a dense matrix of zeros of the requested size. */
-  def zeros[V:Scalar](rows : Int, cols : Int) =
-    fill(rows, cols)(implicitly[Scalar[V]].zero);
+  def zeros[V](rows : Int, cols : Int)(implicit s : Scalar[V]) = {
+    if (s.isPrimitive) {
+      new DenseMatrix(rows, cols, s.manifest.newArray(rows * cols));
+    } else {
+      fill(rows, cols)(s.zero);
+    }
+  }
 
   /** Creates a dense matrix of zeros of the requested size. */
   def ones[V:Scalar](rows : Int, cols : Int) =
@@ -359,3 +371,4 @@ trait DenseMatrixConstructors {
     tabulate(rows, cols)((i,j) => mt.nextInt(imax));
   }
 }
+

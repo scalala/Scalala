@@ -7,7 +7,7 @@
   <groupId>org.scalanlp</groupId>
   <artifactId>scalala_${scala.version}</artifactId>
   <name>Scalala</name>
-  <version>1.0.0.RC1-SNAPSHOT</version>
+  <version>1.0.0.RC2-SNAPSHOT</version>
   <inceptionYear>2008</inceptionYear>
 
   <developers>
@@ -172,8 +172,6 @@
     </dependency>
   </dependencies>
   <build>
-    <sourceDirectory>src/main/scala</sourceDirectory>
-    <testSourceDirectory>src/test/scala</testSourceDirectory>
     <extensions>
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
@@ -196,7 +194,6 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.14.2-SNAPSHOT</version>
         <executions>
           <execution>
             <id>compile</id>

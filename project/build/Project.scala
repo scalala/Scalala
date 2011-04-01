@@ -3,11 +3,11 @@ import java.util.jar.Attributes.Name._
 
 
 class Project(info: ProjectInfo) extends ProguardProject(info) {
-  val scalanlpRepo = "Scala NLP" at "http://repo.scalanlp.org/repo/"
+  val scalaNlp = "ScalaNLP Maven2" at "http://repo.scalanlp.org/repo"
   val ondexRepo = "ondex" at "http://ondex.rothamsted.bbsrc.ac.uk/nexus/content/groups/public"
   val scalaToolsSnapshots = "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
-  lazy val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
-  val publishTo = "Local Nexus" at "http://localhost:8081/nexus/content/repositories/snapshots" 
+  // lazy val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
+  // val publishTo = "Local Nexus" at "http://localhost:8081/nexus/content/repositories/snapshots" 
 
 
   val Jline = "jline" % "jline" % "0.9.94"
@@ -21,9 +21,17 @@ class Project(info: ProjectInfo) extends ProguardProject(info) {
   val Scalatest = "org.scalatest" % "scalatest" % "1.2-for-scala-2.8.0.RC6-SNAPSHOT" % "test"
   val Junit = "junit" % "junit" % "4.5" % "test"
 
-  override def compileOptions = Optimise :: Deprecation :: target(Target.Java1_5) :: Unchecked :: super.compileOptions.toList
+  override def compileOptions =
+    Optimise :: Deprecation ::
+    target(Target.Java1_5) ::
+    Unchecked :: CompileOption("-no-specialization") ::
+    super.compileOptions.toList
 
-  override def packageOptions = ManifestAttributes((IMPLEMENTATION_TITLE, "Scalala"), (IMPLEMENTATION_URL, "http://code.google.com/p/scalala/"), (IMPLEMENTATION_VENDOR, "org.scalanlp"), (SEALED, "true")) :: Nil
+  override def packageOptions = ManifestAttributes(
+    (IMPLEMENTATION_TITLE, "Scalala"),
+    (IMPLEMENTATION_URL, "http://github.com/scalala/"),
+    (IMPLEMENTATION_VENDOR, "scala.la"),
+    (SEALED, "true")) :: Nil
 
   override def managedStyle = ManagedStyle.Maven
 
@@ -37,7 +45,8 @@ class Project(info: ProjectInfo) extends ProguardProject(info) {
 
   lazy val docsArtifact = Artifact(artifactID, "docs", "jar", Some("javadoc"), Nil, None)
 
-  override def packageToPublishActions = super.packageToPublishActions ++ Seq(packageDocs, packageSrc, packageTestSrc)
+  override def packageToPublishActions =
+    super.packageToPublishActions ++ Seq(packageDocs, packageSrc, packageTestSrc)
   
   override def rtJarPath = {
     import System.getProperty
@@ -48,25 +57,28 @@ class Project(info: ProjectInfo) extends ProguardProject(info) {
     }
   }
   
-   def keepMain(className: String) =
-      """-keep public class %s {
-      | public static void main(java.lang.String[]);
-      |}""".stripMargin format className
+  def keepMain(className: String) =
+     """-keep public class %s {
+     | public static void main(java.lang.String[]);
+     |}""".stripMargin format className
       
-  override def allDependencyJars = (super.allDependencyJars +++ 
+  override def allDependencyJars = (
+    super.allDependencyJars +++ 
     Path.fromFile(buildScalaInstance.compilerJar) +++ 
     Path.fromFile(buildScalaInstance.libraryJar)
   )
+
   override def proguardOptions = List(
-      "-keep class scalala.** { *; }",
-      "-keep class org.jfree.** { *; }",
-      keepMain("scalala.ScalalaConsole$"),
-      keepMain("scala.tools.nsc.MainGenericRunner"),
-      "-dontoptimize",
-      "-dontobfuscate", 
-      proguardKeepLimitedSerializability,
-      proguardKeepAllScala,
-      "-keep class ch.epfl.** { *; }",
-      "-keep interface scala.ScalaObject"
+    "-keep class scalala.** { *; }",
+    "-keep class org.jfree.** { *; }",
+    keepMain("scalala.ScalalaConsole$"),
+    keepMain("scala.tools.nsc.MainGenericRunner"),
+    "-dontoptimize",
+    "-dontobfuscate", 
+    proguardKeepLimitedSerializability,
+    proguardKeepAllScala,
+    "-keep class ch.epfl.** { *; }",
+    "-keep interface scala.ScalaObject"
   )
 }
+

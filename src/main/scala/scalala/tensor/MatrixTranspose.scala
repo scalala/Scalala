@@ -22,9 +22,10 @@ package tensor;
 
 import domain.{IndexDomain,TableDomain};
 
-import generic.{CanAdd,CanSub,CanMul,CanDiv,CanPow,CanMod};
 import generic.collection._;
 import scalar.Scalar;
+
+import scalala.operators._;
 
 /**
  * A Transpose of any Matrix type is a Matrix.
@@ -32,10 +33,13 @@ import scalar.Scalar;
  * @author dramage
  */
 trait MatrixTransposeLike
-[@specialized(Int,Long,Float,Double) B, +Coll <: Matrix[B], +This <: MatrixTranspose[B,Coll]]
-extends Tensor2TransposeLike[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
-with MatrixLike[B,This] {
+[@specialized(Int,Long,Float,Double) V, +Coll <: Matrix[V], +This <: MatrixTranspose[V,Coll]]
+extends Tensor2TransposeLike[Int,Int,V,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
+with MatrixLike[V,This] {
   override def domain = underlying.domain.transpose.asInstanceOf[TableDomain];
+
+  override def t : Coll =
+    underlying;
 }
 
 /**
@@ -62,21 +66,7 @@ object MatrixTranspose {
   implicit def canJoinValues[V1,V2,RV](implicit c : CanJoinValues[Matrix[V1],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]) =
     c.asInstanceOf[CanJoinValues[MatrixTranspose[V1,Matrix[V1]],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]];
 
-  implicit def canAdd[V,B,That](implicit c : CanAdd[Matrix[V],B,That]) =
-    c.asInstanceOf[CanAdd[MatrixTranspose[V,Matrix[V]],B,That]];
-
-  implicit def canSub[V,B,That](implicit c : CanSub[Matrix[V],B,That]) =
-    c.asInstanceOf[CanSub[MatrixTranspose[V,Matrix[V]],B,That]];
-
-  implicit def canMul[V,B,That](implicit c : CanMul[Matrix[V],B,That]) =
-    c.asInstanceOf[CanMul[MatrixTranspose[V,Matrix[V]],B,That]];
-
-  implicit def canDiv[V,B,That](implicit c : CanDiv[Matrix[V],B,That]) =
-    c.asInstanceOf[CanDiv[MatrixTranspose[V,Matrix[V]],B,That]];
-
-  implicit def canMod[V,B,That](implicit c : CanMod[Matrix[V],B,That]) =
-    c.asInstanceOf[CanMod[MatrixTranspose[V,Matrix[V]],B,That]];
-
-  implicit def canPow[V,B,That](implicit c : CanPow[Matrix[V],B,That]) =
-    c.asInstanceOf[CanPow[MatrixTranspose[V,Matrix[V]],B,That]];
+  implicit def binaryOp[V,B,Op<:OpType,That](implicit op : BinaryOp[Matrix[V],B,Op,That]) =
+    op.asInstanceOf[BinaryOp[MatrixTranspose[V,Matrix[V]],B,Op,That]];
 }
+

@@ -17,8 +17,10 @@
 package scalala.collection.sparse;
 
 import scala.collection.generic._;
-import scala.reflect.ClassManifest;
 import scala.collection.mutable._;
+
+import scalala.operators._;
+import scalala.scalar.Scalar;
 
 /**
  * <p>Nearly-drop-in replacement for Array[T](length) that does not store
@@ -281,7 +283,6 @@ final class SparseArray[@specialized T]
     use(newIndex, newData, nz);
   }
 
-
   /** Use the given index and data arrays, of which the first inUsed are valid. */
   private def use(inIndex : Array[Int], inData : Array[T], inUsed : Int) = {
     // no need to rep-check since method is private and all callers satisfy
@@ -290,6 +291,14 @@ final class SparseArray[@specialized T]
     data = inData;
     index = inIndex;
     used = inUsed;
+  }
+  
+  /** Sets this array to be a copy of the given other array. */
+  def set(that : SparseArray[T]) = {
+    if (this.length != that.length) {
+      throw new IllegalArgumentException("SparseArrays must be the same length");
+    }
+    use(that.index.clone, that.data.clone, that.used);
   }
 
   private def checkrep() {
@@ -311,40 +320,89 @@ final class SparseArray[@specialized T]
 
   /**
    * Maps all values.  If f(this.default) is not equal to the new default
-   * value, the result will be dense (and much less efficient than just
-   * storing an Array).
+   * value, the result may be an efficiently dense (or almost dense) paired
+   * array.
    */
   def map[B:ClassManifest:DefaultArrayValue](f : T=>B) : SparseArray[B] = {
-    if (default == null || f(default) == implicitly[DefaultArrayValue[B]].value) {
+    val newDefault = implicitly[DefaultArrayValue[B]].value;
+    if (used < length && f(default) == newDefault) {
+      // some default values but f(default) is still default
       val newIndex = new Array[Int](used);
       val newData = new Array[B](used);
-      var i = 0;
+      var i = 0; var o = 0;
       while (i < used) {
-        newIndex(i) = index(i);
-        newData(i) = f(data(i));
+        newIndex(o) = index(i);
+        val newValue = f(data(i));
+        if (newValue != newDefault) {
+          newData(o) = newValue;
+          o += 1;
+        }
         i += 1;
       }
-      new SparseArray[B](length, newIndex, newData, used, initialActiveLength);
+      new SparseArray[B](length, newIndex, newData, o, initialActiveLength);
     } else {
-      val mappedDefault = f(default);
-      val newIndex = Array.range(0, length);
+      // no default values stored or f(default) is non-default
+      val newDefault = f(default);
+      val newIndex = new Array[Int](length);
       val newData = new Array[B](length);
       var i = 0;
       var o = 0;
       while (i < used) {
         while (o < index(i)) {
-          newData(o) = mappedDefault;
+          newIndex(o) = o;
+          newData(o) = newDefault;
           o += 1;
         }
+        newIndex(o) = o;
         newData(o) = f(data(i));
         o += 1;
         i += 1;
       }
       while (o < length) {
-        newData(o) = mappedDefault;
+        newIndex(o) = o;
+        newData(o) = newDefault;
         o += 1;
       }
-      new SparseArray[B](length, newIndex, newData, length, initialActiveLength);
+      val rv = new SparseArray[B](length, newIndex, newData, length, initialActiveLength);
+      rv.compact;
+      rv;
+    }
+  }
+
+  /**
+   * Filter's the array by removing all values for which f is false.
+   */
+  def filter(f : T=>Boolean) : SparseArray[T] = {
+    val newIndex = new Array[Int](used);
+    val newData = new Array[T](used);
+    var i = 0; var o = 0;
+    while (i < used) {
+      if (f(data(i))) {
+        newIndex(o) = index(i) - (i - o);
+        newData(o) = data(i);
+        o += 1;
+      }
+      i += 1;
+    }
+
+    if (f(default)) {
+      // if default values are accepted, assume we're full length.
+      var newLength = length - (i - o);
+      
+      // ... and subtract from that length how many defined tail elements
+      // were filtered ...
+      var ii = used - 1;
+      while (ii >= 0 && index(ii) > newIndex(o) && index(ii) == newLength - 1) {
+        ii -= 1;
+        newLength -= 1;
+      }
+      new SparseArray[T](newLength, newIndex, newData, o, initialActiveLength);
+    } else {
+      // if default values are not accepted, return a "dense" array by
+      // setting each position in newIndex consecutively to forget missing
+      // values
+      val newLength = o;
+      new SparseArray[T](newLength, Array.range(0,newLength), newData.take(newLength), newLength, initialActiveLength);
     }
   }
 
@@ -455,7 +513,7 @@ final class SparseArray[@specialized T]
   }
 }
 
-object SparseArray {
+object SparseArray extends SparseArrayOps {
   def apply[@specialized T:ClassManifest:DefaultArrayValue](values : T*) = {
     val rv = new SparseArray[T](values.length);
     var i = 0;
@@ -511,6 +569,542 @@ object SparseArray {
     rv.compact;
     rv;
   }
+  
+  class RichSparseArray[V](override val repr : SparseArray[V])
+  extends MutableNumericOps[SparseArray[V]];
+  
+  implicit def richSparseArray[V](repr : SparseArray[V]) =
+    new RichSparseArray(repr);
+  
+}
+
+trait LowerPrioritySparseArrayOps {
+  /** Set sparse array with corresponding values from another array. */
+  implicit def OpSetSparseArraySparseArrayCast[V1,V2]
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  : BinaryUpdateOp[SparseArray[V1],SparseArray[V2],OpSet]
+  = new BinaryUpdateOp[SparseArray[V1],SparseArray[V2],OpSet] {
+    def opType = OpSet;
+    def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+      var i = 0;
+      while (i < a.length) {
+        a(i) = cast(b(i));
+        i += 1;
+      }
+    }
+  }
+  
+  /** Set sparse array with casted corresponding values from another array. */
+  implicit def OpSetSparseArrayArrayCast[V1,V2]
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  : BinaryUpdateOp[SparseArray[V1],Array[V2],OpSet]
+  = new BinaryUpdateOp[SparseArray[V1],Array[V2],OpSet] {
+    def opType = OpSet;
+    def apply(a : SparseArray[V1], b : Array[V2]) = {
+      var i = 0;
+      while (i < a.length) {
+        a(i) = cast(b(i));
+        i += 1;
+      }
+    }
+  }
+  
+  /** Set array to casted scalar. */
+  implicit def OpSetSparseArrayScalarCast[V1,V2]
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  : BinaryUpdateOp[SparseArray[V1],V2,OpSet]
+  = new BinaryUpdateOp[SparseArray[V1],V2,OpSet] {
+    def opType = OpSet;
+    def apply(a : SparseArray[V1], b : V2) = { 
+      val v = cast(b);
+      var i = 0;
+      while (i < a.length) {
+        a(i) = v;
+        i += 1;
+      }
+    }
+  }
+}
+
+trait LowPrioritySparseArrayOps {
+  /** Update sparse array with corresponding values from another sparse array. */
+  implicit def OpUpdateSparseArraySparseArray[V1,V2,O<:OpType]
+  (implicit op : BinaryOp[V1,V2,O,V1], c : CompatibleShape[V1,V2])
+  : BinaryUpdateOp[SparseArray[V1], SparseArray[V2], O]
+  = new BinaryUpdateOp[SparseArray[V1], SparseArray[V2], O] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+      require(a.length == b.length, "Inputs must be the same length");
+      var i = 0;
+      while (i < a.length) {
+        a(i) = op(a(i),b(i));
+        i += 1;
+      }
+    }
+  }
+  
+  /** Set array with corresponding values from another array. */
+  implicit def OpSetSparseArraySparseArray[V](implicit s : Scalar[V])
+  : BinaryUpdateOp[SparseArray[V],SparseArray[V],OpSet]
+  = new BinaryUpdateOp[SparseArray[V],SparseArray[V],OpSet] {
+    def opType = OpSet;
+    def apply(a : SparseArray[V], b : SparseArray[V]) = { 
+      require(a.length == b.length, "Inputs must be the same length");
+      var i = 0;
+      while (i < a.length) {
+        a(i) = b(i);
+        i += 1;
+      }
+    }
+  }
+
+  /** Update sparse array with corresponding values from another array. */
+  implicit def OpUpdateSparseArrayArray[V1,V2,O<:OpType]
+  (implicit op : BinaryOp[V1,V2,O,V1], c : CompatibleShape[V1,V2])
+  : BinaryUpdateOp[SparseArray[V1], Array[V2], O]
+  = new BinaryUpdateOp[SparseArray[V1], Array[V2], O] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V1], b : Array[V2]) = {
+      require(a.length == b.length, "Inputs must be the same length");
+      var i = 0;
+      while (i < a.length) {
+        a(i) = op(a(i),b(i));
+        i += 1;
+      }
+    }
+  }
+  
+  /** Set sparse array with corresponding values from another array. */
+  implicit def OpSetSparseArrayArray[V](implicit s : Scalar[V])
+  : BinaryUpdateOp[SparseArray[V],Array[V],OpSet]
+  = new BinaryUpdateOp[SparseArray[V],Array[V],OpSet] {
+    def opType = OpSet;
+    def apply(a : SparseArray[V], b : Array[V]) = { 
+      require(a.length == b.length, "Inputs must be the same length");
+      var i = 0;
+      while (i < a.length) {
+        a(i) = b(i);
+        i += 1;
+      }
+    }
+  }
+  
+  /** Update sparse array with scalar. */
+  implicit def OpUpdateSparseArrayScalar[V1,V2,O<:OpType]
+  (implicit op : BinaryOp[V1,V2,O,V1], s : Scalar[V2])
+  : BinaryUpdateOp[SparseArray[V1], V2, O]
+  = new BinaryUpdateOp[SparseArray[V1], V2, O] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V1], b : V2) = {
+      var i = 0;
+      while (i < a.length) {
+        a(i) = op(a(i),b);
+        i += 1;
+      }
+    }
+  }
+  
+  /** Set sparse array with scalar. */
+  implicit def OpSetSparseArrayScalar[V](implicit s : Scalar[V], dv : DefaultArrayValue[V])
+  : BinaryUpdateOp[SparseArray[V],V,OpSet]
+  = new BinaryUpdateOp[SparseArray[V],V,OpSet] {
+    def opType = OpSet;
+    def apply(a : SparseArray[V], b : V) = {
+      if (b == dv.value) {
+        a.clear();
+      } else {
+        var i = 0;
+        while (i < a.length) {
+          a(i) = b;
+          i += 1;
+        }
+      }
+    }
+  }
+}
+
+trait SparseArrayOps extends LowPrioritySparseArrayOps {
+
+  //
+  // UnaryOps
+  //
+  
+  implicit def UnaryOp[V,RV,O<:OpType]
+  (implicit op : UnaryOp[V,O,RV], dv : DefaultArrayValue[RV], mf : Manifest[RV])
+  : UnaryOp[SparseArray[V],O,SparseArray[RV]]
+  = new UnaryOp[SparseArray[V],O,SparseArray[RV]] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V]) =
+      a.map(op);
+  }
+  
+  //
+  // BinaryOps
+  //
+  
+  implicit def BinaryOpSparseArrayScalar[V1,V2,RV,O<:OpType]
+  (implicit op : BinaryOp[V1,V2,O,RV], s : Scalar[V2], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
+  : BinaryOp[SparseArray[V1], V2, O, SparseArray[RV]]
+  = new BinaryOp[SparseArray[V1], V2, O, SparseArray[RV]] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V1], b : V2) =
+      a.map(v => op(v, b));
+  }
+  
+  implicit def BinaryOpScalarSparseArray[V1,V2,RV,O<:OpType]
+  (implicit op : BinaryOp[V1,V2,O,RV], s : Scalar[V1], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
+  : BinaryOp[V1, SparseArray[V2], O, SparseArray[RV]]
+  = new BinaryOp[V1, SparseArray[V2], O, SparseArray[RV]] {
+    def opType = op.opType;
+    def apply(a : V1, b : SparseArray[V2]) =
+      b.map(v => op(a, v));
+  }
+
+  implicit def BinaryOpSparseArraySparseArray[V1,V2,RV,O<:OpType]
+  (implicit op : BinaryOp[V1,V2,O,RV], c : CompatibleShape[V1,V2], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
+  : BinaryOp[SparseArray[V1],SparseArray[V2],O,SparseArray[RV]]
+  = new BinaryOp[SparseArray[V1],SparseArray[V2],O,SparseArray[RV]] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+      // TODO: optimize
+      if (try { op(a.default, b.default) == dv.value } catch { case _ => false; }) {
+        outer(a, b);
+      } else {
+        all(a, b);
+      }
+    }
+
+    /** Where both a and b have non-default values. */
+    def inner(a : SparseArray[V1], b : SparseArray[V2]) = {
+      require(a.length == b.length, "arrays have different lengths");
+      val rv = new SparseArray[RV](a.length);
+      var aO = 0;
+      var bO = 0;
+      while (aO < a.activeLength && bO < b.activeLength) {
+        val aI = a.indexAt(aO);
+        val bI = b.indexAt(bO);
+        if (aI < bI) {
+          aO += 1;
+        } else if (bI < aI) {
+          bO += 1;
+        } else {
+          rv(aI) = op(a.valueAt(aO), b.valueAt(bO));
+          aO += 1;
+          bO += 1;
+        }
+      }
+      rv;
+    }
+      
+    /** Where either a or b has non-default values. */
+    def outer(a : SparseArray[V1], b : SparseArray[V2]) = {
+      require(a.length == b.length, "arrays have different lengths");
+      val rv = new SparseArray[RV](a.length, scala.math.max(a.activeLength,b.activeLength));
+  
+      var aO = 0;
+      var bO = 0;
+      while (aO < a.activeLength && bO < b.activeLength) {
+        val aI = a.indexAt(aO);
+        val bI = b.indexAt(bO);
+        if (aI < bI) {
+          rv(aI) = op(a.valueAt(aO), b.default);
+          aO += 1;
+        } else if (bI < aI) {
+          rv(bI) = op(a.default, b.valueAt(bO));
+          bO += 1;
+        } else {
+          rv(aI) = op(a.valueAt(aO), b.valueAt(bO));
+          aO += 1;
+          bO += 1;
+        }
+      }
+  
+      // process unpaired remaining from a
+      while (aO < a.activeLength) {
+        val aI = a.indexAt(aO);
+        rv(aI) = op(a.valueAt(aO), b.default);
+        aO += 1;
+      }
+  
+      // process unpaired remaining from b
+      while (bO < b.activeLength) {
+        val bI = b.indexAt(bO);
+        rv(bI) = op(a.default, b.valueAt(bO));
+        bO += 1;
+      }
+  
+      rv;
+    }
+    
+    /** All values regardless of whether default or not. */
+    def all(a : SparseArray[V1], b : SparseArray[V2]) = {
+      require(a.length == b.length, "arrays have different lengths");
+      val rv = new SparseArray[RV](a.length, a.length);
+  
+      var i = 0;
+      while (i < rv.length) {
+        rv(i) = op(a(i),b(i));
+        i += 1;
+      }
+      rv;
+    }
+  }
+
+  implicit def BinaryOpSparseArrayArray[V1,V2,RV,O<:OpType]
+  (implicit op : BinaryOp[V1,V2,O,RV], c : CompatibleShape[V1,V2],
+   d2 : DefaultArrayValue[V2], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
+  : BinaryOp[SparseArray[V1],Array[V2],O,SparseArray[RV]]
+  = new BinaryOp[SparseArray[V1],Array[V2],O,SparseArray[RV]] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V1], b : Array[V2]) = {
+      // TODO: optimize
+      allToSparse(a, b);
+    }
+    
+    def inner(a : SparseArray[V1], b : Array[V2]) = {
+      require(a.length == b.length, "arrays have different lengths");
+      val rv = new SparseArray[RV](a.length, a.activeLength);
+      var o = 0;
+      while (o < a.activeLength) {
+        val i = a.indexAt(o);
+        rv(i) = op(a.valueAt(o), b(i));
+        o += 1;
+      }
+      rv;
+    }
+    
+    def allToDense(a : SparseArray[V1], b : Array[V2]) = {
+      require(a.length == b.length, "arrays have different lengths");
+      val rv = new Array[RV](a.length);
+      var i = 0;
+      while (i < a.length) {
+        rv(i) = op(a(i), b(i));
+        i += 1;
+      }
+      rv;
+    }
+    
+    def allToSparse(a : SparseArray[V1], b : Array[V2]) = {
+      require(a.length == b.length, "arrays have different lengths");
+      val rv = new SparseArray[RV](a.length, a.activeLength);
+      var i = 0;
+      while (i < a.length) {
+        rv(i) = op(a(i), b(i));
+        i += 1;
+      }
+      rv;
+    }
+  }
+
+  implicit def BinaryOpArraySparseArray[V1,V2,RV,O<:OpType]
+  (implicit op : BinaryOp[V1,V2,O,RV], c : CompatibleShape[V1,V2],
+   d1 : DefaultArrayValue[V1], dv : DefaultArrayValue[RV], cm : ClassManifest[RV])
+  : BinaryOp[Array[V1],SparseArray[V2],O,SparseArray[RV]]
+  = new BinaryOp[Array[V1],SparseArray[V2],O,SparseArray[RV]] {
+    def opType = op.opType;
+    def apply(a : Array[V1], b : SparseArray[V2]) = {
+      // TODO: optimize
+      allToSparse(a, b);
+    }
+    
+    def inner(a : Array[V1], b : SparseArray[V2]) = {
+      require(a.length == b.length, "arrays have different lengths");
+      val rv = new SparseArray[RV](b.length, b.activeLength);
+      var o = 0;
+      while (o < b.activeLength) {
+        val i = b.indexAt(o);
+        rv(i) = op(a(i), b.valueAt(o));
+        o += 1;
+      }
+      rv;
+    }
+    
+    def allToDense(a : Array[V1], b : SparseArray[V2]) = {
+      require(a.length == b.length, "arrays have different lengths");
+      val rv = new Array[RV](b.length);
+      var i = 0;
+      while (i < a.length) {
+        rv(i) = op(a(i), b(i));
+        i += 1;
+      }
+      rv;
+    }
+    
+    def allToSparse(a : Array[V1], b : SparseArray[V2]) = {
+      require(a.length == b.length, "arrays have different lengths");
+      val rv = new SparseArray[RV](b.length);
+      var i = 0;
+      while (i < a.length) {
+        rv(i) = op(a(i), b(i));
+        i += 1;
+      }
+      rv;
+    }
+  }
+
+  /** Recurse on elements within an array. */
+  implicit def BinaryUpdateOpRecurseSparseArraySparseArray[V1,V2,O<:OpType]
+  (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
+  : BinaryUpdateOp[SparseArray[V1], SparseArray[V2], O]
+  = new BinaryUpdateOp[SparseArray[V1], SparseArray[V2], O] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+      require(a.length == b.length, "Inputs must be the same length");
+      var i = 0;
+      while (i < a.length) {
+        op(a(i),b(i));
+        i += 1;
+      }
+    }
+  }
+  
+  /** Recurse on elements within an array. */
+  implicit def BinaryUpdateOpRecurseSparseArrayArray[V1,V2,O<:OpType]
+  (implicit op : BinaryUpdateOp[V1,V2,O], c : CompatibleShape[V1,V2])
+  : BinaryUpdateOp[SparseArray[V1], Array[V2], O]
+  = new BinaryUpdateOp[SparseArray[V1], Array[V2], O] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V1], b : Array[V2]) = {
+      require(a.length == b.length, "Inputs must be the same length");
+      var i = 0;
+      while (i < a.length) {
+        op(a(i),b(i));
+        i += 1;
+      }
+    }
+  }
+  
+  /** Recurse on elements. */
+  implicit def BinaryUpdateOpRecurseSparseArrayScalar[V1,V2,O<:OpType]
+  (implicit op : BinaryUpdateOp[V1,V2,O], s : Scalar[V2])
+  : BinaryUpdateOp[SparseArray[V1], V2, O]
+  = new BinaryUpdateOp[SparseArray[V1], V2, O] {
+    def opType = op.opType;
+    def apply(a : SparseArray[V1], b : V2) = {
+      var i = 0;
+      while (i < a.length) {
+        op(a(i),b);
+        i += 1;
+      }
+    }
+  }
+  
+///**
+// * Base class for updating a SparseArray by another SparseArray.  Considers
+// * only non-zeros in the left operand.  Base class of MulInto.
+// *
+// * @author dramage
+// */
+//class SparseArraySparseArrayUpdateLeftNZOp[V1,V2](implicit op : BinaryOp[V1,V2,V1])
+//extends BinaryUpdateOp[SparseArray[V1],SparseArray[V2]] {
+//  def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+//    if (a.length != b.length) {
+//      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+//    }
+//    var aO = 0;
+//    var bO = 0;
+//    while (aO < a.activeLength && bO < b.activeLength) {
+//      val aI = a.indexAt(aO);
+//      val bI = b.indexAt(bO);
+//      if (aI < bI) {
+//        a(aI) = op(a.valueAt(aO), b.default);
+//        aO += 1;
+//      } else if (bI < aI) {
+//        bO += 1;
+//      } else {
+//        a(aI) = op(a.valueAt(aO), b.valueAt(bO));
+//        aO += 1;
+//        bO += 1;
+//      }
+//    }
+//
+//    // process unpaired remaining from a
+//    while (aO < a.activeLength) {
+//      val aI = a.indexAt(aO);
+//      a(aI) = op(a.valueAt(aO), b.default);
+//      aO += 1;
+//    }
+//  }
+//}
+//
+///**
+// * Base class for updating a SparseArray by another SparseArray.  Considers
+// * non-zeros in either operand.  Base class of AddInto.
+// *
+// * @author dramage
+// */
+//class SparseArraySparseArrayUpdateEitherNZOp[V1,V2](implicit op : BinaryOp[V1,V2,V1])
+//extends BinaryUpdateOp[SparseArray[V1],SparseArray[V2]] {
+//  def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+//    if (a.length != b.length) {
+//      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+//    }
+//    
+//    var aO = 0;
+//    var bO = 0;
+//    while (aO < a.activeLength && bO < b.activeLength) {
+//      val aI = a.indexAt(aO);
+//      val bI = b.indexAt(bO);
+//      if (aI < bI) {
+//        a(aI) = op(a.valueAt(aO), b.default);
+//        aO += 1;
+//      } else if (bI < aI) {
+//        a(bI) = op(a.default, b.valueAt(bO));
+//        bO += 1;
+//      } else {
+//        a(aI) = op(a.valueAt(aO), b.valueAt(bO));
+//        aO += 1;
+//        bO += 1;
+//      }
+//    }
+//    
+//    // process unpaired remaining from a
+//    while (aO < a.activeLength) {
+//      val aI = a.indexAt(aO);
+//      a(aI) = op(a.valueAt(aO), b.default);
+//      aO += 1;
+//    }
+//
+//    // process unpaired remaining from b
+//    while (bO < b.activeLength) {
+//      val bI = b.indexAt(bO);
+//      a(bI) = op(a.default, b.valueAt(bO));
+//      bO += 1;
+//    }
+//  }
+//}
+//
+///**
+// * Base class for updating a SparseArray by another SparseArray.  Considers
+// * all values.  Base class of DivInto.
+// *
+// * @author dramage
+// */
+//class SparseArraySparseArrayUpdateAllOp[V1,V2](implicit op : BinaryOp[V1,V2,V1])
+//extends BinaryUpdateOp[SparseArray[V1],SparseArray[V2]] {
+//  def apply(a : SparseArray[V1], b : SparseArray[V2]) = {
+//    if (a.length != b.length) {
+//      throw new DomainException(this.getClass.getSimpleName + ": arrays have different lengths");
+//    }
+//
+//    /** Optimization: use OuterOp if the default value is itself default */
+//    if (try { op(a.default, b.default) == a.default } catch { case _ => false; }) {
+//      (new SparseArraySparseArrayUpdateEitherNZOp[V1,V2]).apply(a,b);
+//    } else {
+//      var i = 0;
+//      while (i < a.length) {
+//        a(i) = op(a(i),b(i));
+//        i += 1;
+//      }
+//    }
+//  }
+//}
+//
+//class SparseArrayScalarUpdateOp[V1,B](implicit op : BinaryOp[V1,B,V1], sb : Scalar[B])
+//extends BinaryUpdateOp[SparseArray[V1],B] {
+//  def apply(a : SparseArray[V1], b : B) =
+//    a.transform(v => op(v, b));
+//}
 }
 
 

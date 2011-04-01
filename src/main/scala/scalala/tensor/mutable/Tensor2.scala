@@ -26,6 +26,8 @@ import generic.collection._;
 
 import scalar.Scalar;
 
+import scalala.operators._;
+
 /**
  * Implementation trait for a mutable tensor.Tensor2.
  *
@@ -34,10 +36,10 @@ import scalar.Scalar;
 trait Tensor2Like
 [@specialized(Int) A1, @specialized(Int) A2,
  @specialized(Int,Long,Float,Double,Boolean) B,
- +D1<:IterableDomain[A1] with DomainLike[A1,D1],
- +D2<:IterableDomain[A2] with DomainLike[A2,D2],
- +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
- +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+ +D1<:Domain1[A1] with Domain1Like[A1,D1],
+ +D2<:Domain1[A2] with Domain1Like[A2,D2],
+ +D<:Domain2Like[A1,A2,D1,D2,T,D],
+ +T<:Domain2Like[A2,A1,D2,D1,D,T],
  +This<:Tensor2[A1,A2,B]]
 extends tensor.Tensor2Like[A1,A2,B,D1,D2,D,T,This]
 with TensorLike[(A1,A2),B,D,This] { self =>
@@ -56,6 +58,9 @@ with TensorLike[(A1,A2),B,D,This] { self =>
   /** Fixed alias for transform((k1,k2,v) => f((k1,k2),v)) */
   /* final */ override def transform(f : ((A1,A2),B)=>B) =
     transform((k1,k2,v) => f((k1,k2),v));
+    
+  override def t : Tensor2[A2,A1,B] =
+    new Tensor2Transpose.Impl[A2,A1,B,This](repr)
 }
 
 /**
@@ -68,7 +73,7 @@ trait Tensor2
  @specialized(Int,Long,Float,Double,Boolean) B]
 extends Tensor[(A1,A2),B]
 with tensor.Tensor2[A1,A2,B]
-with Tensor2Like[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Tensor2[A1,A2,B]];
+with Tensor2Like[A1,A2,B,Domain1[A1],Domain1[A2],Domain2[A1,A2],Domain2[A2,A1],Tensor2[A1,A2,B]];
 
 
 object Tensor2 {
@@ -80,17 +85,17 @@ object Tensor2 {
   }
 
   /** Constructs a closed-domain tensor for the given domain. */
-  def apply[K1,K2,V:Scalar](domain : Product2Domain[K1,K2]) : Tensor2[K1,K2,V] = {
+  def apply[K1,K2,V:Scalar](domain : Domain2[K1,K2]) : Tensor2[K1,K2,V] = {
     val d = domain;
     new Impl[K1,K2,V](scala.collection.mutable.Map[(K1,K2),V]()) {
       override val domain = d;
     }
   }
 
-  class Impl[K1,K2,V:Scalar](m : scala.collection.Map[(K1,K2),V])
+  class Impl[K1,K2,V:Scalar](m : scala.collection.mutable.Map[(K1,K2),V])
   extends Tensor.Impl[(K1,K2),V](m) with Tensor2[K1,K2,V] {
     override def domain =
-      Product2Domain(
+      Domain2(
         SetDomain(map.keySet.map(_._1)),
         SetDomain(map.keySet.map(_._2)));
 
@@ -101,18 +106,7 @@ object Tensor2 {
 
     override def update(k1 : K1, k2 : K2, value : V) = {
       checkKey(k1,k2);
-      map = map.updated((k1,k2), value);
-    }
-  }
-
-  implicit def canTranspose[A2,A1,B:Scalar] : CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]]
-  = new CanTranspose[Tensor2[A1,A2,B],Tensor2[A2,A1,B]] {
-    override def apply(from : Tensor2[A1,A2,B]) = {
-      if (from.isInstanceOf[Tensor2Transpose[_,_,_,_]]) {
-        from.asInstanceOf[Tensor2Transpose[_,_,_,_]].underlying.asInstanceOf[Tensor2[A2,A1,B]];
-      } else {
-        new Tensor2Transpose.Impl[A2,A1,B,Tensor2[A1,A2,B]](from);
-      }
+      map.update((k1,k2), value);
     }
   }
 
@@ -136,9 +130,9 @@ object Tensor2 {
   }
 
   trait RowSliceLike[A1,A2,B,+Coll<:Tensor2[A1,A2,B],+This<:RowSlice[A1,A2,B,Coll]]
-  extends Tensor1SliceLike[(A1,A2),IterableDomain[(A1,A2)],A2,IterableDomain[A2],B,Coll,This] with Tensor1RowLike[A2,B,IterableDomain[A2],This] {
+  extends Tensor1SliceLike[(A1,A2),Domain2[A1,A2],A2,Domain1[A2],B,Coll,This] with Tensor1RowLike[A2,B,Domain1[A2],This] {
     def row : A1;
-    override val domain = underlying.domain._2;
+    override def domain = underlying.domain._2;
     override def lookup(key : A2) = (row,key);
   }
 
@@ -151,9 +145,9 @@ object Tensor2 {
   extends RowSlice[A1,A2,B,Coll];
 
   trait ColSliceLike[A1,A2,B,+Coll<:Tensor2[A1,A2,B],+This<:ColSlice[A1,A2,B,Coll]]
-  extends Tensor1SliceLike[(A1,A2),IterableDomain[(A1,A2)],A1,IterableDomain[A1],B,Coll,This] with Tensor1ColLike[A1,B,IterableDomain[A1],This] {
+  extends Tensor1SliceLike[(A1,A2),Domain2[A1,A2],A1,Domain1[A1],B,Coll,This] with Tensor1ColLike[A1,B,Domain1[A1],This] {
     def col : A2;
-    override val domain = underlying.domain._1;
+    override def domain = underlying.domain._1;
     override def lookup(key : A1) = (key,col);
   }
 
@@ -168,10 +162,10 @@ object Tensor2 {
   trait MatrixSliceLike
   [@specialized(Int) A1, @specialized(Int) A2,
    @specialized(Int,Long,Float,Double,Boolean) B,
-   +D1<:IterableDomain[A1] with DomainLike[A1,D1],
-   +D2<:IterableDomain[A2] with DomainLike[A2,D2],
-   +D<:Product2DomainLike[A1,A2,D1,D2,T,D],
-   +T<:Product2DomainLike[A2,A1,D2,D1,D,T],
+   +D1<:Domain1[A1] with Domain1Like[A1,D1],
+   +D2<:Domain1[A2] with Domain1Like[A2,D2],
+   +D<:Domain2Like[A1,A2,D1,D2,T,D],
+   +T<:Domain2Like[A2,A1,D2,D1,D,T],
    +Coll<:Tensor2[A1,A2,B],
    +This<:MatrixSlice[A1,A2,B,Coll]]
   extends TensorSliceLike[(A1,A2),D,(Int,Int),TableDomain,B,Coll,This]
@@ -196,7 +190,7 @@ object Tensor2 {
    +Coll<:Tensor2[A1,A2,B]]
   extends TensorSlice[(A1,A2),(Int,Int),B,Coll]
   with Matrix[B]
-  with MatrixSliceLike[A1,A2,B,IterableDomain[A1],IterableDomain[A2],Product2Domain[A1,A2],Product2Domain[A2,A1],Coll,MatrixSlice[A1,A2,B,Coll]];
+  with MatrixSliceLike[A1,A2,B,Domain1[A1],Domain1[A2],Domain2[A1,A2],Domain2[A2,A1],Coll,MatrixSlice[A1,A2,B,Coll]];
 
   class MatrixSliceImpl[A1, A2, B, +Coll<:Tensor2[A1,A2,B]]
   (override val underlying : Coll, val keys1 : Seq[A1], val keys2 : Seq[A2])
@@ -208,3 +202,4 @@ object Tensor2 {
     override val domain = TableDomain(keys1.length, keys2.length);
   }
 }
+
