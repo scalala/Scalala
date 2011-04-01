@@ -113,7 +113,7 @@ trait LinearAlgebra {
       work, work.length, info);
 
     if (info.`val` > 0)
-      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+      throw new NotConvergedException(NotConvergedException.Iterations)
     else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
@@ -149,7 +149,7 @@ trait LinearAlgebra {
       work,work.length,iwork, info);
 
     if (info.`val` > 0)
-      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+      throw new NotConvergedException(NotConvergedException.Iterations)
     else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
@@ -253,7 +253,7 @@ trait LinearAlgebra {
     assert(info.`val` >= 0)
 
     if (info.`val` > 0)
-      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+      throw new NotConvergedException(NotConvergedException.Iterations)
 
     A
   }
@@ -295,7 +295,7 @@ trait LinearAlgebra {
     assert(info.`val` >= 0)
 
     if (info.`val` > 0)
-      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+      throw new NotConvergedException(NotConvergedException.Iterations)
 
     (evs, if (rightEigenvectors) Some(A) else None)
   }
