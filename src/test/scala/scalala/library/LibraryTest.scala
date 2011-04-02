@@ -24,7 +24,8 @@ import org.scalacheck._
 import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
-import org.junit.runner.RunWith;
+import org.junit.runner.RunWith
+import tensor.dense.DenseVector
 
 @RunWith(classOf[JUnitRunner])
 class LibraryTest extends FunSuite with Checkers {
@@ -56,5 +57,16 @@ class LibraryTest extends FunSuite with Checkers {
     assertEquals(Library.norm(v,5), 1.7146, 1e-4);
     assertEquals(Library.norm(v,6), 1.6940, 1e-4);
     assertEquals(Library.norm(v,Double.PositiveInfinity), 1.6656, 1e-4);
+  }
+
+  test("Tensor:Normalize") {
+    def assertEquals(a : Double, b : Double, t : Double) =
+      if (math.abs(a - b) > t) throw new AssertionError;
+
+    val v = DenseVector(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
+    val norm2V = Library.normalize(v,2);
+    val norm1V = Library.normalize(v,1);
+    assertEquals(Library.norm(norm2V,2), 1.0, 1e-4);
+    assertEquals(Library.norm(norm1V,1), 1.0, 1e-4);
   }
 }

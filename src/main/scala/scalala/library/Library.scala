@@ -23,7 +23,10 @@ package library;
 import scalala.generic._;
 import scalala.generic.math._;
 
-import scalala.tensor.mutable.Tensor;
+import scalala.tensor.mutable.Tensor
+import tensor.{Tensor1Col, Tensor1}
+import operators.{NumericOps, OpDiv, BinaryOp}
+;
 
 /**
  * Library of scalala basic mathematical functions.
@@ -103,6 +106,32 @@ trait Library {
     }
     m;
   }
+
+  //
+  // normalization and log-normalization:
+  //
+
+  /**
+   * Normalizes the argument such that its norm is 1.0 (with respect to the argument n).
+   * Returns value if value's norm is 0.
+   */
+  def normalize[V,K,That](value: V, n: Double)(implicit _norm: CanNorm[V], st: V<:<NumericOps[V], op: BinaryOp[V,Double,OpDiv,V]):V = {
+    val norm = _norm(value,n)
+    if(norm == 0) value
+    else value / norm;
+  }
+
+  /**
+   * logNormalizes the argument such that the softmax is 0.0.
+   * Returns value if value's softmax is -infinity
+  def logNormalize[V,K,That](value: V)(implicit _norm : CanSoftMax[V], view: V=>Tensor[K,Double], op : BinaryOp[V,Double,OpDiv,That]) = {
+    val norm = _norm(value,n)
+    if(norm == 0) value
+    else value / norm;
+  }
+   */
+
+
 }
 
 object Library extends Library;
