@@ -54,9 +54,6 @@ extends Tensor1Like[Int,V,IndexDomain,This] { self =>
   def withFilter(f : V => Boolean) =
     new Vector.Filtered[V,This](repr, f);
 
-  protected[this] def mkValueString(value : V) : String =
-    value.toString;
-
   /** Returns a view of this vector as a row. */
   def asRow : VectorRow[V] = this match {
     case r : VectorRow[_] => this.asInstanceOf[VectorRow[V]];
@@ -80,7 +77,7 @@ extends Tensor1Like[Int,V,IndexDomain,This] { self =>
   override def toString = {
     val rv = valuesIterator.take(10).map(mkValueString).mkString("\n");
     if (size > 10) {
-      rv + "\n" + "... ("+(size-10) +" more)";
+      rv + System.getProperty("line.separator") + "... ("+(size-10) +" more)";
     } else {
       rv;
     }

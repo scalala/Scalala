@@ -58,13 +58,10 @@ self =>
     rv;
   }
 
-  protected[this] def mkValueString(value : B) : String =
-    value.toString;
-
-  // TODO: improve this method to make it more Matrix-like
-  def toString(maxRows : Int, maxWidth : Int) : String = {
+  def toString(maxLines : Int, maxWidth : Int) : String = {
+    val showRows = if (numRows > maxLines) maxLines - 1 else numRows;
     def colWidth(col : Int) =
-      (0 until (maxRows min numRows)).map(row => mkValueString(this(row,col)).length).max;
+      (0 until showRows).map(row => mkValueString(this(row,col)).length+2).max;
 
     val colWidths = new scala.collection.mutable.ArrayBuffer[Int];
     var col = 0;
@@ -72,25 +69,45 @@ self =>
       colWidths += colWidth(col);
       col += 1;
     }
+    // make space for "... (7 more)"
+    while (colWidths.sum + (numCols - colWidths.size).toString.length + 11 > maxWidth) {
+      colWidths.remove(colWidths.length - 1);
+    }
+
+    val newline = System.getProperty("line.separator");
 
     var rv = new scala.StringBuilder;
-    for (row <- 0 until (maxRows min numRows); col <- 0 until colWidths.length) {
+    for (row <- 0 until showRows; col <- 0 until colWidths.length) {
       val cell = mkValueString(this(row,col));
       rv.append(cell);
-      rv.append(" " * (colWidths(col) - cell.length + 2));
+      rv.append(" " * (colWidths(col) - cell.length));
       if (col == colWidths.length - 1) {
         if (col < numCols - 1) {
-          rv.append(" ...");
+          rv.append("...");
+          if (row == 0) {
+            rv.append(" (");
+            rv.append(numCols - colWidths.size);
+            rv.append(" more)");
+          }
         }
-        rv.append(System.getProperty("line.separator"));
+        if (row + 1 < showRows) {
+          rv.append(newline);
+        }
       }
+    }
+    
+    if (numRows > showRows) {
+      rv.append(newline);
+      rv.append("... (");
+      rv.append(numRows - showRows);
+      rv.append(" more)");
     }
 
     rv.toString;
   }
 
   override def toString : String =
-    toString(maxRows = 20, maxWidth = 72);
+    toString(maxLines = 11, maxWidth = 72);
 
   override protected def canEqual(other : Any) : Boolean = other match {
     case that : Matrix[_] => true;

@@ -169,9 +169,13 @@ self =>
   def pairsIterator : Iterator[(A,B)] =
     domain.iterator.map(k => (k,this(k)));
 
-  /** Iterates over the values in the map. */
+  /** Iterates over the values in the tensor. */
   def valuesIterator : Iterator[B] =
     domain.iterator.map(this);
+
+  /** Iterates over the keys in the tensor. */
+  def keysIterator : Iterator[A] =
+    domain.iterator;
 
   /** Returns some key for which the given predicate is true. */
   def find(p : B => Boolean) : Option[A] = {
@@ -364,12 +368,28 @@ self =>
   def toMap : Map[A,B] =
     this.pairsIterator.toMap;
 
-  // TODO: provide better toString
-  override def toString = {
-    val iter = pairsIterator;
-    val rv = iter.take(10).mkString("\n");
+  protected[this] def mkKeyString(key : A) : String =
+    key.toString;
+
+  protected[this] def mkValueString(value : B) : String =
+    value.toString;
+
+  override def toString : String = {
+    val iter = keysIterator;
+    val keys = iter.take(10).toList;
+    
+    if (keys.isEmpty) 
+      return "";
+    
+    val newline = System.getProperty("line.separator");
+    val keyWidth = keys.iterator.map(mkKeyString).map(_.length).max+1;
+    val rv = (for (key <- keys.iterator) yield {
+      val ks = mkKeyString(key);
+      ks + (" " * (keyWidth-ks.length)) + mkValueString(apply(key));
+    }).mkString(newline);
+    
     if (iter.hasNext) {
-      rv + "...\n";
+      rv + newline + "... ("+(domain.size-10) +" more)";
     } else {
       rv;
     }
