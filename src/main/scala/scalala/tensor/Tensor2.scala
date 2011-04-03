@@ -22,7 +22,7 @@ package tensor;
 
 import scalar.Scalar;
 
-import domain.{IterableDomain,Domain1,Domain2,IndexDomain,TableDomain,CanGetDomain2,CanBuildDomain2,DomainException};
+import domain._;
 
 import scalala.generic.collection._;
 import scalala.operators._;
@@ -86,22 +86,56 @@ extends TensorLike[(K1,K2),V,D,This] with operators.MatrixOps[This] {
   def apply[TT>:This,That1,That2](i : IndexedSeq[K1], j : K2)
   (implicit s1 : CanSliceCol[TT,K2,That1], s2 : CanSliceVector[That1,K1,That2]) : That2 =
     s2.apply(s1.apply(repr, j), i);
+  
+  /** Transpose of the matrix. */
+  def t : Tensor2[K2,K1,V] =
+    new Tensor2Transpose.Impl[K2,K1,V,This](repr);
 
-  /** Transforms all key value pairs in this map by applying the given function. */
-  def foreach[U](fn : (K1,K2,V)=>U) =
+  //
+  // for comprehensions
+  //
+  
+  final def foreach[U](fn : ((K1,K2,V))=>U) : Unit =
+    foreach((k1,k2,v) => fn((k1,k2,v)));
+
+  final def foreachNonZero[U](fn : ((K1,K2,V))=>U) : Unit =
+    foreachNonZero((k1,k2,v) => fn((k1,k2,v)));
+
+  final def map[TT>:This,RV,That](fn : ((K1,K2,V))=>RV)
+  (implicit bf : CanMapKeyValuePairs[TT, (K1,K2), V, RV, That]) : That =
+    map[TT,RV,That]((k1 : K1, k2 : K2, v : V) => fn((k1,k2,v)))(bf);
+
+  final def filter(p : ((K1,K2,V))=>Boolean) =
+    withFilter(p);
+  
+  def withFilter(p : ((K1,K2,V)) => Boolean) =
+    new Tensor2.Filtered[K1,K2,V,This](repr, p);
+
+  //
+  // non-tupled monadic
+  //
+
+  def foreach[U](fn : (K1,K2,V)=>U) : Unit =
     foreachPair((k,v) => fn(k._1, k._2, v));
 
-  /** Tranforms all key value pairs in this map by applying the given function. */
-  def foreachNonZero[U](fn : (K1,K2,V)=>U) =
+  def foreachNonZero[U](fn : (K1,K2,V)=>U) : Unit =
     foreachNonZeroPair((k,v) => fn(k._1, k._2, v));
+  
+  def map[TT>:This,RV,That](fn : (K1,K2,V)=>RV)
+  (implicit bf : CanMapKeyValuePairs[TT, (K1,K2), V, RV, That]) : That =
+    mapPairs[TT,RV,That]((k,v) => fn(k._1,k._2,v))(bf);
+
+  def iterator : Iterator[(K1,K2,V)] =
+    pairsIterator.map(pair => (pair._1._1,pair._1._2,pair._2));
+  
+  //
+  // equality
+  //
 
   override protected def canEqual(other : Any) : Boolean = other match {
     case that : Tensor2[_,_,_] => true;
     case _ => false;
   }
-  
-  def t : Tensor2[K2,K1,V] =
-    new Tensor2Transpose.Impl[K2,K1,V,This](repr);
 }
 
 /**
@@ -257,6 +291,24 @@ object Tensor2 {
     override def lookup2(j : Int) = keys2(j);
 
     override val domain = TableDomain(keys1.length, keys2.length);
+  }
+  
+  class Filtered
+  [@specialized(Int,Long) K1, @specialized(Int,Long) K2,
+   @specialized(Int,Long,Float,Double) V, +This<:Tensor2[K1,K2,V]]
+  (inner : This, p : ((K1,K2,V)) => Boolean) {
+    def foreach[U](fn : ((K1,K2,V)) => U) =
+      inner.foreach(tup => if (p(tup)) fn(tup));
+  
+    def withFilter(q : ((K1,K2,V)) => Boolean) =
+      new Filtered[K1,K2,V,This](inner, tup => p(tup) && q(tup));
+    
+    def map[U,D,That](fn : ((K1,K2,V)) => U)
+    (implicit df : CanGetDomain[This,D], bf : CanBuildTensorFrom[This,D,(K1,K2),U,That]) = {
+      val builder = bf(inner, inner.domain.asInstanceOf[D]);
+      inner.foreach(tup => if (p(tup)) builder((tup._1,tup._2)) = fn(tup));
+      builder.result;
+    }
   }
 }
 

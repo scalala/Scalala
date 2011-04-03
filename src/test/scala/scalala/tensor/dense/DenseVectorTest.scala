@@ -100,14 +100,42 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(x === DenseVector(0,2,3));
   }
 
-  test("Map") {
+  test("MapValues") {
     val a : DenseVector[Int] = DenseVector(1,2,3,4,5);
     val m : DenseVector[Int] = a.mapValues(_ + 1);
-    assert(m.data.toList === List(2,3,4,5,6));
+    assert(m === DenseVector(2,3,4,5,6));
+  }
+
+  test("ForComprehensions") {
+    val a : DenseVectorCol[Int] = DenseVector(1,2,3,4,5);
+    
+    var s = 0;
+    
+    // foreach
+    s = 0;
+    for (v <- a) s += v;
+    assert(s === a.sum);
+    
+    // filter
+    s = 0;
+    for (v <- a; if v < 3) s += v;
+    assert(s === 1+2);
+    
+    // map
+    val b1 : DenseVectorCol[Double] = for (v <- a) yield v * 2.0;
+    assert(b1 === DenseVector(2.0,4.0,6.0,8.0,10.0));
+    
+    // map with filter
+    val b2 : DenseVectorCol[Int] = for (v <- a; if v < 3) yield v * 2;
+    assert(b2 === DenseVector(2.0,4.0));
+    
+    // transpose map with filter
+    val b3 : DenseVectorRow[Int] = for (v <- a.t; if v < 3) yield v * 3;
+    assert(b3 === DenseVector(3,6).t);
   }
 
   test("Tabulate") {
     val m = DenseVector.tabulate(5)(i => i + 1);
-    assert(m.data.toList === List(1,2,3,4,5));
+    assert(m === DenseVector(1,2,3,4,5));
   }
 }

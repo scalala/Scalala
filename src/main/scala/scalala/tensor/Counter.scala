@@ -45,33 +45,41 @@ extends TensorLike[K,V,SetDomain[K],This] { self =>
   override def apply(k : K) = data(k);
 
   //
-  // for-comprehensions.
+  // for comprehensions
   //
-  // Note:
-  // 1. flatMap doesn't make sense here because the value types are
-  //    always scalar, so you can't do { for ((k,v) <- tensor; value <- v) yield ... }.
-  //    Although I guess you might want to iterate over they key types, k,
-  //    but I'm not supporting that.
+  
+  final def foreach[U](fn : ((K,V))=>U) : Unit =
+    foreach((k,v) => fn((k,v)));
+
+  final def foreachNonZero[U](fn : ((K,V))=>U) : Unit =
+    foreachNonZero((k,v) => fn((k,v)));
+
+  final def map[TT>:This,RV,That](fn : ((K,V))=>RV)
+  (implicit bf : CanMapKeyValuePairs[TT, K, V, RV, That]) : That =
+    map[TT,RV,That]((k : K,v : V) => fn((k,v)))(bf);
+  
+  final def filter(p : ((K,V))=>Boolean) =
+    withFilter(p);
+  
+  def withFilter(p : ((K,V)) => Boolean) =
+    new Counter.Filtered[K,V,This](repr, p);
+
+  //
+  // non-tupled monadic
   //
 
-  /** Calls this.foreachPair(fn). */
-  def foreach[U](fn : ((K,V)) => U) : Unit =
-    this.foreachPair((k,v) => fn((k,v)));
+  def foreach[U](fn : (K,V)=>U) : Unit =
+    foreachPair(fn);
 
-  /**
-   * For-comprehension support for "for ((k,v) <- x) yield ..."
-   * Defers to un-tupled map.
-   */
-  def map[TT>:This, RV, That](f: ((K,V)) => RV)
-  (implicit map: CanMapKeyValuePairs[TT, K, V, RV, That]): That =
-    this.mapPairs[TT,RV,That]((k : K, v : V) => f((k,v)));
+  def foreachNonZero[U](fn : (K,V)=>U) : Unit =
+    foreachNonZeroPair(fn);
   
-  def filter(f : ((K,V)) => Boolean) =
-    new Counter.Filtered[K,V,This](repr, f);
-  
-  def withFilter(f : ((K,V)) => Boolean) =
-    new Counter.Filtered[K,V,This](repr, f);
+  def map[TT>:This,RV,That](fn : (K,V)=>RV)
+  (implicit bf : CanMapKeyValuePairs[TT, K, V, RV, That]) : That =
+    mapPairs[TT,RV,That](fn)(bf);
 
+  def iterator : Iterator[(K,V)] =
+    pairsIterator;
 }
 
 trait Counter
@@ -82,7 +90,8 @@ object Counter {
   def apply[K,V:Scalar](values : (K,V)*) : mutable.Counter[K,V] =
     mutable.Counter(values :_ *);
 
-  class Filtered[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Counter[K,V]]
+  class Filtered
+  [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Counter[K,V]]
   (inner : This, p : ((K,V)) => Boolean) {
     def foreach[U](q : ((K,V)) => U) =
       inner.foreach(tup => if (p(tup)) q(tup));

@@ -31,8 +31,8 @@ import scalala.operators._;
  *
  * @author dramage
  */
-trait MatrixLike[@specialized(Int,Long,Float,Double) B, +This<:Matrix[B]]
-extends Tensor2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,This] {
+trait MatrixLike[@specialized(Int,Long,Float,Double) V, +This<:Matrix[V]]
+extends Tensor2Like[Int,Int,V,IndexDomain,IndexDomain,TableDomain,TableDomain,This] {
 self =>
 
   /** Number of rows in this table. */
@@ -46,8 +46,31 @@ self =>
       throw new DomainException("Index "+(row,col)+" out of range.  Size is "+numRows+"x"+numCols);
   }
 
+  /** Returns true if this matrix has the same number of rows as columns. */
+  def isSquare : Boolean =
+    numRows == numCols;
+  
+  /** Returns true if this matrix is symmetric. */
+  def isSymmetric : Boolean = {
+    if (!isSquare) return false;
+    
+    var i = 0;
+    while (i < numRows) {
+      var j = i + 1;
+      while (j < numCols) {
+        if (this(i,j) != this(j,i)) {
+          return false;
+        }
+        j += 1;
+      }
+      i += 1;
+    }
+    
+    return true;
+  }
+
   /** Returns the sum of the diagonal elements of this matrix. */
-  def trace(implicit add : BinaryOp[B,B,OpAdd,B]) = {
+  def trace(implicit add : BinaryOp[V,V,OpAdd,V]) : V= {
     var rv = this(0,0);
     var i = 1;
     var n = math.min(numRows, numCols);
@@ -114,34 +137,13 @@ self =>
     case _ => false;
   }
   
-  override def t : Matrix[B] =
-    new MatrixTranspose.Impl[B,Matrix[B]](repr);
-    
-  def isSquare : Boolean =
-    numRows == numCols;
-  
-  def isSymmetric : Boolean = {
-    if (!isSquare) return false;
-    
-    var i = 0;
-    while (i < numRows) {
-      var j = i + 1;
-      while (j < numCols) {
-        if (this(i,j) != this(j,i)) {
-          return false;
-        }
-        j += 1;
-      }
-      i += 1;
-    }
-    
-    return true;
-  }
+  override def t : Matrix[V] =
+    new MatrixTranspose.Impl[V,Matrix[V]](repr);
 }
 
-trait Matrix[@specialized(Int,Long,Float,Double) B]
-extends Tensor2[Int,Int,B]
-with MatrixLike[B,Matrix[B]];
+trait Matrix[@specialized(Int,Long,Float,Double) V]
+extends Tensor2[Int,Int,V]
+with MatrixLike[V,Matrix[V]];
 
 object Matrix {
   implicit def canSliceRow[V:Scalar] : CanSliceRow[Matrix[V],Int,VectorRow[V]]

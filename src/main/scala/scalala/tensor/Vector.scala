@@ -54,6 +54,10 @@ extends Tensor1Like[Int,V,IndexDomain,This] { self =>
   def iterator : Iterator[V] =
     this.valuesIterator;
 
+  //
+  // Views
+  //
+
   /** Returns a view of this vector as a row. */
   def asRow : VectorRow[V] = this match {
     case r : VectorRow[_] => this.asInstanceOf[VectorRow[V]];
