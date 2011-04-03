@@ -47,7 +47,7 @@ with mutable.Vector[B] with mutable.VectorLike[B,SparseVector[B]] {
   override def update(key : Int, value : B) =
     data(key) = value;
 
-  override def foreachNonZero[U](fn : ((Int,B)=>U)) = {
+  override def foreachNonZeroPair[U](fn : ((Int,B)=>U)) = {
     data.foreachActive(fn);
     data.activeLength == data.length;
   }

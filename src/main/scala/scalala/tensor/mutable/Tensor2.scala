@@ -53,11 +53,7 @@ with TensorLike[(A1,A2),B,D,This] { self =>
 
   /** Tranforms all key value pairs in this map by applying the given function. */
   def transform(f : (A1,A2,B)=>B) =
-    super.transform((k,v) => f(k._1, k._2, v));
-
-  /** Fixed alias for transform((k1,k2,v) => f((k1,k2),v)) */
-  /* final */ override def transform(f : ((A1,A2),B)=>B) =
-    transform((k1,k2,v) => f((k1,k2),v));
+    transformPairs((k,v) => f(k._1, k._2, v));
     
   override def t : Tensor2[A2,A1,B] =
     new Tensor2Transpose.Impl[A2,A1,B,This](repr)

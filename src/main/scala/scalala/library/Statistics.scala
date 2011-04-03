@@ -66,15 +66,15 @@ trait Statistics {
     axis match {
       case Axis.Horizontal =>
         var mu = DenseVector.zeros[Double](X.numRows)
-        X foreach ( (idx, value) =>
-          mu(idx._1) += (value - mu(idx._1)) / (idx._2 + 1)
+        X foreach ( (i, j, value) =>
+          mu(i) += (value - mu(i)) / (j + 1)
         )
         mu
 
       case Axis.Vertical =>
         var mu = DenseVector.zeros[Double](X.numCols)
-        X foreach ( (idx, value) =>
-          mu(idx._2) += (value - mu(idx._2)) / (idx._1 + 1)
+        X foreach ( (i, j, value) =>
+          mu(j) += (value - mu(j)) / (i + 1)
         )
         mu.t
     }

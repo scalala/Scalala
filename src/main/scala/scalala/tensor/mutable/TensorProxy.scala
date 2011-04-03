@@ -39,11 +39,11 @@ extends tensor.TensorProxyLike[K,V,D,Inner,This] with TensorLike[K,V,D,This] {
   override def update(key : K, value : V) : Unit =
     inner.update(key, value);
 
-  override def transform(f : (K,V)=>V) =
-    inner.transform(f);
+  override def transformPairs(f : (K,V)=>V) =
+    inner.transformPairs(f);
 
-  override def transformNonZero(fn : ((K,V)=>V)) : Boolean =
-    inner.transformNonZero(fn);
+  override def transformNonZeroPairs(fn : ((K,V)=>V)) : Boolean =
+    inner.transformNonZeroPairs(fn);
 
   override def transformValues(f : V=>V) =
     inner.transformValues(f);

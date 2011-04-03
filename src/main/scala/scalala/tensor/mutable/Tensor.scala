@@ -34,20 +34,20 @@ import scalala.operators.{BinaryOp,BinaryUpdateOp,OpType,UnaryOp,OpSet,CanCast};
  * @author dramage
  */
 trait TensorLike
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- +D<:IterableDomain[A] with DomainLike[A,D], +Repr<:Tensor[A,B]]
-extends tensor.TensorLike[A, B, D, Repr]
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+ +D<:IterableDomain[K] with DomainLike[K,D], +Repr<:Tensor[K,V]]
+extends tensor.TensorLike[K, V, D, Repr]
 with operators.MutableNumericOps[Repr] { self =>
 
   /**
    * Update an individual value.  The given key must be in the
    * map's domain, but need not be in its activeDomain.
    */
-  def update(key : A, value : B) : Unit;
+  def update(key : K, value : V) : Unit;
 
   /** Tranforms all key value pairs in this map by applying the given function. */
-  def transform(f : (A,B)=>B) =
-    this.foreach((k,v) => update(k,f(k,v)));
+  def transformPairs(f : (K,V)=>V) =
+    this.foreachPair((k,v) => update(k,f(k,v)));
 
   /**
    * Uses the given function to update all elements of the domain
@@ -55,14 +55,14 @@ with operators.MutableNumericOps[Repr] { self =>
    *
    * @return true if all elements in the map were visited.
    */
-  def transformNonZero(fn : ((A,B)=>B)) : Boolean = {
-    this.transform(fn);
+  def transformNonZeroPairs(fn : ((K,V)=>V)) : Boolean = {
+    this.transformPairs(fn);
     true;
   }
 
   /** Tranforms all values in this map by applying the given function. */
-  def transformValues(f : B=>B) =
-    this.foreach((k,v) => update(k,f(v)));
+  def transformValues(f : V=>V) =
+    this.foreachPair((k,v) => update(k,f(v)));
 
   /**
    * Uses the given function to update all elements of the domain
@@ -70,7 +70,7 @@ with operators.MutableNumericOps[Repr] { self =>
    *
    * @return true if all elements in the map were visited.
    */
-  def transformNonZeroValues(fn : (B=>B)) = {
+  def transformNonZeroValues(fn : (V=>V)) = {
     this.transformValues(fn);
     true;
   }
@@ -80,8 +80,8 @@ with operators.MutableNumericOps[Repr] { self =>
    * so that you can construct the appropriate return instance and then
    * call asBuilder to get a builder view of it.
    */
-  def asBuilder[RV>:Repr] : TensorBuilder[A,B,RV] = new TensorBuilder[A,B,RV] {
-    def update(k : A, v : B) = self(k) = v;
+  def asBuilder[RV>:Repr] : TensorBuilder[K,V,RV] = new TensorBuilder[K,V,RV] {
+    def update(k : K, v : V) = self(k) = v;
     def result = self.asInstanceOf[RV];
   }
 }
@@ -92,8 +92,8 @@ with operators.MutableNumericOps[Repr] { self =>
  * @author dramage
  */
 trait Tensor
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
-extends tensor.Tensor[A,B] with TensorLike[A,B,IterableDomain[A],Tensor[A,B]];
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V]
+extends tensor.Tensor[K,V] with TensorLike[K,V,IterableDomain[K],Tensor[K,V]];
 
 object Tensor {
 
@@ -140,33 +140,33 @@ object Tensor {
 //    }
   }
 
-  class Impl[A, B](protected val map : scala.collection.mutable.Map[A,B])
-  (implicit override val scalar : Scalar[B])
-  extends Tensor[A, B] {
-    override def domain : IterableDomain[A] =
+  class Impl[K, V](protected val map : scala.collection.mutable.Map[K,V])
+  (implicit override val scalar : Scalar[V])
+  extends Tensor[K, V] {
+    override def domain : IterableDomain[K] =
       SetDomain(map.keySet);
     
-    override def apply(key : A) : B = {
+    override def apply(key : K) : V = {
       checkKey(key);
       map.getOrElse(key, scalar.zero);
     }
 
-    override def update(key : A, value : B) = {
+    override def update(key : K, value : V) = {
       checkKey(key);
       map.update(key, value);
     }
   }
 
-  implicit def canSliceTensor[A1, A2, B:Scalar] =
-  new CanSliceTensor[Tensor[A1,B], A1, A2, Tensor[A2,B]] {
-    override def apply(from : Tensor[A1,B], keymap : scala.collection.Map[A2,A1]) =
-      new TensorSlice.FromKeyMap[A1, A2, B, Tensor[A1,B]](from, keymap);
+  implicit def canSliceTensor[K1, K2, V:Scalar] =
+  new CanSliceTensor[Tensor[K1,V], K1, K2, Tensor[K2,V]] {
+    override def apply(from : Tensor[K1,V], keymap : scala.collection.Map[K2,K1]) =
+      new TensorSlice.FromKeyMap[K1, K2, V, Tensor[K1,V]](from, keymap);
   }
 
-  implicit def canSliceVector[A, B:Scalar] =
-  new CanSliceVector[Tensor[A,B], A, Vector[B]] {
-    override def apply(from : Tensor[A,B], keys : Seq[A]) =
-      new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
+  implicit def canSliceVector[K, V:Scalar] =
+  new CanSliceVector[Tensor[K,V], K, Vector[V]] {
+    override def apply(from : Tensor[K,V], keys : Seq[K]) =
+      new VectorSlice.FromKeySeq[K,V,Tensor[K,V]](from, keys);
   }
 
   implicit def opUpdateTensorScalar[K,V1,V2,Op<:OpType]
@@ -186,7 +186,7 @@ object Tensor {
     override def opType = op.opType;
     override def apply(a : Tensor[K,V1], b : tensor.Tensor[K,V2]) = {
       a.checkDomain(b.domain);
-      a.transform((k,v) => op(v,b(k)));
+      a.transformPairs((k,v) => op(v,b(k)));
     }
   }
   
@@ -195,7 +195,7 @@ object Tensor {
     def opType = OpSet;
     override def apply(a : Tensor[K,V], b : tensor.Tensor[K,V]) = {
       a.checkDomain(b.domain);
-      a.transform((k,v) => b(k));
+      a.transformPairs((k,v) => b(k));
     }
   }
   
@@ -205,7 +205,7 @@ object Tensor {
     def opType = OpSet;
     override def apply(a : Tensor[K,V1], b : tensor.Tensor[K,V2]) = {
       a.checkDomain(b.domain);
-      a.transform((k,v) => cast(b(k)));
+      a.transformPairs((k,v) => cast(b(k)));
     }
   }
   
@@ -214,7 +214,7 @@ object Tensor {
   = new BinaryUpdateOp[Tensor[K,V],V,OpSet] {
     def opType = OpSet;
     override def apply(a : Tensor[K,V], b : V) = {
-      a.transform((k,v) => b);
+      a.transformPairs((k,v) => b);
     }
   }
   
@@ -225,7 +225,7 @@ object Tensor {
     def opType = OpSet;
     override def apply(a : Tensor[K,V1], b : V2) = {
       val v = cast(b);
-      a.transform((k,v) => v);
+      a.transformPairs((k,v) => v);
     }
   }
 

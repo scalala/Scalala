@@ -51,14 +51,14 @@ extends TensorLike[A,B,D,This] {
   : TensorBuilder[NK,NV,Tensor[NK,NV]] =
     inner.newBuilder[NK,NV](domain);
 
-  override def foreach[U](fn: (A,B) => U) : Unit =
-    inner.foreach(fn);
+  override def foreachPair[U](fn: (A,B) => U) : Unit =
+    inner.foreachPair(fn);
 
   override def foreachValue[U](fn : (B=>U)) =
     inner.foreachValue(fn);
 
-  override def foreachNonZero[U](fn : ((A,B)=>U)) : Boolean =
-    inner.foreachNonZero(fn);
+  override def foreachNonZeroPair[U](fn : ((A,B)=>U)) : Boolean =
+    inner.foreachNonZeroPair(fn);
 
   override def foreachNonZeroValue[U](fn : (B=>U)) =
     inner.foreachNonZeroValue(fn);
@@ -75,8 +75,8 @@ extends TensorLike[A,B,D,This] {
   override def forallNonZero(fn : B => Boolean) : Boolean =
     inner.forallNonZero(fn);
 
-  override def iterator : Iterator[(A,B)] =
-    inner.iterator;
+  override def pairsIterator : Iterator[(A,B)] =
+    inner.pairsIterator;
 
   override def valuesIterator : Iterator[B] =
     inner.valuesIterator;

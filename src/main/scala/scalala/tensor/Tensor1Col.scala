@@ -76,7 +76,7 @@ object Tensor1Col {
     override def opType = OpMulColVectorBy;
     override def apply(a : A, b : B) = {
       val builder = bf(a, dThat(a.domain.asInstanceOf[DA], b.domain.asInstanceOf[DB]));
-      a.foreachNonZero((i,va) => b.foreachNonZero((j,vb) => builder((i,j)) = mul(va,vb)));
+      a.foreachNonZeroPair((i,va) => b.foreachNonZeroPair((j,vb) => builder((i,j)) = mul(va,vb)));
       builder.result;
     }
   }

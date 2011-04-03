@@ -66,7 +66,7 @@ extends TensorLike[A,B,D,This] { self =>
   def dot[C,R](that : Tensor1[A,C])(implicit mul : BinaryOp[B,C,OpMul,R], add : BinaryOp[R,R,OpAdd,R], scalar : Scalar[R]) : R = {
     checkDomain(that.domain);
     var sum = scalar.zero;
-    foreachNonZero((k,v) => sum = add(sum, mul(v, that(k))));
+    foreachNonZeroPair((k,v) => sum = add(sum, mul(v, that(k))));
     sum;
   }
 

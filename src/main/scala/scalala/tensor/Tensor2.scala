@@ -87,21 +87,13 @@ extends TensorLike[(A1,A2),B,D,This] with operators.MatrixOps[This] {
   (implicit s1 : CanSliceCol[TT,A2,That1], s2 : CanSliceVector[That1,A1,That2]) : That2 =
     s2.apply(s1.apply(repr, j), i);
 
-  /** Tranforms all key value pairs in this map by applying the given function. */
+  /** Transforms all key value pairs in this map by applying the given function. */
   def foreach[U](fn : (A1,A2,B)=>U) =
-    super.foreach((k,v) => fn(k._1, k._2, v));
-
-  /** Fixed alias for transform((k1,k2,v) => f((k1,k2),v)) */
-  /* final */ override def foreach[U](f : ((A1,A2),B)=>U) =
-    foreach((k1,k2,v) => f((k1,k2),v));
+    foreachPair((k,v) => fn(k._1, k._2, v));
 
   /** Tranforms all key value pairs in this map by applying the given function. */
   def foreachNonZero[U](fn : (A1,A2,B)=>U) =
-    super.foreachNonZero((k,v) => fn(k._1, k._2, v));
-
-  /** Fixed alias for transform((k1,k2,v) => f((k1,k2),v)) */
-  /* final */ override def foreachNonZero[U](f : ((A1,A2),B)=>U) =
-    foreachNonZero((k1,k2,v) => f((k1,k2),v));
+    foreachNonZeroPair((k,v) => fn(k._1, k._2, v));
 
   override protected def canEqual(other : Any) : Boolean = other match {
     case that : Tensor2[_,_,_] => true;
