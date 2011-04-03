@@ -351,7 +351,7 @@ self =>
 
   /** Returns an unmodifiable Map-like view of this Tensor. */
   def asMap : scala.collection.Map[K,V] = new scala.collection.Map[K,V] {
-    override def keysIterator = domain.iterator;
+    override def keysIterator = self.keysIterator;
     override def valuesIterator = self.valuesIterator;
     override def contains(key : K) = self.isDefinedAt(key);
     override def apply(key : K) = self.apply(key);

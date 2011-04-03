@@ -75,6 +75,9 @@ extends TensorLike[K,V,D,This] {
   override def forallNonZero(fn : V => Boolean) : Boolean =
     inner.forallNonZero(fn);
 
+  override def keysIterator : Iterator[K] =
+    inner.keysIterator;
+
   override def pairsIterator : Iterator[(K,V)] =
     inner.pairsIterator;
 

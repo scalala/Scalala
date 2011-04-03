@@ -44,15 +44,15 @@ extends Tensor1Like[Int,V,IndexDomain,This] { self =>
   def map[TT>:This,RV,That](fn : V => RV)(implicit bf : CanMapValues[TT, V, RV, That]) : That =
     this.mapValues[TT,RV,That](fn)(bf);
 
-  /** Calls this.valuesIterator. */
-  def iterator : Iterator[V] =
-    this.valuesIterator;
-
-//  def filter[TT>:This,That](f : V => Boolean)(implicit cf : CanFilterValues[TT,V,That]) =
-//    cf.filter(repr, f);
+  def filter[TT>:This,That](f : V => Boolean)(implicit cf : CanBuildTensorFrom[TT,IndexDomain,Int,V,That]) =
+    withFilter(f).strict;
   
   def withFilter(f : V => Boolean) =
     new Vector.Filtered[V,This](repr, f);
+
+  /** Calls this.valuesIterator. */
+  def iterator : Iterator[V] =
+    this.valuesIterator;
 
   /** Returns a view of this vector as a row. */
   def asRow : VectorRow[V] = this match {
@@ -106,6 +106,11 @@ object Vector {
     def withFilter(fn : V => Boolean) =
       new Filtered[V,This](inner, v => filterFn(v) && fn(v));
     
+    def foreach[U](fn : V => U) = {
+      for (v <- inner)
+        if (filterFn(v)) fn(v);
+    }
+    
     def map[U,That](fn : V => U)
     (implicit bf : CanBuildTensorFrom[This,IndexDomain,Int,U,That]) = {
       val builder = bf(inner, IndexDomain(size));
@@ -119,20 +124,20 @@ object Vector {
       builder.result;
     }
     
-    def flatMap[U,That](fn : V => Traversable[U])
-    (implicit bf : CanBuildTensorFrom[This,IndexDomain,Int,U,That]) = {
-      val builder = bf(inner, IndexDomain(size));
-      var i = 0;
-      for (v <- inner) {
-        if (filterFn(v)) {
-          for (u <- fn(v)) {
-            builder(i) = u;
-            i += 1;
-          }
-        }
-      }
-      builder.result;
-    }
+//    def flatMap[U,That](fn : V => Traversable[U])
+//    (implicit bf : CanBuildTensorFrom[This,IndexDomain,Int,U,That]) = {
+//      val builder = bf(inner, IndexDomain(size));
+//      var i = 0;
+//      for (v <- inner) {
+//        if (filterFn(v)) {
+//          for (u <- fn(v)) {
+//            builder(i) = u;
+//            i += 1;
+//          }
+//        }
+//      }
+//      builder.result;
+//    }
     
     def strict[That](implicit bf : CanBuildTensorFrom[This,IndexDomain,Int,V,That]) = {
       val builder = bf(inner, IndexDomain(size));
