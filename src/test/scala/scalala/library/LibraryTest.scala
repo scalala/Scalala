@@ -69,4 +69,13 @@ class LibraryTest extends FunSuite with Checkers {
     assertEquals(Library.norm(norm2V,2), 1.0, 1e-4);
     assertEquals(Library.norm(norm1V,1), 1.0, 1e-4);
   }
+
+   test("Tensor:LogNormalize") {
+    def assertEquals(a : Double, b : Double, t : Double) =
+      if (math.abs(a - b) > t) throw new AssertionError;
+
+    val v = DenseVector(-0.4326,-1.6656,0.1253,0.2877,-1.1465);
+    val normed = Library.logNormalize(v);
+    assertEquals(Library.softmax(normed), 0.0, 1e-4);
+  }
 }

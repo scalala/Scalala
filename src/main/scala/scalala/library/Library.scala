@@ -25,7 +25,7 @@ import scalala.generic.math._;
 
 import scalala.tensor.mutable.Tensor
 import tensor.{Tensor1Col, Tensor1}
-import operators.{NumericOps, OpDiv, BinaryOp}
+import operators.{OpSub, NumericOps, OpDiv, BinaryOp}
 ;
 
 /**
@@ -94,6 +94,10 @@ trait Library {
   def sqrt[V,That](value : V)(implicit sqrt : CanSqrt[V,That]) : That =
     sqrt(value);
 
+  def softmax[V](value: V)(implicit softmax: CanSoftmax[V]):Double = {
+    softmax.softmax(value)
+  }
+
   //
   // Constructors
   //
@@ -124,13 +128,24 @@ trait Library {
   /**
    * logNormalizes the argument such that the softmax is 0.0.
    * Returns value if value's softmax is -infinity
-  def logNormalize[V,K,That](value: V)(implicit _norm : CanSoftMax[V], view: V=>Tensor[K,Double], op : BinaryOp[V,Double,OpDiv,That]) = {
-    val norm = _norm(value,n)
-    if(norm == 0) value
-    else value / norm;
-  }
    */
+  def logNormalize[V,K](value: V)(implicit view: V<:<NumericOps[V],
+                                  sm: CanSoftmax[V],
+                                  op : BinaryOp[V,Double,OpSub,V]): V = {
+    val max = softmax(value)
+    if(max.isInfinite) value
+    else value - max;
+  }
 
+  /**
+   * logs and then logNormalizes the argument such that the softmax is 0.0.
+   * Returns value if value's softmax is -infinity
+   */
+  def logAndNormalize[V,V2,K](value: V)(implicit canLog : CanLog[V,V2],
+                                        view: V2 <:< NumericOps[V2], sm: CanSoftmax[V2],
+                                        op : BinaryOp[V2,Double,OpSub,V2]):V2 = {
+    logNormalize(log(value))
+  }
 
 }
 
