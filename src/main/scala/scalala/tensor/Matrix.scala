@@ -99,6 +99,27 @@ self =>
   
   override def t : Matrix[B] =
     new MatrixTranspose.Impl[B,Matrix[B]](repr);
+    
+  def isSquare : Boolean =
+    numRows == numCols;
+  
+  def isSymmetric : Boolean = {
+    if (!isSquare) return false;
+    
+    var i = 0;
+    while (i < numRows) {
+      var j = i + 1;
+      while (j < numCols) {
+        if (this(i,j) != this(j,i)) {
+          return false;
+        }
+        j += 1;
+      }
+      i += 1;
+    }
+    
+    return true;
+  }
 }
 
 trait Matrix[@specialized(Int,Long,Float,Double) B]
@@ -183,50 +204,6 @@ object Matrix {
 
     override val domain = TableDomain(keys1.length, keys2.length);
   }
-  
-//  implicit def canMulMatrixByCol[V1,A,AV,V2,B,RV,That]
-//  (implicit viewA : A=>Matrix[V1],
-//   sr : CanSliceRow[A,Int,B],
-//   viewB : B=>VectorCol[V2],
-//   mul : BinaryOp[A,B,OpMulRowVectorBy,RV],
-//   bf : CanBuildTensorFrom[B,IndexDomain,Int,RV,That],
-//   scalar : Scalar[RV])
-//  : BinaryOp[Matrix[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] =
-//  new BinaryOp[Matrix[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] {
-//    override def opType = OpMulMatrixBy;
-//    override def apply(a : A, b : B) = {
-//      val builder = bf(a);
-//      var i = 0;
-//      while (i < a.numRows) {
-//        builder(i) = mul(a(i, ::)(sr.asInstanceOf[CanSliceRow[Matrix[V1],Int,VectorRow[V1]]]), b);
-//        i += 1;
-//      }
-//      builder.result.asInstanceOf[VectorCol[RV]];
-//    }
-//  }
-//
-//  implicit def canMulMatrixByMatrix[V1,V2,RV]
-//  (implicit sr : CanSliceRow[Matrix[V1],Int,VectorRow[V1]],
-//   sc : CanSliceCol[Matrix[V2],Int,VectorCol[V2]],
-//   mul : BinaryOp[VectorRow[V1],VectorCol[V2],OpMulRowVectorBy,RV],
-//   scalar : Scalar[RV])
-//  : BinaryOp[Matrix[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] =
-//  new BinaryOp[Matrix[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] {
-//    override def opType = OpMulMatrixBy;
-//    override def apply(a : Matrix[V1], b : Matrix[V2]) = {
-//      val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows, b.numCols));
-//      var i = 0;
-//      while (i < a.numRows) {
-//        var j = 0;
-//        while (j < b.numCols) {
-//          builder((i,j)) = mul(a(i, ::)(sr.asInstanceOf[CanSliceRow[Matrix[V1],Int,VectorRow[V1]]]), b(::, j)(sc));
-//          j += 1;
-//        }
-//        i += 1;
-//      }
-//      builder.result.asInstanceOf[Matrix[RV]];
-//    }
-//  }
 
 //  implicit def canAppendMatrixColumns[V]
 //  : CanAppendColumns[Bound[V],Matrix[V],Matrix[V]]
