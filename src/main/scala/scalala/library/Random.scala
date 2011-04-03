@@ -122,7 +122,7 @@ trait Random {
     // matrix Sigma:
     val sqrtSigma = LinearAlgebra.cholesky(sigma)
     val samples: DenseMatrix[Double] =
-      sqrtSigma * DenseMatrix.randn(mu.size, numSamples)
+      sqrtSigma * DenseMatrix.randn(mu.size, numSamples, mt)
     // Due to the row-major storage order of (dense) matrices it's probably
     // best to use row-wise scalar addition instead of column-wise vector
     // addition:

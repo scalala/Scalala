@@ -30,13 +30,13 @@ import scalala.tensor.dense._
 @RunWith(classOf[JUnitRunner])
 class RandomTest extends FunSuite with Checkers {
 
-  test("multivariateGaussian") {
+  test("MultivariateGaussian") {
     // specify rng explicitly so that we don't ever fail this test
     implicit val mt = new random.MersenneTwisterFast(0l);
     
     val Sigma = DenseMatrix((3., 4.), (4., 16.))
     val mu    = DenseVector(77.,-3.)
-    val X     = randn(mu, Sigma, 500000)
+    val X     = randn(mu, Sigma, 50000)(mt)
 
     val (chkSigma, chkMu) = covariance(X)
     assert(chkMu forall ( (i,v) => math.abs(v-mu(i)) < 1e-1 ))
