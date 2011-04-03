@@ -48,9 +48,7 @@ with Tensor1Like[K,V,Domain1[K],Tensor1[K,V]];
 object Tensor1 {
   /** Constructs an open-domain tensor seeded with the given values. */
   def apply[K,V:Scalar](values : (K,V)*) : Tensor1[K,V] = {
-    new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
-      override def checkKey(key : K) = true;
-    }
+    new Impl[K,V](scala.collection.mutable.Map(values :_*)) with Tensor.OpenDomain[K,V];
   }
 
   /** Constructs a closed-domain tensor for the given domain. */

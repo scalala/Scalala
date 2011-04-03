@@ -24,8 +24,9 @@ package mutable;
 import domain._;
 
 import scalala.generic.collection._;
-import scalala.scalar.Scalar;
-import scalala.operators.{BinaryOp,BinaryUpdateOp,OpType,UnaryOp,OpSet,CanCast};
+import scalala.scalar.Scalar
+import operators._
+
 
 /**
  * Implementation trait for TensorLike.  Supports assigning,
@@ -112,9 +113,7 @@ object Tensor {
 //      for ((k,v) <- values) rv(k) = v;
 //      rv;
 //    } else {
-      new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
-        override def checkKey(key : K) = true;
-      }
+      new Impl[K,V](scala.collection.mutable.Map(values :_*)) with OpenDomain[K,V];
 //    }
   }
 
@@ -138,6 +137,11 @@ object Tensor {
         override val domain = d;
       }
 //    }
+  }
+
+  trait OpenDomain[A,B] { this:Tensor[A,B] =>
+    override def checkKey(a: A) = ()
+    override def checkDomain(domain : scalala.tensor.domain.Domain[A]) = ()
   }
 
   class Impl[A, B](protected val map : scala.collection.mutable.Map[A,B])
@@ -215,17 +219,6 @@ object Tensor {
     def opType = OpSet;
     override def apply(a : Tensor[K,V], b : V) = {
       a.transform((k,v) => b);
-    }
-  }
-  
-  implicit def opSetScalarCast[K,V1,V2]
-  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
-  : BinaryUpdateOp[Tensor[K,V1],V2,OpSet]
-  = new BinaryUpdateOp[Tensor[K,V1],V2,OpSet] {
-    def opType = OpSet;
-    override def apply(a : Tensor[K,V1], b : V2) = {
-      val v = cast(b);
-      a.transform((k,v) => v);
     }
   }
 

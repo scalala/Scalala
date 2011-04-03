@@ -56,7 +56,7 @@ extends DomainLike[A, Domain[A]];
  * @author dramage
  */
 trait IterableDomainLike[@specialized(Int,Long) A, +This<:IterableDomain[A]]
-extends Traversable[A] with DomainLike[A,This]  {
+extends Traversable[A] with DomainLike[A,This]  { outer =>
   /** Applies the given function to every element of the domain. */
   def foreach[O](f : A => O);
 
@@ -68,7 +68,7 @@ extends Traversable[A] with DomainLike[A,This]  {
   /** Constructs the union of this and the other domain. */
   def union(that : IterableDomain[A]) : IterableDomain[A] = {
     new IterableDomain[A] with UnionDomainLike[A,IterableDomain[A]] {
-      override def a = repr;
+      override def a = outer.repr;
       override def b = that;
     }
   }
@@ -134,7 +134,7 @@ extends IterableDomainLike[A, This] {
  * @author dramage
  */
 trait Domain1Like[@specialized(Int,Long) A, +This<:Domain1[A]]
-extends IterableDomainLike[A,This] {
+extends IterableDomainLike[A,This] { outer =>
 
   /** Constructs the union of this and the other domain. */
   override def union(that : IterableDomain[A]) : IterableDomain[A] = that match {
@@ -145,7 +145,7 @@ extends IterableDomainLike[A,This] {
   /** Constructs the union of this and the other domain. */
   def union(that : Domain1[A]) : Domain1[A] = {
     new Domain1[A] with UnionDomainLike[A,Domain1[A]] {
-      override def a = repr;
+      override def a = outer.repr;
       override def b = that;
     }
   }

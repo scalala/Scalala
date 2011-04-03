@@ -32,7 +32,7 @@ import scalala.scalar.Scalar;
  *
  * @author dramage
  */
-trait CanBuildTensorFrom[-From, Domain, K, V, +To] {
+trait CanBuildTensorFrom[-From, -Domain, K, V, +To] {
   def apply(from : From, domain : Domain) : TensorBuilder[K,V,To];
 }
 

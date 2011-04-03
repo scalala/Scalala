@@ -79,8 +79,9 @@ with Tensor2Like[A1,A2,B,Domain1[A1],Domain1[A2],Domain2[A1,A2],Domain2[A2,A1],T
 object Tensor2 {
   /** Constructs an open-domain tensor seeded with the given values. */
   def apply[K1,K2,V:Scalar](values : ((K1,K2),V)*) : Tensor2[K1,K2,V] = {
-    new Impl[K1,K2,V](scala.collection.mutable.Map(values :_*)) {
-      override def checkKey(k1 : K1, k2 : K2) = true;
+    new Impl[K1,K2,V](scala.collection.mutable.Map(values :_*))  {
+      override def checkKey(k1: K1, k2: K2) = ()
+      override def checkDomain(k1: tensor.domain.Domain[(K1,K2)]) = ()
     }
   }
 
