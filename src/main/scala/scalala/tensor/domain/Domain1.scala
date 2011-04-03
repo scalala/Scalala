@@ -22,38 +22,36 @@ package tensor;
 package domain;
 
 /**
- * Implementation trait for domains of a DomainFunction, representing
- * a restriction on values of type A.
+ * A domain that explicitly has only one element, i.e. A is not a tuple.
  *
  * @author dramage
  */
-trait DomainLike[@specialized(Int,Long,Float,Double) A, +This<:Domain[A]]
-extends (A => Boolean) {
+trait Domain1Like[@specialized(Int,Long) A, +This<:Domain1[A]]
+extends IterableDomainLike[A,This] {
 
-  def repr : This =
-    this.asInstanceOf[This];
+  /** Constructs the union of this and the other domain. */
+  override def union(that : IterableDomain[A]) : IterableDomain[A] = that match {
+    case d1 : Domain1[_] => this.union(d1.asInstanceOf[Domain1[A]]);
+    case _ => super.union(that);
+  }
 
-  /** Calls contains(key). */
-  final override def apply(key : A) = contains(key);
+  /** Constructs the union of this and the other domain. */
+  def union(that : Domain1[A]) : Domain1[A] = {
+    new Domain1[A] with UnionDomainLike[A,Domain1[A]] {
+      override def a = repr;
+      override def b = that;
+    }
+  }
 
-  /** Returns true if the given element is part of the set. */
-  def contains(key : A) : Boolean;
+  def product[B,That<:Domain1[B]](that : That) =
+    Domain2(repr,that);
 }
 
 /**
- * Domains of a DomainFunction, representing a restriction on values of type A.
+ * A domain that explicitly has only one element, i.e. A is not a tuple.
  *
  * @author dramage
  */
-trait Domain[@specialized(Int,Long,Float,Double) A]
-extends DomainLike[A, Domain[A]];
-
-/**
- * An exception thrown when encountering an invalid domain.
- *
- * @author dramage
- */
-class DomainException(msg : String) extends RuntimeException(msg) {
-  def this() = this(null);
-}
+trait Domain1[@specialized(Int,Long) A]
+extends IterableDomain[A] with Domain1Like[A,Domain1[A]];
 

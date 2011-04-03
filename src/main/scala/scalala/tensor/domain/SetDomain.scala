@@ -22,38 +22,29 @@ package tensor;
 package domain;
 
 /**
- * Implementation trait for domains of a DomainFunction, representing
- * a restriction on values of type A.
+ * The domain of elements from a specific set.
  *
  * @author dramage
  */
-trait DomainLike[@specialized(Int,Long,Float,Double) A, +This<:Domain[A]]
-extends (A => Boolean) {
+case class SetDomain[@specialized(Int,Long) A](set : scala.collection.Set[A])
+extends Domain1[A] with Domain1Like[A,SetDomain[A]] {
 
-  def repr : This =
-    this.asInstanceOf[This];
+  override def size =
+    set.size;
 
-  /** Calls contains(key). */
-  final override def apply(key : A) = contains(key);
+  override def foreach[O](fn : A=>O) =
+    set.foreach(fn);
 
-  /** Returns true if the given element is part of the set. */
-  def contains(key : A) : Boolean;
-}
+  override def iterator =
+    set.iterator;
 
-/**
- * Domains of a DomainFunction, representing a restriction on values of type A.
- *
- * @author dramage
- */
-trait Domain[@specialized(Int,Long,Float,Double) A]
-extends DomainLike[A, Domain[A]];
+  override def contains(key : A) : Boolean =
+    set.contains(key);
 
-/**
- * An exception thrown when encountering an invalid domain.
- *
- * @author dramage
- */
-class DomainException(msg : String) extends RuntimeException(msg) {
-  def this() = this(null);
+  override def equals(other : Any) = other match {
+    case SetDomain(s) => this.set == s;
+    case that : Domain[_] => super.equals(that);
+    case _ => false;
+  }
 }
 

@@ -22,38 +22,35 @@ package tensor;
 package domain;
 
 /**
- * Implementation trait for domains of a DomainFunction, representing
- * a restriction on values of type A.
+ * Trait that represents the onion of two domains.
  *
  * @author dramage
  */
-trait DomainLike[@specialized(Int,Long,Float,Double) A, +This<:Domain[A]]
-extends (A => Boolean) {
+trait UnionDomainLike[@specialized(Int,Long) A, +This<:IterableDomain[A]]
+extends IterableDomainLike[A, This] {
+  def a : IterableDomain[A];
+  def b : IterableDomain[A];
+  
+  override def size = {
+    var s = 0;
+    foreach(k => { s += 1; })
+    s
+  }
 
-  def repr : This =
-    this.asInstanceOf[This];
+  override def foreach[O](fn : A=>O) = {
+    a.foreach(fn);
+    b.foreach(k => if (!a.contains(k)) fn(k));
+  }
 
-  /** Calls contains(key). */
-  final override def apply(key : A) = contains(key);
+  override def iterator =
+    a.iterator ++ b.iterator.filterNot(a.contains);
 
-  /** Returns true if the given element is part of the set. */
-  def contains(key : A) : Boolean;
-}
+  override def contains(key : A) : Boolean =
+    a.contains(key) || b.contains(key);
 
-/**
- * Domains of a DomainFunction, representing a restriction on values of type A.
- *
- * @author dramage
- */
-trait Domain[@specialized(Int,Long,Float,Double) A]
-extends DomainLike[A, Domain[A]];
-
-/**
- * An exception thrown when encountering an invalid domain.
- *
- * @author dramage
- */
-class DomainException(msg : String) extends RuntimeException(msg) {
-  def this() = this(null);
+  override def equals(other : Any) = other match {
+    case that : UnionDomainLike[_,_] => this.a == that.a && this.b == that.b;
+    case _ => super.equals(other);
+  }
 }
 
