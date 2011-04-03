@@ -37,25 +37,7 @@ import tensor.dense.{DenseVector, DenseMatrix}
  *
  * @author dlwh,dramage,retronym,afwlehmann
  */
-object LinearAlgebra {
-
-  case class NotConvergedException(val reason: NotConvergedException.Reason.Value, msg: String = "")
-    extends Exception(msg)
-
-  object NotConvergedException {
-    object Reason extends Enumeration {
-      val Iterations, Divergence, Breakdown = Value
-    }
-  }
-
-  case class MatrixNotSymmetricException()
-    extends IllegalArgumentException("Matrix is not symmetric!")
-
-  case class MatrixNotSquareException()
-    extends IllegalArgumentException("Matrix is not square!")
-
-  case class MatrixEmptyException()
-    extends IllegalArgumentException("Matrix is empty!")
+trait LinearAlgebra {
 
   @inline private def requireNonEmptyMatrix[V](mat: Matrix[V]) =
     if (mat.numCols == 0 || mat.numRows == 0)
@@ -131,7 +113,7 @@ object LinearAlgebra {
       work, work.length, info);
 
     if (info.`val` > 0)
-      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+      throw new NotConvergedException(NotConvergedException.Iterations)
     else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
@@ -167,7 +149,7 @@ object LinearAlgebra {
       work,work.length,iwork, info);
 
     if (info.`val` > 0)
-      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+      throw new NotConvergedException(NotConvergedException.Iterations)
     else if (info.`val` < 0)
       throw new IllegalArgumentException()
 
@@ -271,7 +253,7 @@ object LinearAlgebra {
     assert(info.`val` >= 0)
 
     if (info.`val` > 0)
-      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+      throw new NotConvergedException(NotConvergedException.Iterations)
 
     A
   }
@@ -313,7 +295,7 @@ object LinearAlgebra {
     assert(info.`val` >= 0)
 
     if (info.`val` > 0)
-      throw new NotConvergedException(NotConvergedException.Reason.Iterations)
+      throw new NotConvergedException(NotConvergedException.Iterations)
 
     (evs, if (rightEigenvectors) Some(A) else None)
   }
@@ -418,3 +400,29 @@ object LinearAlgebra {
     inv(Y.t * Y) * Y.t
   }
 }
+
+object LinearAlgebra extends LinearAlgebra;
+
+
+/**
+ * Exception thrown if a routine has not converged.
+ */
+class NotConvergedException(val reason: NotConvergedException.Reason, msg: String = "")
+extends RuntimeException(msg)
+
+object NotConvergedException {
+  trait Reason;
+  object Iterations extends Reason;
+  object Divergence extends Reason;
+  object Breakdown extends Reason;
+}
+
+class MatrixNotSymmetricException
+extends IllegalArgumentException("Matrix is not symmetric");
+
+class MatrixNotSquareException
+extends IllegalArgumentException("Matrix is not square");
+
+class MatrixEmptyException
+extends IllegalArgumentException("Matrix is empty");
+

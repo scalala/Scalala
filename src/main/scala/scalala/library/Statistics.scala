@@ -20,14 +20,12 @@
 package scalala;
 package library;
 
-
-
 import math._
 import Numerics._
 import operators.Implicits._
-import tensor.{::, Matrix, Vector}
 import tensor.dense.{DenseVector, DenseMatrix}
 import generic.collection.{CanSliceCol, CanViewAsVector}
+import tensor.{VectorCol, ::, Matrix, Vector}
 
 /**
  * Matlab-like statistical methods.
@@ -87,25 +85,25 @@ trait Statistics {
    * of X represents one sample of a multivariate random distribution.
    */
   def covariance[T](X: Matrix[T])
-                   (implicit cvv: CanViewAsVector[Vector[T],Double],
-                             css: CanSliceCol[Matrix[T],Int,Vector[Double]],
+                   (implicit css: CanSliceCol[Matrix[T],Int,Vector[Double]],
                               td: T => Double):
     (DenseMatrix[Double], DenseVector[Double]) =
   {
-    if (X.numRows <= 0 || X.numCols < 2)
+    if (X.numRows < 1 || X.numCols < 1)
       throw new IllegalArgumentException
 
-    val N     = X.numRows
-    var mu    = DenseVector.tabulate[Double](N)(X(_,0))
-    var Sigma = DenseMatrix.zeros[Double](N, N)
-    var K     = 0.0
-    for (i <- 1 until X.numCols; val xMinusMu = X(::,i) - mu) {
+    val N        = X.numRows
+    var mu       = DenseVector.tabulate[Double](N)(X(_,0))
+    var Sigma    = DenseMatrix.zeros[Double](N, N)
+    var K        = 1.0
+    for (i <- 1 until X.numCols) {
+      val xMinusMu: VectorCol[Double] = X(::,i) - mu
       K     += 1
       mu    += xMinusMu / K
       Sigma += xMinusMu * xMinusMu.t * (1. - 1. / K)
     }
 
-    (Sigma / K, mu)
+    (Sigma / math.max(1, K-1), mu)
   }
 
   /**
