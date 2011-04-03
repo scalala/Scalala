@@ -105,18 +105,10 @@ trait Random {
    *
    * @throws NotConvergedException in case of a malformed covariance matrix
    */
-  def randn(mu: Vector[Double], Sigma: Matrix[Double], numSamples: Int): DenseMatrix[Double] = {
-    if (numSamples < 1)
-      throw new IllegalArgumentException
-
-    require(Sigma.numRows == Sigma.numCols, "Matrix is not square!")
-    for (i <- 0 until Sigma.numRows; j <- 0 until i) {
-      if (Sigma(i,j) != Sigma(j,i))
-        throw new IllegalArgumentException
-    }
-
-    if (mu.size != Sigma.numCols)
-      throw new IllegalArgumentException
+  def randn(mu: Vector[Double], sigma: Matrix[Double], numSamples: Int): DenseMatrix[Double] = {
+    require(numSamples >= 1, "Must request at least one sample");
+    require(sigma.isSymmetric, "Sigma must be symetric");
+    require(mu.size == sigma.numCols, "mu must be same length as sigma");
 
     // Assuming multivariate samples with zero mean, the general form of
     // the covariance matrix is X X^T where the scale factor 1/(N-1) has
@@ -128,7 +120,7 @@ trait Random {
     // yielding A (X X^T) A^T = A A^T.
     // So we're looking for a "square root" A of the given covariance
     // matrix Sigma:
-    val sqrtSigma = LinearAlgebra.cholesky(Sigma)
+    val sqrtSigma = LinearAlgebra.cholesky(sigma)
     val samples: DenseMatrix[Double] =
       sqrtSigma * DenseMatrix.randn(mu.size, numSamples)
     // Due to the row-major storage order of (dense) matrices it's probably
