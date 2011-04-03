@@ -31,6 +31,7 @@ import scalala.tensor.dense._
 class RandomTest extends FunSuite with Checkers {
 
   test("multivariateGaussian") {
+    // specify rng explicitly so that we don't ever fail this test
     implicit val mt = new random.MersenneTwisterFast(0l);
     
     val Sigma = DenseMatrix((3., 4.), (4., 16.))

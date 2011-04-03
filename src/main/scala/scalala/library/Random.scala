@@ -105,7 +105,7 @@ trait Random {
    *
    * @throws NotConvergedException in case of a malformed covariance matrix
    */
-  def randn(mu: Vector[Double], sigma: Matrix[Double], numSamples: Int): DenseMatrix[Double] = {
+  def randn(mu: Vector[Double], sigma: Matrix[Double], numSamples: Int)(implicit mt : MersenneTwisterFast): DenseMatrix[Double] = {
     require(numSamples >= 1, "Must request at least one sample");
     require(sigma.isSymmetric, "Sigma must be symetric");
     require(mu.size == sigma.numCols, "mu must be same length as sigma");
