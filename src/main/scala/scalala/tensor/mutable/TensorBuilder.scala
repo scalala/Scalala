@@ -27,8 +27,9 @@ package mutable;
  *
  * @author dramage
  */
-trait TensorBuilder[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,+To] {
-  def update(key : A, value : B);
+trait TensorBuilder[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,+To] {
+  def update(key : K, value : V);
 
   def result : To;
 }
+

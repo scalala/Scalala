@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
+import domain.{IterableDomain,SetDomain};
 
 import scalala.generic.collection._;
 import scalala.scalar.Scalar;
@@ -35,7 +35,7 @@ import scalala.operators.{BinaryOp,BinaryUpdateOp,OpType,UnaryOp,OpSet,CanCast};
  */
 trait TensorLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
- +D<:IterableDomain[K] with DomainLike[K,D], +Repr<:Tensor[K,V]]
+ +D<:IterableDomain[K], +Repr<:Tensor[K,V]]
 extends tensor.TensorLike[K, V, D, Repr]
 with operators.MutableNumericOps[Repr] { self =>
 

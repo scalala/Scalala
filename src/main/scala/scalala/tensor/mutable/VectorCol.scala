@@ -23,7 +23,7 @@ package mutable;
 
 import scalar.Scalar;
 
-import domain._;
+import domain.IndexDomain;
 import generic.collection.{CanAppendColumns};
 
 import scalala.operators._;

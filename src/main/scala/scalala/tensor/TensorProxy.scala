@@ -22,7 +22,7 @@ package tensor;
 
 import scalar.Scalar;
 
-import domain._;
+import domain.IterableDomain;
 import generic.collection._;
 
 import mutable.TensorBuilder;
@@ -33,12 +33,12 @@ import mutable.TensorBuilder;
  * @author dramage
  */
 trait TensorProxyLike
-[@specialized(Int, Long) A,
- @specialized(Int, Long, Float, Double, Boolean) B,
- +D<:IterableDomain[A] with DomainLike[A,D],
- Inner <: Tensor[A,B],
- +This<:Tensor[A,B]]
-extends TensorLike[A,B,D,This] {
+[@specialized(Int, Long) K,
+ @specialized(Int, Long, Float, Double, Boolean) V,
+ +D<:IterableDomain[K],
+ Inner <: Tensor[K,V],
+ +This<:Tensor[K,V]]
+extends TensorLike[K,V,D,This] {
   def inner : Inner;
   
   override def repr = inner.asInstanceOf[This];
@@ -51,64 +51,64 @@ extends TensorLike[A,B,D,This] {
   : TensorBuilder[NK,NV,Tensor[NK,NV]] =
     inner.newBuilder[NK,NV](domain);
 
-  override def foreachPair[U](fn: (A,B) => U) : Unit =
+  override def foreachPair[U](fn: (K,V) => U) : Unit =
     inner.foreachPair(fn);
 
-  override def foreachValue[U](fn : (B=>U)) =
+  override def foreachValue[U](fn : (V=>U)) =
     inner.foreachValue(fn);
 
-  override def foreachNonZeroPair[U](fn : ((A,B)=>U)) : Boolean =
+  override def foreachNonZeroPair[U](fn : ((K,V)=>U)) : Boolean =
     inner.foreachNonZeroPair(fn);
 
-  override def foreachNonZeroValue[U](fn : (B=>U)) =
+  override def foreachNonZeroValue[U](fn : (V=>U)) =
     inner.foreachNonZeroValue(fn);
     
-  override def forall(fn : (A,B) => Boolean) : Boolean =
+  override def forall(fn : (K,V) => Boolean) : Boolean =
     inner.forall(fn);
 
-  override def forallNonZero(fn : (A,B) => Boolean) : Boolean =
+  override def forallNonZero(fn : (K,V) => Boolean) : Boolean =
     inner.forallNonZero(fn);
 
-  override def forall(fn : B => Boolean) : Boolean =
+  override def forall(fn : V => Boolean) : Boolean =
     inner.forall(fn);
  
-  override def forallNonZero(fn : B => Boolean) : Boolean =
+  override def forallNonZero(fn : V => Boolean) : Boolean =
     inner.forallNonZero(fn);
 
-  override def pairsIterator : Iterator[(A,B)] =
+  override def pairsIterator : Iterator[(K,V)] =
     inner.pairsIterator;
 
-  override def valuesIterator : Iterator[B] =
+  override def valuesIterator : Iterator[V] =
     inner.valuesIterator;
 
-  override def find(p : B => Boolean) : Option[A] =
+  override def find(p : V => Boolean) : Option[K] =
     inner.find(p);
 
-  override def findAll(p : B => Boolean) : Iterable[A] =
+  override def findAll(p : V => Boolean) : Iterable[K] =
     inner.findAll(p);
 
-  override def apply(key : A) : B =
+  override def apply(key : K) : V =
     inner(key);
 
-  override def argsort(implicit cm : Manifest[A], ord : Ordering[B]) : Array[A] =
+  override def argsort(implicit cm : Manifest[K], ord : Ordering[V]) : Array[K] =
     inner.argsort;
 
-  override def argmax : A =
+  override def argmax : K =
     inner.argmax;
 
-  override def argmin : A =
+  override def argmin : K =
     inner.argmin;
 
-  override def max : B =
+  override def max : V =
     inner.max;
 
-  override def min : B =
+  override def min : V =
     inner.min;
 
-  override def sum : B =
+  override def sum : V =
     inner.sum;
 
-  override def asOrdering(implicit ord : Ordering[B]) =
+  override def asOrdering(implicit ord : Ordering[V]) =
     inner.asOrdering;
 
   override def asMap =
@@ -122,9 +122,10 @@ extends TensorLike[A,B,D,This] {
 }
 
 /**
- * A proxy for a generic Tensor.
+ * K proxy for a generic Tensor.
  *
  * @author dramage
  */
-trait TensorProxy[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B, Inner <: Tensor[A,B]]
-extends Tensor[A,B] with TensorProxyLike[A,B,IterableDomain[A],Inner,TensorProxy[A,B,Inner]];
+trait TensorProxy[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V, Inner <: Tensor[K,V]]
+extends Tensor[K,V] with TensorProxyLike[K,V,IterableDomain[K],Inner,TensorProxy[K,V,Inner]];
+

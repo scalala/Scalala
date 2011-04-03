@@ -23,7 +23,7 @@ package tensor;
 
 import scalar.Scalar;
 
-import domain._;
+import domain.{IterableDomain,IndexDomain};
 
 /**
  * Implementation trait for a Vector view of a slice of keys from a Tensor.
@@ -31,12 +31,12 @@ import domain._;
  * @author dramage
  */
 trait VectorSliceLike
-[@specialized(Int,Long) A, +D<:IterableDomain[A] with DomainLike[A,D],
- @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll<:Tensor[A,B],
- +This<:VectorSlice[A,B,Coll]]
-extends Tensor1SliceLike[A, D, Int, IndexDomain, B, Coll, This]
-with VectorLike[B, This];
+[@specialized(Int,Long) K, +D<:IterableDomain[K],
+ @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll<:Tensor[K,V],
+ +This<:VectorSlice[K,V,Coll]]
+extends Tensor1SliceLike[K, D, Int, IndexDomain, V, Coll, This]
+with VectorLike[V, This];
 
 /**
  * A Vector view of a slice of keys from a Tensor.
@@ -44,16 +44,16 @@ with VectorLike[B, This];
  * @author dramage
  */
 trait VectorSlice
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll<:Tensor[A, B]]
-extends Tensor1Slice[A,Int,B,Coll] with Vector[B]
-with VectorSliceLike[A, IterableDomain[A], B, Coll, VectorSlice[A, B, Coll]];
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll<:Tensor[K, V]]
+extends Tensor1Slice[K,Int,V,Coll] with Vector[V]
+with VectorSliceLike[K, IterableDomain[K], V, Coll, VectorSlice[K, V, Coll]];
 
 object VectorSlice {
-  class FromKeySeq[A, B, +Coll <: Tensor[A, B]]
-  (override val underlying : Coll, keys : Seq[A])
-  (implicit override val scalar : Scalar[B])
-  extends VectorSlice[A, B, Coll] {
+  class FromKeySeq[K, V, +Coll <: Tensor[K, V]]
+  (override val underlying : Coll, keys : Seq[K])
+  (implicit override val scalar : Scalar[V])
+  extends VectorSlice[K, V, Coll] {
     override def lookup(key : Int) = keys(key);
     override val domain = IndexDomain(keys.length);
   }

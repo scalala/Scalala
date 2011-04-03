@@ -33,10 +33,10 @@ import scalala.operators._;
  * @author dramage
  */
 trait MatrixTransposeLike
-[@specialized(Int,Long,Float,Double) B, +Coll <: Matrix[B], +This <: MatrixTranspose[B,Coll]]
-extends tensor.MatrixTransposeLike[B,Coll,This]
-with Tensor2TransposeLike[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
-with MatrixLike[B,This] {
+[@specialized(Int,Long,Float,Double) V, +Coll <: Matrix[V], +This <: MatrixTranspose[V,Coll]]
+extends tensor.MatrixTransposeLike[V,Coll,This]
+with Tensor2TransposeLike[Int,Int,V,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
+with MatrixLike[V,This] {
   override def domain = underlying.domain.transpose.asInstanceOf[TableDomain];
   
   override def t : Coll =
@@ -48,16 +48,16 @@ with MatrixLike[B,This] {
  *
  * @author dramage
  */
-trait MatrixTranspose[@specialized(Int,Long,Float,Double) B, +Coll <: Matrix[B]]
-extends tensor.MatrixTranspose[B,Coll]
-with Tensor2Transpose[Int,Int,B,Coll]
-with Matrix[B] with MatrixTransposeLike[B, Coll, MatrixTranspose[B, Coll]];
+trait MatrixTranspose[@specialized(Int,Long,Float,Double) V, +Coll <: Matrix[V]]
+extends tensor.MatrixTranspose[V,Coll]
+with Tensor2Transpose[Int,Int,V,Coll]
+with Matrix[V] with MatrixTransposeLike[V, Coll, MatrixTranspose[V, Coll]];
 
 object MatrixTranspose {
-  class Impl[B, +Coll <: Matrix[B]]
+  class Impl[V, +Coll <: Matrix[V]]
   (override val underlying : Coll)
-  (implicit override val scalar : Scalar[B])
-  extends MatrixTranspose[B,Coll];
+  (implicit override val scalar : Scalar[V])
+  extends MatrixTranspose[V,Coll];
 
   implicit def canMapValues[V,RV](implicit c : CanMapValues[Matrix[V],V,RV,Matrix[RV]]) =
     c.asInstanceOf[CanMapValues[MatrixTranspose[V,Matrix[V]],V,RV,Matrix[RV]]];
@@ -68,10 +68,10 @@ object MatrixTranspose {
   implicit def canJoinValues[V1,V2,RV](implicit c : CanJoinValues[Matrix[V1],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]) =
     c.asInstanceOf[CanJoinValues[MatrixTranspose[V1,Matrix[V1]],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]];
 
-  implicit def binaryOp[V,B,Op<:OpType,That](implicit op : BinaryOp[Matrix[V],B,Op,That]) =
-    op.asInstanceOf[BinaryOp[MatrixTranspose[V,Matrix[V]],B,Op,That]];
+  implicit def binaryOp[V,RV,Op<:OpType,That](implicit op : BinaryOp[Matrix[V],RV,Op,That]) =
+    op.asInstanceOf[BinaryOp[MatrixTranspose[V,Matrix[V]],RV,Op,That]];
 
-  implicit def binaryUpdateOp[V,B,Op<:OpType](implicit op : BinaryUpdateOp[Matrix[V],B,Op]) =
-    op.asInstanceOf[BinaryUpdateOp[MatrixTranspose[V,Matrix[V]],B,Op]];
+  implicit def binaryUpdateOp[V,RV,Op<:OpType](implicit op : BinaryUpdateOp[Matrix[V],RV,Op]) =
+    op.asInstanceOf[BinaryUpdateOp[MatrixTranspose[V,Matrix[V]],RV,Op]];
 }
 

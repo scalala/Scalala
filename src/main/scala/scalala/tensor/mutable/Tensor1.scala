@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
+import domain.{Domain1,SetDomain};
 
 import scalar.Scalar;
 
@@ -32,7 +32,7 @@ import scalar.Scalar;
  */
 trait Tensor1Like
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1[K,V]]
+ +D<:Domain1[K], +This<:Tensor1[K,V]]
 extends tensor.Tensor1Like[K,V,D,This] with TensorLike[K,V,D,This];
 
 /**

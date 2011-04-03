@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
+import domain.IndexDomain;
 import generic.collection._;
 
 /**

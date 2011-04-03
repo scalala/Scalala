@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
+import domain.Domain1;
 import scalar.Scalar;
 
 /**
@@ -31,7 +31,7 @@ import scalar.Scalar;
  */
 trait Tensor1RowLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1Row[K,V]]
+ +D<:Domain1[K], +This<:Tensor1Row[K,V]]
 extends tensor.Tensor1RowLike[K,V,D,This] with Tensor1Like[K,V,D,This] {
 
   override def t : Tensor1Col[K,V] =

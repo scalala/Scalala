@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
+import domain.{Domain1,Domain2};
 import generic.collection._;
 
 import scalar.Scalar;
@@ -32,20 +32,17 @@ import scalar.Scalar;
  * @author dramage
  */
 trait Tensor2TransposeLike
-[@specialized(Int) A2, @specialized(Int) A1,
- @specialized(Int,Long,Float,Double,Boolean) B,
- +D2<:Domain1[A2] with Domain1Like[A2,D2],
- +D1<:Domain1[A1] with Domain1Like[A1,D1],
- +T<:Domain2Like[A2,A1,D2,D1,D,T],
- +D<:Domain2Like[A1,A2,D1,D2,T,D],
- +Coll<:Tensor2[A1,A2,B],
- +This<:Tensor2Transpose[A2,A1,B,Coll]]
-extends tensor.Tensor2TransposeLike[A2,A1,B,D2,D1,T,D,Coll,This]
-with TensorSliceLike[(A1,A2),D,(A2,A1),T,B,Coll,This]
-with Tensor2Like[A2,A1,B,D2,D1,T,D,This] {
+[@specialized(Int) K2, @specialized(Int) K1,
+ @specialized(Int,Long,Float,Double,Boolean) V,
+ +D2<:Domain1[K2], +D1<:Domain1[K1], +T<:Domain2[K2,K1], +D<:Domain2[K1,K2],
+ +Coll<:Tensor2[K1,K2,V],
+ +This<:Tensor2Transpose[K2,K1,V,Coll]]
+extends tensor.Tensor2TransposeLike[K2,K1,V,D2,D1,T,D,Coll,This]
+with TensorSliceLike[(K1,K2),D,(K2,K1),T,V,Coll,This]
+with Tensor2Like[K2,K1,V,D2,D1,T,D,This] {
 self =>
 
-  override def update(i : A2, j : A1, value : B) =
+  override def update(i : K2, j : K1, value : V) =
     underlying.update(j, i, value);
   
   override def t : Coll =
@@ -58,17 +55,18 @@ self =>
  * @author dramage
  */
 trait Tensor2Transpose
-[@specialized(Int) A2, @specialized(Int) A1,
- @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll <: Tensor2[A1,A2,B]]
-extends tensor.Tensor2Transpose[A2,A1,B,Coll]
-with TensorSlice[(A1,A2),(A2,A1),B,Coll]
-with Tensor2[A2,A1,B]
-with Tensor2TransposeLike[A2,A1,B,Domain1[A2],Domain1[A1],Domain2[A2,A1],Domain2[A1,A2],Coll,Tensor2Transpose[A2,A1,B,Coll]];
+[@specialized(Int) K2, @specialized(Int) K1,
+ @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll <: Tensor2[K1,K2,V]]
+extends tensor.Tensor2Transpose[K2,K1,V,Coll]
+with TensorSlice[(K1,K2),(K2,K1),V,Coll]
+with Tensor2[K2,K1,V]
+with Tensor2TransposeLike[K2,K1,V,Domain1[K2],Domain1[K1],Domain2[K2,K1],Domain2[K1,K2],Coll,Tensor2Transpose[K2,K1,V,Coll]];
 
 object Tensor2Transpose {
   /** Default implementation. */
-  class Impl[A2, A1, B:Scalar, +Coll <: Tensor2[A1,A2,B]](underlying : Coll)
-  extends tensor.Tensor2Transpose.Impl[A2,A1,B,Coll](underlying)
-  with Tensor2Transpose[A2,A1,B,Coll];
+  class Impl[K2, K1, V:Scalar, +Coll <: Tensor2[K1,K2,V]](underlying : Coll)
+  extends tensor.Tensor2Transpose.Impl[K2,K1,V,Coll](underlying)
+  with Tensor2Transpose[K2,K1,V,Coll];
 }
+

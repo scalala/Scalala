@@ -20,7 +20,7 @@
 package scalala;
 package tensor;
 
-import domain._;
+import domain.{IterableDomain,Domain1,IndexDomain,CanGetDomain,CanBuildDomain2};
 import mutable.TensorBuilder;
 
 import scalala.operators._;
@@ -34,7 +34,7 @@ import scalala.generic.collection.CanBuildTensorFrom;
  */
 trait Tensor1ColLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1Col[K,V]]
+ +D<:Domain1[K], +This<:Tensor1Col[K,V]]
 extends Tensor1Like[K,V,D,This] with operators.ColOps[This] { self =>
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = domain match {
     case that : IndexDomain =>

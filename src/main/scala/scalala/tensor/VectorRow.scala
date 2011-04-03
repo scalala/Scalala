@@ -22,7 +22,7 @@ package tensor;
 
 import scalar.Scalar;
 
-import domain._;
+import domain.IndexDomain;
 import generic.collection.{CanSliceCol};
 import mutable.TensorBuilder;
 

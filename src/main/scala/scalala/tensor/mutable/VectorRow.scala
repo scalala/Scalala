@@ -23,7 +23,7 @@ package mutable;
 
 import scalar.Scalar;
 
-import domain._;
+import domain.IndexDomain;
 import generic.collection.CanSliceCol;
 
 import scalala.operators._;

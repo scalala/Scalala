@@ -20,7 +20,7 @@
 package scalala;
 package tensor;
 
-import domain._;
+import domain.IndexDomain;
 
 /**
  * Implementation trait for proxies to a Vector instance.

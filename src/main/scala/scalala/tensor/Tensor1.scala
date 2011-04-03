@@ -22,7 +22,7 @@ package tensor;
 
 import scalar.Scalar;
 
-import domain._;
+import domain.Domain1;
 import operators.{BinaryOp,OpAdd,OpMul};
 
 import mutable.TensorBuilder;
@@ -34,9 +34,9 @@ import mutable.TensorBuilder;
  * @author dramage
  */
 trait Tensor1Like
-[@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B,
- +D<:Domain1[A] with Domain1Like[A,D], +This<:Tensor1[A,B]]
-extends TensorLike[A,B,D,This] { self =>
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
+ +D<:Domain1[K], +This<:Tensor1[K,V]]
+extends TensorLike[K,V,D,This] { self =>
 
   /** Returns the number of elements in the domain of this vector. */
   def size = domain.size;
@@ -63,7 +63,7 @@ extends TensorLike[A,B,D,This] { self =>
   }
 
   /** Returns the inner product of this tensor with another. */
-  def dot[C,R](that : Tensor1[A,C])(implicit mul : BinaryOp[B,C,OpMul,R], add : BinaryOp[R,R,OpAdd,R], scalar : Scalar[R]) : R = {
+  def dot[C,R](that : Tensor1[K,C])(implicit mul : BinaryOp[V,C,OpMul,R], add : BinaryOp[R,R,OpAdd,R], scalar : Scalar[R]) : R = {
     checkDomain(that.domain);
     var sum = scalar.zero;
     foreachNonZeroPair((k,v) => sum = add(sum, mul(v, that(k))));
@@ -82,8 +82,8 @@ extends TensorLike[A,B,D,This] { self =>
  *
  * @author dramage
  */
-trait Tensor1[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B]
-extends Tensor[A,B] with Tensor1Like[A,B,Domain1[A],Tensor1[A,B]];
+trait Tensor1[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
+extends Tensor[K,V] with Tensor1Like[K,V,Domain1[K],Tensor1[K,V]];
 
 object Tensor1 {
   def apply[K,V:Scalar](keys : (K,V)*) : Tensor1Col[K,V] = {
