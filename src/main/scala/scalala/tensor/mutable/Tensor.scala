@@ -100,21 +100,11 @@ object Tensor {
 
   /** Constructs an open-domain tensor seeded with the given values. */
   def apply[K,V:Scalar](values : (K,V)*) : Tensor[K,V] = {
-//    val mI = implicitly[Manifest[Int]];
-//    val mL = implicitly[Manifest[Long]];
-//    val mF = implicitly[Manifest[Float]];
-//    val mD = implicitly[Manifest[Double]];
-//    val mB = implicitly[Manifest[Boolean]];
-//
-//    val types = (implicitly[Manifest[K]],implicitly[Scalar[V]].manifest);
-//
-//    if (types == (mI,mI)) {
-//      val rv = new IntIntImpl().asInstanceOf[Tensor[K,V]];
-//      for ((k,v) <- values) rv(k) = v;
-//      rv;
-//    } else {
-      new Impl[K,V](scala.collection.mutable.Map(values :_*)) with OpenDomain[K,V];
-//    }
+    val map = new scala.collection.mutable.HashMap[K,V]() {
+      override def default(key: K) = implicitly[Scalar[V]].zero;
+    }
+    map ++= values;
+    new Impl[K,V](scala.collection.mutable.Map(values :_*)) with OpenDomain[K,V];
   }
 
   /** Constructs a closed-domain tensor for the given domain. */

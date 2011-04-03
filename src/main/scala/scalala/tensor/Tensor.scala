@@ -530,15 +530,19 @@ object Tensor {
     override def joinEitherNonZero(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
       val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
-      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
-      b.foreachNonZero((k,bV) => builder(k) = fn(a(k),bV));
+      a.foreachNonZero{(k,aV) => builder(k) = fn(aV,b(k))};
+      b.foreachNonZero{(k,bV) => builder(k) = fn(a(k),bV)};
       builder.result;
     }
 
     override def joinBothNonZero(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
       val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
-      a.foreachNonZero((k,aV) => builder(k) = fn(aV,b(k)));
+      a.foreachNonZero{(k,aV) =>
+        val bV = b(k);
+        if(bV != 0.0)
+          builder(k) = fn(aV,bV)
+      };
       builder.result;
     }
   }
@@ -561,7 +565,9 @@ object Tensor {
   = new BinaryOp[This,Tensor[K,V2],Op,That] {
     override def opType = op.opType;
     override def apply(a : This, b : Tensor[K,V2]) = {
-      if (op == OpMul || op == OpAdd || op == OpSub) {
+      if (opType == OpMul) {
+        bf.joinBothNonZero(a,b, op);
+      } else if(opType == OpAdd || opType == OpSub) {
         bf.joinEitherNonZero(a, b, op)
       } else {
         bf.joinAll(a, b, op);
@@ -578,7 +584,7 @@ object Tensor {
   = new BinaryOp[This,V2,Op,That] {
     override def opType = op.opType;
     override def apply(a : This, b : V2) = {
-      if (op == OpMul && !s.isNaN(b)) {
+      if (opType == OpMul && !s.isNaN(b)) {
         bf.mapNonZero(a, v => op(v, b));
       } else {
         bf.map(a, v => op(v, b));
@@ -595,7 +601,7 @@ object Tensor {
   = new BinaryOp[V1,This,Op,That] {
     override def opType = op.opType;
     override def apply(a : V1, b : This) = {
-      if (op == OpMul && !s.isNaN(a)) {
+      if (opType == OpMul && !s.isNaN(a)) {
         bf.mapNonZero(b, v => op(a, v));
       } else {
         bf.map(b, v => op(a, v));
