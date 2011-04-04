@@ -1,17 +1,17 @@
 /*
  Copyright 2009 David Hall, Daniel Ramage
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
- You may obtain a copy of the License at 
- 
+ You may obtain a copy of the License at
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
- limitations under the License. 
+ limitations under the License.
 */
 
 package scalala.library;
@@ -22,7 +22,7 @@ import math._;
  * Provides some functions left out of java.lang.math.
  *
  * Borrowed from scalanlp.
- *  
+ *
  * @author dlwh
  */
 trait Numerics {
@@ -41,7 +41,7 @@ trait Numerics {
     }
 
     var f = 1./(x * x);
-    var t = f*(-1/12.0 + 
+    var t = f*(-1/12.0 +
             f*(1/120.0 +
             f*(-1/252.0 +
             f*(1/240.0 +
@@ -56,7 +56,7 @@ trait Numerics {
     24.01409824083091,-1.231739572450155,
     0.1208650973866179e-2,-0.5395239384953e-5
   );
-  
+
 //  /**
 //   * Evaluates the log of the generalized beta function.
 //   *  = \sum_a lgamma(c(a))- lgamma(c.total)
@@ -66,13 +66,13 @@ trait Numerics {
 //  }
 
   /**
-  * Computes the log of the gamma function. 
+  * Computes the log of the gamma function.
   *
   * Reference: Numerical Recipes in C
   * http://www.library.cornell.edu/nr/cbookcpdf.html
-  * www.cs.berkeley.edu/~milch/blog/versions/blog-0.1.3/blog/distrib 
+  * www.cs.berkeley.edu/~milch/blog/versions/blog-0.1.3/blog/distrib
   * @return an approximation of the log of the Gamma function * of x.  Laczos Approximation
-  */ 
+  */
   def lgamma(x : Double) = {
     var y = x;
     var tmp = x + 5.5;
@@ -93,7 +93,7 @@ trait Numerics {
   private val ERF_B = 4. / Pi;
 
   /**
-  * Approximation to the inverse ERF. Based on 
+  * Approximation to the inverse ERF. Based on
   * homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf
   */
   def erfi(x:Double) = {
@@ -109,7 +109,7 @@ trait Numerics {
   * 1- erf(x)
   */
   def erfc(x: Double) =  1 - erf(x);
- 
+
   /**
   * approximation to the erf function, for gaussian integrals.
   */
@@ -120,7 +120,7 @@ trait Numerics {
   }
 
   /**
-  * Incomplete lgamma function. 
+  * Incomplete lgamma function.
   */
   def lgamma(a: Double, z:Double) = {
     var res = 0.;
@@ -142,89 +142,83 @@ trait Numerics {
   * Sums together things in log space.
   * @return log(exp(a) + exp(b))
   */
-  def logSum(a : Double, b : Double) = {
-    if(a == Double.NegativeInfinity) b
-    else if (b == Double.NegativeInfinity) a
-    else if(a < b) b + log(1 + exp(a-b))
-    else a + log(1+exp(b-a));    
+  def logSum(a: Double, b: Double) = {
+    if (a.isNegInfinity) b
+    else if (b.isNegInfinity) a
+    else if (a < b) b + log1p(exp(a - b))
+    else a + log1p(exp(b - a))
   }
 
   /**
   * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
-  def logSum(a: Double, b:Double, c: Double*):Double ={
-    logSum(Array(a,b) ++ c);
+  def logSum(a: Double, b: Double, c: Double*): Double = {
+    logSum(Array(a, b) ++ c);
   }
 
   /**
   * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
-  def logSum(iter:Iterator[Double], max: Double):Double = {
-    var accum = 0.0;
-    while(iter.hasNext) {
-      val b = iter.next;
-      if(b != Double.NegativeInfinity)
-        accum += exp(b - max);
+  def logSum(iter: Iterator[Double], max: Double): Double = {
+    if (max.isInfinite) {
+      max
+    } else {
+      var accum = 0.0;
+      while (iter.hasNext) {
+        val b = iter.next
+        if (!b.isNegInfinity)
+          accum += exp(b - max)
+      }
+      max + log(accum)
     }
-    max + log(accum);
   }
 
   /**
   * Sums together things in log space.
   * @return log(\sum exp(a_i))
   */
-  def logSum(a:Seq[Double]):Double = {
+  def logSum(a: Seq[Double]): Double = {
     a.length match {
-      case 0 => Double.NegativeInfinity;
+      case 0 => Double.NegativeInfinity
       case 1 => a(0)
-      case 2 => logSum(a(0),a(1));
-      case _ =>
-        val m = a reduceLeft(_ max _);
-        if(m.isInfinite) m
-        else {
-          var i = 0;
-          var accum = 0.0;
-          while(i < a.length) {
-            accum += exp(a(i) - m);
-            i += 1;
-          }
-          m + log(accum);
-        }
+      case 2 => logSum(a(0), a(1))
+      case _ => logSum(a.iterator, a reduceLeft (_ max _))
     }
   }
 
-//  import scalala.tensor.Vector;
-//  /**
-//  * Sums together things in log space.
-//  * @return log(\sum exp(a_i))
-//  */
-//  def logSum(a:Vector):Double = a match {
-//    case a: AdaptiveVector => logSum(a.innerVector);
-//    case a: DenseVector => logSum(a.data);
-//    case a: SparseVector => logSum(a.data.take(a.used));
-//    case _ => logSum(a.activeValues,a.activeValues.reduceLeft(_ max _));
-//  }
-
-//  /**
-//  * Sums together things in log space.
-//  * @return log(\sum exp(a_i))
-//  */
-//  def logNormalize(a:Vector):Vector = {
-//    val sum = logSum(a);
-//    import scalala.Scalala.{logSum => _, _};
-//    a - sum value;
-//  }
-
   /**
-  * Sums together things in log space.
-  * @return log(exp(a) - exp(b))
-  * requires a &gt; b
-  */
-  def logDiff(a : Double, b : Double) = {
-    a + log(1 - exp(b-a) );    
+   * Sums together things in log space. Requires a &gt b.
+   * @return log(exp(a) - exp(b))
+   */
+  def logDiff(a: Double, b: Double): Double = {
+    require(a >= b)
+    if (a > b) a + math.log(1.0 - math.exp(b-a))
+    else Double.NegativeInfinity
   }
+
+  //  import scalala.tensor.Vector;
+  //  /**
+  //  * Sums together things in log space.
+  //  * @return log(\sum exp(a_i))
+  //  */
+  //  def logSum(a:Vector):Double = a match {
+  //    case a: AdaptiveVector => logSum(a.innerVector);
+  //    case a: DenseVector => logSum(a.data);
+  //    case a: SparseVector => logSum(a.data.take(a.used));
+  //    case _ => logSum(a.activeValues,a.activeValues.reduceLeft(_ max _));
+  //  }
+
+  //  /**
+  //  * Sums together things in log space.
+  //  * @return log(\sum exp(a_i))
+  //  */
+  //  def logNormalize(a:Vector):Vector = {
+  //    val sum = logSum(a);
+  //    import scalala.Scalala.{logSum => _, _};
+  //    a - sum value;
+  //  }
 
   /**
    * Computes the polynomial P(x) with coefficients given in the passed in array.
