@@ -40,6 +40,9 @@ trait Library {
   /** Alias for math.log. */
   final def log(v : Double) : Double = scala.math.log(v);
 
+  /** Alias for math.log1p. */
+  final def log1p(v : Double) : Double = scala.math.log1p(v);
+
   /** Alias for math.exp. */
   final def exp(v : Double) : Double = scala.math.exp(v);
 
