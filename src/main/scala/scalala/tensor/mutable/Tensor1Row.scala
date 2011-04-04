@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain.Domain1;
+import domain.{Domain1,IndexDomain};
 
 import scalala.scalar.Scalar;
 
@@ -50,24 +50,17 @@ extends tensor.Tensor1Row[K,V] with Tensor1[K,V]
 with Tensor1RowLike[K,V,Domain1[K],Tensor1Row[K,V]];
 
 object Tensor1Row {
-  /** Constructs an open-domain tensor seeded with the given values. */
-  def apply[K,V:Scalar](values : (K,V)*) : Tensor1Row[K,V] = {
-    new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
-      override def checkKey(key : K) = true;
-    }
-  }
-
   /** Constructs a closed-domain tensor for the given domain. */
-  def apply[K,V:Scalar](domain : Domain1[K]) : Tensor1Row[K,V] = {
-    val d = domain;
-    new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
-      override val domain = d;
-    }
+  def apply[K,V:Scalar](domain : Domain1[K]) : Tensor1Row[K,V] = domain match {
+    case d : IndexDomain => VectorRow(d);
+    case _ => new Impl(domain, scala.collection.mutable.Map[K,V]());
   }
 
-  class Impl[K,V:Scalar](map : scala.collection.mutable.Map[K,V])
-  extends Tensor1.Impl[K,V](map) with Tensor1Row[K,V];
-
+  class Impl[K,V:Scalar](
+    override val domain : Domain1[K],
+    override protected val data : scala.collection.mutable.Map[K,V])
+  extends Tensor.Impl[K,V](domain, data) with Tensor1Row[K,V];
+  
   class View[K,V](override val inner : Tensor1Col[K,V])
   extends Tensor1Proxy[K,V,Tensor1Col[K,V]] with Tensor1Row[K,V]
   with Tensor1Like[K,V,Domain1[K],View[K,V]] {

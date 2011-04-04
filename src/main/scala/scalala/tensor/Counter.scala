@@ -36,14 +36,24 @@ trait CounterLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +M<:scala.collection.Map[K,V],
  +This<:Counter[K,V]]
-extends TensorLike[K,V,SetDomain[K],This]
+extends Tensor1Like[K,V,SetDomain[K],This]
 with TensorNomadic[K,V,This] { self =>
+
+  override def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK])
+  : TensorBuilder[NK,NV,Tensor[NK,NV]] = domain match {
+    case that : IndexDomain =>
+      super.newBuilder(that)
+    case that : Domain1[_] =>
+      mutable.Counter(that)(implicitly[Scalar[NV]]).asBuilder;
+    case _ =>
+      super.newBuilder(domain);
+  }
 
   def data : M;
   
   override def domain : SetDomain[K] = new SetDomain(data.keySet);
   
-  override def apply(k : K) = data(k);
+  override def apply(k : K) = data.getOrElse(k,scalar.zero);
 
   //
   // non-tupled monadic
@@ -58,14 +68,36 @@ with TensorNomadic[K,V,This] { self =>
   def map[TT>:This,RV,That](fn : (K,V)=>RV)
   (implicit bf : CanMapKeyValuePairs[TT, K, V, RV, That]) : That =
     mapPairs[TT,RV,That](fn)(bf);
+    
+  //
+  // faster implementations
+  //
+  
+  override def foreachPair[U](fn : (K,V) => U) : Unit =
+    data.foreach(fn.tupled);
+  
+  override def foreachKey[U](fn : K => U) : Unit =
+    data.keys.foreach(fn);
+  
+  override def foreachValue[U](fn : V => U) : Unit =
+    data.values.foreach(fn);
+    
+  override def keysIterator = data.keysIterator;
+  
+  override def valuesIterator = data.valuesIterator;
+  
+  override def pairsIterator = data.iterator;
 }
 
 trait Counter
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
-extends Tensor[K,V] with CounterLike[K,V,scala.collection.Map[K,V],Counter[K,V]];
+extends Tensor1[K,V] with CounterLike[K,V,scala.collection.Map[K,V],Counter[K,V]];
 
 object Counter {
   def apply[K,V:Scalar](values : (K,V)*) : mutable.Counter[K,V] =
     mutable.Counter(values :_ *);
+    
+  def apply[K,V:Scalar](domain : Domain1[K]) =
+    mutable.Counter(domain);
 }
 

@@ -36,7 +36,7 @@ trait CounterLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +M<:scala.collection.mutable.Map[K,V],
  +This<:Counter[K,V]]
-extends tensor.CounterLike[K,V,M,This] with TensorLike[K,V,IterableDomain[K],This] { self =>
+extends tensor.CounterLike[K,V,M,This] with Tensor1Like[K,V,SetDomain[K],This] { self =>
 
   def update(k : K, v : V) =
     data(k) = v;
@@ -44,7 +44,7 @@ extends tensor.CounterLike[K,V,M,This] with TensorLike[K,V,IterableDomain[K],Thi
 
 trait Counter
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
-extends tensor.Counter[K,V] with Tensor[K,V]
+extends tensor.Counter[K,V] with Tensor1[K,V]
 with CounterLike[K,V,scala.collection.mutable.Map[K,V],Counter[K,V]];
 
 object Counter {
@@ -57,5 +57,8 @@ object Counter {
     for ((k,v) <- values) rv(k) = v;
     rv;
   }
+  
+  def apply[K,V:Scalar](domain : Domain1[K]) : Counter[K,V] =
+    new Impl(scala.collection.mutable.HashMap[K,V]());
 }
 

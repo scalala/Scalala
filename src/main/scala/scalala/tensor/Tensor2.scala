@@ -151,6 +151,10 @@ extends Tensor[(K1,K2),V]
 with Tensor2Like[K1,K2,V,Domain1[K1],Domain1[K2],Domain2[K1,K2],Domain2[K2,K1],Tensor2[K1,K2,V]]
 
 object Tensor2 {
+  /** Constructs a tensor for the given domain. */
+  def apply[K1,K2,V:Scalar](domain : Domain2[K1,K2]) =
+    mutable.Tensor2.apply(domain);
+
   implicit def canSliceRow[K1,K2,V:Scalar] : CanSliceRow[Tensor2[K1,K2,V],K1,Tensor1Row[K2,V]]
   = new CanSliceRow[Tensor2[K1,K2,V],K1,Tensor1Row[K2,V]] {
     override def apply(from : Tensor2[K1,K2,V], row : K1) =

@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain.{Domain1,SetDomain};
+import domain.Domain1;
 
 import scalala.scalar.Scalar;
 
@@ -46,25 +46,8 @@ extends tensor.Tensor1[K,V] with Tensor[K,V]
 with Tensor1Like[K,V,Domain1[K],Tensor1[K,V]];
 
 object Tensor1 {
-  /** Constructs an open-domain tensor seeded with the given values. */
-  def apply[K,V:Scalar](values : (K,V)*) : Tensor1[K,V] = {
-    new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
-      override def checkKey(key : K) = true;
-    }
-  }
-
   /** Constructs a closed-domain tensor for the given domain. */
-  def apply[K,V:Scalar](domain : Domain1[K]) : Tensor1[K,V] = {
-    val d = domain;
-    new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
-      override val domain = d;
-    }
-  }
-
-  class Impl[K,V:Scalar](map : scala.collection.mutable.Map[K,V])
-  extends Tensor.Impl[K,V](map) with Tensor1[K,V] {
-    override def domain : Domain1[K] =
-      SetDomain(map.keySet);
-  }
+  def apply[K,V:Scalar](domain : Domain1[K]) =
+    Tensor1Col(domain);
 }
 

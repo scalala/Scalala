@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain.{IterableDomain,SetDomain};
+import domain.{IterableDomain,SetDomain,Domain1,IndexDomain,Domain2,TableDomain};
 import generic.TensorBuilder;
 
 import scalala.generic.collection._;
@@ -97,56 +97,21 @@ trait Tensor
 extends tensor.Tensor[K,V] with TensorLike[K,V,IterableDomain[K],Tensor[K,V]];
 
 object Tensor {
-
-  /** Constructs an open-domain tensor seeded with the given values. */
-  def apply[K,V:Scalar](data : (K,V)*) : Tensor[K,V] = {
-//    val mI = implicitly[Manifest[Int]];
-//    val mL = implicitly[Manifest[Long]];
-//    val mF = implicitly[Manifest[Float]];
-//    val mD = implicitly[Manifest[Double]];
-//    val mB = implicitly[Manifest[Boolean]];
-//
-//    val types = (implicitly[Manifest[K]],implicitly[Scalar[V]].manifest);
-//
-//    if (types == (mI,mI)) {
-//      val rv = new IntIntImpl().asInstanceOf[Tensor[K,V]];
-//      for ((k,v) <- values) rv(k) = v;
-//      rv;
-//    } else {
-      new Impl[K,V](scala.collection.mutable.Map(data :_*)) {
-        override def checkKey(key : K) = true;
-      }
-//    }
+  /** Constructs a tensor for the given domain. */
+  def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor[K,V] = domain match {
+    case d : IndexDomain => VectorCol(d);
+    case d : Domain1[_] => Tensor1(d);
+    case d : TableDomain => Matrix(d);
+    case d : Domain2[_,_] => Tensor2(d);
+    case _ => new Impl[K,V](domain, scala.collection.mutable.Map[K,V]());
   }
 
-  /** Constructs a closed-domain tensor for the given domain. */
-  def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor[K,V] = {
-//    val mI = implicitly[Manifest[Int]];
-//    val mL = implicitly[Manifest[Long]];
-//    val mF = implicitly[Manifest[Float]];
-//    val mD = implicitly[Manifest[Double]];
-//    val mB = implicitly[Manifest[Boolean]];
-//
-//    val types = (implicitly[Manifest[K]],implicitly[Scalar[V]].manifest);
-//
-//    if (types == (mI,mI)) {
-//      val rv = new ClosedDomainIntIntImpl(domain).asInstanceOf[Tensor[K,V]];
-//      for ((k,v) <- values) rv(k) = v;
-//      rv;
-//    } else {
-      val d = domain;
-      new Impl[K,V](scala.collection.mutable.Map[K,V]()) {
-        override val domain = d;
-      }
-//    }
-  }
-
-  class Impl[K, V](protected val data : scala.collection.mutable.Map[K,V])
+  /** Default implementation on a closed domain. */
+  class Impl[K, V]
+  (override val domain : IterableDomain[K],
+   protected val data : scala.collection.mutable.Map[K,V])
   (implicit override val scalar : Scalar[V])
   extends Tensor[K, V] {
-    override def domain : IterableDomain[K] =
-      SetDomain(data.keySet);
-    
     override def apply(key : K) : V = {
       checkKey(key);
       data.getOrElse(key, scalar.zero);

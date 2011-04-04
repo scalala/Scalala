@@ -20,7 +20,7 @@
 package scalala;
 package tensor;
 
-import domain.Domain1;
+import domain._;
 import generic.TensorBuilder;
 
 import scalala.scalar.Scalar;
@@ -86,14 +86,8 @@ trait Tensor1[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
 extends Tensor[K,V] with Tensor1Like[K,V,Domain1[K],Tensor1[K,V]];
 
 object Tensor1 {
-  def apply[K,V:Scalar](keys : (K,V)*) : Tensor1Col[K,V] = {
-    val m = keys.toMap;
-    val s = implicitly[Scalar[V]];
-    new Tensor1Col[K,V] {
-      override val scalar = s;
-      override val domain = scalala.tensor.domain.SetDomain(m.keySet);
-      override def apply(key : K) = m(key);
-    }
-  }
+  /** Constructs a tensor for the given domain. */
+  def apply[K,V:Scalar](domain : Domain1[K]) : Tensor[K,V] =
+    mutable.Tensor1.apply[K,V](domain);
 }
 

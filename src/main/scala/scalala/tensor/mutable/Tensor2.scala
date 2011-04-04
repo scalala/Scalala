@@ -69,28 +69,16 @@ with Tensor2Like[K1,K2,V,Domain1[K1],Domain1[K2],Domain2[K1,K2],Domain2[K2,K1],T
 
 
 object Tensor2 {
-  /** Constructs an open-domain tensor seeded with the given values. */
-  def apply[K1,K2,V:Scalar](values : ((K1,K2),V)*) : Tensor2[K1,K2,V] = {
-    new Impl[K1,K2,V](scala.collection.mutable.Map(values :_*)) {
-      override def checkKey(k1 : K1, k2 : K2) = true;
-    }
-  }
-
   /** Constructs a closed-domain tensor for the given domain. */
-  def apply[K1,K2,V:Scalar](domain : Domain2[K1,K2]) : Tensor2[K1,K2,V] = {
-    val d = domain;
-    new Impl[K1,K2,V](scala.collection.mutable.Map[(K1,K2),V]()) {
-      override val domain = d;
-    }
+  def apply[K1,K2,V:Scalar](domain : Domain2[K1,K2]) : Tensor2[K1,K2,V] = domain match {
+    case d : TableDomain => Matrix(d);
+    case _ => new Impl(domain, scala.collection.mutable.Map[(K1,K2),V]());
   }
 
-  class Impl[K1,K2,V:Scalar](data : scala.collection.mutable.Map[(K1,K2),V])
-  extends Tensor.Impl[(K1,K2),V](data) with Tensor2[K1,K2,V] {
-    override def domain =
-      Domain2(
-        SetDomain(data.keySet.map(_._1)),
-        SetDomain(data.keySet.map(_._2)));
-
+  class Impl[K1,K2,V:Scalar]
+  (override val domain : Domain2[K1,K2],
+   protected override val data : scala.collection.mutable.Map[(K1,K2),V])
+  extends Tensor.Impl[(K1,K2),V](domain, data) with Tensor2[K1,K2,V] {
     override def apply(k1 : K1, k2 : K2) : V = {
       checkKey(k1,k2);
       data.getOrElse((k1,k2),scalar.zero);

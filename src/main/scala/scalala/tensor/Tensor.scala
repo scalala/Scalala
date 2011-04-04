@@ -475,15 +475,9 @@ trait Tensor
 extends TensorLike[K, V, IterableDomain[K], Tensor[K, V]];
 
 object Tensor {
-
-  class Impl[K,V](data : Map[K,V])(implicit override val scalar : Scalar[V])
-  extends Tensor[K,V] {
-    override val domain : SetDomain[K] = new SetDomain(data.keySet);
-    override def apply(k : K) = data(k);
-  }
-
-  def apply[K,V:Scalar](values : (K,V)*) : Tensor[K,V] =
-    new Impl(values.toMap);
+  /** Constructs a tensor for the given domain. */
+  def apply[K,V:Scalar](domain : IterableDomain[K]) =
+    mutable.Tensor.apply(domain);
 
   implicit def canView[K, V:Scalar] =
   new CanView[Tensor[K,V],TensorView.IdentityView[K,V,Tensor[K,V]]] {
