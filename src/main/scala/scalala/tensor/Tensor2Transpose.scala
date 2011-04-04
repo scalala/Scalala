@@ -22,7 +22,7 @@ package tensor;
 
 import scalar.Scalar;
 
-import domain._;
+import domain.{Domain1,Domain2};
 
 /**
  * Implementation trait for a transposed view of an underlying Tensor2.
@@ -30,21 +30,21 @@ import domain._;
  * @author dramage
  */
 trait Tensor2TransposeLike
-[@specialized(Int) A2, @specialized(Int) A1,
- @specialized(Int,Long,Float,Double,Boolean) B,
- +D2<:Domain1[A2] with Domain1Like[A2,D2],
- +D1<:Domain1[A1] with Domain1Like[A1,D1],
- +T<:Domain2Like[A2,A1,D2,D1,D,T],
- +D<:Domain2Like[A1,A2,D1,D2,T,D],
- +Coll<:Tensor2[A1,A2,B],
- +This<:Tensor2Transpose[A2,A1,B,Coll]]
-extends TensorSliceLike[(A1,A2),D,(A2,A1),T,B,Coll,This]
-with Tensor2Like[A2,A1,B,D2,D1,T,D,This] {
+[@specialized(Int) K2, @specialized(Int) K1,
+ @specialized(Int,Long,Float,Double,Boolean) V,
+ +D2<:Domain1[K2],
+ +D1<:Domain1[K1],
+ +T<:Domain2[K2,K1],
+ +D<:Domain2[K1,K2],
+ +Coll<:Tensor2[K1,K2,V],
+ +This<:Tensor2Transpose[K2,K1,V,Coll]]
+extends TensorSliceLike[(K1,K2),D,(K2,K1),T,V,Coll,This]
+with Tensor2Like[K2,K1,V,D2,D1,T,D,This] {
 self =>
 
-  /* final */ override def lookup(tup : (A2,A1)) = tup.swap;
+  /* final */ override def lookup(tup : (K2,K1)) = tup.swap;
 
-  override def apply(i : A2, j : A1) = underlying.apply(j, i);
+  override def apply(i : K2, j : K1) = underlying.apply(j, i);
 
   override def t : Coll =
     underlying;
@@ -56,20 +56,20 @@ self =>
  * @author dramage
  */
 trait Tensor2Transpose
-[@specialized(Int) A2, @specialized(Int) A1,
- @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll <: Tensor2[A1,A2,B]]
-extends TensorSlice[(A1,A2),(A2,A1),B,Coll]
-with Tensor2[A2,A1,B]
-with Tensor2TransposeLike[A2,A1,B,Domain1[A2],Domain1[A1],Domain2[A2,A1],Domain2[A1,A2],Coll,Tensor2Transpose[A2,A1,B,Coll]];
+[@specialized(Int) K2, @specialized(Int) K1,
+ @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll <: Tensor2[K1,K2,V]]
+extends TensorSlice[(K1,K2),(K2,K1),V,Coll]
+with Tensor2[K2,K1,V]
+with Tensor2TransposeLike[K2,K1,V,Domain1[K2],Domain1[K1],Domain2[K2,K1],Domain2[K1,K2],Coll,Tensor2Transpose[K2,K1,V,Coll]];
 
 
 object Tensor2Transpose {
   /** Default implementation. */
-  class Impl[A2, A1, B, +Coll <: Tensor2[A1,A2,B]]
+  class Impl[K2, K1, V, +Coll <: Tensor2[K1,K2,V]]
   (override val underlying : Coll)
-  (override implicit val scalar : Scalar[B])
-  extends Tensor2Transpose[A2,A1,B,Coll] {
+  (override implicit val scalar : Scalar[V])
+  extends Tensor2Transpose[K2,K1,V,Coll] {
     override val domain = underlying.domain.transpose;
   }
 }

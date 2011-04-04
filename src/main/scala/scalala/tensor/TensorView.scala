@@ -20,10 +20,11 @@
 package scalala;
 package tensor;
 
-import scalar.Scalar;
+import domain.IterableDomain;
 
-import domain._;
-import generic.collection._;
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
+import scalala.operators._;
 
 /**
  * Implementation trait for pass-through views of underlying Tensor.
@@ -31,10 +32,10 @@ import generic.collection._;
  * @author dramage
  */
 trait TensorViewLike
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- +D<:IterableDomain[A] with DomainLike[A,D], +Coll <: Tensor[A,_],
- +This<:TensorView[A,B,Coll]]
-extends TensorLike[A,B,D,This] {
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+ +D<:IterableDomain[K], +Coll <: Tensor[K,_],
+ +This<:TensorView[K,V,Coll]]
+extends TensorLike[K,V,D,This] {
 self =>
 
   /** The collection underlying this view. */
@@ -53,97 +54,97 @@ self =>
  * @author dramage
  */
 trait TensorView
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll <: Tensor[A,_]]
-extends Tensor[A,B]
-with TensorViewLike[A,B,IterableDomain[A],Coll,TensorView[A,B,Coll]];
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll <: Tensor[K,_]]
+extends Tensor[K,V]
+with TensorViewLike[K,V,IterableDomain[K],Coll,TensorView[K,V,Coll]];
 
 
 object TensorView {
 
   trait IdentityViewLike
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
-   +D<:IterableDomain[A] with DomainLike[A,D],
-   +Coll <: Tensor[A,B], +This <: IdentityView[A,B,Coll]]
-  extends TensorViewLike[A,B,D,Coll,This] {
-    override def apply(key : A) =
+  [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+   +D<:IterableDomain[K],
+   +Coll <: Tensor[K,V], +This <: IdentityView[K,V,Coll]]
+  extends TensorViewLike[K,V,D,Coll,This] {
+    override def apply(key : K) =
       underlying.apply(key);
   }
 
   trait IdentityView
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
-   +Coll <: Tensor[A,B]]
-  extends TensorView[A,B,Coll]
-  with IdentityViewLike[A,B,IterableDomain[A],Coll,IdentityView[A,B,Coll]];
+  [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+   +Coll <: Tensor[K,V]]
+  extends TensorView[K,V,Coll]
+  with IdentityViewLike[K,V,IterableDomain[K],Coll,IdentityView[K,V,Coll]];
 
   /** Returns an unmodified view of the given Tensor. */
-  class IdentityViewImpl[A, B, +Coll <: Tensor[A,B]]
+  class IdentityViewImpl[K, V, +Coll <: Tensor[K,V]]
   (override val underlying : Coll)
-  (implicit override val scalar : Scalar[B])
-  extends IdentityView[A,B,Coll];
+  (implicit override val scalar : Scalar[V])
+  extends IdentityView[K,V,Coll];
 
   trait TransformViewLike
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
+  [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
    @specialized(Int,Long,Float,Double,Boolean) O,
-   +D<:IterableDomain[A] with DomainLike[A,D], +Coll <: Tensor[A,B],
-   +This <: TransformView[A,B,O,Coll]]
-  extends TensorViewLike[A,O,D,Coll,This] {
+   +D<:IterableDomain[K], +Coll <: Tensor[K,V],
+   +This <: TransformView[K,V,O,Coll]]
+  extends TensorViewLike[K,O,D,Coll,This] {
     /** Transform a value in the underlying map to a value in the view. */
-    def transform(key : A, value : B) : O;
+    def transform(key : K, value : V) : O;
 
-    override def apply(key : A) =
+    override def apply(key : K) =
       transform(key, underlying.apply(key));
   }
 
   trait TransformView
-  [@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
-   @specialized(Int,Long,Float,Double,Boolean) O, +Coll <: Tensor[A,B]]
-  extends TensorView[A,O,Coll]
-  with TransformViewLike[A,B,O,IterableDomain[A],Coll,TransformView[A,B,O,Coll]]
+  [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+   @specialized(Int,Long,Float,Double,Boolean) O, +Coll <: Tensor[K,V]]
+  extends TensorView[K,O,Coll]
+  with TransformViewLike[K,V,O,IterableDomain[K],Coll,TransformView[K,V,O,Coll]]
 
   /**
    * Returns an unmodified view of the given Tensor with
    * values transformed by the given function.
    */
-  class TransformImpl[A, B, O, +Coll <: Tensor[A,B]]
-  (override val underlying : Coll, fn : ((A,B)=>O))
+  class TransformImpl[K, V, O, +Coll <: Tensor[K,V]]
+  (override val underlying : Coll, fn : ((K,V)=>O))
   (implicit override val scalar : Scalar[O])
-  extends TransformView[A,B,O,Coll] {
-     override def transform(key : A, value : B) = fn(key, value);
+  extends TransformView[K,V,O,Coll] {
+     override def transform(key : K, value : V) = fn(key, value);
   }
 
-  implicit def mkTransformCanMapValues[A, B1, B2, B3:Scalar] =
-  new CanMapValues[TransformView[A,B1,B2,Tensor[A,B1]],B2,B3,TransformView[A,B1,B3,Tensor[A,B1]]] {
-    override def map(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : (B2=>B3)) =
-      new TransformImpl[A,B1,B3,Tensor[A,B1]](
-        from.underlying, ((k:A, v:B1) => fn(from.transform(k,v))));
-    override def mapNonZero(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : (B2=>B3)) =
+  implicit def mkTransformCanMapValues[K, V1, V2, V3:Scalar] =
+  new CanMapValues[TransformView[K,V1,V2,Tensor[K,V1]],V2,V3,TransformView[K,V1,V3,Tensor[K,V1]]] {
+    override def map(from : TransformView[K,V1,V2,Tensor[K,V1]], fn : (V2=>V3)) =
+      new TransformImpl[K,V1,V3,Tensor[K,V1]](
+        from.underlying, ((k:K, v:V1) => fn(from.transform(k,v))));
+    override def mapNonZero(from : TransformView[K,V1,V2,Tensor[K,V1]], fn : (V2=>V3)) =
       map(from, fn);
   }
 
-  implicit def mkTransformCanMapKeyValuePairs[A, B1, B2, B3:Scalar] =
-  new CanMapKeyValuePairs[TransformView[A,B1,B2,Tensor[A,B1]],A,B2,B3,TransformView[A,B1,B3,Tensor[A,B1]]] {
-    override def map(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : ((A,B2)=>B3)) =
-      new TransformImpl[A,B1,B3,Tensor[A,B1]](
-        from.underlying, ((k:A, v:B1) => fn(k,from.transform(k,v))));
-    override def mapNonZero(from : TransformView[A,B1,B2,Tensor[A,B1]], fn : ((A,B2)=>B3)) =
+  implicit def mkTransformCanMapKeyValuePairs[K, V1, V2, V3:Scalar] =
+  new CanMapKeyValuePairs[TransformView[K,V1,V2,Tensor[K,V1]],K,V2,V3,TransformView[K,V1,V3,Tensor[K,V1]]] {
+    override def map(from : TransformView[K,V1,V2,Tensor[K,V1]], fn : ((K,V2)=>V3)) =
+      new TransformImpl[K,V1,V3,Tensor[K,V1]](
+        from.underlying, ((k:K, v:V1) => fn(k,from.transform(k,v))));
+    override def mapNonZero(from : TransformView[K,V1,V2,Tensor[K,V1]], fn : ((K,V2)=>V3)) =
       map(from, fn);
   }
 
   /** Override canMapValues on TensorView instances to construct a lazy view. */
-  implicit def mkIdentityCanMapValues[A, B1, B2:Scalar] =
-  new CanMapValues[IdentityView[A,B1,Tensor[A,B1]],B1,B2,TransformView[A,B1,B2,Tensor[A,B1]]] {
-    override def map(from : IdentityView[A,B1,Tensor[A,B1]], fn : (B1=>B2)) =
-      new TransformImpl[A,B1,B2,Tensor[A,B1]](from.underlying, ((k:A,v:B1) => fn(v)));
-    override def mapNonZero(from : IdentityView[A,B1,Tensor[A,B1]], fn : (B1=>B2)) =
+  implicit def mkIdentityCanMapValues[K, V1, V2:Scalar] =
+  new CanMapValues[IdentityView[K,V1,Tensor[K,V1]],V1,V2,TransformView[K,V1,V2,Tensor[K,V1]]] {
+    override def map(from : IdentityView[K,V1,Tensor[K,V1]], fn : (V1=>V2)) =
+      new TransformImpl[K,V1,V2,Tensor[K,V1]](from.underlying, ((k:K,v:V1) => fn(v)));
+    override def mapNonZero(from : IdentityView[K,V1,Tensor[K,V1]], fn : (V1=>V2)) =
       map(from, fn);
   }
 
-  implicit def mkIdentityCanMapKeyValuePairs[A, B1, B2:Scalar] =
-  new CanMapKeyValuePairs[IdentityView[A,B1,Tensor[A,B1]],A,B1,B2,TransformView[A,B1,B2,Tensor[A,B1]]] {
-    override def map(from : IdentityView[A,B1,Tensor[A,B1]], fn : ((A,B1)=>B2)) =
-      new TransformImpl[A,B1,B2,Tensor[A,B1]](from.underlying, fn);
-    override def mapNonZero(from : IdentityView[A,B1,Tensor[A,B1]], fn : ((A,B1)=>B2)) =
+  implicit def mkIdentityCanMapKeyValuePairs[K, V1, V2:Scalar] =
+  new CanMapKeyValuePairs[IdentityView[K,V1,Tensor[K,V1]],K,V1,V2,TransformView[K,V1,V2,Tensor[K,V1]]] {
+    override def map(from : IdentityView[K,V1,Tensor[K,V1]], fn : ((K,V1)=>V2)) =
+      new TransformImpl[K,V1,V2,Tensor[K,V1]](from.underlying, fn);
+    override def mapNonZero(from : IdentityView[K,V1,Tensor[K,V1]], fn : ((K,V1)=>V2)) =
       map(from, fn);
   }
 }

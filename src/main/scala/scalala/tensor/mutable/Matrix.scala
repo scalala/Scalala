@@ -22,10 +22,10 @@ package tensor;
 package mutable;
 
 import domain.{IndexDomain,TableDomain};
-import generic.collection.{CanSliceRow,CanSliceCol,CanSliceMatrix,CanAppendColumns};
-import scalar.Scalar;
 
-import operators._;
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
+import scalala.operators._;
 
 /**
  * Implementation trait for a MutableTensor that is also a tensor.Matrix.

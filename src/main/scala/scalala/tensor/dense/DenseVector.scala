@@ -21,15 +21,13 @@ package scalala;
 package tensor;
 package dense;
 
-
-import scalar.Scalar;
 import domain.{IterableDomain,IndexDomain};
-import generic.collection.{CanSliceCol,CanAppendColumns};
 
-import scalala.operators._;
-
+import scalala.generic.collection._;
+import scalala.scalar.Scalar;
 import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
+import scalala.operators._;
 
 /**
  * A vector backed by a dense array.
@@ -52,7 +50,7 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
   override def update(key : Int, value : V) =
     data(key) = value;
 
-  override def foreach[U](fn : ((Int,V)=>U)) = {
+  override def foreachPair[U](fn : ((Int,V)=>U)) = {
     var i = 0;
     while (i < data.length) {
       fn(i,data(i));
@@ -64,7 +62,7 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
     data.foreach(fn);
 
   /** Tranforms all key value pairs in this map by applying the given function. */
-  override def transform(fn : (Int,V)=>V) = {
+  override def transformPairs(fn : (Int,V)=>V) = {
     var i = 0;
     while (i < data.length) {
       data(i) = fn(i,data(i));

@@ -20,7 +20,7 @@
 package scalala;
 package tensor;
 
-import domain._;
+import domain.{IterableDomain,Domain1};
 
 /**
  * Implementation trait for a Tensor1 view of a slice of keys from a Tensor.
@@ -28,8 +28,8 @@ import domain._;
  * @author dramage
  */
 trait Tensor1SliceLike
-[@specialized(Int,Long) K1, +D1<:IterableDomain[K1] with DomainLike[K1,D1],
- @specialized(Int,Long) K2, +D2<:Domain1[K2] with Domain1Like[K2,D2],
+[@specialized(Int,Long) K1, +D1<:IterableDomain[K1],
+ @specialized(Int,Long) K2, +D2<:Domain1[K2],
  @specialized(Int,Long,Float,Double,Boolean) V, +Coll<:Tensor[K1,V],
  +This<:Tensor1Slice[K1,K2,V,Coll]]
 extends TensorSliceLike[K1, D1, K2, D2, V, Coll, This]

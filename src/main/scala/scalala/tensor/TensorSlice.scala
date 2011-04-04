@@ -22,7 +22,7 @@ package tensor;
 
 import scalar.Scalar;
 
-import domain._;
+import domain.{IterableDomain,SetDomain};
 
 /**
  * Implementation trait for slices of an underlying Tensor.  A slice
@@ -32,20 +32,20 @@ import domain._;
  * @author dramage
  */
 trait TensorSliceLike
-[@specialized(Int,Long) A1, +D1<:IterableDomain[A1] with DomainLike[A1,D1],
- @specialized(Int,Long) A2, +D2<:IterableDomain[A2] with DomainLike[A2,D2],
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:Tensor[A1,B],
- +This<:TensorSlice[A1,A2,B,Coll]]
-extends TensorLike[A2,B,D2,This] {
+[@specialized(Int,Long) K1, +D1<:IterableDomain[K1],
+ @specialized(Int,Long) K2, +D2<:IterableDomain[K2],
+ @specialized(Int,Long,Float,Double,Boolean) V, +Coll<:Tensor[K1,V],
+ +This<:TensorSlice[K1,K2,V,Coll]]
+extends TensorLike[K2,V,D2,This] {
 self =>
 
   /** The collection underlying this view. */
   protected def underlying: Coll;
 
   /** Maps the keys of this domain map to the keys of the underlying maps's. */
-  def lookup(key : A2) : A1;
+  def lookup(key : K2) : K1;
 
-  override def apply(key : A2) =
+  override def apply(key : K2) =
     underlying.apply(lookup(key));
 
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) =
@@ -58,19 +58,19 @@ self =>
  * @author dramage
  */
 trait TensorSlice
-[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll <: Tensor[A1, B]]
-extends Tensor[A2,B]
-with TensorSliceLike[A1, IterableDomain[A1], A2, IterableDomain[A2], B, Coll, TensorSlice[A1, A2, B, Coll]] {
+[@specialized(Int,Long) K1, @specialized(Int,Long) K2,
+ @specialized(Int,Long,Float,Double,Boolean) V, +Coll <: Tensor[K1, V]]
+extends Tensor[K2,V]
+with TensorSliceLike[K1, IterableDomain[K1], K2, IterableDomain[K2], V, Coll, TensorSlice[K1, K2, V, Coll]] {
 
 }
 
 object TensorSlice {
-  class FromKeyMap[A1, A2, B, +Coll<:Tensor[A1, B]]
-  (override val underlying : Coll, keymap : scala.collection.Map[A2,A1])
-  (override implicit val scalar : Scalar[B])
-  extends TensorSlice[A1, A2, B, Coll] {
-    override def lookup(key : A2) = keymap(key);
+  class FromKeyMap[K1, K2, V, +Coll<:Tensor[K1, V]]
+  (override val underlying : Coll, keymap : scala.collection.Map[K2,K1])
+  (override implicit val scalar : Scalar[V])
+  extends TensorSlice[K1, K2, V, Coll] {
+    override def lookup(key : K2) = keymap(key);
     override val domain = new SetDomain(keymap.keySet);
   }
 }

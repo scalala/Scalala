@@ -43,7 +43,7 @@ object LiteralRow {
 
   implicit def row[V] : LiteralRow[VectorRow[V],V] = new LiteralRow[VectorRow[V],V] {
     def foreach[X](row : VectorRow[V], fn : ((Int,V) => X)) = {
-      row.foreachNonZero(fn);
+      row.foreachNonZeroPair(fn);
     }
 
     def length(row : VectorRow[V]) = row.size;

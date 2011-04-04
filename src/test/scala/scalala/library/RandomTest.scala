@@ -30,19 +30,17 @@ import scalala.tensor.dense._
 @RunWith(classOf[JUnitRunner])
 class RandomTest extends FunSuite with Checkers {
 
-  // XXX: The outcome of this test is questionable since it is possible
-  //      (although not likely) that random samples are generated in a way such
-  //      that the recalculated mean and covariance matrix do not equal the
-  //      given ones up to the desired extent.
-  test("multivariateGaussian") {
+  test("MultivariateGaussian") {
+    // specify rng explicitly so that we don't ever fail this test
+    implicit val mt = new random.MersenneTwisterFast(0l);
+    
     val Sigma = DenseMatrix((3., 4.), (4., 16.))
     val mu    = DenseVector(77.,-3.)
-    val X     = randn(mu, Sigma, 500000)
+    val X     = randn(mu, Sigma, 50000)(mt)
 
     val (chkSigma, chkMu) = covariance(X)
     assert(chkMu forall ( (i,v) => math.abs(v-mu(i)) < 1e-1 ))
     assert(chkSigma forall ( (idx,v) => math.abs(v-Sigma(idx)) < 1e-1 ))
   }
-
 }
 

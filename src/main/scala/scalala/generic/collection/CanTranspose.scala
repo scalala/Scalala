@@ -28,9 +28,7 @@ import scalala.tensor._;
  *
  * @author dramage
  */
-trait CanTranspose[-From,+To] extends UnaryOp[From,OpTranspose,To] {
-  def opType = OpTranspose;
-}
+trait CanTranspose[-From,+To] extends (From=>To);
 
 /**
  * Transpose non-mutable tensors.

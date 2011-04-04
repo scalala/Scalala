@@ -21,26 +21,31 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic.collection._;
-
-import mutable.TensorBuilder;
+import generic._;
 
 import scalala.operators._;
 import scalala.scalar.Scalar;
+import scalala.generic.collection._;
 
 /**
- * A Tensor is a map from keys A (with a domain) to numeric scalar values B.
+ * A Tensor is a map from keys K (with a domain) to numeric scalar values V.
  * More specific operations are available on tensors indexed by a single key
  * (Tensor1, Vector) or pair of keys (Tensor2, Matrix).
+ *
+ * Note that this trait does not support for comprehensions, although its
+ * two sub-traits: TensorSeqLike and TensorMapLike do.  The difference is
+ * the way in which the collection is viewed.  TensorSeqLike views the
+ * collection as one containing values.  TensorMapLike views the collection
+ * as one containing key value pairs.
  *
  * @author dramage
  */
 trait TensorLike
-[@specialized(Int, Long) A,
- @specialized(Int, Long, Float, Double, Boolean) B,
- +D<:IterableDomain[A] with DomainLike[A,D],
- +This<:Tensor[A,B]]
-extends DomainFunction[A, B, D]
+[@specialized(Int, Long) K,
+ @specialized(Int, Long, Float, Double, Boolean) V,
+ +D<:IterableDomain[K],
+ +This<:Tensor[K,V]]
+extends DomainFunction[K, V, D]
 with operators.NumericOps[This] {
 self =>
 
@@ -51,8 +56,8 @@ self =>
   /** Returns a pointer to this cast as an instance of This. */
   def repr : This = this.asInstanceOf[This];
 
-  /** Provides information about the underlying scalar value type B. */
-  implicit val scalar : Scalar[B];
+  /** Provides information about the underlying scalar value type V. */
+  implicit val scalar : Scalar[V];
 
   /**
    * Returns a builder for constructing new instances like this one,
@@ -76,54 +81,77 @@ self =>
   }
 
   //
-  // for-comprehensions.
-  //
-  // Note:
-  // 1. flatMap doesn't make sense here because the value types are
-  //    always scalar, so you can't do { for ((k,v) <- tensor; value <- v) yield ... }.
-  //    Although I guess you might want to iterate over they key types, k,
-  //    but I'm not supporting that.
-  //
-  // 2. filter doesn't make sense because removing some elements from
-  //    the domain is not well defined.
-  //
-
-  /**
-   * For-comprehension support for "for ((k,v) <- x) yield ..."
-   * Defers to un-tupled map.
-   */
-  def map[TT>:This, O, That](f: ((A,B)) => O)
-  (implicit map: CanMapKeyValuePairs[TT, A, B, O, That]): That =
-    this.map[TT,O,That]((k : A, v : B) => f((k,v)));
-
-  //
   // Collection contents
   //
 
   /**
-   * Applies the given function to each element of the domain and
-   * its corresponding value.
+   * Returns the pairs of (K,V) that make up this tensor for use in
+   * for comprehensions.  The returned object can be viewed as a 
+   * Map[K,V].
    */
-  def foreach[U](fn: (A,B) => U) : Unit =
-    for (k <- domain) fn(k, apply(k));
+  def pairs : TensorNomadic[K,V,This] =
+    new TensorNomadic[K,V,This] { override def repr = self.repr; }
+
+  /**
+   * Returns the keys that make up this tensor for use in
+   * for comprehensions.  The returned object can be viewed as a 
+   * Traversable[K].
+   */
+  def keys : TensorKeysNomadic[K,V,This] =
+    new TensorKeysNomadic[K,V,This] { override def repr = self.repr; }
+
+  /**
+   * Returns the values that make up this tensor for use in
+   * for comprehensions.  The returned object can be viewed as a 
+   * Traversable[V].
+   */
+  def values : TensorValuesNomadic[K,V,This] =
+    new TensorValuesNomadic[K,V,This] { override def repr = self.repr; }
+
+  /**
+   * Returns the nonzero elements of this tensor.
+   */
+  def nonzero : TensorNonZeroNomadic[K,V,This] =
+    new TensorNonZeroNomadic[K,V,This] { override def repr = self.repr; }
+
+  /**
+   * Applies the given function to each key and its corresponding value.
+   */
+  def foreachPair[U](fn: (K,V) => U) : Unit =
+    foreachKey(k => fn(k,apply(k)));
+
+  /**
+   * Applies the given function to each key and its corresponding value
+   * if the value is non-zero (and possibly also some that are zeros).
+   *
+   * @return true if all elements in the tensor were visited.
+   */
+  def foreachNonZeroPair[U](fn : ((K,V)=>U)) : Boolean = {
+    this.foreachPair(fn);
+    true;
+  }
+
+  /** Applies the given function to each key in the tensor. */
+  def foreachKey[U](fn: K => U) : Unit =
+    for (k <- domain) fn(k);
+
+  /**
+   * Applies the given function to each key if its corresponding value
+   * is non-zero (and possibly some zero-valued keys as well).
+   *
+   * @return true if all keys in the tensor were visisted.
+   */
+  def foreachNonZeroKey[U](fn : K => U) : Boolean = {
+    this.foreachKey(fn);
+    true;
+  }
 
   /**
    * Applies the given function to each value in the map (one for
    * each element of the domain, including zeros).
    */
-  def foreachValue[U](fn : (B=>U)) =
-    this.foreach((k,v) => fn(v));
-
-  /**
-   * Applies the given function to all elements of the domain
-   * that have a non-zero values (and possibly some that have zeros, too).
-   *
-   * @return true if all elements in the map were visited.
-   */
-  def foreachNonZero[U](fn : ((A,B)=>U)) : Boolean = {
-    this.foreach(fn);
-    true;
-  }
+  def foreachValue[U](fn : (V=>U)) =
+    foreachKey(k => fn(apply(k)));
 
   /**
    * Applies the given function to every non-zero value in the map
@@ -131,94 +159,88 @@ self =>
    *
    * @return true if all elements in the map were visited.
    */
-  def foreachNonZeroValue[U](fn : (B=>U)) = {
+  def foreachNonZeroValue[U](fn : (V=>U)) = {
     this.foreachValue(fn);
     true;
   }
 
-  /**
-   * Returns a traversable over the non-zero elements of the domain (and possibly
-   * some that have zeros)
-   */
-  def nonZero:Traversable[(A,B)] = new Traversable[(A,B)] {
-    def foreach[U](f: ((A,B)) => U): Unit = {
-      foreachNonZero((a,b)=>f(a->b));
-    }
-  }
-
-  /**
-   * Returns a traversable over the non-zero values of the domain (and possibly
-   * some that have zeros)
-   */
-  def nonZeroValues:Traversable[B] = new Traversable[B] {
-    def foreach[U](f: (B) => U): Unit = {
-      foreachNonZeroValue(f);
-    }
-  }
-
   /** Returns true if and only if the given predicate is true for all elements. */
-  def forall(fn : (A,B) => Boolean) : Boolean = {
-    foreach((k,v) => if (!fn(k,v)) return false);
+  def forall(fn : (K,V) => Boolean) : Boolean = {
+    foreachPair((k,v) => if (!fn(k,v)) return false);
     return true;
   }
 
   /** Returns true if and only if the given predicate is true for all elements. */
-  def forall(fn : B => Boolean) : Boolean = {
+  def forall(fn : V => Boolean) : Boolean = {
     foreachValue(v => if (!fn(v)) return false);
     return true;
   }
 
   /** Returns true if and only if the given predicate is true for all non-zero elements. */
-  def forallNonZero(fn : (A,B) => Boolean) : Boolean = {
-    foreachNonZero((k,v) => if (!fn(k,v)) return false);
+  def forallNonZero(fn : (K,V) => Boolean) : Boolean = {
+    foreachNonZeroPair((k,v) => if (!fn(k,v)) return false);
     return true;
   }
  
   /** Returns true if and only if the given predicate is true for all non-zero elements. */
-  def forallNonZero(fn : B => Boolean) : Boolean = {
+  def forallNonZero(fn : V => Boolean) : Boolean = {
     foreachNonZeroValue(v => if (!fn(v)) return false);
     return true;
   }
 
   /** Creates a new map containing a transformed copy of this map. */
-  def map[TT>:This,O,That](f : (A,B) => O)
-  (implicit bf : CanMapKeyValuePairs[TT, A, B, O, That]) : That =
-    bf.map(repr.asInstanceOf[TT], f);
+  def mapPairs[TT>:This,O,That](f : (K,V) => O)
+  (implicit bf : CanMapKeyValuePairs[TT, K, V, O, That]) : That =
+    bf.map(repr, f);
 
   /** Maps all non-zero key-value pairs values. */
-  def mapNonZero[TT>:This,O,That](f : (A,B) => O)
-  (implicit bf : CanMapKeyValuePairs[TT, A, B, O, That]) : That =
+  def mapNonZeroPairs[TT>:This,O,That](f : (K,V) => O)
+  (implicit bf : CanMapKeyValuePairs[TT, K, V, O, That]) : That =
     bf.mapNonZero(repr.asInstanceOf[TT], f);
 
   /** Creates a new map containing a transformed copy of this map. */
-  def mapValues[TT>:This,O,That](f : B => O)
-  (implicit bf : CanMapValues[TT, B, O, That]) : That =
+  def mapValues[TT>:This,O,That](f : V => O)
+  (implicit bf : CanMapValues[TT, V, O, That]) : That =
     bf.map(repr.asInstanceOf[TT], f);
 
   /** Maps all non-zero values. */
-  def mapNonZeroValues[TT>:This,O,That](f : B => O)
-  (implicit bf : CanMapValues[TT, B, O, That]) : That =
+  def mapNonZeroValues[TT>:This,O,That](f : V => O)
+  (implicit bf : CanMapValues[TT, V, O, That]) : That =
     bf.mapNonZero(repr.asInstanceOf[TT], f);
 
-  /** Iterates over all elements in the domain and the corresponding value. */
-  def iterator : Iterator[(A,B)] =
-    domain.iterator.map(k => (k,this(k)));
+  /** Iterates over the keys in the tensor. */
+  def keysIterator : Iterator[K] =
+    domain.iterator;
 
-  /** Iterates over the values in the map. */
-  def valuesIterator : Iterator[B] =
-    domain.iterator.map(this);
+  /** Iterates over the (possibly) non-zero keys in the tensor. */
+  def keysIteratorNonZero : Iterator[K] =
+    keysIterator;
+
+  /** Iterates over the values in the tensor. */
+  def valuesIterator : Iterator[V] =
+    keysIterator.map(apply);
+
+  /** Iterates over the (possibly) non-zero values in the tensor. */
+  def valuesIteratorNonZero : Iterator[V] =
+    valuesIterator;
+
+  /** Iterates over all elements in the domain and the corresponding value. */
+  def pairsIterator : Iterator[(K,V)] =
+    keysIterator.map(k => (k,this(k)));
+
+  /** Iterates over the (possibly) non-zero pairs in the tensor. */
+  def pairsIteratorNonZero : Iterator[(K,V)] =
+    pairsIterator;
 
   /** Returns some key for which the given predicate is true. */
-  def find(p : B => Boolean) : Option[A] = {
-    for (k <- domain) {
-      if (p(apply(k))) return Some(k);
-    }
+  def find(p : V => Boolean) : Option[K] = {
+    foreachKey(k => if (p(apply(k))) return Some(k));
     return None;
   }
     
   /** Returns the keys for which the given predicate is true. */
-  def findAll(p : B => Boolean) : Iterable[A] =
-    domain.filter(this andThen p);
+  def findAll(p : V => Boolean) : Iterator[K] =
+    keysIterator.filter(this andThen p);
   
   /**
    * Constructs a view of this map on which calls to mapValues are
@@ -232,8 +254,8 @@ self =>
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map.
    */
-  def join[TT>:This,V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
-  (implicit bf : CanJoinValues[TT, Tensor[A,V2], B, V2, RV, That]) : That =
+  def join[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (V,V2) => RV)
+  (implicit bf : CanJoinValues[TT, Tensor[K,V2], V, V2, RV, That]) : That =
     bf.joinAll(repr.asInstanceOf[TT], tensor, fn);
 
   /**
@@ -241,8 +263,8 @@ self =>
    * function to create each return value in the map where keys in
    * both this and m are non-zero.
    */
-  def joinBothNonZero[TT>:This,V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
-  (implicit bf : CanJoinValues[TT, Tensor[A,V2], B, V2, RV, That]) : That =
+  def joinBothNonZero[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (V,V2) => RV)
+  (implicit bf : CanJoinValues[TT, Tensor[K,V2], V, V2, RV, That]) : That =
     bf.joinBothNonZero(repr.asInstanceOf[TT], tensor, fn);
 
   /**
@@ -250,45 +272,45 @@ self =>
    * function to create each return value in the map where keys in
    * either this or m are non-zero.
    */
-  def joinEitherNonZero[TT>:This,V2,RV,That](tensor : Tensor[A,V2])(fn : (B,V2) => RV)
-  (implicit bf : CanJoinValues[TT, Tensor[A,V2], B, V2, RV, That]) : That =
+  def joinEitherNonZero[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (V,V2) => RV)
+  (implicit bf : CanJoinValues[TT, Tensor[K,V2], V, V2, RV, That]) : That =
     bf.joinEitherNonZero(repr.asInstanceOf[TT], tensor, fn);
 
   //
   // Slice construction
   //
 
-  /** The value at the given key.  Takes precedence over apply(keys : A*). */
-  def apply(key : A) : B;
+  /** The value at the given key.  Takes precedence over apply(keys : K*). */
+  def apply(key : K) : V;
 
   /** Creates a view backed by the given keys, returning them as a sequence. */
-  def apply[That](keys : A*)
-  (implicit bf : CanSliceVector[This, A, That]) : That =
+  def apply[That](keys : K*)
+  (implicit bf : CanSliceVector[This, K, That]) : That =
     bf(repr, keys);
 
   /** Creates a view backed by the "true" elements in selected. */
-  def apply[That](selected : Tensor[A,Boolean])
-  (implicit bf : CanSliceVector[This, A, That]) : That =
+  def apply[That](selected : Tensor[K,Boolean])
+  (implicit bf : CanSliceVector[This, K, That]) : That =
     bf(repr, domain.filter(selected).toIndexedSeq);
 
   /** Creates a view backed by the given keys, returning them as a sequence. */
-  def apply[That](keys : Traversable[A])
-  (implicit bf : CanSliceVector[This, A, That]) : That =
+  def apply[That](keys : TraversableOnce[K])
+  (implicit bf : CanSliceVector[This, K, That]) : That =
     bf(repr, keys.toIndexedSeq);
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
-  def apply[I,That](keys : (I,A)*)
-  (implicit bf : CanSliceTensor[This, A, I, That]) : That =
+  def apply[I,That](keys : (I,K)*)
+  (implicit bf : CanSliceTensor[This, K, I, That]) : That =
     apply(keys.toMap);
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
-  def apply[I,That](keys : Iterable[(I,A)])
-  (implicit bf : CanSliceTensor[This, A, I, That]) : That =
+  def apply[I,That](keys : TraversableOnce[(I,K)])
+  (implicit bf : CanSliceTensor[This, K, I, That]) : That =
     apply(keys.toMap);
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
-  def apply[I,That](keys : scala.collection.Map[I,A])
-  (implicit bf : CanSliceTensor[This, A, I, That]) : That =
+  def apply[I,That](keys : scala.collection.Map[I,K])
+  (implicit bf : CanSliceTensor[This, K, I, That]) : That =
     bf(repr, keys);
 
   //
@@ -300,15 +322,15 @@ self =>
    * Currently this method is not particularly efficient, as it creates several
    * in-memory arrays the size of the domain.
    */
-  def argsort(implicit cm : Manifest[A], ord : Ordering[B]) : Array[A] =
-    domain.toArray(cm).sortWith((i:A, j:A) => ord.lt(this(i), this(j)));
+  def argsort(implicit cm : Manifest[K], ord : Ordering[V]) : Array[K] =
+    keys.toArray(cm).sortWith((i:K, j:K) => ord.lt(this(i), this(j)));
 
   /**
    * Returns a sorted view of the current map.  Equivalent to calling
    * <code>x(x.argsort)</code>.  Changes to the sorted view are
    * written-through to the underlying map.
    */
-  def sorted[That](implicit bf : CanSliceVector[This, A, That], cm : Manifest[A], ord : Ordering[B]) : That =
+  def sorted[That](implicit bf : CanSliceVector[This, K, That], cm : Manifest[K], ord : Ordering[V]) : That =
     this.apply(this.argsort);
 
 
@@ -317,29 +339,27 @@ self =>
   //
 
   /** Returns a key associated with the largest value in the map. */
-  def argmax : A = {
+  def argmax : K = {
     if (!valuesIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .max");
     }
-    var max = valuesIterator.next;
-    var arg = domain.iterator.next
-    foreach((k,v) => if (scalar.>(v, max)) { max = v; arg = k; });
+    var (arg,max) = pairsIterator.next;
+    foreachPair((k,v) => if (scalar.>(v, max)) { max = v; arg = k; });
     arg;
   }
 
   /** Returns a key associated with the smallest value in the map. */
-  def argmin : A = {
+  def argmin : K = {
     if (!valuesIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .min");
     }
-    var min = valuesIterator.next;
-    var arg = domain.iterator.next
-    foreach((k,v) => if (scalar.<(v,min)) { min = v; arg = k; });
+    var (arg,min) = pairsIterator.next;
+    foreachPair((k,v) => if (scalar.<(v,min)) { min = v; arg = k; });
     arg;
   }
 
   /** Returns the max of the values in this map. */
-  def max : B = {
+  def max : V = {
     if (!valuesIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .max");
     }
@@ -352,7 +372,7 @@ self =>
   }
 
   /** Returns the min of the values in this map. */
-  def min : B = {
+  def min : V = {
     if (!valuesIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .min");
     }
@@ -365,7 +385,7 @@ self =>
   }
 
   /** Returns the sum of the values in this map. */
-  def sum : B = {
+  def sum : V = {
     var sum = scalar.zero;
     foreachNonZeroValue(v => sum = scalar.+(sum,v));
     return sum;
@@ -376,35 +396,40 @@ self =>
   //
 
   /** Returns an ordering over the domain based on the values in this map. */
-  def asOrdering(implicit ord : Ordering[B]) : Ordering[A] = new Ordering[A] {
-    override def compare(a : A, b : A) = ord.compare(self(a), self(b));
+  def asOrdering(implicit ord : Ordering[V]) : Ordering[K] = new Ordering[K] {
+    override def compare(a : K, b : K) = ord.compare(self(a), self(b));
   }
 
   /** Returns an unmodifiable Map-like view of this Tensor. */
-  def asMap : scala.collection.Map[A,B] = new scala.collection.Map[A,B] {
-    override def keysIterator = domain.iterator;
-    override def valuesIterator = self.valuesIterator;
-    override def contains(key : A) = self.isDefinedAt(key);
-    override def apply(key : A) = self.apply(key);
-    override def iterator = self.iterator;
-    override def get(key : A) =
-      if (self.isDefinedAt(key)) Some(self.apply(key)) else None;
-    override def - (key : A) =
-      throw new UnsupportedOperationException("asMap view of Tensor is unmodifiable: use toMap");
-    override def + [B1>:B](kv : (A,B1)): scala.collection.Map[A,B1] =
-      throw new UnsupportedOperationException("asMap view of Tensor is unmodifiable: use toMap");
-  }
+  def asMap : scala.collection.Map[K,V] =
+    pairs;
 
   /** Creates a new copy of this Tensor as a scala map. */
-  def toMap : Map[A,B] =
-    this.iterator.toMap;
+  def toMap : Map[K,V] =
+    asMap.toMap;
 
-  // TODO: provide better toString
-  override def toString = {
-    val iter = iterator;
-    val rv = iter.take(10).mkString("\n");
+  protected[this] def mkKeyString(key : K) : String =
+    key.toString;
+
+  protected[this] def mkValueString(value : V) : String =
+    value.toString;
+
+  override def toString : String = {
+    val iter = keysIterator;
+    val keys = iter.take(10).toList;
+    
+    if (keys.isEmpty) 
+      return "";
+    
+    val newline = System.getProperty("line.separator");
+    val keyWidth = keys.iterator.map(mkKeyString).map(_.length).max+1;
+    val rv = (for (key <- keys.iterator) yield {
+      val ks = mkKeyString(key);
+      ks + (" " * (keyWidth-ks.length)) + mkValueString(apply(key));
+    }).mkString(newline);
+    
     if (iter.hasNext) {
-      rv + "...\n";
+      rv + newline + "... ("+(domain.size-10) +" more)";
     } else {
       rv;
     }
@@ -423,7 +448,7 @@ self =>
       (this eq that) ||
       (that canEqual this) &&
       (this.domain == that.domain) &&
-      ({ val casted = that.asInstanceOf[Tensor[A,B]];
+      ({ val casted = that.asInstanceOf[Tensor[K,V]];
          this.forall((k,v) => casted(k) == v) });
     case _ => false;
   }
@@ -435,47 +460,41 @@ self =>
   }
 
   override def hashCode() =
-    domain.hashCode + valuesIterator.foldLeft(1)((hash,v) => 41 * hash + v.hashCode);
+    domain.hashCode + pairsIterator.foldLeft(1)((hash,v) => 41 * hash + v.hashCode);
 }
 
 /**
- * A Tensor is a map from keys A (with a domain) to numeric scalar values B.
+ * K Tensor is a map from keys K (with a domain) to numeric scalar values V.
  * More specific operations are available on tensors indexed by a single key
  * (Tensor1, Vector) or pair of keys (Tensor2, Matrix).
  *
  * @author dramage
  */
 trait Tensor
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
-extends TensorLike[A, B, IterableDomain[A], Tensor[A, B]];
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V]
+extends TensorLike[K, V, IterableDomain[K], Tensor[K, V]];
 
 object Tensor {
+  /** Constructs a tensor for the given domain. */
+  def apply[K,V:Scalar](domain : IterableDomain[K]) =
+    mutable.Tensor.apply(domain);
 
-  class Impl[A,B](values : Map[A,B])(implicit override val scalar : Scalar[B])
-  extends Tensor[A,B] {
-    override val domain : SetDomain[A] = new SetDomain(values.keySet);
-    override def apply(k : A) = values(k);
+  implicit def canView[K, V:Scalar] =
+  new CanView[Tensor[K,V],TensorView.IdentityView[K,V,Tensor[K,V]]] {
+    override def apply(from : Tensor[K,V]) =
+      new TensorView.IdentityViewImpl[K,V,Tensor[K,V]](from);
   }
 
-  def apply[A,B:Scalar](values : (A,B)*) : Tensor[A,B] =
-    new Impl(values.toMap);
-
-  implicit def canView[A, B:Scalar] =
-  new CanView[Tensor[A,B],TensorView.IdentityView[A,B,Tensor[A,B]]] {
-    override def apply(from : Tensor[A,B]) =
-      new TensorView.IdentityViewImpl[A,B,Tensor[A,B]](from);
+  implicit def canSliceTensor[K1, K2, V:Scalar] =
+  new CanSliceTensor[Tensor[K1,V], K1, K2, Tensor[K2,V]] {
+    override def apply(from : Tensor[K1,V], keymap : scala.collection.Map[K2,K1]) =
+      new TensorSlice.FromKeyMap[K1, K2, V, Tensor[K1,V]](from, keymap);
   }
 
-  implicit def canSliceTensor[A1, A2, B:Scalar] =
-  new CanSliceTensor[Tensor[A1,B], A1, A2, Tensor[A2,B]] {
-    override def apply(from : Tensor[A1,B], keymap : scala.collection.Map[A2,A1]) =
-      new TensorSlice.FromKeyMap[A1, A2, B, Tensor[A1,B]](from, keymap);
-  }
-
-  implicit def canSliceVector[A, B:Scalar] =
-  new CanSliceVector[Tensor[A,B], A, Vector[B]] {
-    override def apply(from : Tensor[A,B], keys : Seq[A]) =
-      new VectorSlice.FromKeySeq[A,B,Tensor[A,B]](from, keys);
+  implicit def canSliceVector[K, V:Scalar] =
+  new CanSliceVector[Tensor[K,V], K, Vector[V]] {
+    override def apply(from : Tensor[K,V], keys : Seq[K]) =
+      new VectorSlice.FromKeySeq[K,V,Tensor[K,V]](from, keys);
   }
 
   implicit def canMapValues[K, V, RV, This, D, That]
@@ -486,12 +505,12 @@ object Tensor {
   = new CanMapValues[This,V,RV,That] {
     override def map(from : This, fn : (V=>RV)) = {
       val builder = bf(from, from.domain.asInstanceOf[D]);
-      from.foreach((k,v) => builder(k) = fn(v));
+      from.foreachPair((k,v) => builder(k) = fn(v));
       builder.result;
     }
     override def mapNonZero(from : This, fn : (V=>RV)) = {
       val builder = bf(from, from.domain.asInstanceOf[D]);
-      from.foreachNonZero((k,v) => builder(k) = fn(v));
+      from.foreachNonZeroPair((k,v) => builder(k) = fn(v));
       builder.result;
     }
   }
@@ -504,12 +523,12 @@ object Tensor {
   = new CanMapKeyValuePairs[This,K,V,RV,That] {
     override def map(from : This, fn : ((K,V)=>RV)) = {
       val builder = bf(from, from.domain.asInstanceOf[D]);
-      from.foreach((k,v) => builder(k) = fn(k,v));
+      from.foreachPair((k,v) => builder(k) = fn(k,v));
       builder.result;
     }
     override def mapNonZero(from : This, fn : ((K,V)=>RV)) = {
       val builder = bf(from, from.domain.asInstanceOf[D]);
-      from.foreachNonZero((k,v) => builder(k) = fn(k,v));
+      from.foreachNonZeroPair((k,v) => builder(k) = fn(k,v));
       builder.result;
     }
   }
@@ -523,22 +542,22 @@ object Tensor {
     override def joinAll(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
       val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
-      a.foreach((k,aV) => builder(k) = fn(aV,b(k)));
+      a.foreachPair((k,aV) => builder(k) = fn(aV,b(k)));
       builder.result;
     }
 
     override def joinEitherNonZero(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
       val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
-      a.foreachNonZero{(k,aV) => builder(k) = fn(aV,b(k))};
-      b.foreachNonZero{(k,bV) => builder(k) = fn(a(k),bV)};
+      a.foreachNonZeroPair((k,aV) => builder(k) = fn(aV,b(k)));
+      b.foreachNonZeroPair((k,bV) => builder(k) = fn(a(k),bV));
       builder.result;
     }
 
     override def joinBothNonZero(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
       val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
-      a.foreachNonZero{(k,aV) =>
+      a.foreachNonZeroPair { (k,aV) =>
         val bV = b(k);
         if(bV != 0.0)
           builder(k) = fn(aV,bV)

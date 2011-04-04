@@ -31,7 +31,8 @@ import org.junit.runner.RunWith
 class DenseMatrixTest extends FunSuite with Checkers {
 
   test("Slicing") {
-    val m = DenseMatrix((0,1,2),(3,4,5));
+    val m = DenseMatrix((0,1,2),
+                        (3,4,5));
     
     // slice sub-matrix
     val s1 : mutable.Matrix[Int] = m(0 to 1, 1 to 2);
@@ -89,18 +90,54 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(m.max === 3);
   }
 
-  test("Map") {
+  test("MapValues") {
     val a : DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1));
-    val m : DenseMatrix[Int] = a.mapValues(_ + 1);
-    assert(m.data.toList === List(2,3,1,4,1,0));
+    
+    val b1 : DenseMatrix[Int] = a.mapValues(_ + 1);
+    assert(b1 === DenseMatrix((2,1,1),(3,4,0)));
+    
+    val b2 : DenseMatrix[Double] = a.mapValues(_ + 1.0);
+    assert(b2 === DenseMatrix((2.0,1.0,1.0),(3.0,4.0,0.0)));
   }
 
+  test("Map") {
+    val a : DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1));
+    
+    val b1 : DenseMatrix[Int] = a.map((i,j,v) => i + v);
+    assert(b1 === DenseMatrix((1,0,0),(3,4,0)));
+    
+    val b2 : DenseMatrix[Double] = a.map((i,j,v) => j + v.toDouble);
+    assert(b2 === DenseMatrix((1.0,1.0,2.0),(2.0,4.0,1.0)));
+  }
+
+  test("ForComprehensions") {
+    val a : DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1));
+    
+    var s = 0;
+    
+    // foreach
+    s = 0;
+    for ((i,j,v) <- a) s += v;
+    assert(s === a.sum);
+    
+    // filter
+    s = 0;
+    for ((i,j,v) <- a; if i % 2 == 0 || j % 2 == 0) s += v;
+    assert(s === 1+2-1);
+    
+    // map
+    val b1 : DenseMatrix[Double] = for ((i,j,v) <- a) yield v * 2.0;
+    assert(b1 === DenseMatrix((2.0,0.0,0.0),(4.0,6.0,-2.0)));
+    
+    // map with filter
+    val b2 : DenseMatrix[Int] = for ((i,j,v) <- a; if j == 0) yield v * 2;
+    assert(b2 === DenseMatrix((2,0,0),(4,0,0)));
+  }
+    
+
   test("Tabulate") {
-    val m = DenseMatrix.tabulate(2,2)((i,j) => 1.0 * (i+1) * (j+2));
-    assert(m(0,0) === 2);
-    assert(m(0,1) === 3);
-    assert(m(1,0) === 4);
-    assert(m(1,1) === 6);
+    val m : DenseMatrix[Double] = DenseMatrix.tabulate(2,2)((i,j) => 1.0 * (i+1) * (j+2));
+    assert(m === DenseMatrix((2,3),(4,6)));
   }
 
   test("Multiply") {
@@ -118,8 +155,8 @@ class DenseMatrixTest extends FunSuite with Checkers {
   }
 
   test("Reshape") {
-    val m = DenseMatrix((1,2,3),(4,5,6));
-    val r = m.reshape(3,2);
+    val m : DenseMatrix[Int] = DenseMatrix((1,2,3),(4,5,6));
+    val r : DenseMatrix[Int] = m.reshape(3,2);
     assert(m.data eq r.data);
     assert(r.numRows === 3);
     assert(r.numCols === 2);

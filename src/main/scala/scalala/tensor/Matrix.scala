@@ -21,9 +21,9 @@ package scalala;
 package tensor;
 
 import domain.{DomainException,IndexDomain,TableDomain}
-import generic.collection._;
-import scalar.Scalar;
 
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
 import scalala.operators._;
 
 /**
@@ -31,8 +31,8 @@ import scalala.operators._;
  *
  * @author dramage
  */
-trait MatrixLike[@specialized(Int,Long,Float,Double) B, +This<:Matrix[B]]
-extends Tensor2Like[Int,Int,B,IndexDomain,IndexDomain,TableDomain,TableDomain,This] {
+trait MatrixLike[@specialized(Int,Long,Float,Double) V, +This<:Matrix[V]]
+extends Tensor2Like[Int,Int,V,IndexDomain,IndexDomain,TableDomain,TableDomain,This] {
 self =>
 
   /** Number of rows in this table. */
@@ -46,8 +46,31 @@ self =>
       throw new DomainException("Index "+(row,col)+" out of range.  Size is "+numRows+"x"+numCols);
   }
 
+  /** Returns true if this matrix has the same number of rows as columns. */
+  def isSquare : Boolean =
+    numRows == numCols;
+  
+  /** Returns true if this matrix is symmetric. */
+  def isSymmetric : Boolean = {
+    if (!isSquare) return false;
+    
+    var i = 0;
+    while (i < numRows) {
+      var j = i + 1;
+      while (j < numCols) {
+        if (this(i,j) != this(j,i)) {
+          return false;
+        }
+        j += 1;
+      }
+      i += 1;
+    }
+    
+    return true;
+  }
+
   /** Returns the sum of the diagonal elements of this matrix. */
-  def trace(implicit add : BinaryOp[B,B,OpAdd,B]) = {
+  def trace(implicit add : BinaryOp[V,V,OpAdd,V]) : V= {
     var rv = this(0,0);
     var i = 1;
     var n = math.min(numRows, numCols);
@@ -58,13 +81,10 @@ self =>
     rv;
   }
 
-  protected[this] def mkValueString(value : B) : String =
-    value.toString;
-
-  // TODO: improve this method to make it more Matrix-like
-  def toString(maxRows : Int, maxWidth : Int) : String = {
+  def toString(maxLines : Int, maxWidth : Int) : String = {
+    val showRows = if (numRows > maxLines) maxLines - 1 else numRows;
     def colWidth(col : Int) =
-      (0 until (maxRows min numRows)).map(row => mkValueString(this(row,col)).length).max;
+      (0 until showRows).map(row => mkValueString(this(row,col)).length+2).max;
 
     val colWidths = new scala.collection.mutable.ArrayBuffer[Int];
     var col = 0;
@@ -72,38 +92,58 @@ self =>
       colWidths += colWidth(col);
       col += 1;
     }
+    // make space for "... (7 more)"
+    while (colWidths.sum + (numCols - colWidths.size).toString.length + 11 > maxWidth) {
+      colWidths.remove(colWidths.length - 1);
+    }
+
+    val newline = System.getProperty("line.separator");
 
     var rv = new scala.StringBuilder;
-    for (row <- 0 until (maxRows min numRows); col <- 0 until colWidths.length) {
+    for (row <- 0 until showRows; col <- 0 until colWidths.length) {
       val cell = mkValueString(this(row,col));
       rv.append(cell);
-      rv.append(" " * (colWidths(col) - cell.length + 2));
+      rv.append(" " * (colWidths(col) - cell.length));
       if (col == colWidths.length - 1) {
         if (col < numCols - 1) {
-          rv.append(" ...");
+          rv.append("...");
+          if (row == 0) {
+            rv.append(" (");
+            rv.append(numCols - colWidths.size);
+            rv.append(" more)");
+          }
         }
-        rv.append(System.getProperty("line.separator"));
+        if (row + 1 < showRows) {
+          rv.append(newline);
+        }
       }
+    }
+    
+    if (numRows > showRows) {
+      rv.append(newline);
+      rv.append("... (");
+      rv.append(numRows - showRows);
+      rv.append(" more)");
     }
 
     rv.toString;
   }
 
   override def toString : String =
-    toString(maxRows = 20, maxWidth = 72);
+    toString(maxLines = 11, maxWidth = 72);
 
   override protected def canEqual(other : Any) : Boolean = other match {
     case that : Matrix[_] => true;
     case _ => false;
   }
   
-  override def t : Matrix[B] =
-    new MatrixTranspose.Impl[B,Matrix[B]](repr);
+  override def t : Matrix[V] =
+    new MatrixTranspose.Impl[V,Matrix[V]](repr);
 }
 
-trait Matrix[@specialized(Int,Long,Float,Double) B]
-extends Tensor2[Int,Int,B]
-with MatrixLike[B,Matrix[B]];
+trait Matrix[@specialized(Int,Long,Float,Double) V]
+extends Tensor2[Int,Int,V]
+with MatrixLike[V,Matrix[V]];
 
 object Matrix {
   implicit def canSliceRow[V:Scalar] : CanSliceRow[Matrix[V],Int,VectorRow[V]]
@@ -183,50 +223,6 @@ object Matrix {
 
     override val domain = TableDomain(keys1.length, keys2.length);
   }
-  
-//  implicit def canMulMatrixByCol[V1,A,AV,V2,B,RV,That]
-//  (implicit viewA : A=>Matrix[V1],
-//   sr : CanSliceRow[A,Int,B],
-//   viewB : B=>VectorCol[V2],
-//   mul : BinaryOp[A,B,OpMulRowVectorBy,RV],
-//   bf : CanBuildTensorFrom[B,IndexDomain,Int,RV,That],
-//   scalar : Scalar[RV])
-//  : BinaryOp[Matrix[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] =
-//  new BinaryOp[Matrix[V1], VectorCol[V2], OpMulMatrixBy, VectorCol[RV]] {
-//    override def opType = OpMulMatrixBy;
-//    override def apply(a : A, b : B) = {
-//      val builder = bf(a);
-//      var i = 0;
-//      while (i < a.numRows) {
-//        builder(i) = mul(a(i, ::)(sr.asInstanceOf[CanSliceRow[Matrix[V1],Int,VectorRow[V1]]]), b);
-//        i += 1;
-//      }
-//      builder.result.asInstanceOf[VectorCol[RV]];
-//    }
-//  }
-//
-//  implicit def canMulMatrixByMatrix[V1,V2,RV]
-//  (implicit sr : CanSliceRow[Matrix[V1],Int,VectorRow[V1]],
-//   sc : CanSliceCol[Matrix[V2],Int,VectorCol[V2]],
-//   mul : BinaryOp[VectorRow[V1],VectorCol[V2],OpMulRowVectorBy,RV],
-//   scalar : Scalar[RV])
-//  : BinaryOp[Matrix[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] =
-//  new BinaryOp[Matrix[V1], Matrix[V2], OpMulMatrixBy, Matrix[RV]] {
-//    override def opType = OpMulMatrixBy;
-//    override def apply(a : Matrix[V1], b : Matrix[V2]) = {
-//      val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows, b.numCols));
-//      var i = 0;
-//      while (i < a.numRows) {
-//        var j = 0;
-//        while (j < b.numCols) {
-//          builder((i,j)) = mul(a(i, ::)(sr.asInstanceOf[CanSliceRow[Matrix[V1],Int,VectorRow[V1]]]), b(::, j)(sc));
-//          j += 1;
-//        }
-//        i += 1;
-//      }
-//      builder.result.asInstanceOf[Matrix[RV]];
-//    }
-//  }
 
 //  implicit def canAppendMatrixColumns[V]
 //  : CanAppendColumns[Bound[V],Matrix[V],Matrix[V]]

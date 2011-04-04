@@ -23,7 +23,7 @@ package mutable;
 
 import domain._;
 
-import scalar.Scalar;
+import scalala.scalar.Scalar;
 
 /**
  * Implementation trait for slices of an underlying Tensor.  A slice
@@ -33,15 +33,15 @@ import scalar.Scalar;
  * @author dramage
  */
 trait TensorSliceLike
-[@specialized(Int,Long) A1, +D1<:IterableDomain[A1] with DomainLike[A1,D1],
- @specialized(Int,Long) A2, +D2<:IterableDomain[A2] with DomainLike[A2,D2],
- @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll<:Tensor[A1,B],
- +This<:TensorSlice[A1,A2,B,Coll]]
-extends tensor.TensorSliceLike[A1,D1,A2,D2,B,Coll,This]
-with TensorLike[A2,B,D2,This] {
+[@specialized(Int,Long) K1, +D1<:IterableDomain[K1],
+ @specialized(Int,Long) K2, +D2<:IterableDomain[K2],
+ @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll<:Tensor[K1,V],
+ +This<:TensorSlice[K1,K2,V,Coll]]
+extends tensor.TensorSliceLike[K1,D1,K2,D2,V,Coll,This]
+with TensorLike[K2,V,D2,This] {
 
-  override def update(key : A2, value : B) =
+  override def update(key : K2, value : V) =
     underlying.update(lookup(key), value);
 }
 
@@ -51,15 +51,16 @@ with TensorLike[A2,B,D2,This] {
  * @author dramage
  */
 trait TensorSlice
-[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll <: Tensor[A1, B]]
-extends tensor.TensorSlice[A1,A2,B,Coll] with Tensor[A2,B]
-with TensorSliceLike[A1, IterableDomain[A1], A2, IterableDomain[A2], B, Coll, TensorSlice[A1, A2, B, Coll]];
+[@specialized(Int,Long) K1, @specialized(Int,Long) K2,
+ @specialized(Int,Long,Float,Double,Boolean) V, +Coll <: Tensor[K1, V]]
+extends tensor.TensorSlice[K1,K2,V,Coll] with Tensor[K2,V]
+with TensorSliceLike[K1, IterableDomain[K1], K2, IterableDomain[K2], V, Coll, TensorSlice[K1, K2, V, Coll]];
 
 
 object TensorSlice {
-  class FromKeyMap[A1, A2, B:Scalar, +Coll<:Tensor[A1, B]]
-  (underlying : Coll, keymap : scala.collection.Map[A2,A1])
-  extends tensor.TensorSlice.FromKeyMap[A1,A2,B,Coll](underlying, keymap)
-  with TensorSlice[A1,A2,B,Coll];
+  class FromKeyMap[K1, K2, V:Scalar, +Coll<:Tensor[K1, V]]
+  (underlying : Coll, keymap : scala.collection.Map[K2,K1])
+  extends tensor.TensorSlice.FromKeyMap[K1,K2,V,Coll](underlying, keymap)
+  with TensorSlice[K1,K2,V,Coll];
 }
+

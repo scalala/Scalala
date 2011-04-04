@@ -20,10 +20,9 @@
 package scalala;
 package tensor;
 
-import scalar.Scalar;
+import domain.Domain1;
 
-import domain._;
-
+import scalala.scalar.Scalar;
 import scalala.operators._;
 
 /**
@@ -32,13 +31,13 @@ import scalala.operators._;
  * @author dramage
  */
 trait Tensor1ProxyLike
-[@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B,
- +D<:Domain1[A] with Domain1Like[A,D], Inner<:Tensor1[A,B], +This<:Tensor1[A,B]]
-extends TensorProxyLike[A,B,D,Inner,This] with Tensor1Like[A,B,D,This] {
+[@specialized(Int,Long)K, @specialized(Int,Long,Float,Double) V,
+ +D<:Domain1[K], Inner<:Tensor1[K,V], +This<:Tensor1[K,V]]
+extends TensorProxyLike[K,V,D,Inner,This] with Tensor1Like[K,V,D,This] {
   override def norm(n : Double) =
     inner.norm(n);
 
-  override def dot[C,R](that : Tensor1[A,C])(implicit mul : BinaryOp[B,C,OpMul,R], add : BinaryOp[R,R,OpAdd,R], scalar : Scalar[R]) : R =
+  override def dot[C,R](that : Tensor1[K,C])(implicit mul : BinaryOp[V,C,OpMul,R], add : BinaryOp[R,R,OpAdd,R], scalar : Scalar[R]) : R =
     inner.dot(that);
 }
 
@@ -48,6 +47,6 @@ extends TensorProxyLike[A,B,D,Inner,This] with Tensor1Like[A,B,D,This] {
  * @author dramage
  */
 trait Tensor1Proxy
-[@specialized(Int,Long)A, @specialized(Int,Long,Float,Double) B, Inner<:Tensor1[A,B]]
-extends TensorProxy[A,B,Inner] with Tensor1[A,B] with Tensor1ProxyLike[A,B,Domain1[A],Inner,Tensor1Proxy[A,B,Inner]];
+[@specialized(Int,Long)K, @specialized(Int,Long,Float,Double) V, Inner<:Tensor1[K,V]]
+extends TensorProxy[K,V,Inner] with Tensor1[K,V] with Tensor1ProxyLike[K,V,Domain1[K],Inner,Tensor1Proxy[K,V,Inner]];
 

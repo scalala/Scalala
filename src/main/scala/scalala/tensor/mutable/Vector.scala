@@ -21,30 +21,33 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
-import generic.collection._;
+import domain.IndexDomain;
+
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
+import scalala.operators._;
 
 /**
  * Implementation trait for a Tensor that is also a tensor.Vector.
  *
  * @author dramage.
  */
-trait VectorLike[@specialized(Int,Long,Float,Double,Boolean) B, +Repr<:Vector[B]]
-extends tensor.VectorLike[B,Repr] with Tensor1Like[Int,B,IndexDomain,Repr] {
+trait VectorLike[@specialized(Int,Long,Float,Double,Boolean) V, +Repr<:Vector[V]]
+extends tensor.VectorLike[V,Repr] with Tensor1Like[Int,V,IndexDomain,Repr] {
 
   /** Returns a view of this vector as a row. Tightens bound superclass's return value. */
-  override def asRow : VectorRow[B] = this match {
-    case r : VectorRow[_] => this.asInstanceOf[VectorRow[B]];
+  override def asRow : VectorRow[V] = this match {
+    case r : VectorRow[_] => this.asInstanceOf[VectorRow[V]];
     case _ => new VectorRow.View(repr);
   }
 
   /** Returns a view of this vector as a column. Tightens bound superclass's return value.  */
-  override def asCol : VectorCol[B] = this match {
-    case c : VectorCol[_] => this.asInstanceOf[VectorCol[B]];
+  override def asCol : VectorCol[V] = this match {
+    case c : VectorCol[_] => this.asInstanceOf[VectorCol[V]];
     case _ => new VectorCol.View(repr);
   }
 
-  def := (seq : Seq[B]) = {
+  def := (seq : Seq[V]) = {
     checkDomain(IndexDomain(seq.length));
 
     var i = 0;
@@ -54,7 +57,7 @@ extends tensor.VectorLike[B,Repr] with Tensor1Like[Int,B,IndexDomain,Repr] {
     }
   }
 
-  def :=[O] (seq : Seq[O])(implicit tf : O=>B) = {
+  def :=[O] (seq : Seq[O])(implicit tf : O=>V) = {
     checkDomain(IndexDomain(seq.length));
 
     var i = 0;
@@ -63,13 +66,16 @@ extends tensor.VectorLike[B,Repr] with Tensor1Like[Int,B,IndexDomain,Repr] {
       i += 1;
     }
   }
+
+  def transform(fn : V=>V) =
+    this.transformValues(fn);
 
   /** In-place quick-sort of the values in this sequence. */
-  def sort(implicit ord : Ordering[B]) : Unit =
+  def sort(implicit ord : Ordering[V]) : Unit =
     quickSort(0, size);
 
   /** Adapted from scala.util.Sorting.sort1 */
-  private def quickSort[K](off: Int, len: Int)(implicit ord: Ordering[B]) {
+  private def quickSort[K](off: Int, len: Int)(implicit ord: Ordering[V]) {
     import ord._
     val x = this;
     @inline def swap(a: Int, b: Int) {
@@ -178,9 +184,9 @@ extends tensor.VectorLike[B,Repr] with Tensor1Like[Int,B,IndexDomain,Repr] {
  *
  * @author dramage
  */
-trait Vector[@specialized(Int,Long,Float,Double,Boolean) B]
-extends tensor.Vector[B] with Tensor1[Int,B]
-with VectorLike[B,Vector[B]];
+trait Vector[@specialized(Int,Long,Float,Double,Boolean) V]
+extends tensor.Vector[V] with Tensor1[Int,V]
+with VectorLike[V,Vector[V]];
 
 
 object Vector extends dense.DenseVectorConstructors;

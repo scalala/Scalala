@@ -24,7 +24,7 @@ package collection;
 import scalala.tensor._;
 import scalala.tensor.domain._;
 import scalala.tensor.dense._;
-import scalala.tensor.mutable.TensorBuilder;
+import scalala.tensor.generic.TensorBuilder;
 import scalala.scalar.Scalar;
 
 /**
@@ -123,6 +123,14 @@ trait CanBuildTensorFromImplicitsLevel2Row extends CanBuildTensorFromImplicitsLe
 trait CanBuildTensorFromImplicitsLevel3 extends CanBuildTensorFromImplicitsLevel2Row {
   import dense._;
   import sparse._;
+  import mutable.Counter;
+  
+  implicit def canBuildCounterFromCounter[K,V:Scalar]
+  : CanBuildTensorFrom[Counter[_,_], Domain1[K], K, V, Counter[K,V]]
+  = new CanBuildTensorFrom[Counter[_,_], Domain1[K], K, V, Counter[K,V]] {
+    override def apply(from : Counter[_,_], domain : Domain1[K]) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[K,V,Counter[K,V]]];
+  }
   
   implicit def canBuildDenseVectorColFromDenseTensor[V:Scalar]
   : CanBuildTensorFrom[DenseArrayTensor[_,_], IndexDomain, Int, V, DenseVectorCol[V]]

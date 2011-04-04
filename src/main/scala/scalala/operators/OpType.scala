@@ -144,14 +144,6 @@ trait OpNeg extends OpType;
 object OpNeg extends OpNeg;
 
 /**
- * Type marker for UnaryOp to take the transpose of A.
- *
- * @author dramage
- */
-trait OpTranspose extends OpType;
-object OpTranspose extends OpTranspose;
-
-/**
  * Type marker for BinaryOp A * B when A is a row.
  *
  * @author dramage

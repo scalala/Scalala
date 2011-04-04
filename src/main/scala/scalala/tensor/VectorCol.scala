@@ -22,9 +22,9 @@ package tensor;
 
 import scalar.Scalar;
 
-import domain._;
-import generic.collection.{CanAppendColumns};
+import domain.IndexDomain;
 
+import scalala.generic.collection.{CanAppendColumns};
 import scalala.operators._;
 
 /**

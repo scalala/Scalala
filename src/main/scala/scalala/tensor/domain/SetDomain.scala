@@ -19,16 +19,32 @@
  */
 package scalala;
 package tensor;
-package mutable;
+package domain;
 
 /**
- * Builds a Tensor of type To after being given a series of
- * key, value pairs.
+ * The domain of elements from a specific set.
  *
  * @author dramage
  */
-trait TensorBuilder[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double) B,+To] {
-  def update(key : A, value : B);
+case class SetDomain[@specialized(Int,Long) A](set : scala.collection.Set[A])
+extends Domain1[A] with Domain1Like[A,SetDomain[A]] {
 
-  def result : To;
+  override def size =
+    set.size;
+
+  override def foreach[O](fn : A=>O) =
+    set.foreach(fn);
+
+  override def iterator =
+    set.iterator;
+
+  override def contains(key : A) : Boolean =
+    set.contains(key);
+
+  override def equals(other : Any) = other match {
+    case SetDomain(s) => this.set == s;
+    case that : Domain[_] => super.equals(that);
+    case _ => false;
+  }
 }
+

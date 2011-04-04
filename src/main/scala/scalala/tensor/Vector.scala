@@ -22,41 +22,51 @@ package tensor;
 
 import domain.IndexDomain;
 
-import scalala.generic.collection.CanFilterValues;
+import scalala.generic.collection._;
 
 /**
- * Vectors are Tensor1's on the non-negative integers.
+ * Vectors are Tensor1s on the non-negative integers.
  *
  * @author dramage
  */
-trait VectorLike[@specialized(Int,Long,Float,Double) B, +This<:Vector[B]]
-extends Tensor1Like[Int,B,IndexDomain,This] { self =>
+trait VectorLike[@specialized(Int,Long,Float,Double) V, +This<:Vector[V]]
+extends Tensor1Like[Int,V,IndexDomain,This] { self =>
 
   //
   // for comprehensions
   //
   
-  /**
-   * For-comprension support for "for (v <- x) ...".
-   */
-  def foreach[U](f : B => U) : Unit =
-    this.foreach((k,v) => f(v));
+  /** Calls this.foreachValue(fn). */
+  def foreach[U](fn : (V=>U)) =
+    this.foreachValue(fn);
   
-  def filter[TT>:This,That](f : B => Boolean)(implicit cf : CanFilterValues[TT,B,That]) =
-    cf.filter(repr, f);
+  /** Calls this.mapValues(fn). */
+  def map[TT>:This,RV,That](fn : V => RV)(implicit bf : CanMapValues[TT, V, RV, That]) : That =
+    this.mapValues[TT,RV,That](fn)(bf);
 
-  protected[this] def mkValueString(value : B) : String =
-    value.toString;
+  def filter[TT>:This,That](f : V => Boolean)(implicit cf : CanBuildTensorFrom[TT,IndexDomain,Int,V,That]) =
+    withFilter(f).strict;
+  
+  def withFilter(f : V => Boolean) =
+    new Vector.Filtered[V,This](repr, f);
+
+  /** Calls this.valuesIterator. */
+  def iterator : Iterator[V] =
+    this.valuesIterator;
+
+  //
+  // Views
+  //
 
   /** Returns a view of this vector as a row. */
-  def asRow : VectorRow[B] = this match {
-    case r : VectorRow[_] => this.asInstanceOf[VectorRow[B]];
+  def asRow : VectorRow[V] = this match {
+    case r : VectorRow[_] => this.asInstanceOf[VectorRow[V]];
     case _ => new VectorRow.View(repr);
   }
 
   /** Returns a view of this vector as a column. */
-  def asCol : VectorCol[B] = this match {
-    case c : VectorCol[_] => this.asInstanceOf[VectorCol[B]];
+  def asCol : VectorCol[V] = this match {
+    case c : VectorCol[_] => this.asInstanceOf[VectorCol[V]];
     case _ => new VectorCol.View(repr);
   }
 
@@ -65,21 +75,16 @@ extends Tensor1Like[Int,B,IndexDomain,This] { self =>
     List.tabulate(size)(i => this(i));
 
   /** Returns a copy of this vector's data as a list. */
-  def toArray(implicit m : ClassManifest[B]) =
+  def toArray(implicit m : ClassManifest[V]) =
     Array.tabulate(size)(i => this(i));
 
   override def toString = {
     val rv = valuesIterator.take(10).map(mkValueString).mkString("\n");
     if (size > 10) {
-      rv + "\n" + "... ("+(size-10) +" more)";
+      rv + System.getProperty("line.separator") + "... ("+(size-10) +" more)";
     } else {
       rv;
     }
-  }
-
-  override protected def canEqual(other : Any) : Boolean = other match {
-    case that : Vector[_] => true;
-    case _ => false;
   }
 }
 
@@ -88,7 +93,67 @@ extends Tensor1Like[Int,B,IndexDomain,This] { self =>
  *
  * @author dramage
  */
-trait Vector[@specialized(Int,Long,Float,Double) B]
-extends Tensor1[Int,B]
-with VectorLike[B,Vector[B]];
+trait Vector[@specialized(Int,Long,Float,Double) V]
+extends Tensor1[Int,V]
+with VectorLike[V,Vector[V]];
+
+
+object Vector {
+  class Filtered[@specialized(Int,Long,Float,Double) V, +This<:Vector[V]]
+  (inner : This, filterFn : V => Boolean) {
+    def size = {
+      var rv = 0;
+      inner.foreach(v => if (filterFn(v)) rv += 1);
+      rv;
+    }
+    
+    def withFilter(fn : V => Boolean) =
+      new Filtered[V,This](inner, v => filterFn(v) && fn(v));
+    
+    def foreach[U](fn : V => U) = {
+      for (v <- inner)
+        if (filterFn(v)) fn(v);
+    }
+    
+    def map[U,That](fn : V => U)
+    (implicit bf : CanBuildTensorFrom[This,IndexDomain,Int,U,That]) = {
+      val builder = bf(inner, IndexDomain(size));
+      var i = 0;
+      for (v <- inner) {
+        if (filterFn(v)) {
+          builder(i) = fn(v);
+          i += 1;
+        }
+      }
+      builder.result;
+    }
+    
+//    def flatMap[U,That](fn : V => Traversable[U])
+//    (implicit bf : CanBuildTensorFrom[This,IndexDomain,Int,U,That]) = {
+//      val builder = bf(inner, IndexDomain(size));
+//      var i = 0;
+//      for (v <- inner) {
+//        if (filterFn(v)) {
+//          for (u <- fn(v)) {
+//            builder(i) = u;
+//            i += 1;
+//          }
+//        }
+//      }
+//      builder.result;
+//    }
+    
+    def strict[That](implicit bf : CanBuildTensorFrom[This,IndexDomain,Int,V,That]) = {
+      val builder = bf(inner, IndexDomain(size));
+      var i = 0;
+      for (v <- inner) {
+        if (filterFn(v)) {
+          builder(i) = v;
+          i += 1;
+        }
+      }
+      builder.result;
+    }
+  }
+}
 

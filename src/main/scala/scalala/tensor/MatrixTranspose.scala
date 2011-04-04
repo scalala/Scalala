@@ -22,9 +22,8 @@ package tensor;
 
 import domain.{IndexDomain,TableDomain};
 
-import generic.collection._;
-import scalar.Scalar;
-
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
 import scalala.operators._;
 
 /**

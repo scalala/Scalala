@@ -30,29 +30,30 @@ import domain._;
  * @author dramage
  */
 trait DomainFunction
-[@specialized(Int,Long,Float,Double) A,
- @specialized(Int,Long,Float,Double,Boolean) +B,
- +D <: Domain[A]]
-extends PartialFunction[A, B] {
+[@specialized(Int,Long,Float,Double) K,
+ @specialized(Int,Long,Float,Double,Boolean) +V,
+ +D <: Domain[K]]
+extends PartialFunction[K, V] {
   
   /** The domain over which this function is defined. */
   def domain : D;
 
   /** Returns true if the key is in the function's domain. */
-  override def isDefinedAt(key : A) =
+  override def isDefinedAt(key : K) =
     domain(key);
 
   /** @throws DomainException if key is not in the domain. */
-  def checkKey(key : A) : Unit = {
+  def checkKey(key : K) : Unit = {
     if (!isDefinedAt(key))
       throw new DomainException("Key " + key + " not in domain");
   }
 
   /** @throws DomainException if domain is not equal to this domain. */
-  def checkDomain(domain : Domain[A]) : Unit = {
+  def checkDomain(domain : Domain[K]) : Unit = {
     if (this.domain != domain)
       throw new DomainException("Incompatible domain: "+domain);
   }
 
-  def apply(key : A) : B;
+  def apply(key : K) : V;
 }
+

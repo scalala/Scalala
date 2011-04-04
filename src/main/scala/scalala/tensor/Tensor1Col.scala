@@ -20,8 +20,8 @@
 package scalala;
 package tensor;
 
-import domain._;
-import mutable.TensorBuilder;
+import domain.{IterableDomain,Domain1,IndexDomain,CanGetDomain,CanBuildDomain2};
+import generic.TensorBuilder;
 
 import scalala.operators._;
 import scalala.scalar.Scalar;
@@ -34,7 +34,7 @@ import scalala.generic.collection.CanBuildTensorFrom;
  */
 trait Tensor1ColLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1Col[K,V]]
+ +D<:Domain1[K], +This<:Tensor1Col[K,V]]
 extends Tensor1Like[K,V,D,This] with operators.ColOps[This] { self =>
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = domain match {
     case that : IndexDomain =>
@@ -76,7 +76,7 @@ object Tensor1Col {
     override def opType = OpMulColVectorBy;
     override def apply(a : A, b : B) = {
       val builder = bf(a, dThat(a.domain.asInstanceOf[DA], b.domain.asInstanceOf[DB]));
-      a.foreachNonZero((i,va) => b.foreachNonZero((j,vb) => builder((i,j)) = mul(va,vb)));
+      a.foreachNonZeroPair((i,va) => b.foreachNonZeroPair((j,vb) => builder((i,j)) = mul(va,vb)));
       builder.result;
     }
   }

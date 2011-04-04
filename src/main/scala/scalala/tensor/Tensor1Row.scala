@@ -20,8 +20,8 @@
 package scalala;
 package tensor;
 
-import domain._;
-import mutable.TensorBuilder;
+import domain.{IterableDomain,Domain1,Domain2,IndexDomain};
+import generic.TensorBuilder;
 
 import scalala.generic.collection.{CanSliceCol,CanBuildTensorFrom};
 import scalala.scalar.Scalar;
@@ -34,7 +34,7 @@ import scalala.operators._;
  */
 trait Tensor1RowLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +D<:Domain1[K] with Domain1Like[K,D], +This<:Tensor1Row[K,V]]
+ +D<:Domain1[K], +This<:Tensor1Row[K,V]]
 extends Tensor1Like[K,V,D,This] with operators.RowOps[This] { self =>
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = domain match {
     case that : IndexDomain =>
@@ -74,7 +74,7 @@ object Tensor1Row {
       a dot b;
   }
 
-  implicit def canMulTensor1RowByMatrix[K1,K2,V1,V2,Col,RV,ThisA,ThisB,D2<:Domain1[K2] with Domain1Like[K2,D2],That]
+  implicit def canMulTensor1RowByMatrix[K1,K2,V1,V2,Col,RV,ThisA,ThisB,D2<:Domain1[K2],That]
   (implicit viewA : ThisA => Tensor1Row[K1,V1],
    viewB : ThisB => Tensor2Like[K1,K2,V2,_,D2,_,_,_],
    slice : CanSliceCol[ThisB,K2,Col],
@@ -85,7 +85,7 @@ object Tensor1Row {
     override def opType = OpMulRowVectorBy;
     override def apply(a : ThisA, b : ThisB) = {
       val domain = b.domain.asInstanceOf[Domain2[_,_]]._2.asInstanceOf[D2];
-      val builder : mutable.TensorBuilder[K2,RV,That] = bf(a, domain);
+      val builder : TensorBuilder[K2,RV,That] = bf(a, domain);
       for (j <- domain.asInstanceOf[Domain1[K2]]) {
         builder(j) = mul(a, slice(b, j));
       }

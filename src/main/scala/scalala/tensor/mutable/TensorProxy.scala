@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
+import domain.{Domain1,IterableDomain,IndexDomain};
 
 /**
  * Proxy for a mutable tensor.
@@ -31,7 +31,7 @@ import domain._;
 trait TensorProxyLike
 [@specialized(Int, Long) K,
  @specialized(Int, Long, Float, Double, Boolean) V,
- +D<:IterableDomain[K] with DomainLike[K,D],
+ +D<:IterableDomain[K],
  Inner <: Tensor[K,V],
  +This <: Tensor[K,V]]
 extends tensor.TensorProxyLike[K,V,D,Inner,This] with TensorLike[K,V,D,This] {
@@ -39,11 +39,11 @@ extends tensor.TensorProxyLike[K,V,D,Inner,This] with TensorLike[K,V,D,This] {
   override def update(key : K, value : V) : Unit =
     inner.update(key, value);
 
-  override def transform(f : (K,V)=>V) =
-    inner.transform(f);
+  override def transformPairs(f : (K,V)=>V) =
+    inner.transformPairs(f);
 
-  override def transformNonZero(fn : ((K,V)=>V)) : Boolean =
-    inner.transformNonZero(fn);
+  override def transformNonZeroPairs(fn : ((K,V)=>V)) : Boolean =
+    inner.transformNonZeroPairs(fn);
 
   override def transformValues(f : V=>V) =
     inner.transformValues(f);
@@ -68,7 +68,7 @@ extends tensor.TensorProxy[A,B,Inner] with Tensor[A,B] with TensorProxyLike[A,B,
 trait Tensor1ProxyLike
 [@specialized(Int, Long) K,
  @specialized(Int, Long, Float, Double, Boolean) V,
- +D<:Domain1[K] with Domain1Like[K,D],
+ +D<:Domain1[K],
  Inner <: Tensor1[K,V],
  +This <: Tensor1[K,V]]
 extends tensor.Tensor1ProxyLike[K,V,D,Inner,This]
@@ -102,3 +102,4 @@ extends tensor.VectorProxyLike[V,Inner,This] with Tensor1ProxyLike[Int,V,IndexDo
  */
 trait VectorProxy[@specialized(Int,Long,Float,Double) V, Inner<:Vector[V]]
 extends tensor.VectorProxy[V,Inner] with Tensor1Proxy[Int,V,Inner] with Vector[V] with VectorProxyLike[V,Inner,VectorProxy[V,Inner]];
+

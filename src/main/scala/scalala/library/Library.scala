@@ -23,10 +23,8 @@ package library;
 import scalala.generic._;
 import scalala.generic.math._;
 
-import scalala.tensor.mutable.Tensor
-import tensor.{Tensor1Col, Tensor1}
-import operators.{OpSub, NumericOps, OpDiv, BinaryOp}
-;
+import scalala.tensor.mutable.Counter;
+import scalala.operators.{OpSub, NumericOps, OpDiv, BinaryOp}
 
 /**
  * Library of scalala basic mathematical functions.
@@ -103,8 +101,8 @@ trait Library {
   //
 
   /** Counts the given items. */
-  def count[X](items : TraversableOnce[X]) : Tensor[X,Int] = {
-    val m = scalala.tensor.mutable.Tensor1Col[X,Int]();
+  def count[X](items : TraversableOnce[X]) : Counter[X,Int] = {
+    val m = Counter[X,Int]();
     for (item <- items) {
       m(item) += 1;
     }

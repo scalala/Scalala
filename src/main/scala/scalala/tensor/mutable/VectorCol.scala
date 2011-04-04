@@ -21,11 +21,10 @@ package scalala;
 package tensor;
 package mutable;
 
-import scalar.Scalar;
+import domain.IndexDomain;
 
-import domain._;
-import generic.collection.{CanAppendColumns};
-
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
 import scalala.operators._;
 
 /**
@@ -51,6 +50,9 @@ extends tensor.VectorCol[V] with Tensor1Col[Int,V] with Vector[V]
 with VectorColLike[V,VectorCol[V]];
 
 object VectorCol {
+  def apply[V:Scalar](domain : IndexDomain) =
+    dense.DenseVectorCol[V](domain);
+
   class View[V](override val inner : Vector[V])
   extends VectorProxy[V,Vector[V]] with tensor.VectorProxy[V,Vector[V]] with VectorCol[V] with VectorLike[V,View[V]] {
     override def repr : View[V] = this;

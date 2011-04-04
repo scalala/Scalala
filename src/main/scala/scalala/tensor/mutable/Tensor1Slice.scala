@@ -21,9 +21,9 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
+import domain.{IterableDomain,Domain1};
 
-import scalar.Scalar;
+import scalala.scalar.Scalar;
 
 /**
  * Implementation trait for a Tensor1 view of a slice of keys from a Tensor.
@@ -31,29 +31,29 @@ import scalar.Scalar;
  * @author dramage
  */
 trait Tensor1SliceLike
-[@specialized(Int,Long) A1, +D1<:IterableDomain[A1] with DomainLike[A1,D1],
- @specialized(Int,Long) A2, +D2<:Domain1[A2] with Domain1Like[A2,D2],
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:Tensor[A1,B],
- +This<:Tensor1Slice[A1,A2,B,Coll]]
-extends tensor.Tensor1SliceLike[A1,D1,A2,D2,B,Coll,This]
-with TensorSliceLike[A1, D1, A2, D2, B, Coll, This]
-with Tensor1Like[A2, B, D2, This];
+[@specialized(Int,Long) K1, +D1<:IterableDomain[K1],
+ @specialized(Int,Long) K2, +D2<:Domain1[K2],
+ @specialized(Int,Long,Float,Double,Boolean) V, +Coll<:Tensor[K1,V],
+ +This<:Tensor1Slice[K1,K2,V,Coll]]
+extends tensor.Tensor1SliceLike[K1,D1,K2,D2,V,Coll,This]
+with TensorSliceLike[K1, D1, K2, D2, V, Coll, This]
+with Tensor1Like[K2, V, D2, This];
 
 /**
- * A Tensor1 view of a slice of keys from a Tensor.
+ * K Tensor1 view of a slice of keys from a Tensor.
  *
  * @author dramage
  */
 trait Tensor1Slice
-[@specialized(Int,Long) A1, @specialized(Int,Long) A2,
- @specialized(Int,Long,Float,Double,Boolean) B, +Coll<:Tensor[A1,B]]
-extends tensor.Tensor1Slice[A1,A2,B,Coll]
-with TensorSlice[A1,A2,B,Coll] with Tensor1[A2,B]
-with Tensor1SliceLike[A1, IterableDomain[A1], A2, Domain1[A2], B, Coll, Tensor1Slice[A1, A2, B, Coll]];
+[@specialized(Int,Long) K1, @specialized(Int,Long) K2,
+ @specialized(Int,Long,Float,Double,Boolean) V, +Coll<:Tensor[K1,V]]
+extends tensor.Tensor1Slice[K1,K2,V,Coll]
+with TensorSlice[K1,K2,V,Coll] with Tensor1[K2,V]
+with Tensor1SliceLike[K1, IterableDomain[K1], K2, Domain1[K2], V, Coll, Tensor1Slice[K1, K2, V, Coll]];
 
 object Tensor1Slice {
   /** This view is a no-op but is needed for correct implicit resolution. */
-  implicit def asTensor1[A,B](slice : Tensor1Slice[A,_,B,_]) : Tensor1[A,B] =
+  implicit def asTensor1[K,V](slice : Tensor1Slice[K,_,V,_]) : Tensor1[K,V] =
     slice;
 }
 

@@ -103,20 +103,5 @@ class TensorTest extends FunSuite with Checkers {
     assert(x.argmin === "c");
     assert(x.argmax === "b");
   }
-
-  test("Addition") {
-    assert(mutable.Tensor("a"->1,"b"->2) + mutable.Tensor("a"->3) === Tensor("a"->4,"b"->2));
-    assert(mutable.Tensor("a"->3) + mutable.Tensor("a"->1,"b"->2) === Tensor("a"->4,"b"->2));
-  }
-
-  test("Subtraction") {
-    assert(mutable.Tensor("a"->1,"b"->2) - mutable.Tensor("a"->3) === Tensor("a" -> -2, "b" -> 2));
-    assert(mutable.Tensor("a"->3) - mutable.Tensor("a"->1,"b"->2) === Tensor("a" -> 2, "b" -> -2));
-  }
-
-//  test("Multiplication") {
-//    assert(mutable.Tensor("a"->1,"b"->2) :* mutable.Tensor("a"->3) === Tensor("a"->3));
-//    assert(mutable.Tensor("a"->3) :* mutable.Tensor("a"->1,"b"->2) === Tensor("a"->3));
-//  }
-
 }
+

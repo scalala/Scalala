@@ -21,10 +21,11 @@ package scalala;
 package tensor;
 package mutable;
 
-import domain._;
-import generic.collection._;
+import domain.{IterableDomain,IndexDomain};
 
-import scalar.Scalar;
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
+import scalala.operators._;
 
 /**
  * Implementation trait for a Vector-like view of a mutable Tensor.
@@ -32,13 +33,13 @@ import scalar.Scalar;
  * @author dramage
  */
 trait VectorSliceLike
-[@specialized(Int,Long) A, +D<:IterableDomain[A] with DomainLike[A,D],
- @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll<:Tensor[A,B],
- +This<:VectorSlice[A,B,Coll]]
-extends tensor.VectorSliceLike[A, D, B, Coll, This]
-with Tensor1SliceLike[A, D, Int, IndexDomain, B, Coll, This]
-with VectorLike[B, This];
+[@specialized(Int,Long) K, +D<:IterableDomain[K],
+ @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll<:Tensor[K,V],
+ +This<:VectorSlice[K,V,Coll]]
+extends tensor.VectorSliceLike[K, D, V, Coll, This]
+with Tensor1SliceLike[K, D, Int, IndexDomain, V, Coll, This]
+with VectorLike[V, This];
 
 /**
  * Vector-like view of a mutable Tensor.
@@ -46,16 +47,16 @@ with VectorLike[B, This];
  * @author dramage
  */
 trait VectorSlice
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- +Coll<:Tensor[A, B]]
-extends tensor.VectorSlice[A,B,Coll]
-with Tensor1Slice[A,Int,B,Coll]
-with Vector[B]
-with VectorSliceLike[A, IterableDomain[A], B, Coll, VectorSlice[A, B, Coll]];
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll<:Tensor[K, V]]
+extends tensor.VectorSlice[K,V,Coll]
+with Tensor1Slice[K,Int,V,Coll]
+with Vector[V]
+with VectorSliceLike[K, IterableDomain[K], V, Coll, VectorSlice[K, V, Coll]];
 
 object VectorSlice {
-  class FromKeySeq[A, B:Scalar, +Coll<:Tensor[A, B]]
-  (underlying : Coll, keys : Seq[A])
-  extends tensor.VectorSlice.FromKeySeq[A,B,Coll](underlying, keys)
-  with VectorSlice[A,B,Coll];
+  class FromKeySeq[K, V:Scalar, +Coll<:Tensor[K, V]]
+  (underlying : Coll, keys : Seq[K])
+  extends tensor.VectorSlice.FromKeySeq[K,V,Coll](underlying, keys)
+  with VectorSlice[K,V,Coll];
 }

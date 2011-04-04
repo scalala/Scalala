@@ -22,7 +22,7 @@ package tensor;
 
 import scalar.Scalar;
 
-import domain._;
+import domain.DomainN;
 
 /**
  * Tensors indexed by a sequence of keys.
