@@ -23,7 +23,7 @@ package mutable;
 
 import domain._;
 
-import scalar.Scalar;
+import scalala.scalar.Scalar;
 
 /**
  * Implementation trait for slices of an underlying Tensor.  A slice

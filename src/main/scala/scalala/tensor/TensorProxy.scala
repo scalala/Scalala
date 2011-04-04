@@ -20,12 +20,11 @@
 package scalala;
 package tensor;
 
-import scalar.Scalar;
-
 import domain.IterableDomain;
-import generic.collection._;
+import generic.TensorBuilder;
 
-import mutable.TensorBuilder;
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
 
 /**
  * Proxy for a Tensor instance.
@@ -54,6 +53,9 @@ extends TensorLike[K,V,D,This] {
   override def foreachPair[U](fn: (K,V) => U) : Unit =
     inner.foreachPair(fn);
 
+  override def foreachKey[U](fn : (K=>U)) =
+    inner.foreachKey(fn);
+    
   override def foreachValue[U](fn : (V=>U)) =
     inner.foreachValue(fn);
 
@@ -75,19 +77,28 @@ extends TensorLike[K,V,D,This] {
   override def forallNonZero(fn : V => Boolean) : Boolean =
     inner.forallNonZero(fn);
 
-  override def keysIterator : Iterator[K] =
-    inner.keysIterator;
-
   override def pairsIterator : Iterator[(K,V)] =
     inner.pairsIterator;
+
+  override def keysIterator : Iterator[K] =
+    inner.keysIterator;
 
   override def valuesIterator : Iterator[V] =
     inner.valuesIterator;
 
+  override def pairsIteratorNonZero : Iterator[(K,V)] =
+    inner.pairsIteratorNonZero;
+
+  override def keysIteratorNonZero : Iterator[K] =
+    inner.keysIteratorNonZero;
+
+  override def valuesIteratorNonZero : Iterator[V] =
+    inner.valuesIteratorNonZero;
+
   override def find(p : V => Boolean) : Option[K] =
     inner.find(p);
 
-  override def findAll(p : V => Boolean) : Iterable[K] =
+  override def findAll(p : V => Boolean) : Iterator[K] =
     inner.findAll(p);
 
   override def apply(key : K) : V =

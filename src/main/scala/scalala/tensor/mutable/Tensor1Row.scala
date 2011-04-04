@@ -22,7 +22,8 @@ package tensor;
 package mutable;
 
 import domain.Domain1;
-import scalar.Scalar;
+
+import scalala.scalar.Scalar;
 
 /**
  * Implementation trait for mutable Tensor1Row instances.

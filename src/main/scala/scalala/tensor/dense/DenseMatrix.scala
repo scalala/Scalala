@@ -21,14 +21,13 @@ package scalala;
 package tensor;
 package dense;
 
-import generic.collection._;
 
 import domain.TableDomain;
-import scalar.Scalar;
 
+import scalala.generic.collection._;
+import scalala.scalar.Scalar;
 import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
-
 import scalala.operators._;
 
 import org.netlib.blas._;

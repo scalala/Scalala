@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 
 import domain._;
-import mutable.TensorBuilder;
+import generic.{TensorBuilder,TensorNomadic};
 
 import scalala.scalar.Scalar;
 import scalala.generic.collection._;
@@ -36,33 +36,14 @@ trait CounterLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +M<:scala.collection.Map[K,V],
  +This<:Counter[K,V]]
-extends TensorLike[K,V,SetDomain[K],This] { self =>
+extends TensorLike[K,V,SetDomain[K],This]
+with TensorNomadic[K,V,This] { self =>
 
   def data : M;
   
   override def domain : SetDomain[K] = new SetDomain(data.keySet);
   
   override def apply(k : K) = data(k);
-
-  //
-  // for comprehensions
-  //
-  
-  final def foreach[U](fn : ((K,V))=>U) : Unit =
-    foreach((k,v) => fn((k,v)));
-
-  final def foreachNonZero[U](fn : ((K,V))=>U) : Unit =
-    foreachNonZero((k,v) => fn((k,v)));
-
-  final def map[TT>:This,RV,That](fn : ((K,V))=>RV)
-  (implicit bf : CanMapKeyValuePairs[TT, K, V, RV, That]) : That =
-    map[TT,RV,That]((k : K,v : V) => fn((k,v)))(bf);
-  
-  final def filter(p : ((K,V))=>Boolean) =
-    withFilter(p);
-  
-  def withFilter(p : ((K,V)) => Boolean) =
-    new Counter.Filtered[K,V,This](repr, p);
 
   //
   // non-tupled monadic
@@ -77,9 +58,6 @@ extends TensorLike[K,V,SetDomain[K],This] { self =>
   def map[TT>:This,RV,That](fn : (K,V)=>RV)
   (implicit bf : CanMapKeyValuePairs[TT, K, V, RV, That]) : That =
     mapPairs[TT,RV,That](fn)(bf);
-
-  def iterator : Iterator[(K,V)] =
-    pairsIterator;
 }
 
 trait Counter
@@ -89,22 +67,5 @@ extends Tensor[K,V] with CounterLike[K,V,scala.collection.Map[K,V],Counter[K,V]]
 object Counter {
   def apply[K,V:Scalar](values : (K,V)*) : mutable.Counter[K,V] =
     mutable.Counter(values :_ *);
-
-  class Filtered
-  [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Counter[K,V]]
-  (inner : This, p : ((K,V)) => Boolean) {
-    def foreach[U](q : ((K,V)) => U) =
-      inner.foreach(tup => if (p(tup)) q(tup));
-  
-    def withFilter(q : ((K,V)) => Boolean) =
-      new Filtered[K,V,This](inner, tup => p(tup) && q(tup));
-    
-    def map[U,D,That](fn : ((K,V)) => U)
-    (implicit df : CanGetDomain[This,D], bf : CanBuildTensorFrom[This,D,K,U,That]) = {
-      val builder = bf(inner, inner.domain.asInstanceOf[D]);
-      inner.foreach(tup => if (p(tup)) builder(tup._1) = fn(tup));
-      builder.result;
-    }
-  }
 }
 

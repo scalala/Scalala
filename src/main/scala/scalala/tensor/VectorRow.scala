@@ -23,9 +23,9 @@ package tensor;
 import scalar.Scalar;
 
 import domain.IndexDomain;
-import generic.collection.{CanSliceCol};
-import mutable.TensorBuilder;
+import generic.TensorBuilder;
 
+import scalala.generic.collection.{CanSliceCol};
 import scalala.operators._;
 
 /**

@@ -23,8 +23,8 @@ package tensor;
 import scalar.Scalar;
 
 import domain.IndexDomain;
-import generic.collection.{CanAppendColumns};
 
+import scalala.generic.collection.{CanAppendColumns};
 import scalala.operators._;
 
 /**

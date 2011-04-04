@@ -20,13 +20,12 @@
 package scalala;
 package tensor;
 
-import domain.{IterableDomain,Domain1,Domain2,IndexDomain,TableDomain,SetDomain,CanGetDomain};
-import generic.collection._;
-
-import mutable.TensorBuilder;
+import domain._;
+import generic._;
 
 import scalala.operators._;
 import scalala.scalar.Scalar;
+import scalala.generic.collection._;
 
 /**
  * A Tensor is a map from keys K (with a domain) to numeric scalar values V.
@@ -86,20 +85,64 @@ self =>
   //
 
   /**
-   * Applies the given function to each element of the domain and
-   * its corresponding value.
+   * Returns the pairs of (K,V) that make up this tensor for use in
+   * for comprehensions.  The returned object can be viewed as a 
+   * Map[K,V].
    */
-  def foreachPair[U](fn: (K,V) => U) : Unit =
-    for (k <- domain) fn(k, apply(k));
+  def pairs : TensorNomadic[K,V,This] =
+    new TensorNomadic[K,V,This] { override def repr = self.repr; }
 
   /**
-   * Applies the given function to all elements of the domain
-   * that have a non-zero values (and possibly some that have zeros, too).
+   * Returns the keys that make up this tensor for use in
+   * for comprehensions.  The returned object can be viewed as a 
+   * Traversable[K].
+   */
+  def keys : TensorKeysNomadic[K,V,This] =
+    new TensorKeysNomadic[K,V,This] { override def repr = self.repr; }
+
+  /**
+   * Returns the values that make up this tensor for use in
+   * for comprehensions.  The returned object can be viewed as a 
+   * Traversable[V].
+   */
+  def values : TensorValuesNomadic[K,V,This] =
+    new TensorValuesNomadic[K,V,This] { override def repr = self.repr; }
+
+  /**
+   * Returns the nonzero elements of this tensor.
+   */
+  def nonzero : TensorNonZeroNomadic[K,V,This] =
+    new TensorNonZeroNomadic[K,V,This] { override def repr = self.repr; }
+
+  /**
+   * Applies the given function to each key and its corresponding value.
+   */
+  def foreachPair[U](fn: (K,V) => U) : Unit =
+    foreachKey(k => fn(k,apply(k)));
+
+  /**
+   * Applies the given function to each key and its corresponding value
+   * if the value is non-zero (and possibly also some that are zeros).
    *
-   * @return true if all elements in the map were visited.
+   * @return true if all elements in the tensor were visited.
    */
   def foreachNonZeroPair[U](fn : ((K,V)=>U)) : Boolean = {
     this.foreachPair(fn);
+    true;
+  }
+
+  /** Applies the given function to each key in the tensor. */
+  def foreachKey[U](fn: K => U) : Unit =
+    for (k <- domain) fn(k);
+
+  /**
+   * Applies the given function to each key if its corresponding value
+   * is non-zero (and possibly some zero-valued keys as well).
+   *
+   * @return true if all keys in the tensor were visisted.
+   */
+  def foreachNonZeroKey[U](fn : K => U) : Boolean = {
+    this.foreachKey(fn);
     true;
   }
 
@@ -108,7 +151,7 @@ self =>
    * each element of the domain, including zeros).
    */
   def foreachValue[U](fn : (V=>U)) =
-    for (k <- domain) fn(apply(k));
+    foreachKey(k => fn(apply(k)));
 
   /**
    * Applies the given function to every non-zero value in the map
@@ -148,7 +191,7 @@ self =>
   /** Creates a new map containing a transformed copy of this map. */
   def mapPairs[TT>:This,O,That](f : (K,V) => O)
   (implicit bf : CanMapKeyValuePairs[TT, K, V, O, That]) : That =
-    bf.map(repr.asInstanceOf[TT], f);
+    bf.map(repr, f);
 
   /** Maps all non-zero key-value pairs values. */
   def mapNonZeroPairs[TT>:This,O,That](f : (K,V) => O)
@@ -165,29 +208,39 @@ self =>
   (implicit bf : CanMapValues[TT, V, O, That]) : That =
     bf.mapNonZero(repr.asInstanceOf[TT], f);
 
-  /** Iterates over all elements in the domain and the corresponding value. */
-  def pairsIterator : Iterator[(K,V)] =
-    domain.iterator.map(k => (k,this(k)));
-
-  /** Iterates over the values in the tensor. */
-  def valuesIterator : Iterator[V] =
-    domain.iterator.map(this);
-
   /** Iterates over the keys in the tensor. */
   def keysIterator : Iterator[K] =
     domain.iterator;
 
+  /** Iterates over the (possibly) non-zero keys in the tensor. */
+  def keysIteratorNonZero : Iterator[K] =
+    keysIterator;
+
+  /** Iterates over the values in the tensor. */
+  def valuesIterator : Iterator[V] =
+    keysIterator.map(apply);
+
+  /** Iterates over the (possibly) non-zero values in the tensor. */
+  def valuesIteratorNonZero : Iterator[V] =
+    valuesIterator;
+
+  /** Iterates over all elements in the domain and the corresponding value. */
+  def pairsIterator : Iterator[(K,V)] =
+    keysIterator.map(k => (k,this(k)));
+
+  /** Iterates over the (possibly) non-zero pairs in the tensor. */
+  def pairsIteratorNonZero : Iterator[(K,V)] =
+    pairsIterator;
+
   /** Returns some key for which the given predicate is true. */
   def find(p : V => Boolean) : Option[K] = {
-    for (k <- domain) {
-      if (p(apply(k))) return Some(k);
-    }
+    foreachKey(k => if (p(apply(k))) return Some(k));
     return None;
   }
     
   /** Returns the keys for which the given predicate is true. */
-  def findAll(p : V => Boolean) : Iterable[K] =
-    domain.filter(this andThen p);
+  def findAll(p : V => Boolean) : Iterator[K] =
+    keysIterator.filter(this andThen p);
   
   /**
    * Constructs a view of this map on which calls to mapValues are
@@ -241,7 +294,7 @@ self =>
     bf(repr, domain.filter(selected).toIndexedSeq);
 
   /** Creates a view backed by the given keys, returning them as a sequence. */
-  def apply[That](keys : Traversable[K])
+  def apply[That](keys : TraversableOnce[K])
   (implicit bf : CanSliceVector[This, K, That]) : That =
     bf(repr, keys.toIndexedSeq);
 
@@ -251,7 +304,7 @@ self =>
     apply(keys.toMap);
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
-  def apply[I,That](keys : Iterable[(I,K)])
+  def apply[I,That](keys : TraversableOnce[(I,K)])
   (implicit bf : CanSliceTensor[This, K, I, That]) : That =
     apply(keys.toMap);
 
@@ -270,7 +323,7 @@ self =>
    * in-memory arrays the size of the domain.
    */
   def argsort(implicit cm : Manifest[K], ord : Ordering[V]) : Array[K] =
-    domain.toArray(cm).sortWith((i:K, j:K) => ord.lt(this(i), this(j)));
+    keys.toArray(cm).sortWith((i:K, j:K) => ord.lt(this(i), this(j)));
 
   /**
    * Returns a sorted view of the current map.  Equivalent to calling
@@ -290,8 +343,7 @@ self =>
     if (!valuesIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .max");
     }
-    var max = valuesIterator.next;
-    var arg = domain.iterator.next
+    var (arg,max) = pairsIterator.next;
     foreachPair((k,v) => if (scalar.>(v, max)) { max = v; arg = k; });
     arg;
   }
@@ -301,8 +353,7 @@ self =>
     if (!valuesIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .min");
     }
-    var min = valuesIterator.next;
-    var arg = domain.iterator.next
+    var (arg,min) = pairsIterator.next;
     foreachPair((k,v) => if (scalar.<(v,min)) { min = v; arg = k; });
     arg;
   }
@@ -350,23 +401,12 @@ self =>
   }
 
   /** Returns an unmodifiable Map-like view of this Tensor. */
-  def asMap : scala.collection.Map[K,V] = new scala.collection.Map[K,V] {
-    override def keysIterator = self.keysIterator;
-    override def valuesIterator = self.valuesIterator;
-    override def contains(key : K) = self.isDefinedAt(key);
-    override def apply(key : K) = self.apply(key);
-    override def iterator = self.pairsIterator;
-    override def get(key : K) =
-      if (self.isDefinedAt(key)) Some(self.apply(key)) else None;
-    override def - (key : K) =
-      throw new UnsupportedOperationException("asMap view of Tensor is unmodifiable: use toMap");
-    override def + [V1>:V](kv : (K,V1)): scala.collection.Map[K,V1] =
-      throw new UnsupportedOperationException("asMap view of Tensor is unmodifiable: use toMap");
-  }
+  def asMap : scala.collection.Map[K,V] =
+    pairs;
 
   /** Creates a new copy of this Tensor as a scala map. */
   def toMap : Map[K,V] =
-    this.pairsIterator.toMap;
+    asMap.toMap;
 
   protected[this] def mkKeyString(key : K) : String =
     key.toString;
@@ -420,7 +460,7 @@ self =>
   }
 
   override def hashCode() =
-    domain.hashCode + valuesIterator.foldLeft(1)((hash,v) => 41 * hash + v.hashCode);
+    domain.hashCode + pairsIterator.foldLeft(1)((hash,v) => 41 * hash + v.hashCode);
 }
 
 /**
@@ -436,10 +476,10 @@ extends TensorLike[K, V, IterableDomain[K], Tensor[K, V]];
 
 object Tensor {
 
-  class Impl[K,V](values : Map[K,V])(implicit override val scalar : Scalar[V])
+  class Impl[K,V](data : Map[K,V])(implicit override val scalar : Scalar[V])
   extends Tensor[K,V] {
-    override val domain : SetDomain[K] = new SetDomain(values.keySet);
-    override def apply(k : K) = values(k);
+    override val domain : SetDomain[K] = new SetDomain(data.keySet);
+    override def apply(k : K) = data(k);
   }
 
   def apply[K,V:Scalar](values : (K,V)*) : Tensor[K,V] =

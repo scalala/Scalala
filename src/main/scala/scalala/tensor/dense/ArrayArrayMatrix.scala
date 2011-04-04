@@ -22,7 +22,8 @@ package tensor;
 package dense;
 
 import domain.TableDomain;
-import scalar.Scalar;
+
+import scalala.scalar.Scalar;
 
 /**
  * A matrix backed by an array of arrays of values.

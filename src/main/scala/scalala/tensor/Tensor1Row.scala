@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 
 import domain.{IterableDomain,Domain1,Domain2,IndexDomain};
-import mutable.TensorBuilder;
+import generic.TensorBuilder;
 
 import scalala.generic.collection.{CanSliceCol,CanBuildTensorFrom};
 import scalala.scalar.Scalar;
@@ -85,7 +85,7 @@ object Tensor1Row {
     override def opType = OpMulRowVectorBy;
     override def apply(a : ThisA, b : ThisB) = {
       val domain = b.domain.asInstanceOf[Domain2[_,_]]._2.asInstanceOf[D2];
-      val builder : mutable.TensorBuilder[K2,RV,That] = bf(a, domain);
+      val builder : TensorBuilder[K2,RV,That] = bf(a, domain);
       for (j <- domain.asInstanceOf[Domain1[K2]]) {
         builder(j) = mul(a, slice(b, j));
       }

@@ -21,15 +21,13 @@ package scalala;
 package tensor;
 package dense;
 
-
-import scalar.Scalar;
 import domain.{IterableDomain,IndexDomain};
-import generic.collection.{CanSliceCol,CanAppendColumns};
 
-import scalala.operators._;
-
+import scalala.generic.collection._;
+import scalala.scalar.Scalar;
 import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
+import scalala.operators._;
 
 /**
  * A vector backed by a dense array.

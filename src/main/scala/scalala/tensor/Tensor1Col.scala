@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 
 import domain.{IterableDomain,Domain1,IndexDomain,CanGetDomain,CanBuildDomain2};
-import mutable.TensorBuilder;
+import generic.TensorBuilder;
 
 import scalala.operators._;
 import scalala.scalar.Scalar;

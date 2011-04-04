@@ -20,12 +20,12 @@
 package scalala;
 package tensor;
 
-import scalar.Scalar;
-
 import domain.Domain1;
-import operators.{BinaryOp,OpAdd,OpMul};
+import generic.TensorBuilder;
 
-import mutable.TensorBuilder;
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
+import scalala.operators.{BinaryOp,OpAdd,OpMul};
 
 /**
  * Implementation trait for a one-axis tensor supports methods like norm

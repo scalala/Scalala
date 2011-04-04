@@ -23,7 +23,7 @@ package mutable;
 
 import domain.{IterableDomain,Domain1};
 
-import scalar.Scalar;
+import scalala.scalar.Scalar;
 
 /**
  * Implementation trait for a Tensor1 view of a slice of keys from a Tensor.

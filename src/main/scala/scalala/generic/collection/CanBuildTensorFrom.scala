@@ -24,7 +24,7 @@ package collection;
 import scalala.tensor._;
 import scalala.tensor.domain._;
 import scalala.tensor.dense._;
-import scalala.tensor.mutable.TensorBuilder;
+import scalala.tensor.generic.TensorBuilder;
 import scalala.scalar.Scalar;
 
 /**

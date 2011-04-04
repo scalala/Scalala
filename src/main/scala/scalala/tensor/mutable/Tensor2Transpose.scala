@@ -22,9 +22,10 @@ package tensor;
 package mutable;
 
 import domain.{Domain1,Domain2};
-import generic.collection._;
 
-import scalar.Scalar;
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
+import scalala.operators._;
 
 /**
  * Implementation trait for a transposed view of an underlying MutableTensor2.

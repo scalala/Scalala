@@ -22,6 +22,7 @@ package tensor;
 package mutable;
 
 import domain.{IterableDomain,SetDomain};
+import generic.TensorBuilder;
 
 import scalala.generic.collection._;
 import scalala.scalar.Scalar;
@@ -98,7 +99,7 @@ extends tensor.Tensor[K,V] with TensorLike[K,V,IterableDomain[K],Tensor[K,V]];
 object Tensor {
 
   /** Constructs an open-domain tensor seeded with the given values. */
-  def apply[K,V:Scalar](values : (K,V)*) : Tensor[K,V] = {
+  def apply[K,V:Scalar](data : (K,V)*) : Tensor[K,V] = {
 //    val mI = implicitly[Manifest[Int]];
 //    val mL = implicitly[Manifest[Long]];
 //    val mF = implicitly[Manifest[Float]];
@@ -112,7 +113,7 @@ object Tensor {
 //      for ((k,v) <- values) rv(k) = v;
 //      rv;
 //    } else {
-      new Impl[K,V](scala.collection.mutable.Map(values :_*)) {
+      new Impl[K,V](scala.collection.mutable.Map(data :_*)) {
         override def checkKey(key : K) = true;
       }
 //    }
@@ -140,20 +141,20 @@ object Tensor {
 //    }
   }
 
-  class Impl[K, V](protected val map : scala.collection.mutable.Map[K,V])
+  class Impl[K, V](protected val data : scala.collection.mutable.Map[K,V])
   (implicit override val scalar : Scalar[V])
   extends Tensor[K, V] {
     override def domain : IterableDomain[K] =
-      SetDomain(map.keySet);
+      SetDomain(data.keySet);
     
     override def apply(key : K) : V = {
       checkKey(key);
-      map.getOrElse(key, scalar.zero);
+      data.getOrElse(key, scalar.zero);
     }
 
     override def update(key : K, value : V) = {
       checkKey(key);
-      map.update(key, value);
+      data.update(key, value);
     }
   }
 

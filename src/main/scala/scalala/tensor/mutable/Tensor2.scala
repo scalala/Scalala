@@ -22,10 +22,9 @@ package tensor;
 package mutable;
 
 import domain.{Domain1,Domain2,SetDomain,TableDomain};
-import generic.collection._;
 
-import scalar.Scalar;
-
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
 import scalala.operators._;
 
 /**
@@ -85,21 +84,21 @@ object Tensor2 {
     }
   }
 
-  class Impl[K1,K2,V:Scalar](m : scala.collection.mutable.Map[(K1,K2),V])
-  extends Tensor.Impl[(K1,K2),V](m) with Tensor2[K1,K2,V] {
+  class Impl[K1,K2,V:Scalar](data : scala.collection.mutable.Map[(K1,K2),V])
+  extends Tensor.Impl[(K1,K2),V](data) with Tensor2[K1,K2,V] {
     override def domain =
       Domain2(
-        SetDomain(map.keySet.map(_._1)),
-        SetDomain(map.keySet.map(_._2)));
+        SetDomain(data.keySet.map(_._1)),
+        SetDomain(data.keySet.map(_._2)));
 
     override def apply(k1 : K1, k2 : K2) : V = {
       checkKey(k1,k2);
-      map.getOrElse((k1,k2),scalar.zero);
+      data.getOrElse((k1,k2),scalar.zero);
     }
 
     override def update(k1 : K1, k2 : K2, value : V) = {
       checkKey(k1,k2);
-      map.update((k1,k2), value);
+      data.update((k1,k2), value);
     }
   }
 

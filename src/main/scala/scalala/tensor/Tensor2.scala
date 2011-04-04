@@ -40,7 +40,8 @@ trait Tensor2Like
  +D<:Domain2[K1,K2],
  +T<:Domain2[K2,K1],
  +This<:Tensor2[K1,K2,V]]
-extends TensorLike[(K1,K2),V,D,This] with operators.MatrixOps[This] {
+extends TensorLike[(K1,K2),V,D,This]
+with operators.MatrixOps[This] {
   def checkKey(k1 : K1, k2 : K2) : Unit = {
     if (!domain._1.contains(k1) || !domain._2.contains(k2)) {
       throw new DomainException((k1,k2)+" not in domain");

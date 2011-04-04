@@ -20,10 +20,11 @@
 package scalala;
 package tensor;
 
-import scalar.Scalar;
-
 import domain.IterableDomain;
-import generic.collection._;
+
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
+import scalala.operators._;
 
 /**
  * Implementation trait for pass-through views of underlying Tensor.

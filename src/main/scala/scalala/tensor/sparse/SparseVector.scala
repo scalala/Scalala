@@ -22,8 +22,8 @@ package tensor;
 package sparse;
 
 import domain.{IterableDomain,IndexDomain};
-import generic.collection.{CanSliceCol,CanAppendColumns};
 
+import scalala.generic.collection.{CanSliceCol,CanAppendColumns};
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 import scalala.scalar.Scalar;
 

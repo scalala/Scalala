@@ -21,11 +21,10 @@ package scalala;
 package tensor;
 package mutable;
 
-import scalar.Scalar;
-
 import domain.IndexDomain;
-import generic.collection.CanSliceCol;
 
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
 import scalala.operators._;
 
 /**

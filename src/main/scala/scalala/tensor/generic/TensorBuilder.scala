@@ -19,7 +19,7 @@
  */
 package scalala;
 package tensor;
-package mutable;
+package generic;
 
 /**
  * Builds a Tensor of type To after being given a series of

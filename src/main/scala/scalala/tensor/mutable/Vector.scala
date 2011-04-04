@@ -22,7 +22,10 @@ package tensor;
 package mutable;
 
 import domain.IndexDomain;
-import generic.collection._;
+
+import scalala.scalar.Scalar;
+import scalala.generic.collection._;
+import scalala.operators._;
 
 /**
  * Implementation trait for a Tensor that is also a tensor.Vector.
