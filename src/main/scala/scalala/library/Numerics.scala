@@ -14,18 +14,19 @@
  limitations under the License.
 */
 
-package scalala.library;
+package scalala.library
 
-import math._;
+import math._
 
 /**
  * Provides some functions left out of java.lang.math.
  *
  * Borrowed from scalanlp.
  *
- * @author dlwh
+ * @author dlwh, afwlehmann
  */
 trait Numerics {
+
   /**
    * The standard digamma function. Cribbed from Radford Neal
    *
@@ -154,7 +155,10 @@ trait Numerics {
   * @return log(\sum exp(a_i))
   */
   def logSum(a: Double, b: Double, c: Double*): Double = {
-    logSum(Array(a, b) ++ c);
+    if (c.length == 0)
+      logSum(a, b)
+    else
+      logSum(logSum(a, b) +: c)
   }
 
   /**
@@ -162,16 +166,17 @@ trait Numerics {
   * @return log(\sum exp(a_i))
   */
   def logSum(iter: Iterator[Double], max: Double): Double = {
+    require(iter.hasNext)
     if (max.isInfinite) {
       max
     } else {
-      var accum = 0.0;
-      while (iter.hasNext) {
-        val b = iter.next
-        if (!b.isNegInfinity)
-          accum += exp(b - max)
+      val aux = (0.0 /: iter) {
+        (acc, x) => if (x.isNegInfinity) acc else acc + math.exp(x-max)
       }
-      max + log(accum)
+      if (aux != 0)
+        max + log(aux)
+      else
+        max
     }
   }
 
@@ -198,28 +203,6 @@ trait Numerics {
     else Double.NegativeInfinity
   }
 
-  //  import scalala.tensor.Vector;
-  //  /**
-  //  * Sums together things in log space.
-  //  * @return log(\sum exp(a_i))
-  //  */
-  //  def logSum(a:Vector):Double = a match {
-  //    case a: AdaptiveVector => logSum(a.innerVector);
-  //    case a: DenseVector => logSum(a.data);
-  //    case a: SparseVector => logSum(a.data.take(a.used));
-  //    case _ => logSum(a.activeValues,a.activeValues.reduceLeft(_ max _));
-  //  }
-
-  //  /**
-  //  * Sums together things in log space.
-  //  * @return log(\sum exp(a_i))
-  //  */
-  //  def logNormalize(a:Vector):Vector = {
-  //    val sum = logSum(a);
-  //    import scalala.Scalala.{logSum => _, _};
-  //    a - sum value;
-  //  }
-
   /**
    * Computes the polynomial P(x) with coefficients given in the passed in array.
    * coefs(i) is the coef for the x^i term.
@@ -233,7 +216,7 @@ trait Numerics {
     }
     p
   }
+
 }
 
-object Numerics extends Numerics;
-
+object Numerics extends Numerics

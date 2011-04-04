@@ -17,14 +17,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-package scalala;
-package library;
+package scalala.library
 
-import org.scalatest._;
-import org.scalatest.junit._;
-import org.scalatest.prop._;
-import org.scalatest.matchers.ShouldMatchers;
-import org.junit.runner.RunWith;
+import org.scalatest._
+import org.scalatest.junit._
+import org.scalatest.prop._
+import org.scalatest.matchers.ShouldMatchers
+import org.junit.runner.RunWith
 import Library._
 import Numerics._
 
@@ -37,11 +36,16 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     logSum(log(2), log(5)) should be (log(7) plusOrMinus 1e-10)
     logSum(Double.NegativeInfinity, log(5)) should be (log(5) plusOrMinus 1e-10)
     logSum(log(5), Double.NegativeInfinity) should be (log(5) plusOrMinus 1e-10)
+    logSum(Double.NegativeInfinity, Double.NegativeInfinity) should be (Double.NegativeInfinity)
+
+    logSum(log(1), log(2), log(3)) should be (log(6) plusOrMinus 1e-10)
+    logSum(log(1), log(2), Double.NegativeInfinity) should be (log(3) plusOrMinus(1e-10))
 
     val s = Array.tabulate[Double](5)(i => log1p(i))
-    logSum(s.iterator, log(5)) should be (log(15) plusOrMinus 1e-10)
+    logSum(s.iterator, s.max) should be (log(15) plusOrMinus 1e-10)
     logSum(s) should be (log(15) plusOrMinus 1e-10)
     logSum(Double.NegativeInfinity +: s) should be (log(15) plusOrMinus 1e-10)
+    logSum(s :+ Double.NegativeInfinity) should be (log(15) plusOrMinus 1e-10)
   }
 
   test("logDiff") {
