@@ -40,82 +40,259 @@ trait DenseVector[@specialized(Int,Long,Float,Double) V]
 extends mutable.Vector[V] with mutable.VectorLike[V,DenseVector[V]]
 with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVector[V]] { self =>
 
-  override def size = data.length;
+  /** Starting offset within data array. */
+  val offset : Int;
+  
+  /** Gap between successive elements in data array. */
+  val stride : Int;
+  
+  /** Number of elements in array. */
+  val length : Int;
 
-  override def domain = IndexDomain(data.length);
+  override def size = length;
+
+  override def domain = IndexDomain(length);
 
   override def apply(key : Int) =
-    data(key);
+    data(offset + key * stride);
 
   override def update(key : Int, value : V) =
-    data(key) = value;
+    data(offset + key * stride) = value;
 
   override def foreachPair[U](fn : ((Int,V)=>U)) = {
     var i = 0;
-    while (i < data.length) {
-      fn(i,data(i));
+    var k = offset;
+    while (i < length) {
+      fn(i, data(k));
       i += 1;
+      k += stride;
     }
   }
 
-  override def foreachValue[U](fn : (V=>U)) =
-    data.foreach(fn);
+  override def foreachValue[U](fn : (V=>U)) = {
+    var i = 0;
+    var k = offset;
+    while (i < length) {
+      fn(data(k));
+      i += 1;
+      k += stride;
+    }
+  }
 
   /** Tranforms all key value pairs in this map by applying the given function. */
   override def transformPairs(fn : (Int,V)=>V) = {
     var i = 0;
-    while (i < data.length) {
-      data(i) = fn(i,data(i));
+    var k = offset;
+    while (i < length) {
+      data(k) = fn(i,data(k));
       i += 1;
+      k += stride;
     }
   }
   
   /** Tranforms all key value pairs in this map by applying the given function. */
   override def transformValues(fn : V=>V) = {
     var i = 0;
-    while (i < data.length) {
-      data(i) = fn(data(i));
+    var k = offset;
+    while (i < length) {
+      data(k) = fn(data(k));
       i += 1;
+      k += stride;
     }
   }
 
   /** Returns a view of this vector as a row. Tightens bound superclass's return value. */
   override def asRow : DenseVectorRow[V] = this match {
     case r : DenseVectorRow[_] => this.asInstanceOf[DenseVectorRow[V]];
-    case _ => new DenseVectorRow(this.data);
+    case _ => new DenseVectorRow(this.data, offset, stride, length);
   }
 
   /** Returns a view of this vector as a column. Tightens bound superclass's return value.  */
   override def asCol : DenseVectorCol[V] = this match {
     case c : DenseVectorCol[_] => this.asInstanceOf[DenseVectorCol[V]];
-    case _ => new DenseVectorCol(this.data);
+    case _ => new DenseVectorCol(this.data, offset, stride, length);
   }
 }
 
 object DenseVector extends DenseVectorConstructors {
+  //
+  // Generic optimized routines
+  //
+  
+  class GenericDenseVectorRowBase[@specialized V:Scalar:Manifest] {
+    def create(length : Int) = new DenseVectorRow(new Array[V](length));
+  }
+  
+  class GenericDenseVectorColBase[@specialized V:Scalar:Manifest] {
+    def create(length : Int) = new DenseVectorCol(new Array[V](length));
+  }
+  
+  /** Optimized base class for joining two dense tensors. */
+  trait CanJoinDenseVectors
+  [@specialized V1, @specialized V2, @specialized RV, DV[V]<:DenseVector[V]]
+  extends CanJoinValues[DV[V1], DV[V2], V1, V2, RV, DV[RV]] {
+    def create(length : Int) : DV[RV];
 
-//  implicit object DenseVectorCanMapValuesFrom
-//  extends DomainMapCanMapValuesFrom[DenseVector,Int,Double,Double,DenseVector] {
-//    override def apply(from : DenseVector, fn : (Double=>Double)) = {
-//      val data = new Array[Double](from.size);
-//      var i = 0;
-//      while (i < data.length) {
-//        data(i) = fn(from.data(i));
-//        i += 1;
-//      }
-//      new DenseVector(data);
-//    }
-//
-//    override def apply(from : DenseVector, fn : ((Int,Double)=>Double)) = {
-//      val data = new Array[Double](from.size);
-//      var i = 0;
-//      while (i < data.length) {
-//        data(i) = fn(i, from.data(i));
-//        i += 1;
-//      }
-//      new DenseVector(data);
-//    }
-//  }
+    override def joinAll(a : DV[V1], b : DV[V2], fn : (V1,V2)=>RV) = {
+      // System.err.println("DENSE!");
+      a.checkDomain(b.domain);
+      val rv = create(a.length);
+      var i = 0;
+      var k1 = a.offset;
+      var k2 = b.offset;
+      while (i < a.length) {
+        rv.data(i) = fn(a.data(k1), b.data(k2));
+        i += 1;
+        k1 += a.stride;
+        k2 += b.stride;
+      }
+      rv;
+    }
+
+    override def joinEitherNonZero(a : DV[V1], b : DV[V2], fn : (V1,V2)=>RV) =
+      joinAll(a,b,fn);
+    
+    override def joinBothNonZero(a : DV[V1], b : DV[V2], fn : (V1,V2)=>RV) =
+      joinAll(a,b,fn);
+  }
+  
+  /** Optimized base class for joining dense columns. */
+  implicit def canJoinDenseVectorCols
+  [@specialized V1, @specialized V2, @specialized RV:Scalar:Manifest]
+  : CanJoinDenseVectors[V1, V2, RV, DenseVectorCol] =
+  new GenericDenseVectorColBase[RV] with CanJoinDenseVectors[V1, V2, RV, DenseVectorCol];
+  
+  /** Optimized base class for joining dense rows. */
+  implicit def canJoinDenseVectorRows
+  [@specialized V1, @specialized V2, @specialized RV:Scalar:Manifest]
+  : CanJoinDenseVectors[V1, V2, RV, DenseVectorRow] =
+  new GenericDenseVectorRowBase[RV] with CanJoinDenseVectors[V1, V2, RV, DenseVectorRow];
+
+  /** Optimized base class for mapping a dense tensor. */
+  trait CanMapValuesDenseVector
+  [@specialized V, @specialized RV, DV[V]<:DenseVector[V]]
+  extends CanMapValues[DV[V],V,RV,DV[RV]] {
+    def create(length : Int) : DV[RV];
+    
+    override def map(from : DV[V], fn : (V=>RV)) = {
+      // System.err.println("DENSE!");
+      val rv = create(from.length);
+      var i = 0;
+      var k = from.offset;
+      while (i < from.length) {
+        rv.data(i) = fn(from.data(k));
+        i += 1;
+        k += from.stride;
+      }
+      rv;
+    }
+    
+    override def mapNonZero(from : DV[V], fn : (V=>RV)) =
+      map(from, fn);
+  }
+  
+  /** Optimized base class for mapping dense columns. */
+  implicit def canMapValuesDenseVectorCols[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanMapValuesDenseVector[V, RV, DenseVectorCol] =
+  new GenericDenseVectorColBase with CanMapValuesDenseVector[V, RV, DenseVectorCol];
+  
+  /** Optimized base class for mapping dense rows. */
+  implicit def canMapValuesDenseVectorRows[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanMapValuesDenseVector[V, RV, DenseVectorRow] =
+  new GenericDenseVectorRowBase with CanMapValuesDenseVector[V, RV, DenseVectorRow];
+
+  /** Optimized base class for mapping a dense tensor. */
+  trait CanMapKeyValuePairsDenseVector
+  [@specialized V, @specialized RV, DV[V]<:DenseVector[V]]
+  extends CanMapKeyValuePairs[DV[V],Int,V,RV,DV[RV]] {
+    def create(length : Int) : DV[RV];
+    
+    override def map(from : DV[V], fn : (Int,V)=>RV) = {
+      // System.err.println("DENSE!");
+      val rv = create(from.length);
+      var i = 0;
+      var k = from.offset;
+      while (i < from.length) {
+        rv.data(i) = fn(i, from.data(k));
+        i += 1;
+        k += from.stride;
+      }
+      rv;
+    }
+    
+    override def mapNonZero(from : DV[V], fn : (Int,V)=>RV) =
+      map(from, fn);
+  }
+  
+  /** Optimized base class for mapping dense columns. */
+  implicit def canMapKeyValuePairsDenseVectorCols[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanMapKeyValuePairsDenseVector[V, RV, DenseVectorCol] =
+  new GenericDenseVectorColBase with CanMapKeyValuePairsDenseVector[V, RV, DenseVectorCol];
+  
+  /** Optimized base class for mapping dense rows. */
+  implicit def canMapKeyValuePairsDenseVectorRows[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanMapKeyValuePairsDenseVector[V, RV, DenseVectorRow] =
+  new GenericDenseVectorRowBase with CanMapKeyValuePairsDenseVector[V, RV, DenseVectorRow];
+
+  //
+  // Specialized objects for generic routines
+  //
+
+  implicit object CanJoinDVCDDVCD extends GenericDenseVectorColBase[Double]
+  with CanJoinDenseVectors[Double,Double,Double,DenseVectorCol];
+
+  implicit object CanJoinDVRDDVRD extends GenericDenseVectorRowBase[Double]
+  with CanJoinDenseVectors[Double,Double,Double,DenseVectorRow];
+
+  implicit object CanMapValuesDVCDDVCD extends GenericDenseVectorColBase[Double]
+  with CanMapValuesDenseVector[Double,Double,DenseVectorCol];
+
+  implicit object CanMapValuesDVRDDVRD extends GenericDenseVectorRowBase[Double]
+  with CanMapValuesDenseVector[Double,Double,DenseVectorRow];
+
+  implicit object CanMapKeyValuePairsDVCDDVCD extends GenericDenseVectorColBase[Double]
+  with CanMapKeyValuePairsDenseVector[Double,Double,DenseVectorCol];
+
+  implicit object CanMapKeyValuePairsDVRDDVRD extends GenericDenseVectorRowBase[Double]
+  with CanMapKeyValuePairsDenseVector[Double,Double,DenseVectorRow];
+  
+  //
+  // BLAS routines
+  //
+  
+  /** BLAS-optimized scala multiply. */
+  implicit object DenseVectorDMulDInto
+  extends BinaryUpdateOp[DenseVector[Double],Double,OpMul] {
+    override def opType = OpMul;
+    override def apply(a : DenseVector[Double], b : Double) = {
+      // System.err.println("BLAS!");
+      org.netlib.blas.Dscal.dscal(a.length, b, a.data, a.offset, a.stride);
+    }
+  }
+  
+  /** BLAS-optimized vector addition. */
+  implicit object DenseVectorDAddDenseVectorDInto
+  extends BinaryUpdateOp[DenseVector[Double],DenseVector[Double],OpAdd] {
+    override def opType = OpAdd;
+    override def apply(a : DenseVector[Double], b : DenseVector[Double]) = {
+      require(a.length == b.length, "Vectors must have same length");
+      // System.err.println("BLAS!");
+      org.netlib.blas.Daxpy.daxpy(
+        a.length, 1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride);
+    }
+  }
+  
+  /** BLAS-optimized vector-vector inner product. */
+  implicit object DenseVectorDInnerMulDenseVectorD
+  extends BinaryOp[DenseVectorRow[Double],DenseVectorCol[Double],OpMulRowVectorBy,Double] {
+    override def opType = OpMulRowVectorBy;
+    override def apply(a : DenseVectorRow[Double], b : DenseVectorCol[Double]) = {
+      require(a.length == b.length, "Vectors must have same length");
+      // System.err.println("BLAS!");
+      org.netlib.blas.Ddot.ddot(
+        a.length, a.data, a.offset, a.stride, b.data, b.offset, b.stride);
+    }
+  }
 }
 
 /**
@@ -131,9 +308,13 @@ trait DenseVectorConstructors extends DenseVectorColConstructors;
  * @author dramage
  */
 class DenseVectorRow[@specialized(Int,Long,Float,Double) V]
-(override val data : Array[V])
+(override val data : Array[V], override val offset : Int,
+ override val stride : Int, override val length : Int)
 (implicit override val scalar : Scalar[V])
 extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,DenseVectorRow[V]] {
+  def this(data : Array[V])(implicit s : Scalar[V]) =
+    this(data, 0, 1, data.length)(s);
+
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
     implicit val mf = implicitly[Scalar[V2]].manifest;
     domain match {
@@ -154,14 +335,18 @@ object DenseVectorRow {
 }
 
 /**
- * DenseVectors as a column.
+ * DenseVector as a column.
  *
  * @author dramage
  */
 class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
-(override val data : Array[V])
+(override val data : Array[V], override val offset : Int,
+ override val stride : Int, override val length : Int)
 (implicit override val scalar : Scalar[V])
 extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,DenseVectorCol[V]]  {
+  def this(data : Array[V])(implicit s : Scalar[V]) =
+    this(data, 0, 1, data.length)(s);
+  
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
     implicit val mf = implicitly[Scalar[V2]].manifest;
     domain match {
@@ -174,21 +359,7 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
     new DenseVectorRow(data)(scalar);
 }
 
-object DenseVectorCol extends DenseVectorColConstructors {
-//  /** Tighten bound on super to be a dense in return value. */
-//  override implicit def canMulVectorColByRow[V1,V2,RV](implicit mul : BinaryOp[V1,V2,OpMul,RV], scalar : Scalar[RV])
-//  = super.canMulVectorColByRow[V1,V2,RV](mul, scalar).asInstanceOf[BinaryOp[DenseVectorCol[V1],tensor.VectorRow[V2],OpMulColVectorBy,DenseMatrix[RV]]];
-
-//  /** Tighten bound on super to be a dense in return value. */
-//  override implicit def canAppendMatrixColumns[V]
-//  : CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V],DenseMatrix[V]]
-//  = super.canAppendMatrixColumns[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.Matrix[V], DenseMatrix[V]]];
-//
-//  /** Tighten bound on super to be a dense in return value. */
-//  override implicit def canAppendVectorColumn[V]
-//  : CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]
-//  = super.canAppendVectorColumn[V].asInstanceOf[CanAppendColumns[DenseVectorCol[V],tensor.VectorCol[V],DenseMatrix[V]]];
-}
+object DenseVectorCol extends DenseVectorColConstructors;
 
 trait DenseVectorColConstructors {
   /** Constructs a DenseVector for the given IndexDomain. */

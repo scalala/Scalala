@@ -40,11 +40,11 @@ import org.netlib.util.intW;
  *
  * @author dramage
  */
-class DenseMatrix[@specialized(Int,Long,Float,Double) B]
-(numRows : Int, numCols : Int, data_ : Array[B])
-(implicit override val scalar : Scalar[B])
-extends DenseArrayTensor[(Int,Int),B] with DenseArrayTensorLike[(Int,Int),B,TableDomain,DenseMatrix[B]]
-with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
+class DenseMatrix[@specialized(Int,Long,Float,Double) V]
+(numRows : Int, numCols : Int, data_ : Array[V])
+(implicit override val scalar : Scalar[V])
+extends DenseArrayTensor[(Int,Int),V] with DenseArrayTensorLike[(Int,Int),V,TableDomain,DenseMatrix[V]]
+with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
   override val data = data_ // workaround for https://lampsvn.epfl.ch/trac/scala/ticket/4013
   
   if (numRows * numCols != data_.length)
@@ -57,7 +57,7 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
    * 
    * @throws IllegalArgumentException if the requested size does not match the current size.
    */
-  def reshape(rows : Int, cols : Int) : DenseMatrix[B] = {
+  def reshape(rows : Int, cols : Int) : DenseMatrix[V] = {
     if (rows * cols != data.length) {
       throw new IllegalArgumentException("Cannot reshape "+numRows+"x"+numCols+" to "+rows+"x"+cols);
     }
@@ -81,10 +81,10 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
   override def apply(row : Int, col : Int) =
     data(index(row,col));
 
-  override def update(row : Int, col : Int, value : B) =
+  override def update(row : Int, col : Int, value : V) =
     data(index(row,col)) = value;
 
-  override def foreach[U](f : (Int,Int,B)=>U) = {
+  override def foreach[U](f : (Int,Int,V)=>U) = {
     var i = 0;
     while (i < data.length) {
       f(rowIndex(i),colIndex(i),data(i));
@@ -92,7 +92,7 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
     }
   }
 
-  override def foreachValue[U](f : (B)=>U) = {
+  override def foreachValue[U](f : (V)=>U) = {
     var i = 0;
     while (i < data.length) {
       f(data(i));
@@ -101,7 +101,7 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
   }
 
   /** Tranforms all key value pairs in this map by applying the given function. */
-  override def transform(f : (Int,Int,B)=>B) = {
+  override def transform(f : (Int,Int,V)=>V) = {
     var i = 0;
     while (i < data.length) {
       data(i) = f(rowIndex(i),colIndex(i),data(i));
@@ -110,7 +110,7 @@ with mutable.Matrix[B] with mutable.MatrixLike[B,DenseMatrix[B]] {
   }
 
   def copy =
-    new DenseMatrix[B](numRows, numCols, data.clone);
+    new DenseMatrix[V](numRows, numCols, data.clone);
 }
 
 object DenseMatrix extends DenseMatrixConstructors {
@@ -119,9 +119,21 @@ object DenseMatrix extends DenseMatrixConstructors {
   // Capabilities
   //
 
-  class DenseMatrixCanMapValues[@specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
-  extends CanMapValues[DenseMatrix[B],B,R,DenseMatrix[R]] {
-    override def map(from : DenseMatrix[B], fn : (B=>R)) = {
+  class DenseMatrixCanSliceRow[@specialized V:Scalar]
+  extends CanSliceRow[DenseMatrix[V],Int,DenseVectorRow[V]] {
+    override def apply(from : DenseMatrix[V], i : Int) =
+      new DenseVectorRow[V](from.data, length = from.numCols, offset = i, stride = from.numRows);
+  }
+  
+  class DenseMatrixCanSliceCol[@specialized V:Scalar]
+  extends CanSliceCol[DenseMatrix[V],Int,DenseVectorCol[V]] {
+    override def apply(from : DenseMatrix[V], j : Int) =
+      new DenseVectorCol[V](from.data, length = from.numRows, offset = j * from.numRows, stride = 1);
+  }
+
+  class DenseMatrixCanMapValues[@specialized(Int,Long,Float,Double) V, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
+  extends CanMapValues[DenseMatrix[V],V,R,DenseMatrix[R]] {
+    override def map(from : DenseMatrix[V], fn : (V=>R)) = {
       val data = new Array[R](from.data.length);
       var i = 0;
       while (i < data.length) {
@@ -131,13 +143,13 @@ object DenseMatrix extends DenseMatrixConstructors {
       new DenseMatrix[R](from.numRows, from.numCols, data);
     }
 
-    override def mapNonZero(from : DenseMatrix[B], fn : (B=>R)) =
+    override def mapNonZero(from : DenseMatrix[V], fn : (V=>R)) =
       map(from, fn);
   }
 
-  class DenseMatrixCanMapKeyValuePairs[@specialized(Int,Long,Float,Double) B, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
-  extends CanMapKeyValuePairs[DenseMatrix[B],(Int,Int),B,R,DenseMatrix[R]] {
-    override def map(from : DenseMatrix[B], fn : (((Int,Int),B)=>R)) = {
+  class DenseMatrixCanMapKeyValuePairs[@specialized(Int,Long,Float,Double) V, @specialized(Int,Long,Float,Double) R:ClassManifest:Scalar]
+  extends CanMapKeyValuePairs[DenseMatrix[V],(Int,Int),V,R,DenseMatrix[R]] {
+    override def map(from : DenseMatrix[V], fn : (((Int,Int),V)=>R)) = {
       val data = new Array[R](from.data.length);
       var i = 0;
       while (i < data.length) {
@@ -147,68 +159,87 @@ object DenseMatrix extends DenseMatrixConstructors {
       new DenseMatrix(from.numRows, from.numCols, data);
     }
     
-    override def mapNonZero(from : DenseMatrix[B], fn : (((Int,Int),B)=>R)) =
+    override def mapNonZero(from : DenseMatrix[V], fn : (((Int,Int),V)=>R)) =
       map(from, fn);
   }
 
-  implicit def mkDenseMatrixCanMapValues[B,R:ClassManifest:Scalar] =
-    new DenseMatrixCanMapValues[B,R];
+  implicit def mkDenseMatrixCanSliceRow[@specialized V:Scalar] =
+    new DenseMatrixCanSliceRow[V];
+
+  implicit def mkDenseMatrixCanSliceCol[@specialized V:Scalar] =
+    new DenseMatrixCanSliceCol[V];
+    
+  implicit def mkDenseMatrixCanMapValues[V,R:ClassManifest:Scalar] =
+    new DenseMatrixCanMapValues[V,R];
   
-  implicit def mkDenseMatrixCanMapKeyValuePairs[B,R:ClassManifest:Scalar] =
-    new DenseMatrixCanMapKeyValuePairs[B,R];
+  implicit def mkDenseMatrixCanMapKeyValuePairs[V,R:ClassManifest:Scalar] =
+    new DenseMatrixCanMapKeyValuePairs[V,R];
+
+  implicit object DenseMatrixCanSliceRowI extends DenseMatrixCanSliceRow[Int];
+  implicit object DenseMatrixCanSliceRowL extends DenseMatrixCanSliceRow[Long];
+  implicit object DenseMatrixCanSliceRowF extends DenseMatrixCanSliceRow[Float];
+  implicit object DenseMatrixCanSliceRowD extends DenseMatrixCanSliceRow[Double];
+
+  implicit object DenseMatrixCanSliceColI extends DenseMatrixCanSliceCol[Int];
+  implicit object DenseMatrixCanSliceColL extends DenseMatrixCanSliceCol[Long];
+  implicit object DenseMatrixCanSliceColF extends DenseMatrixCanSliceCol[Float];
+  implicit object DenseMatrixCanSliceColD extends DenseMatrixCanSliceCol[Double];
   
   implicit object DenseMatrixCanMapValuesDD extends DenseMatrixCanMapValues[Double,Double];
   implicit object DenseMatrixCanMapValuesII extends DenseMatrixCanMapValues[Int,Int];
   implicit object DenseMatrixCanMapValuesID extends DenseMatrixCanMapValues[Int,Double];
 
 
-//  //
-//  // BLAS and LAPACK routines
-//  //
-//  
-//  implicit object DenseMatrixDMulDenseMatrixD
-//  extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpMulMatrixBy,DenseMatrix[Double]] {
-//    def opType = OpMulMatrixBy;
-//    def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
-//      val rv = DenseMatrix.zeros[Double](a.numRows, b.numCols);
-//      BLAS.getInstance().dgemm("n", "n",
-//        rv.numRows, rv.numCols, a.numCols,
-//        1.0, a.data, a.numRows, b.data, a.numCols,
-//        0.0, rv.data, a.numRows);
-//      rv;
-//    }
-//  }
-//
-//  implicit object DenseMatrixDMulDenseVectorColD
-//  extends BinaryOp[DenseMatrix[Double],DenseVectorCol[Double],OpMulMatrixBy,DenseVectorCol[Double]] {
-//    def opType = OpMulMatrixBy;
-//    def apply(a : DenseMatrix[Double], b : DenseVectorCol[Double]) = {
-//      val rv = DenseVectorCol.zeros[Double](a.numRows);
-//      BLAS.getInstance().dgemv("n",
-//        a.numRows, a.numCols,
-//        1.0, a.data, a.numRows, b.data, 1,
-//        0.0, rv.data, 1);
-//      rv;
-//    }
-//  }
+  //
+  // BLAS and LAPACK routines
+  //
+  
+  implicit object DenseMatrixDMulDenseMatrixD
+  extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpMulMatrixBy,DenseMatrix[Double]] {
+    def opType = OpMulMatrixBy;
+    def apply(a : DenseMatrix[Double], b : DenseMatrix[Double]) = {
+      val rv = DenseMatrix.zeros[Double](a.numRows, b.numCols);
+      // System.err.println("BLAS!");
+      BLAS.getInstance().dgemm("n", "n",
+        rv.numRows, rv.numCols, a.numCols,
+        1.0, a.data, a.numRows, b.data, a.numCols,
+        0.0, rv.data, a.numRows);
+      rv;
+    }
+  }
+
+  implicit object DenseMatrixDMulDenseVectorColD
+  extends BinaryOp[DenseMatrix[Double],DenseVectorCol[Double],OpMulMatrixBy,DenseVectorCol[Double]] {
+    def opType = OpMulMatrixBy;
+    def apply(a : DenseMatrix[Double], b : DenseVectorCol[Double]) = {
+      val rv = DenseVectorCol.zeros[Double](a.numRows);
+      // System.err.println("BLAS!");
+      org.netlib.blas.Dgemv.dgemv("n",
+        a.numRows, a.numCols,
+        1.0, a.data, 0, a.numRows,
+             b.data, b.offset, b.stride,
+        0.0, rv.data, rv.offset, rv.stride);
+      rv;
+    }
+  }
 
   implicit object DenseMatrixCanSolveDenseMatrix
   extends BinaryOp[DenseMatrix[Double],DenseMatrix[Double],OpSolveMatrixBy,DenseMatrix[Double]] {
     override def opType = OpSolveMatrixBy;
-    override def apply(A : DenseMatrix[Double], B : DenseMatrix[Double]) = {
-      require(A.numRows == B.numRows,
+    override def apply(A : DenseMatrix[Double], V : DenseMatrix[Double]) = {
+      require(A.numRows == V.numRows,
               "Non-conformant matrix sizes");
 
       // from MTJ 0.9.9
       if (A.numRows == A.numCols) {
         // square: LUSolve
-        val X = B.copy;
+        val X = V.copy;
         LUSolve(X,A);
         X;
       } else {
         // non-square: QRSolve
-        val X = DenseMatrix.zeros[Double](A.numCols, B.numCols);
-        QRSolve(X,A,B,false);
+        val X = DenseMatrix.zeros[Double](A.numCols, V.numCols);
+        QRSolve(X,A,V,false);
         X;
       }
     }
@@ -232,17 +263,17 @@ object DenseMatrix extends DenseMatrixConstructors {
       X;
     }
 
-    /** X := A \ B */
-    def QRSolve(X : DenseMatrix[Double], A : DenseMatrix[Double], B : DenseMatrix[Double], transpose : Boolean) = {
+    /** X := A \ V */
+    def QRSolve(X : DenseMatrix[Double], A : DenseMatrix[Double], V : DenseMatrix[Double], transpose : Boolean) = {
       require(X.numRows == A.numCols, "Wrong number of rows in return value");
-      require(X.numCols == B.numCols, "Wrong number of rows in return value");
+      require(X.numCols == V.numCols, "Wrong number of rows in return value");
 
-      val nrhs = B.numCols;
+      val nrhs = V.numCols;
       
       // allocate temporary solution matrix
       val Xtmp = DenseMatrix.zeros[Double](math.max(A.numRows, A.numCols), nrhs);
       val M = if (!transpose) A.numRows else A.numCols;
-      for (j <- 0 until nrhs; i <- 0 until M) { Xtmp(i,j) = B(i,j); }
+      for (j <- 0 until nrhs; i <- 0 until M) { Xtmp(i,j) = V(i,j); }
 
       val newData = A.data.clone();
 

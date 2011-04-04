@@ -201,24 +201,24 @@ object Tensor2 {
 
   implicit def canMulMatrixByMatrix[
    @specialized(Int) K1, @specialized(Int) K2, @specialized(Int) K3,
-   @specialized(Int,Double) V1, K, ARow, ADomainRow, InnerDomain, ADomain,
-   @specialized(Int,Double) V2, V, BCol, BDomainCol, BDomain,
+   @specialized(Int,Double) V1, A, ARow, ADomainRow, InnerDomain, ADomain,
+   @specialized(Int,Double) V2, B, BCol, BDomainCol, BDomain,
    @specialized(Int,Double) RV, RDomain, That]
   (implicit
-    viewA : K=>Tensor2[K1,K2,V1],
-    sliceA : CanSliceRow[K,K1,ARow],
-    domainA : CanGetDomain2[K,ADomainRow,InnerDomain,ADomain],
-    viewB : V=>Tensor2[K2,K3,V2],
-    sliceB : CanSliceCol[V,K3,BCol],
-    domainB : CanGetDomain2[V,InnerDomain,BDomainCol,BDomain],
+    viewA : A=>Tensor2[K1,K2,V1],
+    sliceA : CanSliceRow[A,K1,ARow],
+    domainA : CanGetDomain2[A,ADomainRow,InnerDomain,ADomain],
+    viewB : B=>Tensor2[K2,K3,V2],
+    sliceB : CanSliceCol[B,K3,BCol],
+    domainB : CanGetDomain2[B,InnerDomain,BDomainCol,BDomain],
     mul : BinaryOp[ARow,BCol,OpMulRowVectorBy,RV],
     domainR : CanBuildDomain2[ADomainRow,BDomainCol,RDomain],
-    bf : CanBuildTensorFrom[K,RDomain,(K1,K3),RV,That],
+    bf : CanBuildTensorFrom[A,RDomain,(K1,K3),RV,That],
     scalar : Scalar[RV])
-  : BinaryOp[K, V, OpMulMatrixBy, That] =
-  new BinaryOp[K, V, OpMulMatrixBy, That] {
+  : BinaryOp[A, B, OpMulMatrixBy, That] =
+  new BinaryOp[A, B, OpMulMatrixBy, That] {
     override def opType = OpMulMatrixBy;
-    override def apply(a : K, b : V) = {
+    override def apply(a : A, b : B) = {
       val domain = domainR(domainA._1(a), domainB._2(b));
       val builder = bf(a, domain);
       for (i <- a.domain._1; j <- b.domain._2) {

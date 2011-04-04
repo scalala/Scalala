@@ -576,14 +576,14 @@ object Tensor {
 //      bf.map(from, op);
 //  }
 
-  implicit def opTensorTensor[K,V1,V2,Op<:OpType,RV,This,That]
-  (implicit view : This=>Tensor[K,V1],
+  implicit def opTensorTensor[K,V1,V2,Op<:OpType,RV,A,B,That]
+  (implicit v1 : A=>Tensor[K,V1], v2 : B=>Tensor[K,V2],
    op : BinaryOp[V1,V2,Op,RV],
-   bf : CanJoinValues[This,Tensor[K,V2],V1,V2,RV,That])
-  : BinaryOp[This,Tensor[K,V2],Op,That]
-  = new BinaryOp[This,Tensor[K,V2],Op,That] {
+   bf : CanJoinValues[A,B,V1,V2,RV,That])
+  : BinaryOp[A,B,Op,That]
+  = new BinaryOp[A,B,Op,That] {
     override def opType = op.opType;
-    override def apply(a : This, b : Tensor[K,V2]) = {
+    override def apply(a : A, b : B) = {
       if (opType == OpMul) {
         bf.joinBothNonZero(a,b, op);
       } else if(opType == OpAdd || opType == OpSub) {

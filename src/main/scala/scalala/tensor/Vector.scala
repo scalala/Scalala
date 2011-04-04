@@ -32,6 +32,9 @@ import scalala.generic.collection._;
 trait VectorLike[@specialized(Int,Long,Float,Double) V, +This<:Vector[V]]
 extends Tensor1Like[Int,V,IndexDomain,This] { self =>
 
+  override def foreachKey[U](fn : (Int => U)) =
+    Range(0,size).foreach(fn);
+
   //
   // for comprehensions
   //
