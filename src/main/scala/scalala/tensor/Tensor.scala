@@ -89,30 +89,30 @@ self =>
    * for comprehensions.  The returned object can be viewed as a 
    * Map[K,V].
    */
-  def pairs : TensorNomadic[K,V,This] =
-    new TensorNomadic[K,V,This] { override def repr = self.repr; }
+  def pairs : TensorMonadic[K,V,This] =
+    new TensorMonadic[K,V,This] { override def repr = self.repr; }
 
   /**
    * Returns the keys that make up this tensor for use in
    * for comprehensions.  The returned object can be viewed as a 
    * Traversable[K].
    */
-  def keys : TensorKeysNomadic[K,V,This] =
-    new TensorKeysNomadic[K,V,This] { override def repr = self.repr; }
+  def keys : TensorKeysMonadic[K,V,This] =
+    new TensorKeysMonadic[K,V,This] { override def repr = self.repr; }
 
   /**
    * Returns the values that make up this tensor for use in
    * for comprehensions.  The returned object can be viewed as a 
    * Traversable[V].
    */
-  def values : TensorValuesNomadic[K,V,This] =
-    new TensorValuesNomadic[K,V,This] { override def repr = self.repr; }
+  def values : TensorValuesMonadic[K,V,This] =
+    new TensorValuesMonadic[K,V,This] { override def repr = self.repr; }
 
   /**
    * Returns the nonzero elements of this tensor.
    */
-  def nonzero : TensorNonZeroNomadic[K,V,This] =
-    new TensorNonZeroNomadic[K,V,This] { override def repr = self.repr; }
+  def nonzero : TensorNonZeroMonadic[K,V,This] =
+    new TensorNonZeroMonadic[K,V,This] { override def repr = self.repr; }
 
   /**
    * Applies the given function to each key and its corresponding value.

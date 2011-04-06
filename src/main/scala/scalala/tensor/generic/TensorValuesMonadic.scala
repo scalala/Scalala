@@ -30,7 +30,7 @@ import scalala.generic.collection._;
  *
  * @author dramage
  */
-trait TensorNonZeroValuesNomadic
+trait TensorValuesMonadic
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +This<:Tensor[K,V]] {
   
@@ -39,16 +39,16 @@ trait TensorNonZeroValuesNomadic
   
   /** Calls repr.foreachValue. */
   def foreach[U](fn : V => U) =
-    repr.foreachNonZeroValue(fn);
+    repr.foreachValue(fn);
   
   /** Calls repr.mapValues. */
   def map[TT>:This,O,That](fn : V => O)
   (implicit bf : CanMapValues[TT, V, O, That]) : That =
-    repr.mapNonZeroValues(fn)(bf.asInstanceOf[CanMapValues[Tensor[K,V],V,O,That]]);
+    repr.mapValues(fn)(bf.asInstanceOf[CanMapValues[Tensor[K,V],V,O,That]]);
 
   /** Calls repr.valuesIterator. */
   def iterator =
-    repr.valuesIteratorNonZero;
+    repr.valuesIterator;
   
   /** Constructs a filtered view of this tensor. */
   def filter[D,That](p : V => Boolean) =
@@ -56,16 +56,29 @@ trait TensorNonZeroValuesNomadic
   
   /** Constructs a filtered view of this tensor. */
   def withFilter(p : V => Boolean) =
-    new TensorNonZeroValuesNomadic.Filtered[K,V,This](repr, p);
+    new TensorValuesMonadic.Filtered[K,V,This](repr, p);
+
+  def reduceLeft[B >: V](op: (B, V) => B): B = {
+    var first = true
+    var acc: B = repr.scalar.zero
+    for (x <- this) {
+      if (first) {
+        acc = x
+        first = false
+      }
+      else acc = op(acc, x)
+    }
+    acc
+  }
 }
 
-object TensorNonZeroValuesNomadic {
+object TensorValuesMonadic {
   /** Filtered view of the values in a Tensor.  Does not support map. */
   class Filtered
   [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Tensor[K,V]]
   (val repr : This, p : V=>Boolean) {
     def foreach[U](fn : V => U) =
-      repr.foreachNonZeroValue(v => if (p(v)) fn(v));
+      repr.foreachValue(v => if (p(v)) fn(v));
 
     def withFilter(q : V => Boolean) =
       new Filtered[K,V,This](repr, v => p(v) && q(v));
@@ -86,11 +99,11 @@ object TensorNonZeroValuesNomadic {
   }
   
   implicit def asIterable[K, @specialized(Int,Long,Float,Double) V, T<:Tensor[K,V]]
-  (values : TensorNonZeroValuesNomadic[K,V,T]) = {
+  (values : TensorValuesMonadic[K,V,T]) = {
     new Iterable[V] {
       def self = values.repr;
-      override def foreach[U](fn : V => U) = self.foreachNonZeroValue(fn);
-      override def iterator = self.valuesIteratorNonZero;
+      override def foreach[U](fn : V => U) = self.foreachValue(fn);
+      override def iterator = self.valuesIterator;
     }
   }
 }

@@ -30,7 +30,7 @@ import scalala.generic.collection._;
  *
  * @author dramage
  */
-trait TensorKeysNomadic
+trait TensorKeysMonadic
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +This<:Tensor[K,V]] {
   
@@ -50,10 +50,10 @@ trait TensorKeysNomadic
   
   /** Constructs a filtered view of this tensor. */
   def withFilter(p : K => Boolean) =
-    new TensorKeysNomadic.Filtered[K,V,This](repr, p);
+    new TensorKeysMonadic.Filtered[K,V,This](repr, p);
 }
 
-object TensorKeysNomadic {
+object TensorKeysMonadic {
   /** Filtered view of the keys in a Tensor.  Does not support map. */
   class Filtered
   [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Tensor[K,V]]
@@ -79,7 +79,7 @@ object TensorKeysNomadic {
 //    }
   }
   
-  implicit def asIterable[K, V, T<:Tensor[K,V]](values : TensorKeysNomadic[K,V,T]) = {
+  implicit def asIterable[K, V, T<:Tensor[K,V]](values : TensorKeysMonadic[K,V,T]) = {
     new Iterable[K] {
       def self = values.repr;
       override def foreach[U](fn : K => U) = self.foreachKey(fn);

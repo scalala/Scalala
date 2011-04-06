@@ -30,7 +30,7 @@ import scalala.generic.collection._;
  *
  * @author dramage
  */
-trait TensorNomadic
+trait TensorMonadic
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +This<:Tensor[K,V]] {
 
@@ -56,16 +56,16 @@ trait TensorNomadic
   
   /** Constructs a filtered view of this tensor. */
   def withFilter(p : ((K,V)) => Boolean) =
-    new TensorNomadic.Filtered[K,V,This](repr, p);
+    new TensorMonadic.Filtered[K,V,This](repr, p);
     
-//  def keys : TensorKeysNomadic[K,V,This] =
-//    repr.keys.asInstanceOf[TensorKeysNomadic[K,V,This]];
+//  def keys : TensorKeysMonadic[K,V,This] =
+//    repr.keys.asInstanceOf[TensorKeysMonadic[K,V,This]];
 //    
-//  def values : TensorValuesNomadic[K,V,This] =
-//    repr.values.asInstanceOf[TensorValuesNomadic[K,V,This]];
+//  def values : TensorValuesMonadic[K,V,This] =
+//    repr.values.asInstanceOf[TensorValuesMonadic[K,V,This]];
 }
 
-object TensorNomadic {
+object TensorMonadic {
   /** Filtered view of the pairs in a Tensor.  Does not support map. */
   class Filtered
   [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Tensor[K,V]]
@@ -77,7 +77,7 @@ object TensorNomadic {
       new Filtered[K,V,This](repr, tup => p(tup) && q(tup));
   }
   
-  implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorNomadic[K,V,T]) = {
+  implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorMonadic[K,V,T]) = {
     new scala.collection.Map[K,V] {
       def self = pairs.repr;
       override def foreach[U](fn : ((K,V)) => U) = pairs.foreach(fn);

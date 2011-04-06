@@ -30,7 +30,7 @@ import scalala.generic.collection._;
  *
  * @author dramage
  */
-trait TensorNonZeroNomadic
+trait TensorNonZeroMonadic
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +This<:Tensor[K,V]] { self =>
 
@@ -56,18 +56,18 @@ trait TensorNonZeroNomadic
   
   /** Constructs a filtered view of this tensor. */
   def withFilter(p : ((K,V)) => Boolean) =
-    new TensorNonZeroNomadic.Filtered[K,V,This](repr, p);
+    new TensorNonZeroMonadic.Filtered[K,V,This](repr, p);
     
-  /** Gets a nomadic for the nonzero keys. */
-  def keys : TensorNonZeroKeysNomadic[K,V,This] =
-    new TensorNonZeroKeysNomadic[K,V,This] { override def repr = self.repr };
+  /** Gets a Monadic for the nonzero keys. */
+  def keys : TensorNonZeroKeysMonadic[K,V,This] =
+    new TensorNonZeroKeysMonadic[K,V,This] { override def repr = self.repr };
   
-  /** Gets a nomadic for the nonzero values. */
-  def values : TensorNonZeroValuesNomadic[K,V,This] =
-    new TensorNonZeroValuesNomadic[K,V,This] { override def repr = self.repr };
+  /** Gets a Monadic for the nonzero values. */
+  def values : TensorNonZeroValuesMonadic[K,V,This] =
+    new TensorNonZeroValuesMonadic[K,V,This] { override def repr = self.repr };
 }
 
-object TensorNonZeroNomadic {
+object TensorNonZeroMonadic {
   /** Filtered view of the pairs in a Tensor.  Does not support map. */
   class Filtered
   [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Tensor[K,V]]
@@ -79,7 +79,7 @@ object TensorNonZeroNomadic {
       new Filtered[K,V,This](repr, tup => p(tup) && q(tup));
   }
   
-  implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorNonZeroNomadic[K,V,T]) = {
+  implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorNonZeroMonadic[K,V,T]) = {
     new scala.collection.Map[K,V] {
       def self = pairs.repr;
       override def foreach[U](fn : ((K,V)) => U) = pairs.foreach(fn);

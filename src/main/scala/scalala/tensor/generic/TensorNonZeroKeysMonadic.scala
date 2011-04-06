@@ -30,7 +30,7 @@ import scalala.generic.collection._;
  *
  * @author dramage
  */
-trait TensorNonZeroKeysNomadic
+trait TensorNonZeroKeysMonadic
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +This<:Tensor[K,V]] {
   
@@ -50,10 +50,10 @@ trait TensorNonZeroKeysNomadic
   
   /** Constructs a filtered view of this tensor. */
   def withFilter(p : K => Boolean) =
-    new TensorNonZeroKeysNomadic.Filtered[K,V,This](repr, p);
+    new TensorNonZeroKeysMonadic.Filtered[K,V,This](repr, p);
 }
 
-object TensorNonZeroKeysNomadic {
+object TensorNonZeroKeysMonadic {
   /** Filtered view of the keys in a Tensor.  Does not support map. */
   class Filtered
   [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Tensor[K,V]]
@@ -65,7 +65,7 @@ object TensorNonZeroKeysNomadic {
       new Filtered[K,V,This](repr, k => p(k) && q(k));
   }
   
-  implicit def asIterable[K, V, T<:Tensor[K,V]](values : TensorNonZeroKeysNomadic[K,V,T]) = {
+  implicit def asIterable[K, V, T<:Tensor[K,V]](values : TensorNonZeroKeysMonadic[K,V,T]) = {
     new Iterable[K] {
       def self = values.repr;
       override def foreach[U](fn : K => U) = self.foreachNonZeroKey(fn);
