@@ -109,6 +109,24 @@ with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
     }
   }
 
+  /** Assigns the given value to all elements of this map. */
+  def :=(value : V) = {
+    var i = 0;
+    while (i < data.length) {
+      data(i) = value;
+      i += 1;
+    }
+  }
+
+  /** Tranforms all values in this map by applying the given function. */
+  override def transformValues(f : V=>V) = {
+    var i = 0;
+    while (i < data.length) {
+      data(i) = f(data(i));
+      i += 1;
+    }
+  }
+
   def copy =
     new DenseMatrix[V](numRows, numCols, data.clone);
 }
