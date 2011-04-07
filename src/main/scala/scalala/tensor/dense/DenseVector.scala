@@ -234,6 +234,29 @@ object DenseVector extends DenseVectorConstructors {
   : CanMapKeyValuePairsDenseVector[V, RV, DenseVectorRow] =
   new GenericDenseVectorRowBase with CanMapKeyValuePairsDenseVector[V, RV, DenseVectorRow];
 
+
+  /** Optimized base class for creating zeros */
+  trait CanCreateZerosDenseVector
+  [@specialized V, @specialized RV, DV[V]<:DenseVector[V]]
+    extends CanCreateZerosLike[DV[V],DV[RV]] {
+    def create(length : Int) : DV[RV];
+    def apply(v1: DV[V]) = create(v1.length);
+  }
+
+    /** Optimized base class for mapping dense columns. */
+  implicit def canCreateZerosDenseVectorCols[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanCreateZerosDenseVector[V, RV, DenseVectorCol] =
+  new GenericDenseVectorColBase with CanCreateZerosDenseVector[V, RV, DenseVectorCol];
+
+  /** Optimized base class for mapping dense rows. */
+  implicit def canCreateZerosDenseVectorRows[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanCreateZerosDenseVector[V, RV, DenseVectorRow] =
+  new GenericDenseVectorRowBase with CanCreateZerosDenseVector[V, RV, DenseVectorRow];
+
+
+
+
+
   //
   // Specialized objects for generic routines
   //
