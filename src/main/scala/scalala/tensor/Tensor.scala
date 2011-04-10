@@ -89,7 +89,7 @@ self =>
    * for comprehensions.  The returned object can be viewed as a 
    * Map[K,V].
    */
-  def pairs : TensorMonadic[K,V,This] =
+  def pairs : TensorPairsMonadic[K,V,This] =
     new TensorMonadic[K,V,This] { override def repr = self.repr; }
 
   /**
@@ -108,11 +108,11 @@ self =>
   def values : TensorValuesMonadic[K,V,This] =
     new TensorValuesMonadic[K,V,This] { override def repr = self.repr; }
 
-  /**
-   * Returns the nonzero elements of this tensor.
-   */
-  def nonzero : TensorNonZeroMonadic[K,V,This] =
-    new TensorNonZeroMonadic[K,V,This] { override def repr = self.repr; }
+//  /**
+//   * Returns the nonzero elements of this tensor.
+//   */
+//  def nonzero : TensorNonZeroMonadic[K,V,This] =
+//    new TensorNonZeroMonadic[K,V,This] { override def repr = self.repr; }
 
   /**
    * Applies the given function to each key and its corresponding value.
