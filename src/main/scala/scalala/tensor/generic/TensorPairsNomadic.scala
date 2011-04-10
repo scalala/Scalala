@@ -56,16 +56,10 @@ trait TensorPairsMonadic
   
   /** Constructs a filtered view of this tensor. */
   def withFilter(p : ((K,V)) => Boolean) =
-    new TensorMonadic.Filtered[K,V,This](repr, p);
-    
-//  def keys : TensorKeysMonadic[K,V,This] =
-//    repr.keys.asInstanceOf[TensorKeysMonadic[K,V,This]];
-//    
-//  def values : TensorValuesMonadic[K,V,This] =
-//    repr.values.asInstanceOf[TensorValuesMonadic[K,V,This]];
+    new TensorPairsMonadic.Filtered[K,V,This](repr, p);
 }
 
-object TensorMonadic {
+object TensorPairsMonadic {
   /** Filtered view of the pairs in a Tensor.  Does not support map. */
   class Filtered
   [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Tensor[K,V]]
@@ -77,7 +71,7 @@ object TensorMonadic {
       new Filtered[K,V,This](repr, tup => p(tup) && q(tup));
   }
   
-  implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorMonadic[K,V,T]) = {
+  implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorPairsMonadic[K,V,T]) = {
     new scala.collection.Map[K,V] {
       def self = pairs.repr;
       override def foreach[U](fn : ((K,V)) => U) = pairs.foreach(fn);

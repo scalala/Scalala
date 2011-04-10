@@ -56,18 +56,10 @@ trait TensorNonZeroPairsMonadic
   
   /** Constructs a filtered view of this tensor. */
   def withFilter(p : ((K,V)) => Boolean) =
-    new TensorNonZeroMonadic.Filtered[K,V,This](repr, p);
-    
-//  /** Gets a Monadic for the nonzero keys. */
-//  def keys : TensorNonZeroKeysMonadic[K,V,This] =
-//    new TensorNonZeroKeysMonadic[K,V,This] { override def repr = self.repr };
-//  
-//  /** Gets a Monadic for the nonzero values. */
-//  def values : TensorNonZeroValuesMonadic[K,V,This] =
-//    new TensorNonZeroValuesMonadic[K,V,This] { override def repr = self.repr };
+    new TensorNonZeroPairsMonadic.Filtered[K,V,This](repr, p);
 }
 
-object TensorNonZeroMonadic {
+object TensorNonZeroPairsMonadic {
   /** Filtered view of the pairs in a Tensor.  Does not support map. */
   class Filtered
   [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Tensor[K,V]]
@@ -79,7 +71,7 @@ object TensorNonZeroMonadic {
       new Filtered[K,V,This](repr, tup => p(tup) && q(tup));
   }
   
-  implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorNonZeroMonadic[K,V,T]) = {
+  implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorNonZeroPairsMonadic[K,V,T]) = {
     new scala.collection.Map[K,V] {
       def self = pairs.repr;
       override def foreach[U](fn : ((K,V)) => U) = pairs.foreach(fn);

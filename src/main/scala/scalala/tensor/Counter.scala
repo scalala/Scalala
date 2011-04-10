@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic.{TensorBuilder,TensorMonadic};
+import generic.{TensorBuilder,TensorPairsMonadic};
 
 import scalala.scalar.Scalar;
 import scalala.generic.collection._;

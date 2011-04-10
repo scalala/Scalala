@@ -90,7 +90,7 @@ self =>
    * Map[K,V].
    */
   def pairs : TensorPairsMonadic[K,V,This] =
-    new TensorMonadic[K,V,This] { override def repr = self.repr; }
+    new TensorPairsMonadic[K,V,This] { override def repr = self.repr; }
 
   /**
    * Returns the keys that make up this tensor for use in
@@ -108,11 +108,12 @@ self =>
   def values : TensorValuesMonadic[K,V,This] =
     new TensorValuesMonadic[K,V,This] { override def repr = self.repr; }
 
-//  /**
-//   * Returns the nonzero elements of this tensor.
-//   */
-//  def nonzero : TensorNonZeroMonadic[K,V,This] =
-//    new TensorNonZeroMonadic[K,V,This] { override def repr = self.repr; }
+  /**
+   * Returns a monadic nonzero elements of this tensor.  Then call one of
+   * .pairs .keys or .values for use in for comprehensions.
+   */
+  def nonzero : TensorNonZeroMonadic[K,V,This] =
+    new TensorNonZeroMonadic[K,V,This] { override def repr = self.repr; }
 
   /**
    * Applies the given function to each key and its corresponding value.
@@ -322,15 +323,15 @@ self =>
    * Currently this method is not particularly efficient, as it creates several
    * in-memory arrays the size of the domain.
    */
-  def argsort(implicit cm : Manifest[K], ord : Ordering[V]) : Array[K] =
-    keys.toArray(cm).sortWith((i:K, j:K) => ord.lt(this(i), this(j)));
+  def argsort(implicit ord : Ordering[V]) : List[K] =
+    keys.toList.sortWith((i:K, j:K) => ord.lt(this(i), this(j)));
 
   /**
    * Returns a sorted view of the current map.  Equivalent to calling
    * <code>x(x.argsort)</code>.  Changes to the sorted view are
    * written-through to the underlying map.
    */
-  def sorted[That](implicit bf : CanSliceVector[This, K, That], cm : Manifest[K], ord : Ordering[V]) : That =
+  def sorted[That](implicit bf : CanSliceVector[This, K, That], ord : Ordering[V]) : That =
     this.apply(this.argsort);
 
 
@@ -340,7 +341,7 @@ self =>
 
   /** Returns a key associated with the largest value in the map. */
   def argmax : K = {
-    if (!valuesIterator.hasNext) {
+    if (!pairsIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .max");
     }
     var (arg,max) = pairsIterator.next;
@@ -350,7 +351,7 @@ self =>
 
   /** Returns a key associated with the smallest value in the map. */
   def argmin : K = {
-    if (!valuesIterator.hasNext) {
+    if (!pairsIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .min");
     }
     var (arg,min) = pairsIterator.next;
