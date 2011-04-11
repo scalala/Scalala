@@ -33,14 +33,14 @@ import scalala.generic.collection._;
 trait TensorNonZeroValuesMonadic
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +This<:Tensor[K,V]] {
-  
+
   /** Underlying tensor. */
   def repr : This;
-  
+
   /** Calls repr.foreachValue. */
   def foreach[U](fn : V => U) =
     repr.foreachNonZeroValue(fn);
-  
+
   /** Calls repr.mapValues. */
   def map[TT>:This,O,That](fn : V => O)
   (implicit bf : CanMapValues[TT, V, O, That]) : That =
@@ -49,27 +49,31 @@ trait TensorNonZeroValuesMonadic
   /** Calls repr.valuesIterator. */
   def iterator =
     repr.valuesIteratorNonZero;
-  
+
   /** Constructs a filtered view of this tensor. */
   def filter[D,That](p : V => Boolean) =
     withFilter(p);
-  
+
   /** Constructs a filtered view of this tensor. */
   def withFilter(p : V => Boolean) =
     new TensorNonZeroValuesMonadic.Filtered[K,V,This](repr, p);
 
-  def reduceLeft[B >: V](op: (B, V) => B): B = {
-    var first = true
-    var acc: B = repr.scalar.zero
-    for (x <- this) {
-      if (first) {
-        acc = x
-        first = false
-      }
-      else acc = op(acc, x)
-    }
-    acc
-  }
+  /** Proxy for iterator.reduceLeft */
+  def reduceLeft[B >: V](op: (B, V) => B): B =
+    iterator.reduceLeft(op)
+
+  /** Proxy for iterator.reduceRight */
+  def reduceRight[B >: V](op: (V, B) => B): B =
+    iterator.reduceRight(op)
+
+  /** Proxy for iterator.foldLeft */
+  def foldLeft[B](initialValue: B)(op: (B, V) => B): B =
+    iterator.foldLeft(initialValue)(op)
+
+  /** Proxy for iterator.foldRight */
+  def foldRight[B](initialValue: B)(op: (V, B) => B): B =
+    iterator.foldRight(initialValue)(op)
+
 }
 
 object TensorNonZeroValuesMonadic {
@@ -82,14 +86,14 @@ object TensorNonZeroValuesMonadic {
 
     def withFilter(q : V => Boolean) =
       new Filtered[K,V,This](repr, v => p(v) && q(v));
-    
+
 //    def map[U,D,That](fn : V => U)
 //    (implicit df : CanGetDomain[This,D], bf : CanBuildTensorFrom[This,D,K,U,That]) = {
 //      val builder = bf(repr, repr.domain.asInstanceOf[D]);
 //      repr.foreachPair((k,v) => if (p(v)) builder(k) = fn(v));
 //      builder.result;
 //    }
-//    
+//
 //    def strict[D,That]
 //    (implicit df : CanGetDomain[This,D], bf : CanBuildTensorFrom[This,D,K,V,That]) = {
 //      val builder = bf(repr, repr.domain.asInstanceOf[D]);
@@ -97,7 +101,7 @@ object TensorNonZeroValuesMonadic {
 //      builder.result;
 //    }
   }
-  
+
   implicit def asIterable[K, @specialized(Int,Long,Float,Double) V, T<:Tensor[K,V]]
   (values : TensorNonZeroValuesMonadic[K,V,T]) = {
     new Iterable[V] {
