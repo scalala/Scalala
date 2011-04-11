@@ -29,19 +29,25 @@ import tensor.dense.DenseVector
 
 @RunWith(classOf[JUnitRunner])
 class LibraryTest extends FunSuite with Checkers {
-  test("Log") {
+  test("log") {
     assert(Library.log(2.8) === 1.0296194171811581);
     assert(Library.log(1) === 0);
     assert(Library.log(Array(1,2,3,4)).toList === List(0.0, 0.6931471805599453, 1.0986122886681098, 1.3862943611198906))
   }
 
-  test("Mean") {
-    // assert(Library.mean(List(1,2,3,4)) === ((1+2+3+4) / 4));
+  test("mean") {
     assert(Library.mean(List(Array(0,2),Array(2,4))).toList === List(1,3));
     assert(Library.mean(List(Array(1.0,3.0),Array(2.0,4.0))).toList === List(1.5,3.5));
+    assert(Library.mean(Iterator(1,2,3)) === 2.0);
+    assert(Library.mean(List(1,2,3,4)) === ((1+2+3+4) / 4.0));
   }
 
-  test("Exp") {
+  test("stddev") {
+    assert(Library.stddev(Array(1,2,3)) === 1.0);
+    assert(Library.stddev(Iterator(1,2,3,4)) === 1.2909944487358056);
+  }
+
+  test("exp") {
     assert(Library.exp(Array(1,2,3,4)).toList === List(1,2,3,4).map(_.toDouble).map(math.exp));
   }
 

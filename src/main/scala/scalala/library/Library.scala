@@ -95,9 +95,18 @@ trait Library {
   def sqrt[V,That](value : V)(implicit sqrt : CanSqrt[V,That]) : That =
     sqrt(value);
 
-  def softmax[V](value: V)(implicit softmax: CanSoftmax[V]):Double = {
+  /** Take the standard deviation of a collection. */
+  def stddev[V,VV,That](data : V)
+  (implicit variance : CanVariance[V,VV], sqrt : CanSqrt[VV,That]) : That =
+    sqrt(variance(data));
+
+  /** Take the variance of a collection. */
+  def variance[V,That](data : V)(implicit variance : CanVariance[V,That]) =
+    variance(data);
+
+  /** Take the softmax of a collection. */
+  def softmax[V](value: V)(implicit softmax: CanSoftmax[V]) : Double =
     softmax.softmax(value)
-  }
 
   //
   // Constructors

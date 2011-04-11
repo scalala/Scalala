@@ -51,29 +51,51 @@ trait LowPriorityCanMean {
 }
 
 object CanMean { // extends LowPriorityCanMean {
-  implicit object ArrayMeanD extends CanMean[Array[Double],Double] {
-    def apply(values : Array[Double]) = {
-      var sum = 0.0;
-      var i = 0;
-      while (i < values.length) {
-        sum += values(i);
-        i += 1;
+  /** Numerically stable one-pass mean computation. */
+  implicit def TraversableOnceMeanScalar[S](implicit view : S=>Double)
+  : CanMean[TraversableOnce[S],Double]
+  = new CanMean[TraversableOnce[S],Double] {
+    def apply(values : TraversableOnce[S]) = {
+      var m = 0.0;
+      var k = 0;
+      for (x <- values) {
+        k += 1;
+        m += (x - m) / k;
       }
-      sum / values.length;
+      m;
+    }
+  }
+  
+  /** Optimized implementation for array of doubles. */
+  implicit def ArrayMeanScalar[S](implicit view : S=>Double)
+  : CanMean[Array[S],Double]
+  = new CanMean[Array[S],Double] {
+    def apply(values : Array[S]) = {
+      var m = 0.0;
+      var k = 0;
+      while (k < values.length) {
+        m += (values(k) - m) / (k + 1);
+        k += 1;
+      }
+      m;
     }
   }
 
   /** Computes the mean by starting with zero, adding into it, and dividing into it. */
-  implicit def ZeroInto[V,RV](implicit zero : CanCreateZerosLike[V,RV], addInto : BinaryUpdateOp[RV,V,OpAdd], divInto : BinaryUpdateOp[RV,Int,OpDiv])
-  : CanMean[Traversable[V],RV] = new CanMean[Traversable[V],RV] {
-    def apply(values : Traversable[V]) : RV = {
-      val sum = zero(values.head);
-      var n = 0;
+  implicit def ZeroInto[V,RV](implicit zero : CanCreateZerosLike[V,RV],
+   addInto : BinaryUpdateOp[RV,V,OpAdd], divInto : BinaryUpdateOp[RV,Int,OpDiv])
+  : CanMean[TraversableOnce[V],RV] = new CanMean[TraversableOnce[V],RV] {
+    def apply(values : TraversableOnce[V]) : RV = {
+      var sum : RV = null.asInstanceOf[RV];
+      var k = 0;
       for (value <- values) {
+        if (k == 0) {
+          sum = zero(value);
+        }
         addInto(sum, value);
-        n += 1;
+        k += 1;
       }
-      divInto(sum, n);
+      divInto(sum, k);
       sum;
     }
   }
