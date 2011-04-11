@@ -3,18 +3,37 @@ Scalala is a high performance numeric linear algebra library for Scala,
 with rich Matlab-like operators on vectors and matrices; a library of
 numerical routines; support for plotting.
 
-(c) Daniel Ramage 2009-
+This software is released under the LGPL.  See LICENSE for details. 
 
-This project can be built with maven:
-  mvn clean compile
-  mvn assembly:assembly
+(c) 2008- | Daniel Ramage | dramage | http://cs.stanford.edu/~dramage 
 
-Scaladoc for the public API can be built with:
-  mvn scala:doc
+With contributions from:
+  David Hall <dlwh>
+  Jason Zaugg <retronym>
+  Alexander Lehmann <afwlehmann>
+  aerskine
+  And others (email me if you've contributed code and aren't listed)
+
+Building upon and/or borrowing from solid libraries:
+  JFreeChart  http://www.jfree.org/jfreechart/
+  Netlib      http://code.google.com/p/netlib-java/
+  MTJ         http://code.google.com/p/matrix-toolkits-java/ 
+  iText       http://www.itextpdf.com/
+
+This project can be built with sbt, which is included in the repo,
+or can be downloaded from http://code.google.com/p/simple-build-tool/.
+
+Run sbt (./sbt) and invoke one or more of the following targets:
+  compile     -- Builds the library
+  test        -- Runs the unit tests
+  doc         -- Builds scaladoc for the public API
+  proguard    -- Builds a distributable jar
 
 For project maintainers, the project can be deployed with:
-  mvn source:jar deploy
+  publish
 
-To run an interactive console:
-  java -jar target/scalala*-jar-with-dependencies.jar
+To run an interactive console, either do so through sbt (console or
+console-quick) or run sbt's proguard target, and then:
+
+  java -jar target/scala_2.8.1/scalala*.min.jar
 
