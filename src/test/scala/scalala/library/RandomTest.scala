@@ -24,7 +24,7 @@ import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
 import scalala.library.Random._
-import scalala.library.Statistics._
+import scalala.library.Library._
 import scalala.tensor.dense._
 
 @RunWith(classOf[JUnitRunner])
