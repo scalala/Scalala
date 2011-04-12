@@ -84,6 +84,21 @@ class Project(info: ProjectInfo) extends DefaultProject(info) with ProguardProje
   //
   // publishing
   //  
-  val publishTo = "Scalala" at "dav:http://scalala.org/repo/" 
+  val publishToRepoName = "Sonatype Nexus Repository Manager"
+  val publishTo = {
+    val repoUrl = "http://nexus.scala-tools.org/content/repositories/" +
+      (if (version.toString.endsWith("-SNAPSHOT")) "snapshots" else "releases")
+    publishToRepoName at repoUrl
+  }
+
+  lazy val publishUser = system[String]("build.publish.user")
+  lazy val publishPassword = system[String]("build.publish.password")
+
+  (publishUser.get, publishPassword.get) match {
+    case (Some(u), Some(p)) =>
+      Credentials.add(publishToRepoName, "nexus.scala-tools.org", u, p)
+    case _ =>
+      Credentials(Path.userHome / ".ivy2" / ".credentials", log)
+  }
 }
 
