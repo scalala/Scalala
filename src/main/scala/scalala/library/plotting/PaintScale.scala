@@ -95,7 +95,7 @@ object PaintScale {
   lazy val BlackToWhite = createGradient(Color.BLACK, Color.WHITE, 500);
 
   /** Produces a gradient from white (low) to black (high) */
-  lazy val WhiteToBlack = createGradient(Color.BLACK, Color.WHITE, 500);
+  lazy val WhiteToBlack = createGradient(Color.WHITE, Color.BLACK, 500);
 
   /** Produces a gradient from red (low) to green (high) */
   lazy val RedToGreen = createGradient(Color.RED, Color.GREEN, 500);
@@ -171,9 +171,7 @@ object PaintScale {
     var gradientIndex = 0; //points to the next open spot in the final gradient
     val gradient = new Array[Color](numSteps)
 
-    if (numSections <= 0) {
-        throw new IllegalArgumentException("You must pass in at least 2 colors in the array!");
-    }
+    require(numSelections > 0, "Array must have at least two colors");
 
     for (section <- 0 until numSections) {
       //we divide the gradient into (n - 1) sections, and do a regular gradient for each
