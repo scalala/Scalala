@@ -167,17 +167,17 @@ trait Plotting {
     renderer.setSeriesOutlinePaint(0, XYPlot.outlinePaint(series));
     renderer.setSeriesOutlineStroke(0, XYPlot.outlineStroke(series));
 
-    // renderer.setSeriesShape(0, xyplot.shape(series));
-
     val tooltipGenerator = new org.jfree.chart.labels.XYToolTipGenerator() {
-      override def generateToolTip(dataset : org.jfree.data.xy.XYDataset, series : Int, item : Int) : String = {
+      override def generateToolTip(dataset : org.jfree.data.xy.XYDataset,
+        series : Int, item : Int) : String = {
         dataset.asInstanceOf[XYDataset[_]].getTip(series, item);
       }
     }
     renderer.setSeriesToolTipGenerator(series, tooltipGenerator);
 
     val labelGenerator = new org.jfree.chart.labels.XYItemLabelGenerator() {
-      override def generateLabel(dataset : org.jfree.data.xy.XYDataset, series : Int, item : Int) : String = {
+      override def generateLabel(dataset : org.jfree.data.xy.XYDataset,
+        series : Int, item : Int) : String = {
         dataset.asInstanceOf[XYDataset[_]].getLabel(series, item);
       }
     }
@@ -203,6 +203,10 @@ trait Plotting {
       throw new IllegalArgumentException("Expected style to be one of - . or +")
     }
 
+    // set standard tick unit back to default (non-int) if we see non-ints
+    if (!xt.scalar.zero.isInstanceOf[Int]) xyplot.setXAxisDecimalTickUnits();
+    if (!yt.scalar.zero.isInstanceOf[Int]) xyplot.setYAxisDecimalTickUnits();
+
     // add dataset and renderer to plot
     xyplot.plot.setDataset(series, dataset);
     xyplot.plot.setRenderer(series, renderer);
@@ -220,7 +224,8 @@ trait Plotting {
    paintScale : PaintScale = DynamicPaintScale(),
    name : String = null)
   (implicit xyplot : XYPlot = figures.figure.plot,
-   xtv : CanViewAsTensor1[X,K,XV], ytv : CanViewAsTensor1[Y,K,YV], stv : CanViewAsTensor1[S,K,SV], ctv : CanViewAsTensor1[C,K,CV])
+   xtv : CanViewAsTensor1[X,K,XV], ytv : CanViewAsTensor1[Y,K,YV],
+   stv : CanViewAsTensor1[S,K,SV], ctv : CanViewAsTensor1[C,K,CV])
   : Unit = {
 
     val series = xyplot.nextSeries;
@@ -274,6 +279,10 @@ trait Plotting {
     }
     renderer.setSeriesItemLabelGenerator(series, labelGenerator);
     renderer.setSeriesItemLabelsVisible(series, labels != null);
+
+    // set standard tick unit back to default (non-int) if we see non-ints
+    if (!xt.scalar.zero.isInstanceOf[Int]) xyplot.setXAxisDecimalTickUnits();
+    if (!yt.scalar.zero.isInstanceOf[Int]) xyplot.setYAxisDecimalTickUnits();
 
     // add dataset and renderer to plot
     xyplot.plot.setDataset(series, dataset);
@@ -388,15 +397,13 @@ trait Plotting {
   (implicit xyplot : XYPlot = figures.figure.plot,
    mtv : CanViewAsTensor2[M,Int,Int,V]) {
 
-    import org.jfree.chart.axis.{NumberAxis,TickUnits,NumberTickUnit};
-
     val mt = mtv(img);
 
     val series = xyplot.nextSeries;
 
     val domain = mt.domain;
-    val (minx,maxx) = (domain._1.min, domain._1.max);
-    val (miny,maxy) = (domain._2.min, domain._2.max);
+    val (minx,maxx) = (domain._2.min, domain._2.max);
+    val (miny,maxy) = (domain._1.min, domain._1.max);
 
     val items = domain.toIndexedSeq;
 
@@ -463,25 +470,18 @@ trait Plotting {
     renderer.setBlockWidth(1);
     renderer.setBlockHeight(1);
 
-    // integer tick units    
-    val units = new TickUnits();
-    val df = new java.text.DecimalFormat("0");
-    for (b <- List(1,2,5); e <- List(0,1,2,3,4,5,6,7,8)) {
-      units.add(new NumberTickUnit(b * math.pow(10,e).toInt, df));
-    }
-
     xyplot.plot.getRangeAxis.setInverted(true);
     xyplot.plot.getRangeAxis.setLowerBound(miny+offset._2);
     xyplot.plot.getRangeAxis.setUpperBound(maxy+1+offset._2);
-    xyplot.plot.getRangeAxis.setStandardTickUnits(units);
+    xyplot.plot.getRangeAxis.setStandardTickUnits(XYPlot.integerTickUnits);
     
     xyplot.plot.getDomainAxis.setLowerBound(minx+offset._1);
     xyplot.plot.getDomainAxis.setUpperBound(maxx+1+offset._1);
-    xyplot.plot.getDomainAxis.setStandardTickUnits(units);
+    xyplot.plot.getDomainAxis.setStandardTickUnits(XYPlot.integerTickUnits);
 
     // set legend
     if (showScale) {
-      val legendAxis = new NumberAxis();
+      val legendAxis = new org.jfree.chart.axis.NumberAxis();
       legendAxis.setLowerBound(staticScale.lower);
       legendAxis.setUpperBound(staticScale.upper);
 

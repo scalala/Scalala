@@ -39,23 +39,13 @@ sealed trait PaintScale;
  *
  * @author dramage
  */
-case class StaticPaintScale(lower : Double, upper : Double, gradient : Array[Color] = PaintScale.BlueToRed)
+case class StaticPaintScale(
+  lower : Double, upper : Double,
+  gradient : Array[Color] = PaintScale.WhiteToBlack)
 extends PaintScale {
-  // for painting NaN
-  val nanPaint = {
-    val img = new BufferedImage(5,5,BufferedImage.TYPE_INT_ARGB);
-    
-    val gfx = img.getGraphics;
-    gfx.setColor(Color.gray);
-    gfx.drawLine(0,0,4,4);
-    gfx.dispose();
-    
-    new TexturePaint(img, new Rectangle2D.Double(0,0,5,5));
-  }
-  
   def color(value : Double) : Paint = {
-    if (java.lang.Double.isNaN(value)) {
-      nanPaint
+    if (value.isNaN) {
+      PaintScale.nanPaint
     } else {
       val index = gradient.length * (value - lower) / (upper - lower);
       gradient(math.min(gradient.length-1, math.max(0, index.toInt)));
@@ -69,7 +59,8 @@ extends PaintScale {
  *
  * @author dramage
  */
-case class DynamicPaintScale(gradient : Array[Color] = PaintScale.BlueToRed)
+case class DynamicPaintScale(
+  gradient : Array[Color] = PaintScale.WhiteToBlack)
 extends PaintScale {
   def apply(lower : Double, upper : Double) =
     StaticPaintScale(lower, upper, gradient);
@@ -79,6 +70,17 @@ extends PaintScale {
  * Color graident code from http://www.mbeckler.org/heatMap/heatMap.html
  */
 object PaintScale {
+  /** For painting NaN. */
+  val nanPaint = {
+    val img = new BufferedImage(5,5,BufferedImage.TYPE_INT_ARGB);
+    
+    val gfx = img.getGraphics;
+    gfx.setColor(Color.gray);
+    gfx.drawLine(0,0,4,4);
+    gfx.dispose();
+    
+    new TexturePaint(img, new Rectangle2D.Double(0,0,5,5));
+  }
 
   implicit def paintScaleFromRange(vLowerUpper : (Double,Double)) : PaintScale =
     StaticPaintScale(vLowerUpper._1, vLowerUpper._2);
@@ -91,6 +93,9 @@ object PaintScale {
 
   /** Produces a gradient from black (low) to white (high) */
   lazy val BlackToWhite = createGradient(Color.BLACK, Color.WHITE, 500);
+
+  /** Produces a gradient from white (low) to black (high) */
+  lazy val WhiteToBlack = createGradient(Color.BLACK, Color.WHITE, 500);
 
   /** Produces a gradient from red (low) to green (high) */
   lazy val RedToGreen = createGradient(Color.RED, Color.GREEN, 500);
@@ -193,3 +198,4 @@ object PaintScale {
     return gradient;
   }
 }
+
