@@ -171,7 +171,7 @@ object PaintScale {
     var gradientIndex = 0; //points to the next open spot in the final gradient
     val gradient = new Array[Color](numSteps)
 
-    require(numSelections > 0, "Array must have at least two colors");
+    require(numSections > 0, "Array must have at least two colors");
 
     for (section <- 0 until numSections) {
       //we divide the gradient into (n - 1) sections, and do a regular gradient for each
