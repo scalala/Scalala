@@ -66,7 +66,7 @@ object Counter2 {
       override def default(k: K1) = scala.collection.mutable.Map[K2,V]();
     }
     val rv: Impl[K1, K2, V] = new Impl[K1,K2,V](map);
-    for ((k1,k2,v) <- values) rv(k1,k2) = v;
+    for ((k1,k2,v) <- values) rv(k1,k2) = rv.scalar.+(rv(k1,k2), v);
     rv;
   }
   

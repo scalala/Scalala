@@ -54,7 +54,7 @@ object Counter {
 
   def apply[K,V:Scalar](values : (K,V)*) : Counter[K,V] = {
     val rv = new Impl(scala.collection.mutable.HashMap[K,V]());
-    for ((k,v) <- values) rv(k) = v;
+    for ((k,v) <- values) rv(k) = rv.scalar.+(v,rv(k));
     rv;
   }
   
