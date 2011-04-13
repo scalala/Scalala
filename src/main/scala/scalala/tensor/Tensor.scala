@@ -46,7 +46,7 @@ trait TensorLike
  +D<:IterableDomain[K],
  +This<:Tensor[K,V]]
 extends DomainFunction[K, V, D]
-with operators.NumericOps[This] {
+with operators.NumericOps[This] with HasValuesMonadic[This,V] {
 self =>
 
   type Domain = D;

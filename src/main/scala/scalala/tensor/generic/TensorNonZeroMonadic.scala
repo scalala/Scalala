@@ -22,7 +22,9 @@ package tensor;
 package generic;
 
 import domain.CanGetDomain;
-import scalala.generic.collection._;
+import scalala.generic.collection._
+import operators.HasValuesMonadic
+;
 
 /**
  * For comprehensions on pairs of values from an underlying tensor.  This
@@ -32,7 +34,7 @@ import scalala.generic.collection._;
  */
 trait TensorNonZeroMonadic
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +This<:Tensor[K,V]] { self =>
+ +This<:Tensor[K,V]] extends HasValuesMonadic[This,V] { self =>
 
   /** Underlying tensor. */
   def repr : This;

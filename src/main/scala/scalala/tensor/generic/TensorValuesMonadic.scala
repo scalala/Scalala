@@ -22,7 +22,8 @@ package tensor;
 package generic;
 
 import domain.CanGetDomain;
-import scalala.generic.collection._;
+import scalala.generic.collection._
+import operators.ValuesMonadic;
 
 /**
  * Support for comprehensions on values from an underlying tensor.  This
@@ -32,7 +33,7 @@ import scalala.generic.collection._;
  */
 trait TensorValuesMonadic
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
- +This<:Tensor[K,V]] {
+ +This<:Tensor[K,V]] extends ValuesMonadic[This,V] {
   
   /** Underlying tensor. */
   def repr : This;
@@ -42,7 +43,7 @@ trait TensorValuesMonadic
     repr.foreachValue(fn);
   
   /** Calls repr.mapValues. */
-  def map[TT>:This,O,That](fn : V => O)
+  override def map[TT>:This,O,That](fn : V => O)
   (implicit bf : CanMapValues[TT, V, O, That]) : That =
     repr.mapValues(fn)(bf.asInstanceOf[CanMapValues[Tensor[K,V],V,O,That]]);
 
