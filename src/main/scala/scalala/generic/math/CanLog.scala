@@ -27,7 +27,7 @@ import collection.CanMapValues;
 import scalala.operators.{UnaryOp,OpType};
 
 /**
- * Operator type for exp(A).
+ * Operator type for log(A).
  *
  * @author dramage
  */
