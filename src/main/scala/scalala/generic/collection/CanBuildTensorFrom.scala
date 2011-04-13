@@ -123,13 +123,13 @@ trait CanBuildTensorFromImplicitsLevel2Row extends CanBuildTensorFromImplicitsLe
 trait CanBuildTensorFromImplicitsLevel3 extends CanBuildTensorFromImplicitsLevel2Row {
   import dense._;
   import sparse._;
-  import mutable.Counter;
-  
+  import tensor.{Counter=>Ctr}
+
   implicit def canBuildCounterFromCounter[K,V:Scalar]
-  : CanBuildTensorFrom[Counter[_,_], Domain1[K], K, V, Counter[K,V]]
-  = new CanBuildTensorFrom[Counter[_,_], Domain1[K], K, V, Counter[K,V]] {
-    override def apply(from : Counter[_,_], domain : Domain1[K]) =
-      from.newBuilder(domain).asInstanceOf[TensorBuilder[K,V,Counter[K,V]]];
+  : CanBuildTensorFrom[Ctr[_,_], Domain1[K], K, V, mutable.Counter[K,V]]
+  = new CanBuildTensorFrom[Ctr[_,_], Domain1[K], K, V, mutable.Counter[K,V]] {
+    override def apply(from : Ctr[_,_], domain : Domain1[K]) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[K,V,mutable.Counter[K,V]]];
   }
   
   implicit def canBuildDenseVectorColFromDenseTensor[V:Scalar]
