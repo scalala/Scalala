@@ -22,7 +22,10 @@ package tensor;
 package generic;
 
 import domain.CanGetDomain;
-import scalala.generic.collection._;
+import scalala.generic.collection._
+import scala.collection.generic.CanBuildFrom
+import operators.HasValuesMonadic
+;
 
 /**
  * For comprehensions on pairs of values from an underlying tensor.  This
@@ -75,6 +78,16 @@ object TensorMonadic {
     
     def withFilter(q : ((K,V)) => Boolean) =
       new Filtered[K,V,This](repr, tup => p(tup) && q(tup));
+
+     /** Calls repr.mapPairs. */
+    def map[O,That](fn : ((K,V)) => O)
+                   (implicit bf : CanBuildFrom[Iterable[(K,V)],O,That]) : That = {
+      val b = bf();
+      repr.foreachPair( (k,v) =>
+        if(p(k -> v)) b += fn(k->v)
+      )
+      b.result;
+    }
   }
   
   implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorMonadic[K,V,T]) = {
