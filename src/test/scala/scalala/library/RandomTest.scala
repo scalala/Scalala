@@ -39,8 +39,8 @@ class RandomTest extends FunSuite with Checkers {
     val X     = randn(mu, Sigma, 50000)(mt)
 
     val (chkSigma, chkMu) = covariance(X)
-    assert(chkMu forall ( (i,v) => math.abs(v-mu(i)) < 1e-1 ))
-    assert(chkSigma forall ( (idx,v) => math.abs(v-Sigma(idx)) < 1e-1 ))
+    assert(chkMu forallPairs ( (i,v) => math.abs(v-mu(i)) < 1e-1 ))
+    assert(chkSigma forallPairs ( (idx,v) => math.abs(v-Sigma(idx)) < 1e-1 ))
   }
 }
 

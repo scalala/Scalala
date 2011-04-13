@@ -46,6 +46,10 @@ extends TensorLike[K,V,D,This] {
   
   override val scalar = inner.scalar;
 
+  override def size = inner.size;
+  
+  override def nonzeroSize = inner.nonzeroSize;
+
   override def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK])
   : TensorBuilder[NK,NV,Tensor[NK,NV]] =
     inner.newBuilder[NK,NV](domain);
@@ -65,17 +69,17 @@ extends TensorLike[K,V,D,This] {
   override def foreachNonZeroValue[U](fn : (V=>U)) =
     inner.foreachNonZeroValue(fn);
     
-  override def forall(fn : (K,V) => Boolean) : Boolean =
-    inner.forall(fn);
+  override def forallPairs(fn : (K,V) => Boolean) : Boolean =
+    inner.forallPairs(fn);
 
-  override def forallNonZero(fn : (K,V) => Boolean) : Boolean =
-    inner.forallNonZero(fn);
+  override def forallNonZeroPairs(fn : (K,V) => Boolean) : Boolean =
+    inner.forallNonZeroPairs(fn);
 
-  override def forall(fn : V => Boolean) : Boolean =
-    inner.forall(fn);
+  override def forallValues(fn : V => Boolean) : Boolean =
+    inner.forallValues(fn);
  
-  override def forallNonZero(fn : V => Boolean) : Boolean =
-    inner.forallNonZero(fn);
+  override def forallNonZeroValues(fn : V => Boolean) : Boolean =
+    inner.forallNonZeroValues(fn);
 
   override def pairsIterator : Iterator[(K,V)] =
     inner.pairsIterator;

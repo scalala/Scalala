@@ -36,9 +36,9 @@ import scalala.operators._;
  */
 @serializable
 @SerialVersionUID(1)
-trait SparseVector[@specialized(Int,Long,Float,Double) B]
-extends SparseArrayTensor[Int,B] with SparseArrayTensorLike[Int,B,IndexDomain,SparseVector[B]]
-with mutable.Vector[B] with mutable.VectorLike[B,SparseVector[B]] {
+trait SparseVector[@specialized(Int,Long,Float,Double) V]
+extends SparseArrayTensor[Int,V] with SparseArrayTensorLike[Int,V,IndexDomain,SparseVector[V]]
+with mutable.Vector[V] with mutable.VectorLike[V,SparseVector[V]] {
   override def size = data.length;
 
   override val domain = IndexDomain(data.length);
@@ -46,35 +46,40 @@ with mutable.Vector[B] with mutable.VectorLike[B,SparseVector[B]] {
   override def apply(key : Int) =
     data(key);
 
-  override def update(key : Int, value : B) =
+  override def update(key : Int, value : V) =
     data(key) = value;
 
-  override def foreachNonZeroPair[U](fn : ((Int,B)=>U)) = {
-    data.foreachActive(fn);
+  override def foreachNonZeroPair[U](fn : ((Int,V)=>U)) = {
+    data.foreachActivePair(fn);
     data.activeLength == data.length;
   }
 
-  override def foreachNonZeroValue[U](fn : (B=>U)) = {
-    data.foreachActive(fn);
+  override def foreachNonZeroKey[U](fn : (Int=>U)) = {
+    data.foreachActiveKey(fn);
+    data.activeLength == data.length;
+  }
+
+  override def foreachNonZeroValue[U](fn : (V=>U)) = {
+    data.foreachActiveValue(fn);
     data.activeLength == data.length;
   }
 }
 
 object SparseVector {
   /** Creates a sparse vector literal. */
-  def apply[B:Scalar:ClassManifest:DefaultArrayValue](values : B*) =
+  def apply[V:Scalar:ClassManifest:DefaultArrayValue](values : V*) =
     new SparseVectorCol(SparseArray(values :_*))
 
   /** Returns a vector of zeros of the given size. */
-  def zeros[B:Scalar:ClassManifest:DefaultArrayValue](size : Int) =
+  def zeros[V:Scalar:ClassManifest:DefaultArrayValue](size : Int) =
     create(size)();
 
   /** Creates a sparse vector of the given size with given initial values. */
-  def create[B:Scalar:ClassManifest:DefaultArrayValue](size : Int)(values : (Int,B)*) =
+  def create[V:Scalar:ClassManifest:DefaultArrayValue](size : Int)(values : (Int,V)*) =
     new SparseVectorCol(SparseArray.create(size)(values :_*));
 
   /** Tabulate a vector with the value at each offset given by the function. */
-  def tabulate[B:Scalar:ClassManifest:DefaultArrayValue](size : Int)(f : (Int => B)) =
+  def tabulate[V:Scalar:ClassManifest:DefaultArrayValue](size : Int)(f : (Int => V)) =
     new SparseVectorCol(SparseArray.tabulate(size)(f));
 }
 

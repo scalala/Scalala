@@ -48,11 +48,6 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
   /** Gap between successive elements in data array. */
   val stride : Int;
   
-  /** Number of elements in array. */
-  val length : Int;
-
-  override def size = length;
-
   override def domain = IndexDomain(length);
 
   override def apply(key : Int) =

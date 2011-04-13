@@ -70,7 +70,7 @@ object CanFilterValues {
 
     def filterNonZero(from : SparseArray[V], fn : (V=>Boolean)) = {
       val rv = new SparseArray[V](from.length, from.activeLength);
-      from.foreachActive((k,v) => if (fn(v)) { rv(k) = v; });
+      from.foreachActivePair((k,v) => if (fn(v)) { rv(k) = v; });
       rv.compact;
       rv;
     }

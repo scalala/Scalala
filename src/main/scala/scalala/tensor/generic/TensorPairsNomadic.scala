@@ -25,7 +25,6 @@ import domain.CanGetDomain;
 import scalala.generic.collection._
 import scala.collection.generic.CanBuildFrom
 import operators.HasValuesMonadic
-;
 
 /**
  * For comprehensions on pairs of values from an underlying tensor.  This
@@ -43,6 +42,10 @@ trait TensorPairsMonadic
   /** Calls repr.foreachPair. */
   def foreach[U](fn : ((K,V)) => U) =
     repr.foreachPair((k,v) => fn((k,v)));
+
+  /** Calls repr.size. */
+  def size =
+    repr.size;
   
   /** Calls repr.mapPairs. */
   def map[TT>:This,O,That](fn : ((K,V)) => O)

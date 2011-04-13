@@ -84,6 +84,14 @@ self =>
   // Collection contents
   //
 
+  /** The size of this collection. */
+  def size =
+    domain.size;
+  
+  /** An upper bound on the number of non zero values in this collection. */
+  def nonzeroSize =
+    size;
+
   /**
    * Returns the pairs of (K,V) that make up this tensor for use in
    * for comprehensions.  The returned object can be viewed as a 
@@ -166,25 +174,25 @@ self =>
   }
 
   /** Returns true if and only if the given predicate is true for all elements. */
-  def forall(fn : (K,V) => Boolean) : Boolean = {
+  def forallPairs(fn : (K,V) => Boolean) : Boolean = {
     foreachPair((k,v) => if (!fn(k,v)) return false);
     return true;
   }
 
   /** Returns true if and only if the given predicate is true for all elements. */
-  def forall(fn : V => Boolean) : Boolean = {
+  def forallValues(fn : V => Boolean) : Boolean = {
     foreachValue(v => if (!fn(v)) return false);
     return true;
   }
 
   /** Returns true if and only if the given predicate is true for all non-zero elements. */
-  def forallNonZero(fn : (K,V) => Boolean) : Boolean = {
+  def forallNonZeroPairs(fn : (K,V) => Boolean) : Boolean = {
     foreachNonZeroPair((k,v) => if (!fn(k,v)) return false);
     return true;
   }
  
   /** Returns true if and only if the given predicate is true for all non-zero elements. */
-  def forallNonZero(fn : V => Boolean) : Boolean = {
+  def forallNonZeroValues(fn : V => Boolean) : Boolean = {
     foreachNonZeroValue(v => if (!fn(v)) return false);
     return true;
   }
@@ -255,45 +263,27 @@ self =>
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map.
    */
-  def join[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (V,V2) => RV)
-  (implicit bf : CanBuildTensorFrom[TT,D,K,RV,That],
-   jj : CanJoin[TT, Tensor[K,V2], K, V, V2])
-  : That = {
-    this.checkDomain(tensor.domain);
-    val builder = bf(repr.asInstanceOf[TT], (this.domain union tensor.domain).asInstanceOf[D]);
-    jj.joinAll(repr.asInstanceOf[TT], tensor, (k,v1,v2) => builder(k) = fn(v1,v2));
-    builder.result;
-  }
+  def join[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (K,V,V2) => RV)
+  (implicit jj : CanJoin[TT, Tensor[K,V2], K, V, V2]) : Unit =
+    jj.joinAll[RV](repr.asInstanceOf[TT], tensor, (k,v1,v2) => fn(k,v1,v2));
 
   /**
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map where keys in
    * both this and m are non-zero.
    */
-  def joinBothNonZero[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (V,V2) => RV)
-  (implicit bf : CanBuildTensorFrom[TT,D,K,RV,That],
-   jj : CanJoin[TT, Tensor[K,V2], K, V, V2])
-  : That = {
-    this.checkDomain(tensor.domain);
-    val builder = bf(repr.asInstanceOf[TT], (this.domain union tensor.domain).asInstanceOf[D]);
-    jj.joinBothNonZero(repr.asInstanceOf[TT], tensor, (k,v1,v2) => builder(k) = fn(v1,v2));
-    builder.result;
-  }
+  def joinBothNonZero[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (K,V,V2) => RV)
+  (implicit jj : CanJoin[TT, Tensor[K,V2], K, V, V2]) : Unit =
+    jj.joinBothNonZero[RV](repr.asInstanceOf[TT], tensor, (k,v1,v2) => fn(k,v1,v2));
 
   /**
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map where keys in
    * either this or m are non-zero.
    */
-  def joinEitherNonZero[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (V,V2) => RV)
-  (implicit bf : CanBuildTensorFrom[TT,D,K,RV,That],
-   jj : CanJoin[TT, Tensor[K,V2], K, V, V2])
-  : That = {
-    this.checkDomain(tensor.domain);
-    val builder = bf(repr.asInstanceOf[TT], (this.domain union tensor.domain).asInstanceOf[D]);
-    jj.joinEitherNonZero(repr.asInstanceOf[TT], tensor, (k,v1,v2) => builder(k) = fn(v1,v2));
-    builder.result;
-  }
+  def joinEitherNonZero[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (K,V,V2) => RV)
+  (implicit jj : CanJoin[TT, Tensor[K,V2], K, V, V2]) : Unit =
+    jj.joinEitherNonZero[RV](repr.asInstanceOf[TT], tensor, (k,v1,v2) => fn(k,v1,v2));
 
   //
   // Slice construction
@@ -468,7 +458,8 @@ self =>
       (that canEqual this) &&
       (this.domain == that.domain) &&
       ({ val casted = that.asInstanceOf[Tensor[K,V]];
-         this.forall((k,v) => casted(k) == v) });
+         this.joinEitherNonZero(casted) { (k,v1,v2) => if (v1 != v2) return false; }
+         true; });
     case _ => false;
   }
 
@@ -573,20 +564,28 @@ object Tensor {
         if (aV != aZ) fn(k, aV, b(k));
       });
       b.foreachNonZeroPair((k,bV) => {
-        if (bV != bZ) fn(k, a(k), bV);
+        val aV = a(k);
+        if (bV != bZ && aV == aZ) fn(k, aV, bV);
       });
     }
 
-    // TODO: call foreachNonZeroPair on the smaller collection
     override def joinBothNonZero[RV](_a : A, _b : B, fn : (K,V1,V2)=>RV) = {
       val a = viewA(_a);
       val b = viewB(_b);
-      val bZ = b.scalar.zero;
       a.checkDomain(b.domain);
-      a.foreachNonZeroPair((k,aV) => {
-        val bV = b(k);
-        if (bV != bZ) fn(k, aV, bV);
-      });
+      if (a.nonzeroSize <= b.nonzeroSize) {
+        val bZ = b.scalar.zero;
+        a.foreachNonZeroPair((k,aV) => {
+          val bV = b(k);
+          if (bV != bZ) fn(k, aV, bV);
+        });
+      } else {
+        val aZ = a.scalar.zero;
+        b.foreachNonZeroPair((k,bV) => {
+          val aV = a(k);
+          if (aV != aZ) fn(k, aV, bV);
+        });
+      }
     }
   }
 
@@ -655,7 +654,6 @@ object Tensor {
     }
   }
   
-  // TODO: call foreachNonZeroPair on the smaller collection
   implicit def opTensorInnerProduct[K,V1,V2,A,B,RV]
   (implicit viewA : A=>Tensor[K,V1], viewB: B=>Tensor[K,V2],
    mul : BinaryOp[V1,V2,OpMul,RV], add : BinaryOp[RV,RV,OpAdd,RV],
@@ -663,10 +661,14 @@ object Tensor {
   : BinaryOp[A,B,OpMulInner,RV]
   = new BinaryOp[A,B,OpMulInner,RV] {
     override def opType = OpMulInner;
-    override def apply(t1: A, t2: B) = {
-      t1.checkDomain(t2.domain);
+    override def apply(a: A, b: B) = {
+      a.checkDomain(b.domain);
       var sum = s.zero;
-      t1.foreachNonZeroPair((k,v) => sum = add(sum, mul(v, t2(k))));
+      if (a.nonzeroSize <= b.nonzeroSize) {
+        a.foreachNonZeroPair((k,aV) => sum = add(sum, mul(aV, b(k))));
+      } else {
+        b.foreachNonZeroPair((k,bV) => sum = add(sum, mul(a(k), bV)));
+      }
       sum;
     }
   }

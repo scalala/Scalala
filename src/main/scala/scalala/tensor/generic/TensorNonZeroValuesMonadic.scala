@@ -41,6 +41,10 @@ trait TensorNonZeroValuesMonadic
   def foreach[U](fn : V => U) =
     repr.foreachNonZeroValue(fn);
 
+  /** Calls repr.nonzeroSize. */
+  def size =
+    repr.nonzeroSize;
+
   /** Calls repr.mapValues. */
   override def map[TT>:This,O,That](fn : V => O)
   (implicit bf : CanMapValues[TT, V, O, That]) : That =
@@ -57,23 +61,6 @@ trait TensorNonZeroValuesMonadic
   /** Constructs a filtered view of this tensor. */
   def withFilter(p : V => Boolean) =
     new TensorNonZeroValuesMonadic.Filtered[K,V,This](repr, p);
-
-  /** Proxy for iterator.reduceLeft */
-  def reduceLeft[B >: V](op: (B, V) => B): B =
-    iterator.reduceLeft(op)
-
-  /** Proxy for iterator.reduceRight */
-  def reduceRight[B >: V](op: (V, B) => B): B =
-    iterator.reduceRight(op)
-
-  /** Proxy for iterator.foldLeft */
-  def foldLeft[B](initialValue: B)(op: (B, V) => B): B =
-    iterator.foldLeft(initialValue)(op)
-
-  /** Proxy for iterator.foldRight */
-  def foldRight[B](initialValue: B)(op: (V, B) => B): B =
-    iterator.foldRight(initialValue)(op)
-
 }
 
 object TensorNonZeroValuesMonadic {

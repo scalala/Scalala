@@ -36,8 +36,7 @@ trait CounterLike
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V,
  +M<:scala.collection.Map[K,V],
  +This<:Counter[K,V]]
-extends Tensor1Like[K,V,SetDomain[K],This]
-with TensorPairsMonadic[K,V,This] { self =>
+extends Tensor1Like[K,V,SetDomain[K],This] { self =>
 
   override def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK])
   : TensorBuilder[NK,NV,Tensor[NK,NV]] = domain match {
@@ -58,20 +57,6 @@ with TensorPairsMonadic[K,V,This] { self =>
   override def checkKey(k : K) = ();
   
   override def checkDomain(d : scalala.tensor.domain.Domain[K]) = ();
-
-  //
-  // non-tupled monadic
-  //
-
-  def foreach[U](fn : (K,V)=>U) : Unit =
-    foreachPair(fn);
-
-  def foreachNonZero[U](fn : (K,V)=>U) : Unit =
-    foreachNonZeroPair(fn);
-  
-  def map[TT>:This,RV,That](fn : (K,V)=>RV)
-  (implicit bf : CanMapKeyValuePairs[TT, K, V, RV, That]) : That =
-    mapPairs[TT,RV,That](fn)(bf);
     
   //
   // faster implementations

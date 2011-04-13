@@ -93,8 +93,8 @@ class LibraryTest extends FunSuite with Checkers {
     val X = Matrix((9,5,14,4),(2,-12,8,-5),(8,-6,-8,11))
     val meanV = Vector(6.3333, -4.3333, 4.6666, 3.3333)
     val meanH = Vector(8., -1.75, 1.25)
-    assert(mean(X, Axis.Horizontal) forall ((i, v) => math.abs(v-meanH(i)) < 1e-4))
-    assert(mean(X, Axis.Vertical) forall ((i, v) => math.abs(v-meanV(i)) < 1e-4))
+    assert(mean(X, Axis.Horizontal) forallPairs ((i, v) => math.abs(v-meanH(i)) < 1e-4))
+    assert(mean(X, Axis.Vertical) forallPairs ((i, v) => math.abs(v-meanV(i)) < 1e-4))
   }
 
   test("Matrix:Covariance") {
@@ -104,8 +104,8 @@ class LibraryTest extends FunSuite with Checkers {
                        ( 35.3333, 74.9166,  -7.4166),
                        (-22.0000, -7.4166,  92.9166))
     val (chkSigma, chkMu) = covariance(X)
-    assert(chkMu forall ((i, v) => math.abs(v-mu(i)) < 1e-4))
-    assert(chkSigma forall ((idx, v) => math.abs(v-Sigma(idx)) < 1e-4))
+    assert(chkMu forallPairs ((i, v) => math.abs(v-mu(i)) < 1e-4))
+    assert(chkSigma forallPairs ((idx, v) => math.abs(v-Sigma(idx)) < 1e-4))
   }
 }
 

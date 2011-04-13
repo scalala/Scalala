@@ -40,6 +40,10 @@ trait TensorKeysMonadic
   def foreach[U](fn : K => U) =
     repr.foreachKey(fn);
 
+  /** Calls repr.size. */
+  def size =
+    repr.size;
+
   /** Calls repr.keysIterator. */
   def iterator =
     repr.keysIterator;

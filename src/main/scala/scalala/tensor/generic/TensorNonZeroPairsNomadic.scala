@@ -40,6 +40,10 @@ trait TensorNonZeroPairsMonadic
   /** Calls repr.foreachPair. */
   def foreach[U](fn : ((K,V)) => U) =
     repr.foreachNonZeroPair((k,v) => fn((k,v)));
+
+  /** Calls repr.nonzeroSize. */
+  def size =
+    repr.nonzeroSize;
   
   /** Calls repr.mapPairs. */
   def map[TT>:This,O,That](fn : ((K,V)) => O)

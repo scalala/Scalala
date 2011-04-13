@@ -38,6 +38,9 @@ trait SparseArrayTensorLike
 extends mutable.TensorLike[A,B,D,This] {
   def data : SparseArray[B];
 
+  override def nonzeroSize =
+    data.activeLength;
+
   /** Assigns the given value to all elements of this map. */
   def :=(value : B) = {
     if (value == data.default) {

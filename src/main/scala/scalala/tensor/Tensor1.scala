@@ -39,7 +39,7 @@ trait Tensor1Like
 extends TensorLike[K,V,D,This] { self =>
 
   /** Returns the number of elements in the domain of this vector. */
-  def size = domain.size;
+  def length = size;
 
   /** Returns the k-norm of this tensor. */
   def norm(n : Double) : Double = {

@@ -40,6 +40,10 @@ trait TensorNonZeroKeysMonadic
   def foreach[U](fn : K => U) =
     repr.foreachNonZeroKey(fn);
 
+  /** Calls repr.nonzeroSize. */
+  def size =
+    repr.nonzeroSize;
+
   /** Calls repr.keysIterator. */
   def iterator =
     repr.keysIteratorNonZero;

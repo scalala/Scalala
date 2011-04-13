@@ -38,6 +38,10 @@ trait TensorNonZeroMonadic
 
   /** Underlying tensor. */
   def repr : This;
+
+  /** Calls repr.nonzeroSize. */
+  def size =
+    repr.nonzeroSize;
     
   /** Gets a Monadic for the nonzero pairs. */
   def pairs : TensorNonZeroPairsMonadic[K,V,This] =

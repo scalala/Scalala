@@ -75,7 +75,7 @@ object CanMapValues {
 
     def mapNonZero(from : SparseArray[V], fn : (V => RV)) = {
       val rv = new SparseArray[RV](from.length, from.activeLength);
-      from.foreachActive((k,v) => rv(k) = fn(v));
+      from.foreachActivePair((k,v) => rv(k) = fn(v));
       rv;
     }
   }

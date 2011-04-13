@@ -442,7 +442,7 @@ final class SparseArray[@specialized T]
   }
 
   /** Applies the given function to each non-default element. */
-  def foreachActive[U](f: ((Int,T) => U)) {
+  def foreachActivePair[U](f: ((Int,T) => U)) {
     var i = 0;
     while(i < used) {
       f(index(i), data(i));
@@ -451,10 +451,19 @@ final class SparseArray[@specialized T]
   }
 
   /** Applies the given function to each non-default element. */
-  def foreachActive[U](f: T => U) {
+  def foreachActiveValue[U](f: T => U) {
     var i = 0;
     while(i < used) {
       f(data(i));
+      i += 1;
+    }
+  }
+
+  /** Applies the given function to each non-default element. */
+  def foreachActiveKey[U](f: Int => U) {
+    var i = 0;
+    while(i < used) {
+      f(index(i));
       i += 1;
     }
   }
