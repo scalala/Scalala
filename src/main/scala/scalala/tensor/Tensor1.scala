@@ -23,9 +23,10 @@ package tensor;
 import domain._;
 import generic.TensorBuilder;
 
+import operators.{InnerProduct, BinaryOp, OpAdd, OpMul}
 import scalala.scalar.Scalar;
 import scalala.generic.collection._;
-import scalala.operators.{BinaryOp,OpAdd,OpMul};
+
 
 /**
  * Implementation trait for a one-axis tensor supports methods like norm
@@ -62,14 +63,6 @@ extends TensorLike[K,V,D,This] { self =>
     }
   }
 
-  /** Returns the inner product of this tensor with another. */
-  def dot[C,R](that : Tensor1[K,C])(implicit mul : BinaryOp[V,C,OpMul,R], add : BinaryOp[R,R,OpAdd,R], scalar : Scalar[R]) : R = {
-    checkDomain(that.domain);
-    var sum = scalar.zero;
-    foreachNonZeroPair((k,v) => sum = add(sum, mul(v, that(k))));
-    sum;
-  }
-
   override protected def canEqual(other : Any) : Boolean = other match {
     case that : Tensor1[_,_] => true;
     case _ => false;
@@ -89,5 +82,17 @@ object Tensor1 {
   /** Constructs a tensor for the given domain. */
   def apply[K,V:Scalar](domain : Domain1[K]) : Tensor[K,V] =
     mutable.Tensor1.apply[K,V](domain);
+
+  implicit def tensor1InnerProduct[K,V1,V2,A,B,RV](implicit view : A=>Tensor1[K,V1], view2: B=>Tensor1[K,V2],
+                                                   mul : BinaryOp[V1,V2,OpMul,RV],
+                                                   add : BinaryOp[RV,RV,OpAdd,RV],
+                                                   s : Scalar[RV]) = new InnerProduct[A,B,RV] {
+      def apply(t1: A, t2: B) = {
+        t1.checkDomain(t2.domain);
+        var sum = s.zero;
+        t1.foreachNonZeroPair((k,v) => sum = add(sum, mul(v, t2(k))));
+        sum;
+      }
+  }
 }
 

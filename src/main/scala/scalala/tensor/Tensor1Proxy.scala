@@ -36,9 +36,6 @@ trait Tensor1ProxyLike
 extends TensorProxyLike[K,V,D,Inner,This] with Tensor1Like[K,V,D,This] {
   override def norm(n : Double) =
     inner.norm(n);
-
-  override def dot[C,R](that : Tensor1[K,C])(implicit mul : BinaryOp[V,C,OpMul,R], add : BinaryOp[R,R,OpAdd,R], scalar : Scalar[R]) : R =
-    inner.dot(that);
 }
 
 /**
