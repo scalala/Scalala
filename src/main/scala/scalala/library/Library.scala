@@ -143,9 +143,9 @@ trait Library {
    * logs and then logNormalizes the argument such that the softmax is 0.0.
    * Returns value if value's softmax is -infinity
    */
-  def logAndNormalize[V,V2,K](value: V)(implicit canLog : CanLog[V,V2],
-                                        view: V2 <:< NumericOps[V2], sm: CanSoftmax[V2],
-                                        op : BinaryOp[V2,Double,OpSub,V2]):V2 = {
+  def logAndNormalize[V,K](value: V)(implicit canLog : CanLog[V,V],
+                                     view: V <:< NumericOps[V], sm: CanSoftmax[V],
+                                     op : BinaryOp[V,Double,OpSub,V]):V = {
     logNormalize(log(value))
   }
 
