@@ -80,6 +80,10 @@ trait Library {
   def exp[V,That](value : V)(implicit exp : CanExp[V,That]) : That =
     exp(value);
 
+    /** Take the log of the given value. */
+  def abs[V,That](value : V)(implicit abs : CanAbs[V,That]) : That =
+    abs(value);
+
   /** Take the n-norm of the given values. */
   def mean[V,That](value : V)(implicit mean : CanMean[V,That]) : That =
     mean(value);
