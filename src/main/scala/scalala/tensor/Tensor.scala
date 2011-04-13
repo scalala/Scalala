@@ -63,16 +63,16 @@ self =>
    * Returns a builder for constructing new instances like this one,
    * on the given domain.
    */
-  def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK])
+  def newBuilder[NK,NV](domain : IterableDomain[NK])(implicit scalar : Scalar[NV])
   : TensorBuilder[NK,NV,Tensor[NK,NV]] = domain match {
     case that : IndexDomain =>
-      mutable.Vector(that)(implicitly[Scalar[NV]]).asBuilder;
+      mutable.Vector[NV](that)(scalar).asBuilder;
     case that : Domain1[_] =>
-      mutable.Tensor1(that)(implicitly[Scalar[NV]]).asBuilder;
+      mutable.Tensor1[NK,NV](that.asInstanceOf[Domain1[NK]])(scalar).asBuilder;
     case that : TableDomain =>
-      mutable.Matrix(that)(implicitly[Scalar[NV]]).asBuilder;
+      mutable.Matrix[NV](that)(scalar).asBuilder;
     case that : Domain2[_,_] =>
-      mutable.Tensor2(that)(implicitly[Scalar[NV]]).asBuilder;
+      mutable.Tensor2[Any,Any,NV](that.asInstanceOf[Domain2[Any,Any]])(scalar).asBuilder.asInstanceOf[TensorBuilder[NK,NV,Tensor[NK,NV]]];
       // TODO: add this in when we have a mutable.TensorN
 //    case that : ProductNDomain[_] =>
 //      mutable.TensorN(that)(implicitly[Scalar[NV]]).asBuilder;
@@ -119,7 +119,7 @@ self =>
    * Applies the given function to each key and its corresponding value.
    */
   def foreachPair[U](fn: (K,V) => U) : Unit =
-    foreachKey(k => fn(k,apply(k)));
+    foreachKey[U](k => fn(k,apply(k)));
 
   /**
    * Applies the given function to each key and its corresponding value
@@ -128,13 +128,13 @@ self =>
    * @return true if all elements in the tensor were visited.
    */
   def foreachNonZeroPair[U](fn : ((K,V)=>U)) : Boolean = {
-    this.foreachPair(fn);
+    this.foreachPair[U](fn);
     true;
   }
 
   /** Applies the given function to each key in the tensor. */
   def foreachKey[U](fn: K => U) : Unit =
-    for (k <- domain) fn(k);
+    domain.foreach[U](fn);
 
   /**
    * Applies the given function to each key if its corresponding value
@@ -143,7 +143,7 @@ self =>
    * @return true if all keys in the tensor were visisted.
    */
   def foreachNonZeroKey[U](fn : K => U) : Boolean = {
-    this.foreachKey(fn);
+    this.foreachKey[U](fn);
     true;
   }
 
@@ -152,7 +152,7 @@ self =>
    * each element of the domain, including zeros).
    */
   def foreachValue[U](fn : (V=>U)) =
-    foreachKey(k => fn(apply(k)));
+    foreachKey[U](k => fn(apply(k)));
 
   /**
    * Applies the given function to every non-zero value in the map
@@ -161,7 +161,7 @@ self =>
    * @return true if all elements in the map were visited.
    */
   def foreachNonZeroValue[U](fn : (V=>U)) = {
-    this.foreachValue(fn);
+    this.foreachValue[U](fn);
     true;
   }
 
@@ -256,8 +256,14 @@ self =>
    * function to create each return value in the map.
    */
   def join[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (V,V2) => RV)
-  (implicit bf : CanJoinValues[TT, Tensor[K,V2], V, V2, RV, That]) : That =
-    bf.joinAll(repr.asInstanceOf[TT], tensor, fn);
+  (implicit bf : CanBuildTensorFrom[TT,D,K,RV,That],
+   jj : CanJoin[TT, Tensor[K,V2], K, V, V2])
+  : That = {
+    this.checkDomain(tensor.domain);
+    val builder = bf(repr.asInstanceOf[TT], (this.domain union tensor.domain).asInstanceOf[D]);
+    jj.joinAll(repr.asInstanceOf[TT], tensor, (k,v1,v2) => builder(k) = fn(v1,v2));
+    builder.result;
+  }
 
   /**
    * Creates a new Tensor over the same domain using the given value
@@ -265,8 +271,14 @@ self =>
    * both this and m are non-zero.
    */
   def joinBothNonZero[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (V,V2) => RV)
-  (implicit bf : CanJoinValues[TT, Tensor[K,V2], V, V2, RV, That]) : That =
-    bf.joinBothNonZero(repr.asInstanceOf[TT], tensor, fn);
+  (implicit bf : CanBuildTensorFrom[TT,D,K,RV,That],
+   jj : CanJoin[TT, Tensor[K,V2], K, V, V2])
+  : That = {
+    this.checkDomain(tensor.domain);
+    val builder = bf(repr.asInstanceOf[TT], (this.domain union tensor.domain).asInstanceOf[D]);
+    jj.joinBothNonZero(repr.asInstanceOf[TT], tensor, (k,v1,v2) => builder(k) = fn(v1,v2));
+    builder.result;
+  }
 
   /**
    * Creates a new Tensor over the same domain using the given value
@@ -274,8 +286,14 @@ self =>
    * either this or m are non-zero.
    */
   def joinEitherNonZero[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (V,V2) => RV)
-  (implicit bf : CanJoinValues[TT, Tensor[K,V2], V, V2, RV, That]) : That =
-    bf.joinEitherNonZero(repr.asInstanceOf[TT], tensor, fn);
+  (implicit bf : CanBuildTensorFrom[TT,D,K,RV,That],
+   jj : CanJoin[TT, Tensor[K,V2], K, V, V2])
+  : That = {
+    this.checkDomain(tensor.domain);
+    val builder = bf(repr.asInstanceOf[TT], (this.domain union tensor.domain).asInstanceOf[D]);
+    jj.joinEitherNonZero(repr.asInstanceOf[TT], tensor, (k,v1,v2) => builder(k) = fn(v1,v2));
+    builder.result;
+  }
 
   //
   // Slice construction
@@ -302,12 +320,12 @@ self =>
   /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : (I,K)*)
   (implicit bf : CanSliceTensor[This, K, I, That]) : That =
-    apply(keys.toMap);
+    apply[I,That](keys.toMap[I,K](Predef.conforms[(I, K)]));
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : TraversableOnce[(I,K)])
   (implicit bf : CanSliceTensor[This, K, I, That]) : That =
-    apply(keys.toMap);
+    apply[I,That](keys.toMap[I,K](Predef.conforms[(I, K)]));
 
   /** Creates a view for the given elements with new indexes I, backed by this map. */
   def apply[I,That](keys : scala.collection.Map[I,K])
@@ -332,7 +350,7 @@ self =>
    * written-through to the underlying map.
    */
   def sorted[That](implicit bf : CanSliceVector[This, K, That], ord : Ordering[V]) : That =
-    this.apply(this.argsort);
+    this.apply[That](this.argsort);
 
 
   //
@@ -534,37 +552,41 @@ object Tensor {
     }
   }
 
-  implicit def canJoin[K, V1, V2, RV, This, D, That]
-  (implicit view : This=>Tensor[K,V1], d : CanGetDomain[This,D],
-   bf : CanBuildTensorFrom[This, D, K, RV, That],
-   s : Scalar[RV])
-  : CanJoinValues[This, Tensor[K,V2], V1, V2, RV, That] =
-  new CanJoinValues[This, Tensor[K,V2], V1, V2, RV, That] {
-    override def joinAll(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+  implicit def canJoin[K, V1, V2, A, B]
+  (implicit viewA : A=>Tensor[K,V1], viewB : B=>Tensor[K,V2])
+  : CanJoin[A, B, K, V1, V2] =
+  new CanJoin[A, B, K, V1, V2] {
+    override def joinAll[RV](_a : A, _b : B, fn : (K,V1,V2)=>RV) = {
+      val a = viewA(_a);
+      val b = viewB(_b);
       a.checkDomain(b.domain);
-      val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
-      a.foreachPair((k,aV) => builder(k) = fn(aV,b(k)));
-      builder.result;
+      a.foreachPair((k,aV) => fn(k,aV,b(k)));
     }
 
-    override def joinEitherNonZero(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+    override def joinEitherNonZero[RV](_a : A, _b : B, fn : (K,V1,V2)=>RV) = {
+      val a  = viewA(_a);
+      val b  = viewB(_b);
+      val aZ = a.scalar.zero;
+      val bZ = b.scalar.zero;
       a.checkDomain(b.domain);
-      val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
-      a.foreachNonZeroPair((k,aV) => builder(k) = fn(aV,b(k)));
-      b.foreachNonZeroPair((k,bV) => builder(k) = fn(a(k),bV));
-      builder.result;
+      a.foreachNonZeroPair((k,aV) => {
+        if (aV != aZ) fn(k, aV, b(k));
+      });
+      b.foreachNonZeroPair((k,bV) => {
+        if (bV != bZ) fn(k, a(k), bV);
+      });
     }
 
     // TODO: call foreachNonZeroPair on the smaller collection
-    override def joinBothNonZero(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
+    override def joinBothNonZero[RV](_a : A, _b : B, fn : (K,V1,V2)=>RV) = {
+      val a = viewA(_a);
+      val b = viewB(_b);
+      val bZ = b.scalar.zero;
       a.checkDomain(b.domain);
-      val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
-      a.foreachNonZeroPair { (k,aV) =>
+      a.foreachNonZeroPair((k,aV) => {
         val bV = b(k);
-        if (bV != 0.0)
-          builder(k) = fn(aV,bV)
-      };
-      builder.result;
+        if (bV != bZ) fn(k, aV, bV);
+      });
     }
   }
 
@@ -581,18 +603,21 @@ object Tensor {
   implicit def opTensorTensor[K,V1,V2,Op<:OpType,RV,A,B,That]
   (implicit v1 : A=>Tensor[K,V1], v2 : B=>Tensor[K,V2],
    op : BinaryOp[V1,V2,Op,RV],
-   bf : CanJoinValues[A,B,V1,V2,RV,That])
+   jj : CanJoin[A,B,K,V1,V2],
+   bf : CanBuildTensorForBinaryOp[A,B,Op,K,RV,That])
   : BinaryOp[A,B,Op,That]
   = new BinaryOp[A,B,Op,That] {
     override def opType = op.opType;
     override def apply(a : A, b : B) = {
+      val builder = bf(a,b);
       if (opType == OpMul) {
-        bf.joinBothNonZero(a,b, op);
+        jj.joinBothNonZero(a,b,(k,v1,v2) => builder(k) = op(v1,v2));
       } else if(opType == OpAdd || opType == OpSub) {
-        bf.joinEitherNonZero(a, b, op)
+        jj.joinEitherNonZero(a,b,(k,v1,v2) => builder(k) = op(v1,v2));
       } else {
-        bf.joinAll(a, b, op);
+        jj.joinAll(a,b,(k,v1,v2) => builder(k) = op(v1,v2));
       }
+      builder.result;
     }
   }
 

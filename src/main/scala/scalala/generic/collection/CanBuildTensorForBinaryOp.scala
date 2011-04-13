@@ -21,19 +21,28 @@ package scalala;
 package generic;
 package collection;
 
+import scalala.tensor.domain.CanGetDomain;
+import scalala.tensor.generic.TensorBuilder;
+import scalala.tensor.Tensor;
+
 /**
- * Builder trait for creating a view of two tensors by joining two underlying
- * tensors across their (identical) domains.
+ * Trait for building a new tensor from either A or B depending on the
+ * given Op.  Default to building tensor for left operand.
  *
  * @author dramage
  */
-trait CanJoinValues[Repr1, -Repr2, V1, V2, RV, +That] {
-  /** Joins on all keys in the domain. */
-  def joinAll(a : Repr1, b : Repr2, fn : (V1,V2)=>RV) : That;
-
-  /** Joins when both a and b are non-zero. */
-  def joinBothNonZero(a : Repr1, b : Repr2, fn : (V1,V2)=>RV) : That;
-
-  /** Joins when either a or b is non-zero. */
-  def joinEitherNonZero(a : Repr1, b : Repr2, fn : (V1,V2)=>RV) : That;
+trait CanBuildTensorForBinaryOp[-A, -B, Op, K, V, +To] {
+  def apply(a : A, b : B) : TensorBuilder[K,V,To];
 }
+
+object CanBuildTensorForBinaryOp {
+  implicit def canBuildTensorLeft[A,B,D,Op,K,V,To]
+  (implicit va : A=>Tensor[K,_],
+   df : CanGetDomain[A,D],
+   bf : CanBuildTensorFrom[A,D,K,V,To])
+  : CanBuildTensorForBinaryOp[A,B,Op,K,V,To]
+  = new CanBuildTensorForBinaryOp[A,B,Op,K,V,To] {
+    def apply(a : A, b : B)  = bf.apply(a, a.domain.asInstanceOf[D]);
+  }
+}
+

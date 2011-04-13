@@ -82,9 +82,9 @@ with operators.MutableNumericOps[Repr] { self =>
    * so that you can construct the appropriate return instance and then
    * call asBuilder to get a builder view of it.
    */
-  def asBuilder[RV>:Repr] : TensorBuilder[K,V,RV] = new TensorBuilder[K,V,RV] {
+  def asBuilder : TensorBuilder[K,V,Tensor[K,V]] = new TensorBuilder[K,V,Tensor[K,V]] {
     def update(k : K, v : V) = self(k) = v;
-    def result = self.asInstanceOf[RV];
+    def result = repr;
   }
 }
 

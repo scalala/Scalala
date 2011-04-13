@@ -141,45 +141,41 @@ object DenseVector extends DenseVectorConstructors {
   }
   
   /** Optimized base class for joining two dense tensors. */
-  trait CanJoinDenseVectors
-  [@specialized V1, @specialized V2, @specialized RV, DV[V]<:DenseVector[V]]
-  extends CanJoinValues[DV[V1], DV[V2], V1, V2, RV, DV[RV]] {
-    def create(length : Int) : DV[RV];
-
-    override def joinAll(a : DV[V1], b : DV[V2], fn : (V1,V2)=>RV) = {
+  class CanJoinDenseVectors[
+   @specialized(Int,Long,Float,Double) V1,
+   @specialized(Int,Long,Float,Double) V2,
+   DV[V]<:DenseVector[V]]
+  extends CanJoin[DV[V1], DV[V2], Int, V1, V2] {
+    override def joinAll[RV](a : DV[V1], b : DV[V2], fn : (Int,V1,V2)=>RV) = {
       // System.err.println("DENSE!");
       a.checkDomain(b.domain);
-      val rv = create(a.length);
       var i = 0;
       var k1 = a.offset;
       var k2 = b.offset;
       while (i < a.length) {
-        rv.data(i) = fn(a.data(k1), b.data(k2));
+        fn(i, a.data(k1), b.data(k2));
         i += 1;
         k1 += a.stride;
         k2 += b.stride;
       }
-      rv;
     }
-
-    override def joinEitherNonZero(a : DV[V1], b : DV[V2], fn : (V1,V2)=>RV) =
-      joinAll(a,b,fn);
     
-    override def joinBothNonZero(a : DV[V1], b : DV[V2], fn : (V1,V2)=>RV) =
+    override def joinBothNonZero[RV](a : DV[V1], b : DV[V2], fn : (Int,V1,V2)=>RV) =
+      joinAll(a,b,fn);
+
+    override def joinEitherNonZero[RV](a : DV[V1], b : DV[V2], fn : (Int,V1,V2)=>RV) =
       joinAll(a,b,fn);
   }
   
   /** Optimized base class for joining dense columns. */
-  implicit def canJoinDenseVectorCols
-  [@specialized V1, @specialized V2, @specialized RV:Scalar:Manifest]
-  : CanJoinDenseVectors[V1, V2, RV, DenseVectorCol] =
-  new GenericDenseVectorColBase[RV] with CanJoinDenseVectors[V1, V2, RV, DenseVectorCol];
+  implicit def canJoinDenseVectorCols[V1, V2]
+  : CanJoinDenseVectors[V1, V2, DenseVectorCol] =
+  new CanJoinDenseVectors[V1, V2, DenseVectorCol];
   
   /** Optimized base class for joining dense rows. */
-  implicit def canJoinDenseVectorRows
-  [@specialized V1, @specialized V2, @specialized RV:Scalar:Manifest]
-  : CanJoinDenseVectors[V1, V2, RV, DenseVectorRow] =
-  new GenericDenseVectorRowBase[RV] with CanJoinDenseVectors[V1, V2, RV, DenseVectorRow];
+  implicit def canJoinDenseVectorRows[V1, V2]
+  : CanJoinDenseVectors[V1, V2, DenseVectorRow] =
+  new CanJoinDenseVectors[V1, V2, DenseVectorRow];
 
   /** Optimized base class for mapping a dense tensor. */
   trait CanMapValuesDenseVector
@@ -299,11 +295,9 @@ object DenseVector extends DenseVectorConstructors {
   // Specialized objects for generic routines
   //
 
-  implicit object CanJoinDVCDDVCD extends GenericDenseVectorColBase[Double]
-  with CanJoinDenseVectors[Double,Double,Double,DenseVectorCol];
+  implicit object CanJoinDVCDDVCD extends CanJoinDenseVectors[Double,Double,DenseVectorCol];
 
-  implicit object CanJoinDVRDDVRD extends GenericDenseVectorRowBase[Double]
-  with CanJoinDenseVectors[Double,Double,Double,DenseVectorRow];
+  implicit object CanJoinDVRDDVRD extends CanJoinDenseVectors[Double,Double,DenseVectorRow];
 
   implicit object CanMapValuesDVCDDVCD extends GenericDenseVectorColBase[Double]
   with CanMapValuesDenseVector[Double,Double,DenseVectorCol];

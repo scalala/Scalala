@@ -55,17 +55,5 @@ object MatrixTranspose {
   (override val underlying : Coll)
   (implicit override val scalar : Scalar[B])
   extends MatrixTranspose[B,Coll];
-
-  implicit def canMapValues[V,RV](implicit c : CanMapValues[Matrix[V],V,RV,Matrix[RV]]) =
-    c.asInstanceOf[CanMapValues[MatrixTranspose[V,Matrix[V]],V,RV,Matrix[RV]]];
-
-  implicit def canKeyValuePairs[V,RV](implicit c : CanMapKeyValuePairs[Matrix[V],(Int,Int),V,RV,Matrix[RV]]) =
-    c.asInstanceOf[CanMapKeyValuePairs[MatrixTranspose[V,Matrix[V]],(Int,Int),V,RV,Matrix[RV]]];
-
-  implicit def canJoinValues[V1,V2,RV](implicit c : CanJoinValues[Matrix[V1],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]) =
-    c.asInstanceOf[CanJoinValues[MatrixTranspose[V1,Matrix[V1]],Tensor[(Int,Int),V2],V1,V2,RV,Matrix[RV]]];
-
-  implicit def binaryOp[V,B,Op<:OpType,That](implicit op : BinaryOp[Matrix[V],B,Op,That]) =
-    op.asInstanceOf[BinaryOp[MatrixTranspose[V,Matrix[V]],B,Op,That]];
 }
 
