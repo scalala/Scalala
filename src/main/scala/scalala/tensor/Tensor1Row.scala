@@ -66,13 +66,12 @@ object Tensor1Row {
   }
   
   implicit def canMulTensor1RowByCol[K,V1,V2,A,B,RV]
-  (implicit viewA : A => Tensor1Row[K,V1], viewB : B => Tensor1Col[K,V2],
-   mul : BinaryOp[V1,V2,OpMul,RV], add : BinaryOp[RV,RV,OpAdd,RV], scalar : Scalar[RV])
+  (implicit viewA : A=>Tensor1Row[K,V1], viewB : B=>Tensor1Col[K,V2],
+   dot : BinaryOp[A,B,OpMulInner,RV], scalar : Scalar[RV])
   : BinaryOp[A,B,OpMulRowVectorBy,RV]
   = new BinaryOp[A,B,OpMulRowVectorBy,RV] {
     override def opType = OpMulRowVectorBy;
-    override def apply(a : A, b : B) =
-      a dot b;
+    override def apply(a : A, b : B) = dot(a, b);
   }
 
   implicit def canMulTensor1RowByMatrix[K1,K2,V1,V2,Col,RV,ThisA,ThisB,D2<:Domain1[K2],That]

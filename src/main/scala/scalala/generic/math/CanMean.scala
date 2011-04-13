@@ -81,12 +81,6 @@ object CanMean { // extends LowPriorityCanMean {
     }
   }
 
-  implicit object TraversableMean extends CanMean[Traversable[Double],Double] {
-    def apply(values : Traversable[Double]) = {
-      values.sum / values.size;
-    }
-  }
-
   /** Computes the mean by starting with zero, adding into it, and dividing into it. */
   implicit def ZeroInto[V,RV](implicit zero : CanCreateZerosLike[V,RV],
    addInto : BinaryUpdateOp[RV,V,OpAdd], divInto : BinaryUpdateOp[RV,Int,OpDiv])

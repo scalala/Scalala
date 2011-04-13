@@ -23,14 +23,13 @@ package tensor;
 import domain._;
 import generic.TensorBuilder;
 
-import operators.{InnerProduct, BinaryOp, OpAdd, OpMul}
+import operators.{BinaryOp, OpAdd, OpMul}
 import scalala.scalar.Scalar;
 import scalala.generic.collection._;
 
 
 /**
- * Implementation trait for a one-axis tensor supports methods like norm
- * and inner products (dot) with other one-axis tensors.
+ * Implementation trait for a one-axis tensor supports methods like norm.
  *
  * @author dramage
  */
@@ -82,17 +81,5 @@ object Tensor1 {
   /** Constructs a tensor for the given domain. */
   def apply[K,V:Scalar](domain : Domain1[K]) : Tensor[K,V] =
     mutable.Tensor1.apply[K,V](domain);
-
-  implicit def tensor1InnerProduct[K,V1,V2,A,B,RV](implicit view : A=>Tensor1[K,V1], view2: B=>Tensor1[K,V2],
-                                                   mul : BinaryOp[V1,V2,OpMul,RV],
-                                                   add : BinaryOp[RV,RV,OpAdd,RV],
-                                                   s : Scalar[RV]) = new InnerProduct[A,B,RV] {
-      def apply(t1: A, t2: B) = {
-        t1.checkDomain(t2.domain);
-        var sum = s.zero;
-        t1.foreachNonZeroPair((k,v) => sum = add(sum, mul(v, t2(k))));
-        sum;
-      }
-  }
 }
 

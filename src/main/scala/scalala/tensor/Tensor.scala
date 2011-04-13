@@ -555,12 +555,13 @@ object Tensor {
       builder.result;
     }
 
+    // TODO: call foreachNonZeroPair on the smaller collection
     override def joinBothNonZero(a : This, b : Tensor[K,V2], fn : (V1,V2)=>RV) = {
       a.checkDomain(b.domain);
       val builder = bf(a, (a.domain union b.domain).asInstanceOf[D]);
       a.foreachNonZeroPair { (k,aV) =>
         val bV = b(k);
-        if(bV != 0.0)
+        if (bV != 0.0)
           builder(k) = fn(aV,bV)
       };
       builder.result;
@@ -626,6 +627,22 @@ object Tensor {
       } else {
         bf.map(b, v => op(a, v));
       }
+    }
+  }
+  
+  // TODO: call foreachNonZeroPair on the smaller collection
+  implicit def opTensorInnerProduct[K,V1,V2,A,B,RV]
+  (implicit viewA : A=>Tensor[K,V1], viewB: B=>Tensor[K,V2],
+   mul : BinaryOp[V1,V2,OpMul,RV], add : BinaryOp[RV,RV,OpAdd,RV],
+   compatible : CompatibleShape[A,B], s : Scalar[RV])
+  : BinaryOp[A,B,OpMulInner,RV]
+  = new BinaryOp[A,B,OpMulInner,RV] {
+    override def opType = OpMulInner;
+    override def apply(t1: A, t2: B) = {
+      t1.checkDomain(t2.domain);
+      var sum = s.zero;
+      t1.foreachNonZeroPair((k,v) => sum = add(sum, mul(v, t2(k))));
+      sum;
     }
   }
 }

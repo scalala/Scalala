@@ -59,7 +59,7 @@ trait NumericOps[+This] {
 
   def :!=[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpNe,That]) = op(repr,b);
 
-  def dot[TT>:This,B,That](b : B)(implicit op : InnerProduct[TT,B,That]) = op(repr,b);
+  def dot[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulInner,That]) = op(repr,b);
 
   //
   // Operator aliases

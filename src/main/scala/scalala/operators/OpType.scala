@@ -144,6 +144,14 @@ trait OpNeg extends OpType;
 object OpNeg extends OpNeg;
 
 /**
+ * Type marker for inner (dot) product of A and B.
+ *
+ * @author dramage
+ */
+trait OpMulInner extends OpType;
+object OpMulInner extends OpMulInner;
+
+/**
  * Type marker for BinaryOp A * B when A is a row.
  *
  * @author dramage
