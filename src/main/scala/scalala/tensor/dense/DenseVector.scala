@@ -27,7 +27,9 @@ import scalala.generic.collection._;
 import scalala.scalar.Scalar;
 import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
-import scalala.operators._;
+import scalala.operators._
+import java.util.Arrays
+;
 
 /**
  * A vector backed by a dense array.
@@ -243,6 +245,11 @@ object DenseVector extends DenseVectorConstructors {
     def apply(v1: DV[V]) = create(v1.length);
   }
 
+
+  implicit def canCreateZerosDenseVector[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanCreateZerosDenseVector[V, RV, DenseVector] =
+    new GenericDenseVectorColBase with CanCreateZerosDenseVector[V, RV, DenseVector];
+
     /** Optimized base class for mapping dense columns. */
   implicit def canCreateZerosDenseVectorCols[@specialized V, @specialized RV:Scalar:Manifest]
   : CanCreateZerosDenseVector[V, RV, DenseVectorCol] =
@@ -252,6 +259,26 @@ object DenseVector extends DenseVectorConstructors {
   implicit def canCreateZerosDenseVectorRows[@specialized V, @specialized RV:Scalar:Manifest]
   : CanCreateZerosDenseVector[V, RV, DenseVectorRow] =
   new GenericDenseVectorRowBase with CanCreateZerosDenseVector[V, RV, DenseVectorRow];
+
+
+  /** Optimized base class for copying zeros */
+  class CanCopyDenseVectorRow[@specialized V:Scalar:ClassManifest] extends CanCopy[DenseVectorRow[V]] {
+    def apply(v1: DenseVectorRow[V]) = {
+      new DenseVectorRow(Array.tabulate(v1.length)(i => v1(i)));
+    }
+  }
+
+  class CanCopyDenseVectorCol[@specialized V:Scalar:ClassManifest] extends CanCopy[DenseVectorCol[V]] {
+    def apply(v1: DenseVectorCol[V]) = {
+      new DenseVectorCol(Array.tabulate(v1.length)(i => v1(i)));
+    }
+  }
+
+    /** Optimized base class for mapping dense columns. */
+  implicit def canCopyDenseVectorCols[@specialized V:Scalar:Manifest] = new CanCopyDenseVectorCol[V];
+
+  /** Optimized base class for mapping dense rows. */
+  implicit def canCopyDenseVectorRows[@specialized V:Scalar:Manifest] = new CanCopyDenseVectorRow[V];
 
 
 
