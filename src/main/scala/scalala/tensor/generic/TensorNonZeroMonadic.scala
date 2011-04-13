@@ -38,27 +38,10 @@ trait TensorNonZeroMonadic
 
   /** Underlying tensor. */
   def repr : This;
-  
-  /** Calls repr.foreachPair. */
-  def foreach[U](fn : ((K,V)) => U) =
-    repr.foreachNonZeroPair((k,v) => fn((k,v)));
-  
-  /** Calls repr.mapPairs. */
-  def map[TT>:This,O,That](fn : ((K,V)) => O)
-  (implicit bf : CanMapKeyValuePairs[TT, K, V, O, That]) : That =
-    repr.mapNonZeroPairs((k,v) => fn((k,v)))(bf.asInstanceOf[CanMapKeyValuePairs[Tensor[K,V],K,V,O,That]]);
-
-  /** Calls repr.pairsIterator. */
-  def iterator =
-    repr.pairsIteratorNonZero;
-
-  /** Constructs a filtered view of this tensor. */
-  def filter(p : ((K,V)) => Boolean) =
-    withFilter(p);
-  
-  /** Constructs a filtered view of this tensor. */
-  def withFilter(p : ((K,V)) => Boolean) =
-    new TensorNonZeroMonadic.Filtered[K,V,This](repr, p);
+    
+  /** Gets a Monadic for the nonzero pairs. */
+  def pairs : TensorNonZeroPairsMonadic[K,V,This] =
+    new TensorNonZeroPairsMonadic[K,V,This] { override def repr = self.repr };
     
   /** Gets a Monadic for the nonzero keys. */
   def keys : TensorNonZeroKeysMonadic[K,V,This] =
@@ -67,36 +50,5 @@ trait TensorNonZeroMonadic
   /** Gets a Monadic for the nonzero values. */
   def values : TensorNonZeroValuesMonadic[K,V,This] =
     new TensorNonZeroValuesMonadic[K,V,This] { override def repr = self.repr };
-}
-
-object TensorNonZeroMonadic {
-  /** Filtered view of the pairs in a Tensor.  Does not support map. */
-  class Filtered
-  [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V, +This<:Tensor[K,V]]
-  (val repr : This, p : ((K,V))=>Boolean) {
-    def foreach[U](fn : ((K,V)) => U) =
-      repr.foreachNonZeroPair((k,v) => if (p((k,v))) fn((k,v)));
-    
-    def withFilter(q : ((K,V)) => Boolean) =
-      new Filtered[K,V,This](repr, tup => p(tup) && q(tup));
-  }
-  
-  implicit def asMap[K,V,T<:Tensor[K,V]](pairs : TensorNonZeroMonadic[K,V,T]) = {
-    new scala.collection.Map[K,V] {
-      def self = pairs.repr;
-      override def foreach[U](fn : ((K,V)) => U) = pairs.foreach(fn);
-      override def keysIterator = self.keysIteratorNonZero;
-      override def valuesIterator = self.valuesIteratorNonZero;
-      override def contains(key : K) = self.isDefinedAt(key);
-      override def apply(key : K) = self.apply(key);
-      override def iterator = self.pairsIteratorNonZero;
-      override def get(key : K) =
-        if (self.isDefinedAt(key)) Some(self.apply(key)) else None;
-      override def - (key : K) =
-        this.toMap.-(key);
-      override def + [V1>:V](kv : (K,V1)): scala.collection.Map[K,V1] =
-        this.toMap.+(kv);
-    }
-  }
 }
 

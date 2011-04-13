@@ -104,7 +104,7 @@ extends TensorLike[K,V,D,This] {
   override def apply(key : K) : V =
     inner(key);
 
-  override def argsort(implicit cm : Manifest[K], ord : Ordering[V]) : Array[K] =
+  override def argsort(implicit ord : Ordering[V]) : List[K] =
     inner.argsort;
 
   override def argmax : K =
@@ -136,7 +136,7 @@ extends TensorLike[K,V,D,This] {
 }
 
 /**
- * K proxy for a generic Tensor.
+ * Proxy for a generic Tensor.
  *
  * @author dramage
  */

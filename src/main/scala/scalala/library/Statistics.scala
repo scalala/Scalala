@@ -23,9 +23,7 @@ package library;
 import math._
 import Numerics._
 import operators.Implicits._
-import tensor.dense.{DenseVector, DenseMatrix}
-import generic.collection.{CanSliceCol, CanViewAsVector}
-import tensor.{VectorCol, ::, Matrix, Vector}
+import generic.collection.{CanViewAsVector}
 
 /**
  * Matlab-like statistical methods.
@@ -35,108 +33,6 @@ import tensor.{VectorCol, ::, Matrix, Vector}
 trait Statistics {
 
   private val sqrt2 = sqrt(2);
-
-  /**
-   * Numerically stable one-pass mean computation.
-   *
-   * From http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
-   */
-  def mean[X](data : TraversableOnce[X])(implicit xv : X=>Double) = {
-    var m = 0.0;
-    var k = 0;
-    for (x <- data) {
-      k += 1;
-      m += (x - m) / k;
-    }
-    m;
-  }
-
-  object Axis extends Enumeration {
-    val Horizontal, Vertical = Value
-  }
-
-  /**
-   * Mean vector of the given matrix along the specified axis.
-   */
-  def mean[@specialized T](X: Matrix[T], axis: Axis.Value)(implicit xv: T => Double):
-    DenseVector[Double] =
-  {
-    // TODO: This calculation of the mean is rather slow. It should
-    //       be transformed into several while loops.
-    axis match {
-      case Axis.Horizontal =>
-        var mu = DenseVector.zeros[Double](X.numRows)
-        X foreach ( (i, j, value) =>
-          mu(i) += (value - mu(i)) / (j + 1)
-        )
-        mu
-
-      case Axis.Vertical =>
-        var mu = DenseVector.zeros[Double](X.numCols)
-        X foreach ( (i, j, value) =>
-          mu(j) += (value - mu(j)) / (i + 1)
-        )
-        mu.t
-    }
-  }
-
-  /**
-   * The covariance matrix and mean of the given dataset X where each column
-   * of X represents one sample of a multivariate random distribution.
-   */
-  def covariance[T](X: Matrix[T])
-                   (implicit css: CanSliceCol[Matrix[T],Int,Vector[Double]],
-                              td: T => Double):
-    (DenseMatrix[Double], DenseVector[Double]) =
-  {
-    if (X.numRows < 1 || X.numCols < 1)
-      throw new IllegalArgumentException
-
-    val N        = X.numRows
-    var mu       = DenseVector.tabulate[Double](N)(X(_,0))
-    var Sigma    = DenseMatrix.zeros[Double](N, N)
-    var K        = 1.0
-    for (i <- 1 until X.numCols) {
-      val xMinusMu: VectorCol[Double] = X(::,i) - mu
-      K     += 1
-      mu    += xMinusMu / K
-      Sigma += xMinusMu * xMinusMu.t * (1. - 1. / K)
-    }
-
-    (Sigma / math.max(1, K-1), mu)
-  }
-
-  /**
-   * Numerically stable one-pass sample variance computation.
-   *
-   * From http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
-   */
-  def variance[X](data : TraversableOnce[X])(implicit xv : X=>Double) = {
-    var m = 0.0;
-    var q = 0.0;
-    var k = 0;
-    for (x <- data) {
-      k += 1;
-      if (k == 1) {
-        m = x;
-        q = 0;
-      } else {
-        val xMm = x - m;
-        val xMmDk = xMm / k;
-        m = m + xMmDk;
-        q = q + (k - 1) * xMm * xMmDk
-      }
-    }
-    q / (k - 1);
-  }
-
-  /**
-   * Numerically stable one-pass standard deviation computation.
-   *
-   * From http://www.cs.berkeley.edu/~mhoemmen/cs194/Tutorials/variance.pdf
-   */
-  def stddev[X](data : TraversableOnce[X])(implicit xv : X=>Double) =
-    math.sqrt(variance(data));
 
   /**
    * Computes the cumulative density function of the value x.

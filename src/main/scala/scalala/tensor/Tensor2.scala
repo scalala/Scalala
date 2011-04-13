@@ -128,7 +128,7 @@ with operators.MatrixOps[This] {
 
   def iterator : Iterator[(K1,K2,V)] =
     pairsIterator.map(pair => (pair._1._1,pair._1._2,pair._2));
-  
+
   //
   // equality
   //

@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic.{TensorBuilder,TensorMonadic};
+import generic.{TensorBuilder,TensorPairsMonadic};
 
 import scalala.scalar.Scalar;
 import scalala.generic.collection._;
@@ -37,7 +37,7 @@ trait CounterLike
  +M<:scala.collection.Map[K,V],
  +This<:Counter[K,V]]
 extends Tensor1Like[K,V,SetDomain[K],This]
-with TensorMonadic[K,V,This] { self =>
+with TensorPairsMonadic[K,V,This] { self =>
 
   override def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK])
   : TensorBuilder[NK,NV,Tensor[NK,NV]] = domain match {

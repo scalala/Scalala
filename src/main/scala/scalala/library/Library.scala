@@ -20,11 +20,13 @@
 package scalala;
 package library;
 
-import scalala.generic._;
 import scalala.generic.math._;
 
-import scalala.tensor.mutable.Counter;
 import scalala.operators.{OpSub, NumericOps, OpDiv, BinaryOp}
+import scalala.tensor.{VectorCol, ::, Matrix, Vector}
+import scalala.tensor.mutable.Counter;
+import scalala.tensor.dense.{DenseVector, DenseMatrix}
+import scalala.generic.collection.{CanSliceCol, CanViewAsVector}
 
 /**
  * Library of scalala basic mathematical functions.
@@ -39,6 +41,9 @@ trait Library {
 
   /** Alias for math.log. */
   final def log(v : Double) : Double = scala.math.log(v);
+
+  /** Alias for math.log1p. */
+  final def log1p(v : Double) : Double = scala.math.log1p(v);
 
   /** Alias for math.exp. */
   final def exp(v : Double) : Double = scala.math.exp(v);
@@ -96,8 +101,69 @@ trait Library {
   def sqrt[V,That](value : V)(implicit sqrt : CanSqrt[V,That]) : That =
     sqrt(value);
 
-  def softmax[V](value: V)(implicit softmax: CanSoftmax[V]):Double = {
+  /** Take the standard deviation of a collection. */
+  def stddev[V,VV,That](data : V)
+  (implicit variance : CanVariance[V,VV], sqrt : CanSqrt[VV,That]) : That =
+    sqrt(variance(data));
+
+  /** Take the variance of a collection. */
+  def variance[V,That](data : V)(implicit variance : CanVariance[V,That]) =
+    variance(data);
+
+  /** Take the softmax of a collection. */
+  def softmax[V](value: V)(implicit softmax: CanSoftmax[V]) : Double =
     softmax.softmax(value)
+
+  object Axis extends Enumeration {
+    val Horizontal, Vertical = Value
+  }
+  
+  /**
+   * Mean vector of the given matrix along the specified axis.
+   */
+  def mean[@specialized T](X: Matrix[T], axis: Axis.Value)(implicit xv: T => Double)
+  : DenseVector[Double] = {
+    // TODO: This calculation of the mean is rather slow. It should
+    //       be transformed into several while loops.
+    axis match {
+      case Axis.Horizontal =>
+        var mu = DenseVector.zeros[Double](X.numRows)
+        X foreach ( (i, j, value) =>
+          mu(i) += (value - mu(i)) / (j + 1)
+        )
+        mu
+
+      case Axis.Vertical =>
+        var mu = DenseVector.zeros[Double](X.numCols)
+        X foreach ( (i, j, value) =>
+          mu(j) += (value - mu(j)) / (i + 1)
+        )
+        mu.t
+    }
+  }
+
+  /**
+   * The covariance matrix and mean of the given dataset X where each column
+   * of X represents one sample of a multivariate random distribution.
+   */
+  def covariance[T](X: Matrix[T])
+  (implicit css: CanSliceCol[Matrix[T],Int,Vector[Double]], td: T => Double)
+  : (DenseMatrix[Double], DenseVector[Double]) = {
+    if (X.numRows < 1 || X.numCols < 1)
+      throw new IllegalArgumentException
+
+    val N        = X.numRows
+    var mu       = DenseVector.tabulate[Double](N)(X(_,0))
+    var Sigma    = DenseMatrix.zeros[Double](N, N)
+    var K        = 1.0
+    for (i <- 1 until X.numCols) {
+      val xMinusMu: VectorCol[Double] = X(::,i) - mu
+      K     += 1
+      mu    += xMinusMu / K
+      Sigma += xMinusMu * xMinusMu.t * (1. - 1. / K)
+    }
+
+    (Sigma / math.max(1, K-1), mu)
   }
 
   //

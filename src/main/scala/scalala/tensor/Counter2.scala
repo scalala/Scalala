@@ -21,7 +21,7 @@ package scalala;
 package tensor;
 
 import domain._;
-import generic.{TensorBuilder,TensorMonadic};
+import generic.{TensorBuilder,TensorPairsMonadic};
 
 import scalala.scalar.Scalar;
 import scalala.generic.collection._
@@ -40,7 +40,7 @@ trait Counter2Like
  +M2 <: scala.collection.Map[K2,V],
  +This<:Counter2[K1,K2,V]]
 extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K2,K1],This]
-//with TensorNomadic[(K1,K2),V,This]
+//with TensorPairsMonadic[(K1,K2),V,This]
 { self =>
 
   override def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK])

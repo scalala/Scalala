@@ -34,11 +34,11 @@ import scalala.operators._;
  * @author dramage
  */
 trait DenseArrayTensorLike
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B,
- +D<:IterableDomain[A],
- +This<:DenseArrayTensor[A,B]]
-extends mutable.TensorLike[A,B,D,This] {
-  def data : Array[B];
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+ +D<:IterableDomain[K],
+ +This<:DenseArrayTensor[K,V]]
+extends mutable.TensorLike[K,V,D,This] {
+  def data : Array[V];
 
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2])
   : TensorBuilder[K2,V2,Tensor[K2,V2]] = domain match {
@@ -47,26 +47,8 @@ extends mutable.TensorLike[A,B,D,This] {
     case _ => super.newBuilder[K2,V2](domain);
   }
 
-  /** Assigns the given value to all elements of this map. */
-  def :=(value : B) = {
-    var i = 0;
-    while (i < data.length) {
-      data(i) = value;
-      i += 1;
-    }
-  }
-
-  /** Tranforms all values in this map by applying the given function. */
-  override def transformValues(f : B=>B) = {
-    var i = 0;
-    while (i < data.length) {
-      data(i) = f(data(i));
-      i += 1;
-    }
-  }
-
-  override def foreachNonZeroValue[U](fn : (B=>U)) = {
-    data.foreach(fn);
+  override def foreachNonZeroValue[U](fn : (V=>U)) = {
+    foreachValue(fn);
     true;
   }
 }
@@ -77,6 +59,6 @@ extends mutable.TensorLike[A,B,D,This] {
  * @author dramage
  */
 trait DenseArrayTensor
-[@specialized(Int,Long) A, @specialized(Int,Long,Float,Double,Boolean) B]
-extends mutable.Tensor[A,B]
-with DenseArrayTensorLike[A,B,IterableDomain[A],DenseArrayTensor[A,B]];
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V]
+extends mutable.Tensor[K,V]
+with DenseArrayTensorLike[K,V,IterableDomain[K],DenseArrayTensor[K,V]];

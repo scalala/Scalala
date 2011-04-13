@@ -103,6 +103,17 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
     }
   }
 
+  /** Assigns the given value to all elements of this map. */
+  def := (value : V) = {
+    var i = 0;
+    var k = offset
+    while (i < length) {
+      data(k) = value;
+      i += 1;
+      k += stride;
+    }
+  }
+
   /** Returns a view of this vector as a row. Tightens bound superclass's return value. */
   override def asRow : DenseVectorRow[V] = this match {
     case r : DenseVectorRow[_] => this.asInstanceOf[DenseVectorRow[V]];
