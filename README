@@ -37,3 +37,9 @@ console-quick) or run sbt's proguard target, and then:
 
   java -jar target/scala_2.8.1/scalala*.min.jar
 
+Documentation is available here:
+  https://github.com/scalala/Scalala/wiki/Scalala
+
+And informal support is available here:
+  http://groups.google.com/group/scalala
+
