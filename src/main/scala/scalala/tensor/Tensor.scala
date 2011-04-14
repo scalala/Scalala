@@ -263,7 +263,7 @@ self =>
    * Creates a new Tensor over the same domain using the given value
    * function to create each return value in the map.
    */
-  def join[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (K,V,V2) => RV)
+  def joinAll[TT>:This,V2,RV,That](tensor : Tensor[K,V2])(fn : (K,V,V2) => RV)
   (implicit jj : CanJoin[TT, Tensor[K,V2], K, V, V2]) : Unit =
     jj.joinAll[RV](repr.asInstanceOf[TT], tensor, (k,v1,v2) => fn(k,v1,v2));
 
@@ -563,9 +563,12 @@ object Tensor {
       a.foreachNonZeroPair((k,aV) => {
         if (aV != aZ) fn(k, aV, b(k));
       });
+      // TODO: Shouldn't call next line if a.foreachNonZeroPair returns
+      // true unless the domains are open (e.g. Counters).  Need to implement
+      // open domain correctly before we do that optimization.
       b.foreachNonZeroPair((k,bV) => {
         val aV = a(k);
-        if (bV != bZ && aV == aZ) fn(k, aV, bV);
+        if (aV == aZ && bV != bZ) fn(k, aV, bV);
       });
     }
 
@@ -573,17 +576,17 @@ object Tensor {
       val a = viewA(_a);
       val b = viewB(_b);
       a.checkDomain(b.domain);
+      val aZ = a.scalar.zero;
+      val bZ = b.scalar.zero;
       if (a.nonzeroSize <= b.nonzeroSize) {
-        val bZ = b.scalar.zero;
         a.foreachNonZeroPair((k,aV) => {
           val bV = b(k);
-          if (bV != bZ) fn(k, aV, bV);
+          if (aV != aZ && bV != bZ) fn(k, aV, bV);
         });
       } else {
-        val aZ = a.scalar.zero;
         b.foreachNonZeroPair((k,bV) => {
           val aV = a(k);
-          if (aV != aZ) fn(k, aV, bV);
+          if (aV != aZ && bV != bZ) fn(k, aV, bV);
         });
       }
     }
