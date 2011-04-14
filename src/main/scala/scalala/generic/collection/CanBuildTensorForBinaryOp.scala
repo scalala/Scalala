@@ -31,18 +31,16 @@ import scalala.tensor.Tensor;
  *
  * @author dramage
  */
-trait CanBuildTensorForBinaryOp[-A, -B, Op, K, V, +To] {
-  def apply(a : A, b : B) : TensorBuilder[K,V,To];
+trait CanBuildTensorForBinaryOp[-A, -B, D, K, V, Op, +To] {
+  def apply(a : A, b : B, domain : D) : TensorBuilder[K,V,To];
 }
 
 object CanBuildTensorForBinaryOp {
-  implicit def canBuildTensorLeft[A,B,D,Op,K,V,To]
-  (implicit va : A=>Tensor[K,_],
-   df : CanGetDomain[A,D],
-   bf : CanBuildTensorFrom[A,D,K,V,To])
-  : CanBuildTensorForBinaryOp[A,B,Op,K,V,To]
-  = new CanBuildTensorForBinaryOp[A,B,Op,K,V,To] {
-    def apply(a : A, b : B)  = bf.apply(a, a.domain.asInstanceOf[D]);
+  implicit def canBuildTensorLeft[A,B,D,K,V,Op,To]
+  (implicit va : A=>Tensor[K,_], bf : CanBuildTensorFrom[A,D,K,V,To])
+  : CanBuildTensorForBinaryOp[A,B,D,K,V,Op,To]
+  = new CanBuildTensorForBinaryOp[A,B,D,K,V,Op,To] {
+    def apply(a : A, b : B, domain : D)  = bf.apply(a, domain);
   }
 }
 

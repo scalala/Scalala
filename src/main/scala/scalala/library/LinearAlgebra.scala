@@ -382,7 +382,7 @@ trait LinearAlgebra {
   /**
    * Computes the Moore-Penrose pseudo inverse of the given real matrix X.
    */
-  def pinv[T](X: Matrix[T])(implicit td: T => Double): DenseMatrix[Double] = {
+  def pinv(X: DenseMatrix[Double]) : DenseMatrix[Double] = {
     requireNonEmptyMatrix(X)
 
     // The pseudo inverse is nothing but the least-squares solution to AX=B,
@@ -392,12 +392,23 @@ trait LinearAlgebra {
     //       A^T AX = A^T B
     //    =>      X = (A^T A)^(-1) A^T B
 
-    // TODO: Couldn't get inv(X.t * X) * X.t to work because I was unable
-    //       to get the right implicit matrix multiplication operator.
-    //       This is probably rather easy to fix.
-    //
-    val Y = DenseMatrix.tabulate[Double](X.numRows,X.numCols)(X(_,_))
-    inv(Y.t * Y) * Y.t
+    inv(X.t * X) * X.t
+  }
+
+  /**
+   * Computes the Moore-Penrose pseudo inverse of the given real matrix X.
+   */
+  def pinv[V](X: DenseMatrix[V])(implicit cast : V=>Double) : DenseMatrix[Double] = {
+    requireNonEmptyMatrix(X)
+
+    // The pseudo inverse is nothing but the least-squares solution to AX=B,
+    // hence:
+    //       d/dX 1/2 (AX-B)^2 = A^T (AX-B)
+    // Solving A^T (AX-B) = 0 for X yields
+    //       A^T AX = A^T B
+    //    =>      X = (A^T A)^(-1) A^T B
+
+    pinv(X.mapValues(cast));
   }
 }
 

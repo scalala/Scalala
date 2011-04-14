@@ -602,16 +602,17 @@ object Tensor {
 //      bf.map(from, op);
 //  }
 
-  implicit def opTensorTensor[K,V1,V2,Op<:OpType,RV,A,B,That]
+  implicit def opTensorTensor[K,D,V1,V2,Op<:OpType,RV,A,B,That]
   (implicit v1 : A=>Tensor[K,V1], v2 : B=>Tensor[K,V2],
+   df : CanGetDomain[A,D],
    op : BinaryOp[V1,V2,Op,RV],
    jj : CanJoin[A,B,K,V1,V2],
-   bf : CanBuildTensorForBinaryOp[A,B,Op,K,RV,That])
+   bf : CanBuildTensorForBinaryOp[A,B,D,K,RV,Op,That])
   : BinaryOp[A,B,Op,That]
   = new BinaryOp[A,B,Op,That] {
     override def opType = op.opType;
     override def apply(a : A, b : B) = {
-      val builder = bf(a,b);
+      val builder = bf(a,b,(a.domain union b.domain).asInstanceOf[D]);
       if (opType == OpMul) {
         jj.joinBothNonZero(a,b,(k,v1,v2) => builder(k) = op(v1,v2));
       } else if(opType == OpAdd || opType == OpSub) {

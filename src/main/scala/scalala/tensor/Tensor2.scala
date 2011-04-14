@@ -213,14 +213,14 @@ object Tensor2 {
     domainB : CanGetDomain2[B,InnerDomain,BDomainCol,BDomain],
     mul : BinaryOp[ARow,BCol,OpMulRowVectorBy,RV],
     domainR : CanBuildDomain2[ADomainRow,BDomainCol,RDomain],
-    bf : CanBuildTensorFrom[A,RDomain,(K1,K3),RV,That],
+    bf : CanBuildTensorForBinaryOp[A,B,RDomain,(K1,K3),RV,OpMulMatrixBy,That],
     scalar : Scalar[RV])
   : BinaryOp[A, B, OpMulMatrixBy, That] =
   new BinaryOp[A, B, OpMulMatrixBy, That] {
     override def opType = OpMulMatrixBy;
     override def apply(a : A, b : B) = {
       val domain = domainR(domainA._1(a), domainB._2(b));
-      val builder = bf(a, domain);
+      val builder = bf(a, b, domain);
       for (i <- a.domain._1; j <- b.domain._2) {
         builder((i,j)) = mul(sliceA(a,i), sliceB(b,j));
       }

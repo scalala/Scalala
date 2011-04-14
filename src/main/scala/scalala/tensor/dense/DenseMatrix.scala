@@ -133,6 +133,16 @@ with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
 
 object DenseMatrix extends DenseMatrixConstructors {
 
+  /** Any matrix multiplied by dense is dense. */
+  implicit def canBuildDenseMatrixMulRight[@specialized A, VA, VB, RV]
+  (implicit viewA : A=>scalala.tensor.Matrix[VA], mul : BinaryOp[VA,VB,OpMul,RV], s : Scalar[RV])
+  : CanBuildTensorForBinaryOp[A,DenseMatrix[VB],TableDomain,(Int,Int),RV,OpMulMatrixBy,DenseMatrix[RV]]
+  = new CanBuildTensorForBinaryOp[A,DenseMatrix[VB],TableDomain,(Int,Int),RV,OpMulMatrixBy,DenseMatrix[RV]] {
+    override def apply(a : A, b : DenseMatrix[VB], domain : TableDomain) =
+      DenseMatrix.zeros[RV](domain._1.size, domain._2.size).asBuilder.
+        asInstanceOf[generic.TensorBuilder[(Int, Int),RV,DenseMatrix[RV]]];
+  }
+
   //
   // Capabilities
   //
