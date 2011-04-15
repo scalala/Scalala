@@ -171,13 +171,8 @@ trait Library {
   //
 
   /** Counts the given items. */
-  def count[X](items : TraversableOnce[X]) : Counter[X,Int] = {
-    val m = Counter[X,Int]();
-    for (item <- items) {
-      m(item) += 1;
-    }
-    m;
-  }
+  def count[X](items : TraversableOnce[X]) : Counter[X,Int] =
+    Counter.count(items);
 
   //
   // normalization and log-normalization:

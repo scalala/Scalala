@@ -57,24 +57,38 @@ with Counter2Like[K1,K2, V,Curried[scala.collection.mutable.Map,K1]#Result,scala
 
 object Counter2 {
   class Impl[K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V]
-  (override val data : scala.collection.mutable.Map[K1,scala.collection.mutable.Map[K2,V]])(implicit override val scalar : Scalar[V])
-  extends Counter2[K1,K2,V] {
-  }
+  (override val data : scala.collection.mutable.Map[K1,scala.collection.mutable.Map[K2,V]])
+  (implicit override val scalar : Scalar[V])
+  extends Counter2[K1,K2,V];
 
-  def apply[K1,K2,V:Scalar](values : (K1,K2,V)*) : Counter2[K1,K2,V] = {
-    val map: HashMap[K1, scala.collection.mutable.Map[K2, V]]  = new HashMap[K1,scala.collection.mutable.Map[K2,V]] {
+  /** Returns a new empty counter. */
+  def apply[K1,K2,V:Scalar]() : Counter2[K1,K2,V] = {
+    val map = new HashMap[K1,scala.collection.mutable.Map[K2,V]] {
       override def default(k: K1) = scala.collection.mutable.Map[K2,V]();
     }
-    val rv: Impl[K1, K2, V] = new Impl[K1,K2,V](map);
-    for ((k1,k2,v) <- values) rv(k1,k2) = rv.scalar.+(rv(k1,k2), v);
+    new Impl[K1,K2,V](map);
+  }
+    
+  /** Aggregates the counts in the given items. */
+  def apply[K1,K2,V:Scalar](values : (K1,K2,V)*) : Counter2[K1,K2,V] =
+    apply(values);
+
+  /** Aggregates the counts in the given items. */
+  def apply[K1,K2,V:Scalar](values : TraversableOnce[(K1,K2,V)]) : Counter2[K1,K2,V] = {
+    val rv = apply[K1,K2,V]();
+    values.foreach({ case (k1,k2,v) => rv(k1,k2) = rv.scalar.+(rv(k1,k2), v) });
     rv;
   }
+
+  /** Constructs a Counter2 -- currently ignores the domain. */
+  def apply[K1,K2,V:Scalar](domain : Domain2[K1,K2]) : Counter2[K1,K2,V] =
+    apply[K1,K2,V]();
   
-  def apply[K1,K2,V:Scalar](domain : Domain2[K1,K2]) : Counter2[K1,K2,V] = {
-    val map = new scala.collection.mutable.HashMap[K1,scala.collection.mutable.Map[K2,V]] {
-      override def default(k: K1) = scala.collection.mutable.Map[K2,V]();
-    }
-    new Impl(map);
+  /** Counts the given elements. */
+  def count[K1,K2](values : TraversableOnce[(K1,K2)]) : Counter2[K1,K2,Int] = {
+    val rv = apply[K1,K2,Int]();
+    values.foreach({ case (k1,k2) => rv(k1,k2) += 1; });
+    rv;
   }
 
   implicit def canSliceRow[K1,K2,V:Scalar] : CanSliceRow[Counter2[K1,K2,V],K1,Counter[K2,V]]

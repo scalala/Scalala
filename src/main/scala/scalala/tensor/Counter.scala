@@ -85,10 +85,19 @@ trait Counter
 extends Tensor1[K,V] with CounterLike[K,V,scala.collection.Map[K,V],Counter[K,V]];
 
 object Counter {
+  def apply[K,V:Scalar]() : mutable.Counter[K,V] =
+    mutable.Counter();
+  
   def apply[K,V:Scalar](values : (K,V)*) : mutable.Counter[K,V] =
     mutable.Counter(values :_ *);
+  
+  def apply[K,V:Scalar](values : TraversableOnce[(K,V)]) : mutable.Counter[K,V] =
+    mutable.Counter(values);
     
   def apply[K,V:Scalar](domain : Domain1[K]) =
     mutable.Counter(domain);
+  
+  def count[K](items : TraversableOnce[K]) : mutable.Counter[K,Int] =
+    mutable.Counter.count(items);
 }
 

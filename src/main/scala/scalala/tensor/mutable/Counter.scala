@@ -49,12 +49,29 @@ with CounterLike[K,V,scala.collection.mutable.Map[K,V],Counter[K,V]];
 
 object Counter {
   class Impl[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
-  (override val data : scala.collection.mutable.Map[K,V])(implicit override val scalar : Scalar[V])
+  (override val data : scala.collection.mutable.Map[K,V])
+  (implicit override val scalar : Scalar[V])
   extends Counter[K,V];
 
-  def apply[K,V:Scalar](values : (K,V)*) : Counter[K,V] = {
-    val rv = new Impl(scala.collection.mutable.HashMap[K,V]());
-    for ((k,v) <- values) rv(k) = rv.scalar.+(v,rv(k));
+  /** Returns an empty counter. */
+  def apply[K,V:Scalar]() : Counter[K,V] =
+    new Impl(scala.collection.mutable.HashMap[K,V]());
+
+  /** Returns a counter by summing all the given values. */
+  def apply[K,V:Scalar](values : (K,V)*) : Counter[K,V] =
+    apply(values);
+  
+  /** Returns a counter by summing all the given values. */
+  def apply[K,V:Scalar](values : TraversableOnce[(K,V)]) : Counter[K,V] = {
+    val rv = apply[K,V]();
+    values.foreach({ case (k,v) => rv(k) = rv.scalar.+(v,rv(k)); });
+    rv;
+  }
+
+  /** Counts each of the given items. */
+  def count[K](items : TraversableOnce[K]) : Counter[K,Int] = {
+    val rv = apply[K,Int]();
+    items.foreach(rv(_) += 1);
     rv;
   }
   

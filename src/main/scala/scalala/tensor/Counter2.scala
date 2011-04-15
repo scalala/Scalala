@@ -106,12 +106,20 @@ trait Counter2
 extends Tensor2[K1,K2,V] with Counter2Like[K1,K2,V,Curried[scala.collection.Map,K1]#Result,scala.collection.Map[K2,V],Counter2[K1,K2,V]];
 
 object Counter2 {
+  def apply[K1,K2,V:Scalar]() : mutable.Counter2[K1,K2,V] =
+    mutable.Counter2();
+    
   def apply[K1,K2,V:Scalar](values : (K1,K2,V)*) : mutable.Counter2[K1,K2,V] =
     mutable.Counter2(values :_ *);
     
+  def apply[K1,K2,V:Scalar](values : TraversableOnce[(K1,K2,V)]) : mutable.Counter2[K1,K2,V] =
+    mutable.Counter2(values);
+
   def apply[K1,K2,V:Scalar](domain : Domain2[K1,K2]) =
     mutable.Counter2(domain);
 
+  def count[K1,K2](items : TraversableOnce[(K1,K2)]) : mutable.Counter2[K1,K2,Int] =
+    mutable.Counter2.count(items);
 
   /**
    * This is just a curried version of scala.collection.Map.
