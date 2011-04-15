@@ -36,15 +36,22 @@ extends Tensor2Like[Int,Int,V,IndexDomain,IndexDomain,TableDomain,TableDomain,Th
 self =>
 
   /** Number of rows in this table. */
-  /* final */ def numRows : Int = domain.numRows;
+  def numRows : Int;
 
   /** Number of columsn in this table. */
-  /* final */ def numCols : Int = domain.numCols;
+  def numCols : Int;
+
+  override def size = numRows * numCols;
+
+  override def domain = TableDomain(numRows, numCols);
 
   override def checkKey(row : Int, col : Int) {
     if (row < 0 || row >= numRows || col < 0 || col >= numCols)
       throw new DomainException("Index "+(row,col)+" out of range.  Size is "+numRows+"x"+numCols);
   }
+
+  override def foreachKey[U](fn : ((Int,Int))=>U) =
+    for (i <- 0 until numRows; j <- 0 until numCols) fn((i,j));
 
   /** Returns true if this matrix has the same number of rows as columns. */
   def isSquare : Boolean =
@@ -168,6 +175,7 @@ object Matrix {
   extends VectorSliceLike[(Int,Int),TableDomain,V,Coll,This] with VectorRowLike[V,This] {
     def row : Int;
     override val domain = underlying.domain._2;
+    override def length = underlying.numCols;
     override def lookup(key : Int) = (row,key);
   }
 
@@ -182,7 +190,8 @@ object Matrix {
   trait ColSliceLike[V,+Coll<:Matrix[V],+This<:ColSlice[V,Coll]]
   extends VectorSliceLike[(Int,Int),TableDomain,V,Coll,This] with VectorColLike[V,This] {
     def col : Int;
-    override val domain = underlying.domain._1;
+    override def domain = underlying.domain._1;
+    override def length = underlying.numRows;
     override def lookup(key : Int) = (key,col);
   }
 
@@ -218,6 +227,8 @@ object Matrix {
   (override val underlying : Coll, val keys1 : Seq[Int], val keys2 : Seq[Int])
   (implicit override val scalar : Scalar[V])
   extends MatrixSlice[V, Coll] {
+    override def numRows = keys1.size;
+    override def numCols = keys2.size;
     override def lookup1(i : Int) = keys1(i);
     override def lookup2(j : Int) = keys2(j);
 

@@ -47,8 +47,6 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
   
   /** Gap between successive elements in data array. */
   val stride : Int;
-  
-  override def domain = IndexDomain(length);
 
   override def apply(key : Int) =
     data(offset + key * stride);
@@ -76,7 +74,6 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
     }
   }
 
-  /** Tranforms all key value pairs in this map by applying the given function. */
   override def transformPairs(fn : (Int,V)=>V) = {
     var i = 0;
     var k = offset;
@@ -87,7 +84,6 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
     }
   }
   
-  /** Tranforms all key value pairs in this map by applying the given function. */
   override def transformValues(fn : V=>V) = {
     var i = 0;
     var k = offset;
@@ -98,28 +94,13 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
     }
   }
 
-  /** Assigns the given value to all elements of this map. */
-  def := (value : V) = {
-    var i = 0;
-    var k = offset
-    while (i < length) {
-      data(k) = value;
-      i += 1;
-      k += stride;
-    }
-  }
+  /** Returns a view of this vector as a row. */
+  override def asRow : DenseVectorRow[V] =
+    new DenseVectorRow(this.data, offset, stride, length);
 
-  /** Returns a view of this vector as a row. Tightens bound superclass's return value. */
-  override def asRow : DenseVectorRow[V] = this match {
-    case r : DenseVectorRow[_] => this.asInstanceOf[DenseVectorRow[V]];
-    case _ => new DenseVectorRow(this.data, offset, stride, length);
-  }
-
-  /** Returns a view of this vector as a column. Tightens bound superclass's return value.  */
-  override def asCol : DenseVectorCol[V] = this match {
-    case c : DenseVectorCol[_] => this.asInstanceOf[DenseVectorCol[V]];
-    case _ => new DenseVectorCol(this.data, offset, stride, length);
-  }
+  /** Returns a view of this vector as a column.  */
+  override def asCol : DenseVectorCol[V] =
+    new DenseVectorCol(this.data, offset, stride, length);
 }
 
 object DenseVector extends DenseVectorConstructors {

@@ -113,6 +113,8 @@ object Tensor {
    protected val data : scala.collection.mutable.Map[K,V])
   (implicit override val scalar : Scalar[V])
   extends Tensor[K, V] {
+    override def size = domain.size;
+  
     override def apply(key : K) : V = {
       checkKey(key);
       data.getOrElse(key, scalar.zero);

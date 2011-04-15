@@ -57,6 +57,14 @@ extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K
 
   def data : M1[_<:M2];
   
+  override def size = {
+    var s = 0;
+    for (m <- data.valuesIterator) {
+      s += m.size
+    }
+    s;
+  }
+
   override def domain : Domain2[K1,K2] = {
     new Domain2[K1,K2] {
       def _1 = new SetDomain(data.keySet)
@@ -70,23 +78,6 @@ extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K
   
   override def checkDomain(d : scalala.tensor.domain.Domain[(K1,K2)]) = ();
 
-
-  //
-  // non-tupled monadic
-  //
-
-//  override def iterator =
-//    repr.pairsIterator;
-
-  override def foreach[U](fn : (K1,K2,V)=>U) : Unit =
-    foreachPair( (k:(K1,K2),v:V) => fn(k._1,k._2,v));
-
-  override def foreachNonZero[U](fn : (K1,K2,V)=>U) : Unit =
-    foreachNonZeroPair((kk:(K1,K2),v:V)=>fn(kk._1,kk._2,v));
-  
-  override def map[TT>:This,RV,That](fn : (K1,K2,V)=>RV)
-  (implicit bf : CanMapKeyValuePairs[TT, (K1,K2), V, RV, That]) : That =
-    mapPairs[TT,RV,That]( (kk:(K1,K2),v:V)=>fn(kk._1,kk._2,v))(bf);
     
   //
   // faster implementations
@@ -97,12 +88,17 @@ extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K
 
   override def foreachValue[U](fn : V => U) : Unit =
     valuesIterator.foreach(fn);
+    
+  override def foreachTriple[U](fn : (K1,K2,V) => U) : Unit =
+    triplesIterator.foreach(triple => fn(triple._1,triple._2,triple._3));
 
-  override def keysIterator = for( (k1,m) <- data.iterator; k2 <- m.keysIterator) yield (k1,k2);
+  override def keysIterator = for ((k1,m) <- data.iterator; k2 <- m.keysIterator) yield (k1,k2);
 
-  override def valuesIterator = for(m <- data.valuesIterator; v <- m.valuesIterator) yield v
+  override def valuesIterator = for (m <- data.valuesIterator; v <- m.valuesIterator) yield v
 
-  override def pairsIterator = for( (k1,m) <- data.iterator; (k2,v) <- m.iterator) yield (k1,k2)->v;
+  override def pairsIterator = for ((k1,m) <- data.iterator; (k2,v) <- m.iterator) yield (k1,k2)->v;
+  
+  override def triplesIterator = for ((k1,m) <- data.iterator; (k2,v) <- m.iterator) yield (k1,k2,v);
 }
 
 trait Counter2

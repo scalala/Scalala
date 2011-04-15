@@ -128,14 +128,14 @@ trait Library {
     axis match {
       case Axis.Horizontal =>
         var mu = DenseVector.zeros[Double](X.numRows)
-        X foreach ( (i, j, value) =>
+        X foreachTriple ( (i, j, value) =>
           mu(i) += (value - mu(i)) / (j + 1)
         )
         mu
 
       case Axis.Vertical =>
         var mu = DenseVector.zeros[Double](X.numCols)
-        X foreach ( (i, j, value) =>
+        X foreachTriple ( (i, j, value) =>
           mu(j) += (value - mu(j)) / (i + 1)
         )
         mu.t

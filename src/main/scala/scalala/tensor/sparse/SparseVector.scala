@@ -39,20 +39,13 @@ import scalala.operators._;
 trait SparseVector[@specialized(Int,Long,Float,Double) V]
 extends SparseArrayTensor[Int,V] with SparseArrayTensorLike[Int,V,IndexDomain,SparseVector[V]]
 with mutable.Vector[V] with mutable.VectorLike[V,SparseVector[V]] {
-  override def size = data.length;
-
-  override val domain = IndexDomain(data.length);
+  override def length = data.length;
 
   override def apply(key : Int) =
     data(key);
 
   override def update(key : Int, value : V) =
     data(key) = value;
-
-  override def foreachNonZeroPair[U](fn : ((Int,V)=>U)) = {
-    data.foreachActivePair(fn);
-    data.activeLength == data.length;
-  }
 
   override def foreachNonZeroKey[U](fn : (Int=>U)) = {
     data.foreachActiveKey(fn);
@@ -61,6 +54,11 @@ with mutable.Vector[V] with mutable.VectorLike[V,SparseVector[V]] {
 
   override def foreachNonZeroValue[U](fn : (V=>U)) = {
     data.foreachActiveValue(fn);
+    data.activeLength == data.length;
+  }
+
+  override def foreachNonZeroPair[U](fn : ((Int,V)=>U)) = {
+    data.foreachActivePair(fn);
     data.activeLength == data.length;
   }
 }

@@ -27,8 +27,14 @@ import domain._;
 import scalala.generic.collection._;
 import scalala.operators._;
 
+import generic.TensorTriplesMonadic;
+
+
 /**
  * Implementation trait for tensors indexed by two keys, such as Matrices.
+ *
+ * TODO: Make up mind about whether implementing classes should provide
+ * which one (or both) of the pairs interface and triples interface.
  *
  * @author dramage
  */
@@ -41,7 +47,7 @@ trait Tensor2Like
  +T<:Domain2[K2,K1],
  +This<:Tensor2[K1,K2,V]]
 extends TensorLike[(K1,K2),V,D,This]
-with operators.MatrixOps[This] {
+with operators.MatrixOps[This] { self =>
   def checkKey(k1 : K1, k2 : K2) : Unit = {
     if (!domain._1.contains(k1) || !domain._2.contains(k2)) {
       throw new DomainException((k1,k2)+" not in domain");
@@ -93,41 +99,31 @@ with operators.MatrixOps[This] {
     new Tensor2Transpose.Impl[K2,K1,V,This](repr);
 
   //
-  // for comprehensions
-  //
-  
-  final def foreach[U](fn : ((K1,K2,V))=>U) : Unit =
-    foreach((k1,k2,v) => fn((k1,k2,v)));
-
-  final def foreachNonZero[U](fn : ((K1,K2,V))=>U) : Unit =
-    foreachNonZero((k1,k2,v) => fn((k1,k2,v)));
-
-  final def map[TT>:This,RV,That](fn : ((K1,K2,V))=>RV)
-  (implicit bf : CanMapKeyValuePairs[TT, (K1,K2), V, RV, That]) : That =
-    map[TT,RV,That]((k1 : K1, k2 : K2, v : V) => fn((k1,k2,v)))(bf);
-
-  final def filter(p : ((K1,K2,V))=>Boolean) =
-    withFilter(p);
-  
-  def withFilter(p : ((K1,K2,V)) => Boolean) =
-    new Tensor2.Filtered[K1,K2,V,This](repr, p);
-
-  //
-  // non-tupled monadic
+  // triples accessors
   //
 
-  def foreach[U](fn : (K1,K2,V)=>U) : Unit =
+  def triples : TensorTriplesMonadic[K1,K2,V,This] =
+    new TensorTriplesMonadic[K1,K2,V,This] { override def repr = self.repr; }
+
+  def foreachTriple[U](fn : (K1,K2,V)=>U) : Unit =
     foreachPair((k,v) => fn(k._1, k._2, v));
 
-  def foreachNonZero[U](fn : (K1,K2,V)=>U) : Unit =
+  def foreachNonZeroTriple[U](fn : (K1,K2,V)=>U) : Unit =
     foreachNonZeroPair((k,v) => fn(k._1, k._2, v));
   
-  def map[TT>:This,RV,That](fn : (K1,K2,V)=>RV)
+  def mapTriples[TT>:This,RV,That](fn : (K1,K2,V)=>RV)
   (implicit bf : CanMapKeyValuePairs[TT, (K1,K2), V, RV, That]) : That =
     mapPairs[TT,RV,That]((k,v) => fn(k._1,k._2,v))(bf);
 
-  def iterator : Iterator[(K1,K2,V)] =
+  def mapNonZeroTriples[TT>:This,RV,That](fn : (K1,K2,V)=>RV)
+  (implicit bf : CanMapKeyValuePairs[TT, (K1,K2), V, RV, That]) : That =
+    mapNonZeroPairs[TT,RV,That]((k,v) => fn(k._1,k._2,v))(bf);
+
+  def triplesIterator : Iterator[(K1,K2,V)] =
     pairsIterator.map(pair => (pair._1._1,pair._1._2,pair._2));
+
+  def triplesIteratorNonZero : Iterator[(K1,K2,V)] =
+    pairsIteratorNonZero.map(pair => (pair._1._1,pair._1._2,pair._2));
 
   //
   // equality
@@ -231,7 +227,8 @@ object Tensor2 {
   trait RowSliceLike[K1,K2,V,+Coll<:Tensor2[K1,K2,V],+This<:RowSlice[K1,K2,V,Coll]]
   extends Tensor1SliceLike[(K1,K2),IterableDomain[(K1,K2)],K2,Domain1[K2],V,Coll,This] with Tensor1RowLike[K2,V,Domain1[K2],This] {
     def row : K1;
-    override val domain = underlying.domain._2;
+    override def domain = underlying.domain._2;
+    override def size = domain.size;
     override def lookup(key : K2) = (row,key);
   }
 
@@ -247,6 +244,7 @@ object Tensor2 {
   extends Tensor1SliceLike[(K1,K2),IterableDomain[(K1,K2)],K1,Domain1[K1],V,Coll,This] with Tensor1ColLike[K1,V,Domain1[K1],This] {
     def col : K2;
     override val domain = underlying.domain._1;
+    override def size = domain.size;
     override def lookup(key : K1) = (key,col);
   }
 
@@ -292,28 +290,13 @@ object Tensor2 {
   (override val underlying : Coll, val keys1 : Seq[K1], val keys2 : Seq[K2])
   (implicit override val scalar : Scalar[V])
   extends MatrixSlice[K1, K2, V, Coll] {
+    override def numRows = keys1.size;
+    override def numCols = keys2.size;
+  
     override def lookup1(i : Int) = keys1(i);
     override def lookup2(j : Int) = keys2(j);
 
     override val domain = TableDomain(keys1.length, keys2.length);
-  }
-  
-  class Filtered
-  [@specialized(Int,Long) K1, @specialized(Int,Long) K2,
-   @specialized(Int,Long,Float,Double) V, +This<:Tensor2[K1,K2,V]]
-  (inner : This, p : ((K1,K2,V)) => Boolean) {
-    def foreach[U](fn : ((K1,K2,V)) => U) =
-      inner.foreach(tup => if (p(tup)) fn(tup));
-  
-    def withFilter(q : ((K1,K2,V)) => Boolean) =
-      new Filtered[K1,K2,V,This](inner, tup => p(tup) && q(tup));
-    
-    def map[U,D,That](fn : ((K1,K2,V)) => U)
-    (implicit df : CanGetDomain[This,D], bf : CanBuildTensorFrom[This,D,(K1,K2),U,That]) = {
-      val builder = bf(inner, inner.domain.asInstanceOf[D]);
-      inner.foreach(tup => if (p(tup)) builder((tup._1,tup._2)) = fn(tup));
-      builder.result;
-    }
   }
 }
 

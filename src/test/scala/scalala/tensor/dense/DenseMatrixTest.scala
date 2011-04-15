@@ -103,35 +103,35 @@ class DenseMatrixTest extends FunSuite with Checkers {
   test("Map") {
     val a : DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1));
     
-    val b1 : DenseMatrix[Int] = a.map((i,j,v) => i + v);
+    val b1 : DenseMatrix[Int] = a.mapTriples((i,j,v) => i + v);
     assert(b1 === DenseMatrix((1,0,0),(3,4,0)));
     
-    val b2 : DenseMatrix[Double] = a.map((i,j,v) => j + v.toDouble);
+    val b2 : DenseMatrix[Double] = a.mapTriples((i,j,v) => j + v.toDouble);
     assert(b2 === DenseMatrix((1.0,1.0,2.0),(2.0,4.0,1.0)));
   }
 
-  test("ForComprehensions") {
+  test("Triples") {
     val a : DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1));
     
     var s = 0;
     
     // foreach
     s = 0;
-    for ((i,j,v) <- a) s += v;
+    for ((i,j,v) <- a.triples) s += v;
     assert(s === a.sum);
     
     // filter
     s = 0;
-    for ((i,j,v) <- a; if i % 2 == 0 || j % 2 == 0) s += v;
+    for ((i,j,v) <- a.triples; if i % 2 == 0 || j % 2 == 0) s += v;
     assert(s === 1+2-1);
     
-    // map
-    val b1 : DenseMatrix[Double] = for ((i,j,v) <- a) yield v * 2.0;
-    assert(b1 === DenseMatrix((2.0,0.0,0.0),(4.0,6.0,-2.0)));
-    
-    // map with filter
-    val b2 : DenseMatrix[Int] = for ((i,j,v) <- a; if j == 0) yield v * 2;
-    assert(b2 === DenseMatrix((2,0,0),(4,0,0)));
+//    // map
+//    val b1 : DenseMatrix[Double] = for ((i,j,v) <- a) yield v * 2.0;
+//    assert(b1 === DenseMatrix((2.0,0.0,0.0),(4.0,6.0,-2.0)));
+//    
+//    // map with filter
+//    val b2 : DenseMatrix[Int] = for ((i,j,v) <- a; if j == 0) yield v * 2;
+//    assert(b2 === DenseMatrix((2,0,0),(4,0,0)));
   }
     
 
@@ -146,6 +146,18 @@ class DenseMatrixTest extends FunSuite with Checkers {
     val c = DenseVector(6,2,3);
     assert(a * b === DenseMatrix((37, -8, 25), (85, -23, 67)));
     assert(a * c === DenseVector(19,52));
+    
+    // should be dense
+    val x : DenseMatrix[Int] = a * a.t;
+    assert(x === DenseMatrix((14,32),(32,77)));
+    
+    // should be dense
+    val y : DenseMatrix[Int] = a.t * a;
+    assert(y === DenseMatrix((17,22,27),(22,29,36),(27,36,45)));
+    
+    // should promote
+    val z : DenseMatrix[Double] = b * (b + 1.0);
+    assert(z === DenseMatrix((164,5,107),(-5,10,-27),(161,-7,138)));
   }
 
   test("Trace") {

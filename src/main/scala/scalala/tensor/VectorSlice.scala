@@ -55,6 +55,6 @@ object VectorSlice {
   (implicit override val scalar : Scalar[V])
   extends VectorSlice[K, V, Coll] {
     override def lookup(key : Int) = keys(key);
-    override val domain = IndexDomain(keys.length);
+    override def length = keys.size;
   }
 }

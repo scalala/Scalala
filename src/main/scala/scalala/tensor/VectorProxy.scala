@@ -29,8 +29,7 @@ import domain.IndexDomain;
  */
 trait VectorProxyLike[@specialized(Int,Long,Float,Double) V, Inner<:Vector[V], +This<:Vector[V]]
 extends Tensor1ProxyLike[Int,V,IndexDomain,Inner,This] with VectorLike[V,This] {
-  override def size =
-    inner.size;
+  override def length = inner.length;
 }
 
 /**

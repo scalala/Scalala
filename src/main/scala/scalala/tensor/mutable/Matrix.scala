@@ -71,66 +71,51 @@ object Matrix extends dense.DenseMatrixConstructors {
   }
 
   trait RowSliceLike[V,+Coll<:Matrix[V],+This<:RowSlice[V,Coll]]
-  extends VectorSliceLike[(Int,Int),TableDomain,V,Coll,This] with VectorRowLike[V,This] {
-    def row : Int;
-    override val domain = underlying.domain._2;
-    override def lookup(key : Int) = (row,key);
-  }
+  extends tensor.Matrix.RowSliceLike[V,Coll,This]
+  with VectorSliceLike[(Int,Int),TableDomain,V,Coll,This] with VectorRowLike[V,This];
 
   trait RowSlice[V,+Coll<:Matrix[V]]
-  extends VectorSlice[(Int,Int),V,Coll] with VectorRow[V] with RowSliceLike[V,Coll,RowSlice[V,Coll]];
+  extends tensor.Matrix.RowSlice[V,Coll] with VectorSlice[(Int,Int),V,Coll]
+  with VectorRow[V] with RowSliceLike[V,Coll,RowSlice[V,Coll]];
 
   class RowSliceImpl[V,+Coll<:Matrix[V]]
   (override val underlying : Coll, override val row : Int)
   (implicit override val scalar : Scalar[V])
-  extends RowSlice[V,Coll];
+  extends tensor.Matrix.RowSliceImpl[V,Coll](underlying,row)
+  with RowSlice[V,Coll];
 
   trait ColSliceLike[V,+Coll<:Matrix[V],+This<:ColSlice[V,Coll]]
-  extends VectorSliceLike[(Int,Int),TableDomain,V,Coll,This] with VectorColLike[V,This] {
-    def col : Int;
-    override val domain = underlying.domain._1;
-    override def lookup(key : Int) = (key,col);
-  }
+  extends tensor.Matrix.ColSliceLike[V,Coll,This]
+  with VectorSliceLike[(Int,Int),TableDomain,V,Coll,This] with VectorColLike[V,This];
 
   trait ColSlice[V,+Coll<:Matrix[V]]
-  extends VectorSlice[(Int,Int),V,Coll] with VectorCol[V] with ColSliceLike[V,Coll,ColSlice[V,Coll]];
+  extends tensor.Matrix.ColSlice[V,Coll] with VectorSlice[(Int,Int),V,Coll]
+  with VectorCol[V] with ColSliceLike[V,Coll,ColSlice[V,Coll]];
 
   class ColSliceImpl[V,+Coll<:Matrix[V]]
   (override val underlying : Coll, override val col : Int)
   (implicit override val scalar : Scalar[V])
-  extends ColSlice[V,Coll];
+  extends tensor.Matrix.ColSliceImpl[V,Coll](underlying,col)
+  with ColSlice[V,Coll];
 
   trait MatrixSliceLike[@specialized(Int,Long,Float,Double,Boolean) V,
    +Coll<:Matrix[V], +This<:MatrixSlice[V,Coll]]
-  extends TensorSliceLike[(Int,Int),TableDomain,(Int,Int),TableDomain,V,Coll,This]
+  extends tensor.Matrix.MatrixSliceLike[V,Coll,This]
+  with TensorSliceLike[(Int,Int),TableDomain,(Int,Int),TableDomain,V,Coll,This]
   with MatrixLike[V,This] {
-
-    def lookup1(i : Int) : Int;
-    def lookup2(j : Int) : Int;
-
-    /* final */ override def lookup(tup : (Int,Int)) =
-      (lookup1(tup._1), lookup2(tup._2));
-
-    override def apply(i : Int, j : Int) : V =
-      underlying.apply(lookup1(i), lookup2(j));
-
     override def update(i : Int, j : Int, value : V) =
       underlying.update(lookup1(i), lookup2(j), value);
   }
 
   trait MatrixSlice[@specialized(Int,Long,Float,Double,Boolean) V,
    +Coll<:Matrix[V]]
-  extends TensorSlice[(Int,Int),(Int,Int),V,Coll]
+  extends tensor.Matrix.MatrixSlice[V,Coll] with TensorSlice[(Int,Int),(Int,Int),V,Coll]
   with Matrix[V] with MatrixSliceLike[V,Coll,MatrixSlice[V,Coll]];
 
   class MatrixSliceImpl[V, +Coll<:Matrix[V]]
-  (override val underlying : Coll, val keys1 : Seq[Int], val keys2 : Seq[Int])
+  (override val underlying : Coll, override val keys1 : Seq[Int], override val keys2 : Seq[Int])
   (implicit override val scalar : Scalar[V])
-  extends MatrixSlice[V, Coll] {
-    override def lookup1(i : Int) = keys1(i);
-    override def lookup2(j : Int) = keys2(j);
-
-    override val domain = TableDomain(keys1.length, keys2.length);
-  }
+  extends tensor.Matrix.MatrixSliceImpl[V,Coll](underlying,keys1,keys2)
+  with MatrixSlice[V, Coll];
 }
 

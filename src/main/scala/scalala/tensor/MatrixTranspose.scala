@@ -36,6 +36,9 @@ trait MatrixTransposeLike
 extends Tensor2TransposeLike[Int,Int,V,IndexDomain,IndexDomain,TableDomain,TableDomain,Coll,This]
 with MatrixLike[V,This] {
   override def domain = underlying.domain.transpose.asInstanceOf[TableDomain];
+  
+  override def numRows = underlying.numCols;
+  override def numCols = underlying.numRows;
 
   override def t : Coll =
     underlying;

@@ -41,7 +41,7 @@ import org.netlib.util.intW;
  * @author dramage
  */
 class DenseMatrix[@specialized(Int,Long,Float,Double) V]
-(numRows : Int, numCols : Int, data_ : Array[V])
+(override val numRows : Int, override val numCols : Int, data_ : Array[V])
 (implicit override val scalar : Scalar[V])
 extends DenseArrayTensor[(Int,Int),V] with DenseArrayTensorLike[(Int,Int),V,TableDomain,DenseMatrix[V]]
 with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
@@ -49,8 +49,6 @@ with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
   
   if (numRows * numCols != data_.length)
     throw new IllegalArgumentException("data.length must equal numRows*numCols");
-
-  override def domain = TableDomain(numRows, numCols);
 
   /**
    * Returns a view of this data matrix but with the given number of rows and columns.
@@ -84,14 +82,6 @@ with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
   override def update(row : Int, col : Int, value : V) =
     data(index(row,col)) = value;
 
-  override def foreach[U](f : (Int,Int,V)=>U) = {
-    var i = 0;
-    while (i < data.length) {
-      f(rowIndex(i),colIndex(i),data(i));
-      i += 1;
-    }
-  }
-
   override def foreachValue[U](f : (V)=>U) = {
     var i = 0;
     while (i < data.length) {
@@ -100,20 +90,10 @@ with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
     }
   }
 
-  /** Tranforms all key value pairs in this map by applying the given function. */
-  override def transform(f : (Int,Int,V)=>V) = {
+  override def foreachTriple[U](f : (Int,Int,V)=>U) = {
     var i = 0;
     while (i < data.length) {
-      data(i) = f(rowIndex(i),colIndex(i),data(i));
-      i += 1;
-    }
-  }
-
-  /** Assigns the given value to all elements of this map. */
-  def :=(value : V) = {
-    var i = 0;
-    while (i < data.length) {
-      data(i) = value;
+      f(rowIndex(i),colIndex(i),data(i));
       i += 1;
     }
   }
@@ -123,6 +103,15 @@ with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
     var i = 0;
     while (i < data.length) {
       data(i) = f(data(i));
+      i += 1;
+    }
+  }
+
+  /** Tranforms all key value pairs in this map by applying the given function. */
+  override def transformTriples(f : (Int,Int,V)=>V) = {
+    var i = 0;
+    while (i < data.length) {
+      data(i) = f(rowIndex(i),colIndex(i),data(i));
       i += 1;
     }
   }

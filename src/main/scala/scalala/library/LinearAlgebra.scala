@@ -162,7 +162,7 @@ trait LinearAlgebra {
    */
   def kron[V1,V2,RV](a : Matrix[V1], b : Matrix[V2])(implicit mul : BinaryOp[V1,V2,OpMul,RV], s : Scalar[RV]) : Matrix[RV] = {
     val builder = a.newBuilder[(Int,Int),RV](TableDomain(a.numRows * b.numRows, a.numCols * b.numCols));
-    a.foreachNonZero((ai,aj,av) => b.foreachNonZero((bi,bj,bv) =>
+    a.foreachNonZeroTriple((ai,aj,av) => b.foreachNonZeroTriple((bi,bj,bv) =>
       builder((ai * b.numRows + bi, aj * b.numCols + bj)) = mul(av, bv)));
     builder.result.asInstanceOf[Matrix[RV]];
   }

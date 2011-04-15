@@ -67,9 +67,6 @@ extends tensor.VectorLike[V,Repr] with Tensor1Like[Int,V,IndexDomain,Repr] {
     }
   }
 
-  def transform(fn : V=>V) =
-    this.transformValues(fn);
-
   /** In-place quick-sort of the values in this sequence. */
   def sort(implicit ord : Ordering[V]) : Unit =
     quickSort(0, size);

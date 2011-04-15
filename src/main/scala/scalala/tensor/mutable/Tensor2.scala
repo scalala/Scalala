@@ -48,7 +48,7 @@ with TensorLike[(K1,K2),V,D,This] { self =>
     update(pos._1, pos._2, value);
 
   /** Tranforms all key value pairs in this map by applying the given function. */
-  def transform(f : (K1,K2,V)=>V) =
+  def transformTriples(f : (K1,K2,V)=>V) =
     transformPairs((k,v) => f(k._1, k._2, v));
     
   override def t : Tensor2[K2,K1,V] =
@@ -110,34 +110,36 @@ object Tensor2 {
   }
 
   trait RowSliceLike[K1,K2,V,+Coll<:Tensor2[K1,K2,V],+This<:RowSlice[K1,K2,V,Coll]]
-  extends Tensor1SliceLike[(K1,K2),Domain2[K1,K2],K2,Domain1[K2],V,Coll,This] with Tensor1RowLike[K2,V,Domain1[K2],This] {
-    def row : K1;
-    override def domain = underlying.domain._2;
-    override def lookup(key : K2) = (row,key);
-  }
+  extends tensor.Tensor2.RowSliceLike[K1,K2,V,Coll,This]
+  with Tensor1SliceLike[(K1,K2),Domain2[K1,K2],K2,Domain1[K2],V,Coll,This]
+  with Tensor1RowLike[K2,V,Domain1[K2],This];
 
   trait RowSlice[K1,K2,V,+Coll<:Tensor2[K1,K2,V]]
-  extends Tensor1Slice[(K1,K2),K2,V,Coll] with Tensor1Row[K2,V] with RowSliceLike[K1,K2,V,Coll,RowSlice[K1,K2,V,Coll]];
+  extends tensor.Tensor2.RowSlice[K1,K2,V,Coll]
+  with Tensor1Slice[(K1,K2),K2,V,Coll] with Tensor1Row[K2,V]
+  with RowSliceLike[K1,K2,V,Coll,RowSlice[K1,K2,V,Coll]];
 
   class RowSliceImpl[K1,K2,V,+Coll<:Tensor2[K1,K2,V]]
   (override val underlying : Coll, override val row : K1)
   (implicit override val scalar : Scalar[V])
-  extends RowSlice[K1,K2,V,Coll];
+  extends tensor.Tensor2.RowSliceImpl[K1,K2,V,Coll](underlying,row)
+  with RowSlice[K1,K2,V,Coll];
 
   trait ColSliceLike[K1,K2,V,+Coll<:Tensor2[K1,K2,V],+This<:ColSlice[K1,K2,V,Coll]]
-  extends Tensor1SliceLike[(K1,K2),Domain2[K1,K2],K1,Domain1[K1],V,Coll,This] with Tensor1ColLike[K1,V,Domain1[K1],This] {
-    def col : K2;
-    override def domain = underlying.domain._1;
-    override def lookup(key : K1) = (key,col);
-  }
+  extends tensor.Tensor2.ColSliceLike[K1,K2,V,Coll,This]
+  with Tensor1SliceLike[(K1,K2),Domain2[K1,K2],K1,Domain1[K1],V,Coll,This]
+  with Tensor1ColLike[K1,V,Domain1[K1],This]
 
   trait ColSlice[K1,K2,V,+Coll<:Tensor2[K1,K2,V]]
-  extends Tensor1Slice[(K1,K2),K1,V,Coll] with Tensor1Col[K1,V] with ColSliceLike[K1,K2,V,Coll,ColSlice[K1,K2,V,Coll]];
+  extends tensor.Tensor2.ColSlice[K1,K2,V,Coll]
+  with Tensor1Slice[(K1,K2),K1,V,Coll] with Tensor1Col[K1,V]
+  with ColSliceLike[K1,K2,V,Coll,ColSlice[K1,K2,V,Coll]];
 
   class ColSliceImpl[K1,K2,V,+Coll<:Tensor2[K1,K2,V]]
   (override val underlying : Coll, override val col : K2)
   (implicit override val scalar : Scalar[V])
-  extends ColSlice[K1,K2,V,Coll];
+  extends tensor.Tensor2.ColSliceImpl[K1,K2,V,Coll](underlying,col)
+  with ColSlice[K1,K2,V,Coll];
 
   trait MatrixSliceLike
   [@specialized(Int) K1, @specialized(Int) K2,
@@ -148,18 +150,9 @@ object Tensor2 {
    +T<:Domain2[K2,K1],
    +Coll<:Tensor2[K1,K2,V],
    +This<:MatrixSlice[K1,K2,V,Coll]]
-  extends TensorSliceLike[(K1,K2),D,(Int,Int),TableDomain,V,Coll,This]
+  extends tensor.Tensor2.MatrixSliceLike[K1,K2,V,D1,D2,D,T,Coll,This]
+  with TensorSliceLike[(K1,K2),D,(Int,Int),TableDomain,V,Coll,This]
   with MatrixLike[V,This] {
-
-    def lookup1(i : Int) : K1;
-    def lookup2(j : Int) : K2;
-
-    /* final */ override def lookup(tup : (Int,Int)) =
-      (lookup1(tup._1), lookup2(tup._2));
-
-    override def apply(i : Int, j : Int) : V =
-      underlying.apply(lookup1(i), lookup2(j));
-
     override def update(i : Int, j : Int, value : V) =
       underlying.update(lookup1(i), lookup2(j), value);
   }
@@ -168,18 +161,15 @@ object Tensor2 {
   [@specialized(Int,Long) K1, @specialized(Int,Long) K2,
    @specialized(Int,Long,Float,Double,Boolean) V,
    +Coll<:Tensor2[K1,K2,V]]
-  extends TensorSlice[(K1,K2),(Int,Int),V,Coll]
+  extends tensor.Tensor2.MatrixSlice[K1,K2,V,Coll]
+  with TensorSlice[(K1,K2),(Int,Int),V,Coll]
   with Matrix[V]
   with MatrixSliceLike[K1,K2,V,Domain1[K1],Domain1[K2],Domain2[K1,K2],Domain2[K2,K1],Coll,MatrixSlice[K1,K2,V,Coll]];
 
   class MatrixSliceImpl[K1, K2, V, +Coll<:Tensor2[K1,K2,V]]
-  (override val underlying : Coll, val keys1 : Seq[K1], val keys2 : Seq[K2])
+  (override val underlying : Coll, override val keys1 : Seq[K1], override val keys2 : Seq[K2])
   (implicit override val scalar : Scalar[V])
-  extends MatrixSlice[K1, K2, V, Coll] {
-    override def lookup1(i : Int) = keys1(i);
-    override def lookup2(j : Int) = keys2(j);
-
-    override val domain = TableDomain(keys1.length, keys2.length);
-  }
+  extends tensor.Tensor2.MatrixSliceImpl[K1,K2,V,Coll](underlying,keys1,keys2)
+  with MatrixSlice[K1, K2, V, Coll];
 }
 

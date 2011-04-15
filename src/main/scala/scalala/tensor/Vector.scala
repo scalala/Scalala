@@ -32,11 +32,18 @@ import scalala.generic.collection._;
 trait VectorLike[@specialized(Int,Long,Float,Double) V, +This<:Vector[V]]
 extends Tensor1Like[Int,V,IndexDomain,This] { self =>
 
+  /** Returns the number of elements in the domain of this vector. Same as size. */
+  def length : Int;
+
+  override def size = length;
+
+  override def domain = IndexDomain(length);
+  
   override def foreachKey[U](fn : (Int => U)) =
     Range(0,size).foreach(fn);
 
   //
-  // for comprehensions
+  // special case for comprehensions
   //
   
   /** Calls this.foreachValue(fn). */

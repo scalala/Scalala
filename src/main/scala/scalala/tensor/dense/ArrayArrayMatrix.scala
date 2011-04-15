@@ -39,7 +39,11 @@ extends mutable.Matrix[B] with mutable.MatrixLike[B,ArrayArrayMatrix[B]] {
     throw new IllegalArgumentException("All rows must be same length");
   }
 
-  override val domain = new TableDomain(data.length, data(0).length);
+  override def numRows =
+    data.length;
+    
+  override def numCols =
+    data(0).length;
 
   override def apply(i : Int, j : Int) =
     data(i)(j);

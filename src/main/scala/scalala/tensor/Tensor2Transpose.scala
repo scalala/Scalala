@@ -42,6 +42,9 @@ extends TensorSliceLike[(K1,K2),D,(K2,K1),T,V,Coll,This]
 with Tensor2Like[K2,K1,V,D2,D1,T,D,This] {
 self =>
 
+  override def domain = underlying.domain.transpose.asInstanceOf[T];
+  override def size = underlying.size;
+
   /* final */ override def lookup(tup : (K2,K1)) = tup.swap;
 
   override def apply(i : K2, j : K1) = underlying.apply(j, i);
@@ -69,7 +72,6 @@ object Tensor2Transpose {
   class Impl[K2, K1, V, +Coll <: Tensor2[K1,K2,V]]
   (override val underlying : Coll)
   (override implicit val scalar : Scalar[V])
-  extends Tensor2Transpose[K2,K1,V,Coll] {
-    override val domain = underlying.domain.transpose;
-  }
+  extends Tensor2Transpose[K2,K1,V,Coll];
 }
+

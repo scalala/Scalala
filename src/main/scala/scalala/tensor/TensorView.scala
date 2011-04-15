@@ -44,6 +44,8 @@ self =>
   /** Maps to underlying.domain */
   override def domain = underlying.domain.asInstanceOf[D];
 
+  override def size = underlying.size;
+
   /** Views of views should just return this (cast as This) */
   def view = repr;
 }

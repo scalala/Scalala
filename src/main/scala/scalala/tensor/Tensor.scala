@@ -85,8 +85,7 @@ self =>
   //
 
   /** The size of this collection. */
-  def size =
-    domain.size;
+  def size : Int;
   
   /** An upper bound on the number of non zero values in this collection. */
   def nonzeroSize =
@@ -102,16 +101,16 @@ self =>
 
   /**
    * Returns the keys that make up this tensor for use in
-   * for comprehensions.  The returned object can be viewed as a 
-   * Traversable[K].
+   * for comprehensions.  The returned object can be viewed as an
+   * Iterable[K].
    */
   def keys : TensorKeysMonadic[K,V,This] =
     new TensorKeysMonadic[K,V,This] { override def repr = self.repr; }
 
   /**
    * Returns the values that make up this tensor for use in
-   * for comprehensions.  The returned object can be viewed as a 
-   * Traversable[V].
+   * for comprehensions.  The returned object can be viewed as an 
+   * Iterable[V].
    */
   def values : TensorValuesMonadic[K,V,This] =
     new TensorValuesMonadic[K,V,This] { override def repr = self.repr; }

@@ -52,12 +52,14 @@ extends Tensor1Like[K,V,SetDomain[K],This] { self =>
   
   override def domain : SetDomain[K] = new SetDomain(data.keySet);
   
+  override def size = data.size;
+  
   override def apply(k : K) = data.getOrElse(k,scalar.zero);
 
   override def checkKey(k : K) = ();
   
   override def checkDomain(d : scalala.tensor.domain.Domain[K]) = ();
-    
+  
   //
   // faster implementations
   //

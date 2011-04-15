@@ -61,9 +61,7 @@ trait TensorSlice
 [@specialized(Int,Long) K1, @specialized(Int,Long) K2,
  @specialized(Int,Long,Float,Double,Boolean) V, +Coll <: Tensor[K1, V]]
 extends Tensor[K2,V]
-with TensorSliceLike[K1, IterableDomain[K1], K2, IterableDomain[K2], V, Coll, TensorSlice[K1, K2, V, Coll]] {
-
-}
+with TensorSliceLike[K1, IterableDomain[K1], K2, IterableDomain[K2], V, Coll, TensorSlice[K1, K2, V, Coll]];
 
 object TensorSlice {
   class FromKeyMap[K1, K2, V, +Coll<:Tensor[K1, V]]
@@ -71,7 +69,8 @@ object TensorSlice {
   (override implicit val scalar : Scalar[V])
   extends TensorSlice[K1, K2, V, Coll] {
     override def lookup(key : K2) = keymap(key);
-    override val domain = new SetDomain(keymap.keySet);
+    override def domain = new SetDomain(keymap.keySet);
+    override def size = keymap.size;
   }
 }
 
