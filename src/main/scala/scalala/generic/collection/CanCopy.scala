@@ -40,6 +40,13 @@ object CanCopy {
     }
   }
 
+  class OpMapValues[From,A](implicit op : CanCopy[A], map : CanMapValues[From,A,A,From]) extends CanCopy[From] {
+    def apply(v : From) = map.map(v, op);
+  }
+
+  implicit def opMapValues[From,A](implicit map : CanMapValues[From,A,A,From], op : CanCopy[A])
+  : CanCopy[From] = new OpMapValues[From,A]()(op, map);
+
   implicit def OpArrayAny[V:ClassManifest:Scalar] : OpArray[V] =
     new OpArray[V];
 
