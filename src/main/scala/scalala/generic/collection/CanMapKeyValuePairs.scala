@@ -27,7 +27,7 @@ package collection;
  *
  * @author dramage
  */
-trait CanMapKeyValuePairs[From, K, A, B, +To] {
+trait CanMapKeyValuePairs[-From, +K, +A, -B, +To] {
   /** Maps all key-value pairs from the given collection. */
   def map(from : From, fn : ((K,A) => B)) : To;
 
