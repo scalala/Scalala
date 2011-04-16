@@ -41,6 +41,13 @@ object CanCreateZerosLike {
     }
   }
 
+  class OpMapValues[From,A,To](implicit op : Scalar[A], map : CanMapValues[From,A,A,To]) extends CanCreateZerosLike[From,To] {
+    def apply(v : From) = map.map(v, _ => op.zero);
+  }
+
+  implicit def opMapValues[From,A,To](implicit map : CanMapValues[From,A,A,To], op : Scalar[A])
+  : CanCreateZerosLike[From,To] = new OpMapValues[From,A,To]()(op, map);
+
   implicit def OpArrayAny[V:ClassManifest:Scalar] : OpArray[V] =
     new OpArray[V];
 
