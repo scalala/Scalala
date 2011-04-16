@@ -186,6 +186,11 @@ object DenseVector extends DenseVectorConstructors {
   : CanMapValuesDenseVector[V, RV, DenseVectorRow] =
   new GenericDenseVectorRowBase with CanMapValuesDenseVector[V, RV, DenseVectorRow];
 
+  /** optimized for just mapping densevectors */
+  implicit def canMapValuesDenseVectors[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanMapValuesDenseVector[V, RV, DenseVector] =
+  new GenericDenseVectorColBase with CanMapValuesDenseVector[V, RV, DenseVector];
+
   /** Optimized base class for mapping a dense tensor. */
   trait CanMapKeyValuePairsDenseVector
   [@specialized V, @specialized RV, DV[V]<:DenseVector[V]]
@@ -248,6 +253,12 @@ object DenseVector extends DenseVectorConstructors {
   class CanCopyDenseVectorRow[@specialized V:Scalar:ClassManifest] extends CanCopy[DenseVectorRow[V]] {
     def apply(v1: DenseVectorRow[V]) = {
       new DenseVectorRow(Array.tabulate(v1.length)(i => v1(i)));
+    }
+  }
+
+  class CanCopyDenseVector[@specialized V:Scalar:ClassManifest] extends CanCopy[DenseVector[V]] {
+    def apply(v1: DenseVector[V]) = {
+      new DenseVectorCol(Array.tabulate(v1.length)(i => v1(i)));
     }
   }
 

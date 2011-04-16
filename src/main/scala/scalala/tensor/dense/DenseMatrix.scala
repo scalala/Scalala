@@ -27,12 +27,14 @@ import domain.TableDomain;
 import scalala.generic.collection._;
 import scalala.scalar.Scalar;
 import scalala.library.random.MersenneTwisterFast;
-import scalala.library.Random;
+
 import scalala.operators._;
 
 import org.netlib.blas._;
 import org.netlib.lapack._;
-import org.netlib.util.intW;
+import org.netlib.util.intW
+import library.{LinearAlgebra, Random}
+;
 
 /**
  * A DenseMatrix is backed by an array of doubles, with each column
@@ -416,6 +418,40 @@ trait DenseMatrixConstructors {
   /** A vector of the given size of random integers in the range [0..max). */
   def randi(imax : Int, rows : Int, cols : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
     tabulate(rows, cols)((i,j) => mt.nextInt(imax));
+  }
+
+    /**
+   * Computes a matrix whose columns represent samples drawn from a multivariate
+   * Gaussian distribution obeying both the given mean `mu' and covariance
+   * matrix `Sigma'.
+   *
+   * @throws NotConvergedException in case of a malformed covariance matrix
+   */
+  def randn(mu: Vector[Double], sigma: Matrix[Double], numSamples: Int)(implicit mt : MersenneTwisterFast): DenseMatrix[Double] = {
+    require(numSamples >= 1, "Must request at least one sample");
+    require(sigma.isSymmetric, "Sigma must be symetric");
+    require(mu.size == sigma.numCols, "mu must be same length as sigma");
+
+    // Assuming multivariate samples with zero mean, the general form of
+    // the covariance matrix is X X^T where the scale factor 1/(N-1) has
+    // been left out for improved readabilty.
+    // Let Y = AX, then Y Y^T = (AX) (AX)^T = A (X X^T) A^T.
+    // In case of a random matrix X where each element of X has been
+    // drawn from a standard normal distribution, and where thus all
+    // random variables are i.i.d. it holds that X X^T = I (identity)
+    // yielding A (X X^T) A^T = A A^T.
+    // So we're looking for a "square root" A of the given covariance
+    // matrix Sigma:
+    val sqrtSigma = LinearAlgebra.cholesky(sigma)
+    val samples: DenseMatrix[Double] =
+      sqrtSigma * DenseMatrix.randn(mu.size, numSamples, mt)
+    // Due to the row-major storage order of (dense) matrices it's probably
+    // best to use row-wise scalar addition instead of column-wise vector
+    // addition:
+    for (i <- 0 until mu.size)
+      samples(i, ::) += mu(i)
+
+    samples
   }
 }
 
