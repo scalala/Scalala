@@ -10,7 +10,8 @@ import scalar.Scalar
  */
 class DiagonalMatrix[Vec,S](val innerVector: Vec)(implicit val scalar: Scalar[S], view: Vec<:<Vector[S])
   extends Matrix[S] with MatrixLike[S,DiagonalMatrix[Vec,S]] {
-  def domain: TableDomain = new TableDomain(innerVector.size,innerVector.size);
+  def numCols = innerVector.size;
+  def numRows = innerVector.size;
   def apply(i: Int, j: Int): S = {
     innerVector.checkKey(i);
     innerVector.checkKey(j);
