@@ -23,10 +23,11 @@ package library;
 import scalala.generic.math._;
 
 import scalala.operators.{OpSub, NumericOps, OpDiv, BinaryOp}
-import scalala.tensor.{VectorCol, ::, Matrix, Vector}
 import scalala.tensor.mutable.Counter;
 import scalala.tensor.dense.{DenseVector, DenseMatrix}
-import scalala.generic.collection.{CanSliceCol, CanViewAsVector}
+import tensor._
+import domain.CanGetDomain
+import scalala.generic.collection.{CanBuildTensorFrom, CanSliceRow, CanSliceCol, CanViewAsVector}
 
 /**
  * Library of scalala basic mathematical functions.
@@ -192,7 +193,7 @@ trait Library {
    * logNormalizes the argument such that the softmax is 0.0.
    * Returns value if value's softmax is -infinity
    */
-  def logNormalize[V,K](value: V)(implicit view: V<:<NumericOps[V],
+  def logNormalize[V,K](value: V)(implicit view: V => NumericOps[V],
                                   sm: CanSoftmax[V],
                                   op : BinaryOp[V,Double,OpSub,V]): V = {
     val max = softmax(value)
@@ -204,10 +205,28 @@ trait Library {
    * logs and then logNormalizes the argument such that the softmax is 0.0.
    * Returns value if value's softmax is -infinity
    */
-  def logAndNormalize[V,K](value: V)(implicit canLog : CanLog[V,V],
-                                     view: V <:< NumericOps[V], sm: CanSoftmax[V],
+  def logAndNormalize[V](value: V)(implicit canLog : CanLog[V,V],
+                                     view: V => NumericOps[V], sm: CanSoftmax[V],
                                      op : BinaryOp[V,Double,OpSub,V]):V = {
     logNormalize(log(value))
+  }
+
+  def logAndNormalizeRows[T,K1,K2,V,Row,ADomain,That](matrix: T)(implicit canLog: CanLog[Row,Row],
+                                                    view: T=>Tensor2[K1,K2,V],
+                                                    domainA : CanGetDomain[T,ADomain],
+                                                    sliceRows: CanSliceRow[T,K1,Row],
+                                                    view2: Row => Tensor1[K2,V] with NumericOps[Row], sm: CanSoftmax[Row],
+                                                    op : BinaryOp[Row,Double,OpSub,Row],
+                                                    bf : CanBuildTensorFrom[T,ADomain,(K1,K2),V,That]): That = {
+    val builder = bf(matrix,domainA(matrix));
+    for(k1 <- matrix.domain._1) {
+      val row: Row = sliceRows(matrix, k1);
+      val ln: Row = logAndNormalize(row);
+      for((k2,v) <- ln.pairsIterator) {
+        builder(k1 -> k2) = v;
+      }
+    }
+    builder.result;
   }
 
 }
