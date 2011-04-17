@@ -288,7 +288,48 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   
   implicit object OpNeDI extends BinaryOp[Double,Int,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Double, b : Int) = a != b; }
-    
+  
+  // Boolean * Anything and vice versa
+
+  implicit object OpMulBB extends BinaryOp[Boolean,Boolean,OpMul,Boolean]
+    { def opType = OpMul; def apply(a : Boolean, b : Boolean) = a && b; }
+
+  implicit object OpMulBI extends BinaryOp[Boolean,Int,OpMul,Int]
+    { def opType = OpMul; def apply(a : Boolean, b : Int) = if (a) b else 0; }
+
+  implicit object OpMulBL extends BinaryOp[Boolean,Long,OpMul,Long]
+    { def opType = OpMul; def apply(a : Boolean, b : Long) = if (a) b else 0; }
+
+  implicit object OpMulBF extends BinaryOp[Boolean,Float,OpMul,Float]
+    { def opType = OpMul; def apply(a : Boolean, b : Float) = if (a) b else 0; }
+
+  implicit object OpMulBD extends BinaryOp[Boolean,Double,OpMul,Double]
+    { def opType = OpMul; def apply(a : Boolean, b : Double) = if (a) b else 0; }
+
+  implicit object OpMulIB extends BinaryOp[Int,Boolean,OpMul,Int]
+    { def opType = OpMul; def apply(a : Int, b : Boolean) = if (b) a else 0; }
+
+  implicit object OpMulLB extends BinaryOp[Long,Boolean,OpMul,Long]
+    { def opType = OpMul; def apply(a : Long, b : Boolean) = if (b) a else 0; }
+
+  implicit object OpMulFB extends BinaryOp[Float,Boolean,OpMul,Float]
+    { def opType = OpMul; def apply(a : Float, b : Boolean) = if (b) a else 0; }
+
+  implicit object OpMulDB extends BinaryOp[Double,Boolean,OpMul,Double]
+    { def opType = OpMul; def apply(a : Double, b : Boolean) = if (b) a else 0; }
+
+  implicit def OpMulBooleanAny[V](implicit s : Scalar[V])
+  : BinaryOp[Boolean,V,OpMul,V]
+  = new BinaryOp[Boolean,V,OpMul,V] {
+    def opType = OpMul; def apply(a : Boolean, b : V) = if (a) b else s.zero;
+  }
+
+  implicit def OpMulAnyBoolean[V](implicit s : Scalar[V])
+  : BinaryOp[V,Boolean,OpMul,V]
+  = new BinaryOp[V,Boolean,OpMul,V] {
+    def opType = OpMul; def apply(a : V, b : Boolean) = if (b) a else s.zero;
+  }
+
   //
   // Promote regular scalar multiplications to shaped multiplications
   //
