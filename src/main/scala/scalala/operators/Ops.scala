@@ -84,22 +84,6 @@ trait NumericOps[+This] {
   /** Alias for :%(b) when b is a scalar. */
   final def %[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMod,That], sb : Scalar[B]) =
     this.:%(b);
-
-  /** Alias for :<(b) for all b. */
-  final def <[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpLT,That]) =
-    this.:<(b);
-
-  /** Alias for :<=(b) for all b. */
-  final def <=[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpLTE,That]) =
-    this.:<=(b);
-
-  /** Alias for :>(b) for all b. */
-  final def >[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpGT,That]) =
-    this.:>(b);
-
-  /** Alias for :>=(b) for all b. */
-  final def >=[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpGTE,That]) =
-    this.:>=(b);
 }
 
 /**
