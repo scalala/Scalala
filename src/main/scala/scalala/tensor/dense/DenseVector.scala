@@ -346,6 +346,15 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
   def this(data : Array[V])(implicit s : Scalar[V]) =
     this(data, 0, 1, data.length)(s);
 
+  def apply(range : Range) : DenseVectorRow[V] = {
+    require(range.end < length, "Range out of bounds");
+    new DenseVectorRow[V](data,
+      offset = offset + stride * range.start,
+      stride = stride * range.step,
+      length = range.size);
+  }
+
+
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
     implicit val mf = implicitly[Scalar[V2]].manifest;
     domain match {
@@ -377,6 +386,14 @@ class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
 extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,DenseVectorCol[V]]  {
   def this(data : Array[V])(implicit s : Scalar[V]) =
     this(data, 0, 1, data.length)(s);
+
+  def apply(range : Range) : DenseVectorCol[V] = {
+    require(range.end < length, "Range out of bounds");
+    new DenseVectorCol[V](data,
+      offset = offset + stride * range.start,
+      stride = stride * range.step,
+      length = range.size);
+  }
   
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
     implicit val mf = implicitly[Scalar[V2]].manifest;
