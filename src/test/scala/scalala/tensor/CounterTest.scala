@@ -27,6 +27,9 @@ import org.junit.runner.RunWith
 
 @RunWith(classOf[JUnitRunner])
 class CounterTest extends FunSuite with Checkers {
+  val TOLERANCE = 1e-4;
+  def assertClose(a : Double, b : Double) =
+    assert(math.abs(a - b) < TOLERANCE);
 
   test("Addition") {
     assert(mutable.Counter("a"->1,"b"->2) + mutable.Counter("a"->3) === Counter("a"->4,"b"->2));
@@ -41,6 +44,13 @@ class CounterTest extends FunSuite with Checkers {
   test("Multiplication") {
     assert(mutable.Counter("a"->1,"b"->2) :* mutable.Counter("a"->3) === Counter("a"->3));
     assert(mutable.Counter("a"->3) :* mutable.Counter("a"->1,"b"->2) === Counter("a"->3));
+  }
+
+  test("MulInner") {
+    val a = mutable.Counter(1->0.56390,2->0.36231,3->0.14601,4->0.60294,5->0.14535);
+    val b = mutable.Counter(1->0.15951,2->0.83671,3->0.56002,4->0.57797,5->0.54450);
+    assertClose(a dot b, .90249);
+//    assertClose(a.t * b, .90249);
   }
 }
 
