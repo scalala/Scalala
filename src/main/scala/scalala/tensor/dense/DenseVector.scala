@@ -224,6 +224,9 @@ object DenseVector extends DenseVectorConstructors {
   : CanMapKeyValuePairsDenseVector[V, RV, DenseVectorRow] =
   new GenericDenseVectorRowBase with CanMapKeyValuePairsDenseVector[V, RV, DenseVectorRow];
 
+    implicit def canMapKeyValuePairsDenseVector[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanMapKeyValuePairsDenseVector[V, RV, DenseVector] =
+  new GenericDenseVectorColBase with CanMapKeyValuePairsDenseVector[V, RV, DenseVector];
 
   /** Optimized base class for creating zeros */
   trait CanCreateZerosDenseVector
