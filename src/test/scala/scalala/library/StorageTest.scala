@@ -38,21 +38,21 @@ class StorageTest extends FunSuite with Checkers with ShouldMatchers {
     val m = DenseMatrix.randn(5,5)
     Storage.storetxt(os, m)
     val n = Storage.loadtxt(new ByteArrayInputStream(os.toByteArray))
-    m foreachPair ((idx,v) => n(idx) should be (v plusOrMinus 1e-16))
+    m foreachPair ((idx,v) => n(idx) should be (v plusOrMinus 1e-15))
 
     os.reset()
     Storage.storetxt(os, m)
     val o = Storage.loadtxt(new ByteArrayInputStream(os.toByteArray), skipRows=2)
     o.numRows should be (m.numRows-2)
-    o foreachPair ((idx,v) => m(idx._1+2,idx._2) should be (v plusOrMinus 1e-16))
+    o foreachPair ((idx,v) => m(idx._1+2,idx._2) should be (v plusOrMinus 1e-15))
 
     os.reset()
     Storage.storetxt(os, m)
     val p = Storage.loadtxt(new ByteArrayInputStream(os.toByteArray), columns=Seq(1,3))
     p.numCols should be (2)
     p foreachPair {
-      case ((row,0), v) => m(row,1) should be (v plusOrMinus 1e-16)
-      case ((row,1), v) => m(row,3) should be (v plusOrMinus 1e-16)
+      case ((row,0), v) => m(row,1) should be (v plusOrMinus 1e-15)
+      case ((row,1), v) => m(row,3) should be (v plusOrMinus 1e-15)
       case _ => true should be (false) // signal failure
     }
 
