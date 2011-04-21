@@ -33,12 +33,12 @@ class RandomTest extends FunSuite with Checkers {
   test("MultivariateGaussian") {
     // specify rng explicitly so that we don't ever fail this test
     implicit val mt = new random.MersenneTwisterFast(0l);
-    
+
     val Sigma = DenseMatrix((3., 4.), (4., 16.))
     val mu    = DenseVector(77.,-3.)
     val X     = DenseMatrix.randn(mu, Sigma, 50000)(mt)
 
-    val (chkSigma, chkMu) = covariance(X)
+    val (chkSigma, chkMu) = covariance(X, Axis.Horizontal)
     assert(chkMu forallPairs ( (i,v) => math.abs(v-mu(i)) < 1e-1 ))
     assert(chkSigma forallPairs ( (idx,v) => math.abs(v-Sigma(idx)) < 1e-1 ))
   }

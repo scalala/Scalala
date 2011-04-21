@@ -111,27 +111,27 @@ class DenseVectorTest extends FunSuite with Checkers {
 
   test("ForComprehensions") {
     val a : DenseVectorCol[Int] = DenseVector(1,2,3,4,5);
-    
+
     var s = 0;
-    
+
     // foreach
     s = 0;
     for (v <- a) s += v;
     assert(s === a.sum);
-    
+
     // filter
     s = 0;
     for (v <- a; if v < 3) s += v;
     assert(s === 1+2);
-    
+
     // map
     val b1 : DenseVectorCol[Double] = for (v <- a) yield v * 2.0;
     assert(b1 === DenseVector(2.0,4.0,6.0,8.0,10.0));
-    
+
     // map with filter
     val b2 : DenseVectorCol[Int] = for (v <- a; if v < 3) yield v * 2;
     assert(b2 === DenseVector(2.0,4.0));
-    
+
     // transpose map with filter
     val b3 : DenseVectorRow[Int] = for (v <- a.t; if v < 3) yield v * 3;
     assert(b3 === DenseVector(3,6).t);

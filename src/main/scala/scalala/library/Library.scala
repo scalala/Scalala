@@ -20,8 +20,7 @@
 package scalala;
 package library;
 
-import scalala.generic.math._;
-
+import scalala.generic.math._
 import scalala.operators.{OpSub, NumericOps, OpDiv, BinaryOp}
 import scalala.tensor.mutable.Counter;
 import scalala.tensor.dense.{DenseVector, DenseMatrix}
@@ -32,7 +31,7 @@ import scalala.generic.collection.{CanBuildTensorFrom, CanSliceRow, CanSliceCol,
 /**
  * Library of scalala basic mathematical functions.
  *
- * @author dramage
+ * @author dramage, afwlehmann
  */
 trait Library {
 
@@ -118,7 +117,7 @@ trait Library {
   object Axis extends Enumeration {
     val Horizontal, Vertical = Value
   }
-  
+
   /**
    * Mean vector of the given matrix along the specified axis.
    */
@@ -144,27 +143,41 @@ trait Library {
   }
 
   /**
-   * The covariance matrix and mean of the given dataset X where each column
-   * of X represents one sample of a multivariate random distribution.
+   * The covariance matrix and mean of the given dataset X where the samples of
+   * a multivariate random distribution are stacked along the given axis.
    */
-  def covariance[T](X: Matrix[T])
-  (implicit css: CanSliceCol[Matrix[T],Int,Vector[Double]], td: T => Double)
-  : (DenseMatrix[Double], DenseVector[Double]) = {
-    if (X.numRows < 1 || X.numCols < 1)
-      throw new IllegalArgumentException
+  def covariance(X: Matrix[Double], axis: Axis.Value = Axis.Horizontal):
+    (DenseMatrix[Double], DenseVector[Double]) =
+  {
+    require(X.numCols > 0 && X.numRows > 0)
 
-    val N        = X.numRows
-    var mu       = DenseVector.tabulate[Double](N)(X(_,0))
-    var Sigma    = DenseMatrix.zeros[Double](N, N)
-    var K        = 1.0
-    for (i <- 1 until X.numCols) {
-      val xMinusMu: VectorCol[Double] = X(::,i) - mu
-      K     += 1
-      mu    += xMinusMu / K
-      Sigma += xMinusMu * xMinusMu.t * (1. - 1. / K)
+    axis match {
+      case Axis.Horizontal =>
+        val dim   = X.numRows
+        var mu    = DenseVector.tabulate[Double](dim)(X(_,0))
+        var Sigma = DenseMatrix.zeros[Double](dim, dim)
+        var K     = 1.0
+        for (i <- 1 until X.numCols) {
+          val xMinusMu = X(::,i) - mu
+          K     += 1
+          mu    += xMinusMu / K
+          Sigma += xMinusMu * xMinusMu.t * (1. - 1. / K)
+        }
+        (Sigma / math.max(1, K-1), mu)
+
+      case Axis.Vertical =>
+        val dim   = X.numCols
+        var mu    = DenseVector.tabulate[Double](dim)(X(0,_))
+        var Sigma = DenseMatrix.zeros[Double](dim, dim)
+        var K     = 1.0
+        for (i <- 1 until X.numRows) {
+          val xMinusMu = X(i,::) - mu
+          K     += 1
+          mu    += xMinusMu / K
+          Sigma += xMinusMu.t * xMinusMu * (1. - 1. / K)
+        }
+        (Sigma / math.max(1, K-1), mu)
     }
-
-    (Sigma / math.max(1, K-1), mu)
   }
 
   //
