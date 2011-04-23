@@ -20,10 +20,15 @@ Building upon and/or borrowing from solid libraries:
   MTJ         http://code.google.com/p/matrix-toolkits-java/ 
   iText       http://www.itextpdf.com/
 
-This project can be built with sbt, which is included in the repo,
-or can be downloaded from http://code.google.com/p/simple-build-tool/.
+The source currently lives on github.  You can download a copy:
+
+  git clone https://github.com/scalala/Scalala.git
+
+Scalala is built with sbt, which is included in the repository or
+can be downloaded from http://code.google.com/p/simple-build-tool/.
 
 Run sbt (./sbt) and invoke one or more of the following targets:
+  update      -- Downloads scalala's dependencies
   compile     -- Builds the library
   test        -- Runs the unit tests
   doc         -- Builds scaladoc for the public API
@@ -34,7 +39,6 @@ For project maintainers, the project can be deployed with:
 
 To run an interactive console, either do so through sbt (console or
 console-quick) or run sbt's proguard target, and then:
-
   java -jar target/scala_2.8.1/scalala*.min.jar
 
 Documentation is available here:
