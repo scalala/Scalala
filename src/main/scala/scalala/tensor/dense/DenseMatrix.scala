@@ -402,6 +402,40 @@ trait DenseMatrixConstructors {
     new DenseMatrix(rows, cols, Array.tabulate(rows * cols)(i => fn(i % rows, i / rows)));
   }
 
+  /** Horizontally tiles some matrices. They must have the same number of rows */
+  def horzcat[V:Scalar](matrices: Matrix[V]*) = {
+    if(matrices.isEmpty) zeros[V](0,0)
+    else {
+      require(matrices.forall(m => m.numRows == matrices(0).numRows),"Not all matrices have the same number of rows");
+      val numCols = matrices.foldLeft(0)(_ + _.numCols);
+      val numRows = matrices(0).numRows;
+      val res = DenseMatrix.zeros[V](numRows,numCols);
+      var offset = 0;
+      for(m <- matrices) {
+        res(0 until numRows,(offset) until (offset + m.numCols)) := m;
+        offset+= m.numCols;
+      }
+      res
+    }
+  }
+
+  /** Vertically tiles some matrices. They must have the same number of columns */
+  def vertcat[V:Scalar](matrices: Matrix[V]*) = {
+    if(matrices.isEmpty) zeros[V](0,0)
+    else {
+      require(matrices.forall(m => m.numCols == matrices(0).numCols),"Not all matrices have the same number of columns");
+      val numRows = matrices.foldLeft(0)(_ + _.numRows);
+      val numCols = matrices(0).numCols;
+      val res = DenseMatrix.zeros[V](numRows,numCols);
+      var offset = 0;
+      for(m <- matrices) {
+        res((offset) until (offset + m.numRows),0 until numCols) := m;
+        offset+= m.numRows;
+      }
+      res
+    }
+  }
+
   /** A vector of the given size with uniform random values between 0 and 1. */
   def rand(rows : Int, cols : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
     tabulate(rows, cols)((i,j) => mt.nextDouble);
