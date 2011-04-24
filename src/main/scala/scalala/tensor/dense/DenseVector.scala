@@ -361,7 +361,7 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
     this(data, 0, 1, data.length)(s);
 
   def apply(range : Range) : DenseVectorRow[V] = {
-    require(range.end < length, "Range out of bounds");
+    require(range.end <= length, "Range out of bounds");
     new DenseVectorRow[V](data,
       offset = offset + stride * range.start,
       stride = stride * range.step,
@@ -402,7 +402,7 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
     this(data, 0, 1, data.length)(s);
 
   def apply(range : Range) : DenseVectorCol[V] = {
-    require(range.end < length, "Range out of bounds");
+    require(range.end <= length, "Range out of bounds");
     new DenseVectorCol[V](data,
       offset = offset + stride * range.start,
       stride = stride * range.step,
@@ -466,6 +466,20 @@ trait DenseVectorColConstructors {
   def range(from : Int, until : Int, by : Int = 1) =
     new DenseVectorCol[Int](Array.range(from, until, by));
 
+
+  /**Concatenates two or more vectors together into a large vector. Assumes column vectors. */
+  def vertcat[V:Scalar](vectors: Vector[V]*) = {
+    val size = vectors.foldLeft(0)(_ + _.size);
+    val result = zeros[V](size);
+    var offset = 0;
+    for(v <- vectors) {
+      println(result.size,offset,offset+v.size)
+      result(offset until (offset + v.size)) := v;
+      offset += v.size;
+    }
+    result;
+  }
+
   /** A vector of the given size with uniform random values between 0 and 1. */
   def rand(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
     tabulate(size)(i => mt.nextDouble);
@@ -483,5 +497,6 @@ trait DenseVectorColConstructors {
   def randi(imax : Int, size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
     tabulate(size)(i => mt.nextInt(imax));
   }
+
 }
 
