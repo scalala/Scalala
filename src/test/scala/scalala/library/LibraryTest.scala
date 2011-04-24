@@ -25,9 +25,9 @@ import matchers.ShouldMatchers
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
-import scalala.tensor.dense.DenseVector
 import scalala.tensor.mutable.{Matrix, Vector}
 import Library._
+import tensor.dense.{DenseVectorCol, DenseVector}
 
 @RunWith(classOf[JUnitRunner])
 class LibraryTest extends FunSuite with Checkers with ShouldMatchers {
@@ -101,6 +101,14 @@ class LibraryTest extends FunSuite with Checkers with ShouldMatchers {
     val (chkSigmaV, chkMuV) = covariance(X.t, Axis.Vertical)
     assert(chkMuV forallPairs ((i, v) => math.abs(v-mu(i)) < 1e-4))
     assert(chkSigmaV forallPairs ((idx, v) => math.abs(v-Sigma(idx)) < 1e-4))
+  }
+
+  test("Matrix:MinMax") {
+    val X = Matrix((9.,5.,14.,4.),(2.,-12.,8.,-5.),(8.,-6.,-8.,11.))
+    min(X, Axis.Horizontal).toArray should be === (Array(4.,-12.,-8.))
+    max(X, Axis.Horizontal).toArray should be === (Array(14.,8.,11.))
+    min(X, Axis.Vertical).toArray should be === (Array(2.,-12.,-8.,-5.))
+    max(X, Axis.Vertical).toArray should be === (Array(9.,5.,14.,11.))
   }
 
 }

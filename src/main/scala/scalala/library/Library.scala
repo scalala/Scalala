@@ -23,10 +23,11 @@ package library;
 import scalala.generic.math._
 import scalala.operators.{OpSub, NumericOps, OpDiv, BinaryOp}
 import scalala.tensor.mutable.Counter;
-import scalala.tensor.dense.{DenseVector, DenseMatrix}
 import tensor._
+import dense._
 import domain.CanGetDomain
-import scalala.generic.collection.{CanBuildTensorFrom, CanSliceRow, CanSliceCol, CanViewAsVector}
+import scalala.generic.collection.{CanBuildTensorFrom, CanSliceRow}
+import scalar.Scalar
 
 /**
  * Library of scalala basic mathematical functions.
@@ -116,6 +117,26 @@ trait Library {
 
   object Axis extends Enumeration {
     val Horizontal, Vertical = Value
+  }
+
+  /**
+   * Minimum vector of the given matrix along the specified axis.
+   */
+  def min[T: Scalar](X: Matrix[T], axis: Axis.Value): DenseVector[T] = {
+    axis match {
+      case Axis.Horizontal => DenseVectorCol.tabulate[T](X.numRows)(X(_,::).min)
+      case Axis.Vertical => DenseVectorRow.tabulate[T](X.numCols)(X(::,_).min)
+    }
+  }
+
+  /**
+   * Maximum vector of the given matrix along the specified axis.
+   */
+  def max[T: Scalar](X: Matrix[T], axis: Axis.Value): DenseVector[T] = {
+    axis match {
+      case Axis.Horizontal => DenseVectorCol.tabulate[T](X.numRows)(X(_,::).max)
+      case Axis.Vertical => DenseVectorRow.tabulate[T](X.numCols)(X(::,_).max)
+    }
   }
 
   /**
