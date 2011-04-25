@@ -361,7 +361,8 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
     this(data, 0, 1, data.length)(s);
 
   def apply(range : Range) : DenseVectorRow[V] = {
-    require(range.end <= length, "Range out of bounds");
+    // this really should be < and not <=
+    require(range.end < length, "Range out of bounds");
     new DenseVectorRow[V](data,
       offset = offset + stride * range.start,
       stride = stride * range.step,
@@ -402,7 +403,8 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
     this(data, 0, 1, data.length)(s);
 
   def apply(range : Range) : DenseVectorCol[V] = {
-    require(range.end <= length, "Range out of bounds");
+    // this really should be < and not <=
+    require(range.end < length, "Range out of bounds");
     new DenseVectorCol[V](data,
       offset = offset + stride * range.start,
       stride = stride * range.step,
