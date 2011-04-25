@@ -35,7 +35,7 @@ trait CanSoftmax[-From] {
 }
 
 object CanSoftmax {
-  implicit def mkTensor1Softmax[T](implicit tt : CanViewAsTensor1[T,_,Double])
+  implicit def mkTensor1Softmax[K,T](implicit tt : CanViewAsTensor1[T,K,Double])
   : CanSoftmax[T] = new CanSoftmax[T] {
     def softmax(t : T) : Double = {
       val value = tt(t);

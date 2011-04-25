@@ -288,7 +288,7 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   
   implicit object OpNeDI extends BinaryOp[Double,Int,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Double, b : Int) = a != b; }
-  
+
   // Boolean * Anything and vice versa
 
   implicit object OpMulBB extends BinaryOp[Boolean,Boolean,OpMul,Boolean]
@@ -329,6 +329,17 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   = new BinaryOp[V,Boolean,OpMul,V] {
     def opType = OpMul; def apply(a : V, b : Boolean) = if (b) a else s.zero;
   }
+
+    // Double <-> Boolean
+
+  implicit object OpAddDB extends BinaryOp[Double,Boolean,OpAdd,Double]
+    { def opType = OpAdd; def apply(a : Double, b : Boolean) = if(b) a + 1 else a; }
+
+  implicit object OpSubDB extends BinaryOp[Double,Boolean,OpSub,Double]
+    { def opType = OpSub; def apply(a : Double, b : Boolean) = if(b) a - 1 else a; }
+
+  implicit object OpPowDB extends BinaryOp[Double,Boolean,OpPow,Double]
+    { def opType = OpPow; def apply(a : Double, b : Boolean) = math.pow(a,if(b) 1.0 else 0.0); }
 
   //
   // Promote regular scalar multiplications to shaped multiplications

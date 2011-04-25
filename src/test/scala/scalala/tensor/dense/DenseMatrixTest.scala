@@ -135,10 +135,18 @@ class DenseMatrixTest extends FunSuite with Checkers {
   }
     
 
-  test("Tabulate") {
-    val m : DenseMatrix[Double] = DenseMatrix.tabulate(2,2)((i,j) => 1.0 * (i+1) * (j+2));
-    assert(m === DenseMatrix((2,3),(4,6)));
+  test("horzcat") {
+    val a : DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1));
+    val result: DenseMatrix[Int] = DenseMatrix((1,0,0,1,0, 0),(2,3,-1,2,3,-1));
+    assert(DenseMatrix.horzcat(a,a) === result);
   }
+
+  test("vertcat") {
+    val a : DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1));
+    val result: DenseMatrix[Int] = DenseMatrix((1,0,0),(2,3,-1),(1,0,0),(2,3,-1));
+    assert(DenseMatrix.vertcat(a,a) === result);
+  }
+
 
   test("Multiply") {
     val a = DenseMatrix((1, 2, 3),(4, 5, 6));

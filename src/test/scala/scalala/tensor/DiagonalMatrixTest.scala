@@ -1,3 +1,5 @@
+package scalala.tensor
+
 /*
  * Distributed as part of Scalala, a linear algebra library.
  *
@@ -17,30 +19,26 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110 USA
  */
-package scalala.library
 
-import org.scalatest._
-import org.scalatest.junit._
-import org.scalatest.prop._
+import dense.{DenseVector, DenseMatrix}
+import org.scalatest._;
+import org.scalatest.junit._;
+import org.scalatest.prop._;
 import org.junit.runner.RunWith
-import scalala.library.Random._
-import scalala.library.Library._
-import scalala.tensor.dense._
+import scalala.library.LinearAlgebra.diag;
 
 @RunWith(classOf[JUnitRunner])
-class RandomTest extends FunSuite with Checkers {
+class DiagonalMatrixTest extends FunSuite with Checkers {
 
-  test("MultivariateGaussian") {
-    // specify rng explicitly so that we don't ever fail this test
-    implicit val mt = new random.MersenneTwisterFast(0l);
-    
-    val Sigma = DenseMatrix((3., 4.), (4., 16.))
-    val mu    = DenseVector(77.,-3.)
-    val X     = DenseMatrix.randn(mu, Sigma, 50000)(mt)
 
-    val (chkSigma, chkMu) = covariance(X)
-    assert(chkMu forallPairs ( (i,v) => math.abs(v-mu(i)) < 1e-1 ))
-    assert(chkSigma forallPairs ( (idx,v) => math.abs(v-Sigma(idx)) < 1e-1 ))
+  test("Multiply") {
+    val a = DenseMatrix((1, 2, 3),(4, 5, 6),(7,8,9));
+    val c = diag(DenseVector(6,2,3));
+    val ac :DenseMatrix[Int] = a * c; // check types;
+    assert(a * c === DenseMatrix( (6,4,9),(24,10,18),(42,16,27)));
   }
-}
 
+
+
+
+}

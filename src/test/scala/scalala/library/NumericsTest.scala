@@ -26,7 +26,7 @@ import org.scalatest.matchers.ShouldMatchers
 import org.junit.runner.RunWith
 import Library._
 import Numerics._
-
+import org.scalacheck.{Prop, Arbitrary}
 
 @RunWith(classOf[JUnitRunner])
 class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
@@ -55,6 +55,26 @@ class NumericsTest extends FunSuite with Checkers with ShouldMatchers {
     evaluating {
       logDiff(log(5), log(6))
     } should produce [IllegalArgumentException]
+  }
+
+  import Arbitrary._;
+  implicit def ae(x: Double) = new {
+    def =~=(y: Double) = (x-y).abs/x < 1E-6;
+  }
+
+  test("logsumming is approximately associative") {
+    check(Prop.forAll { (a: Double, b:Double, c: Double) =>
+      logSum(a,logSum(b,c)) =~= logSum(logSum(a,b),c);
+    })
+    check(Prop.forAll { (a: Double, b:Double, c: Double) =>
+      logSum(a,logSum(b,c)) =~= logSum(a,b,c);
+    })
+  }
+
+  test("sum distributes over logsum") {
+    check(Prop.forAll { (a: Double, b:Double, c: Double) =>
+      (a + logSum(b,c)) =~= (logSum(a + b,a+c));
+    })
   }
 
 }

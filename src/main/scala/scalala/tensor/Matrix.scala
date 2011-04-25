@@ -235,6 +235,31 @@ object Matrix {
     override val domain = TableDomain(keys1.length, keys2.length);
   }
 
+  implicit def canMulMatrixByMatrix[
+   @specialized(Int,Double) V1, A, ARow, ADomainRow, InnerDomain, ADomain,
+   @specialized(Int,Double) V2, B, BCol, BDomainCol, BDomain,
+   @specialized(Int,Double) RV, RDomain, That]
+  (implicit
+    viewA : A=>Matrix[V1],
+    sliceA : CanSliceRow[A,Int,ARow],
+    viewB : B=>Matrix[V2],
+    sliceB : CanSliceCol[B,Int,BCol],
+    mul : BinaryOp[ARow,BCol,OpMulRowVectorBy,RV],
+    bf : CanBuildTensorFrom[A,TableDomain,(Int,Int),RV,That],
+    scalar : Scalar[RV])
+  : BinaryOp[A, B, OpMulMatrixBy, That] =
+  new BinaryOp[A, B, OpMulMatrixBy, That] {
+    override def opType = OpMulMatrixBy;
+    override def apply(a : A, b : B) = {
+      val domain = new TableDomain(a.numRows,b.numCols)
+      val builder = bf(a, domain);
+      for (i <- a.domain._1; j <- b.domain._2) {
+        builder(i->j) = mul(sliceA(a,i), sliceB(b,j));
+      }
+      builder.result;
+    }
+  }
+
 //  implicit def canAppendMatrixColumns[V]
 //  : CanAppendColumns[Bound[V],Matrix[V],Matrix[V]]
 //  = new CanAppendColumns[Bound[V],Matrix[V],Matrix[V]] {

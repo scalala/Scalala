@@ -23,8 +23,10 @@ package tensor;
 import domain._;
 import generic.{TensorBuilder,TensorPairsMonadic};
 
-import scalala.scalar.Scalar;
-import scalala.generic.collection._;
+import scalala.scalar.Scalar
+import scalala.generic.collection._
+;
+
 
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
@@ -99,5 +101,26 @@ object Counter {
   
   def count[K](items : TraversableOnce[K]) : mutable.Counter[K,Int] =
     mutable.Counter.count(items);
+
+  implicit def CanMapValuesCounter
+  [@specialized(Int) K, @specialized(Int,Double) V, @specialized(Int,Double) RV:Scalar]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
+  = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
+    override def map(from : Counter[K,V], fn : (V=>RV)) = {
+      val rv = Counter[K,RV]();
+      for( (k,v) <- from.pairsIterator) {
+        rv(k) = fn(from.data(k));
+      }
+      rv;
+    }
+
+    override def mapNonZero(from : Counter[K,V], fn : (V=>RV)) = {
+      val rv = Counter[K,RV]();
+      for( (k,v) <- from.pairsIteratorNonZero) {
+        rv(k) = fn(from.data(k));
+      }
+      rv;
+    }
+  }
+
 }
 

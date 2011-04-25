@@ -77,5 +77,28 @@ object Counter {
   
   def apply[K,V:Scalar](domain : Domain1[K]) : Counter[K,V] =
     new Impl(scala.collection.mutable.HashMap[K,V]());
+
+//  implicit def opCanCopy[K,V:CanCopy] = CanCopy.opMapValues[Counter[K,V],V];
+//  implicit def opZeros[K,V:Scalar] = CanCreateZerosLike.opMapValues[Counter[K,V],V,Counter[K,V]];
+
+  implicit def CanMapValuesCounter
+  [@specialized(Int) K, @specialized(Int,Double) V, @specialized(Int,Double) RV:Scalar]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
+  = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
+    override def map(from : Counter[K,V], fn : (V=>RV)) = {
+      val rv = Counter[K,RV]();
+      for( (k,v) <- from.pairsIterator) {
+        rv(k) = fn(from.data(k));
+      }
+      rv;
+    }
+
+    override def mapNonZero(from : Counter[K,V], fn : (V=>RV)) = {
+      val rv = Counter[K,RV]();
+      for( (k,v) <- from.pairsIteratorNonZero) {
+        rv(k) = fn(from.data(k));
+      }
+      rv;
+    }
+  }
 }
 

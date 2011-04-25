@@ -138,4 +138,11 @@ class DenseVectorTest extends FunSuite with Checkers {
     val m = DenseVector.tabulate(5)(i => i + 1);
     assert(m === DenseVector(1,2,3,4,5));
   }
+
+  test("VertCat") {
+    val a1 = DenseVector(1,2,3);
+    val a2 = DenseVector(2,3,4);
+    val res = DenseVector(1,2,3,2,3,4);
+    assert(DenseVector.vertcat(a1,a2) === res);
+  }
 }

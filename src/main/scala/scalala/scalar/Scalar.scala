@@ -198,9 +198,9 @@ object Scalar {
     def >=(a : Boolean, b : Boolean) = a >= b;
     def <(a : Boolean, b : Boolean) = a < b;
     def <=(a : Boolean, b : Boolean) = a <= b;
-    def +(a : Boolean, b : Boolean) = throw new UnsupportedOperationException();
+    def +(a : Boolean, b : Boolean) = a || b;
     def -(a : Boolean, b : Boolean) = throw new UnsupportedOperationException();
-    def *(a : Boolean, b : Boolean) = throw new UnsupportedOperationException();
+    def *(a : Boolean, b : Boolean) = a && b;
     def /(a : Boolean, b : Boolean) = throw new UnsupportedOperationException();
     def norm(a : Boolean) = if (a) 1.0 else 0.0;
     def toDouble(a : Boolean) = if (a) 1.0 else 0.0;

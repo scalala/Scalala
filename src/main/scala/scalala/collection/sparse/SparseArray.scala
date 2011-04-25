@@ -47,6 +47,8 @@ import scalala.scalar.Scalar;
  *
  * @author dlwh, dramage
  */
+@serializable
+@SerialVersionUID(1L)
 final class SparseArray[@specialized T]
 (val length : Int, protected var index : Array[Int], protected var data : Array[T], protected var used : Int, initialActiveLength : Int)
 (implicit m : ClassManifest[T], df : DefaultArrayValue[T]) {
@@ -143,9 +145,19 @@ final class SparseArray[@specialized T]
     if (offset >= 0) Some(data(offset)) else None;
   }
 
-  def getOrElse(i : Int, value : T) : T = {
+  def getOrElse(i : Int, value : =>T) : T = {
     val offset = findOffset(i);
     if (offset >= 0) data(offset) else value;
+  }
+
+  def getOrElseUpdate(i : Int, value : =>T) : T = {
+    val offset = findOffset(i);
+    if (offset >= 0) data(offset)
+    else {
+      val v = value;
+      update(i,v)
+      v;
+    }
   }
 
   /** Returns the size of the array. */

@@ -17,6 +17,7 @@
 package scalala.library
 
 import math._
+import scalala.tensor.Tensor1
 
 /**
  * Provides some functions left out of java.lang.math.
@@ -41,8 +42,8 @@ trait Numerics {
       x += 1;
     }
 
-    var f = 1./(x * x);
-    var t = f*(-1/12.0 +
+    val f = 1./(x * x);
+    val t = f*(-1/12.0 +
             f*(1/120.0 +
             f*(-1/252.0 +
             f*(1/240.0 +
@@ -58,13 +59,13 @@ trait Numerics {
     0.1208650973866179e-2,-0.5395239384953e-5
   );
 
-//  /**
-//   * Evaluates the log of the generalized beta function.
-//   *  = \sum_a lgamma(c(a))- lgamma(c.total)
-//   */
-//  def lbeta[T](c: DoubleCounter[T]) = {
-//    c.valuesIterator.foldLeft(-lgamma(c.total))( (acc,x)=> acc +lgamma(x));
-//  }
+  /**
+   * Evaluates the log of the generalized beta function.
+   *  = \sum_a lgamma(c(a))- lgamma(c.sum)
+   */
+  def lbeta[T](c: Tensor1[T,Double]) = {
+    c.valuesIterator.foldLeft(-lgamma(c.sum))( (acc,x)=> acc +lgamma(x));
+  }
 
   /**
   * Computes the log of the gamma function.
@@ -194,7 +195,55 @@ trait Numerics {
   }
 
   /**
-   * Sums together things in log space. Requires a &gt b.
+   * Sums together the first length elements in log space.
+   * The length parameter is used.
+   *
+   * This method needs to be fast. Don't scala-ify it.
+   * @return log(\sum^length exp(a_i))
+   */
+  def logSum(a: Array[Double], length: Int):Double = {
+    length match {
+      case 0 => Double.NegativeInfinity;
+      case 1 => a(0)
+      case 2 => logSum(a(0),a(1));
+      case _ =>
+        val m = max(a, length);
+        if(m.isInfinite) m
+        else {
+          var i = 0;
+          var accum = 0.0;
+          while(i < length) {
+            accum += exp(a(i) - m);
+            i += 1;
+          }
+          m + log(accum);
+        }
+    }
+  }
+
+  // fast versions of max. Useful for the fast logsum.
+  private def max(a: Array[Double], length: Int) = {
+    var i = 1;
+    var max =  a(0);
+    while(i < length) {
+      if(a(i) > max) max = a(i);
+      i += 1;
+    }
+    max;
+
+  }
+
+  /**
+   * The sigmoid function: 1/(1 + exp(-x));
+   */
+  def sigmoid(x: Double) = 1/(1+exp(-x));
+
+
+  /**
+   * Takes the difference of two doubles in log space. Requires a &gt b.
+   * Note that this only works if a and b are close in value. For a &gt;&gt; b,
+   * this will almost certainly do nothing. (exp(30) - exp(1) \approx exp(30))
+   *
    * @return log(exp(a) - exp(b))
    */
   def logDiff(a: Double, b: Double): Double = {
