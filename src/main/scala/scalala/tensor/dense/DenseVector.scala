@@ -475,7 +475,6 @@ trait DenseVectorColConstructors {
     val result = zeros[V](size);
     var offset = 0;
     for(v <- vectors) {
-      println(result.size,offset,offset+v.size)
       result(offset until (offset + v.size)) := v;
       offset += v.size;
     }
