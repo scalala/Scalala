@@ -30,9 +30,9 @@ import scalala.tensor.mutable.{Matrix, Vector}
 
 @RunWith(classOf[JUnitRunner])
 class StatisticsTest extends FunSuite with Checkers with ShouldMatchers {
-  test("corr") {
-    corr(Vector(1,2,3), Vector(2,3,3.4)) should be (0.97072 plusOrMinus 1e-5);
-    assert(corr(Vector[Double](), Vector[Double]()).isNaN);
+  test("corrcoef") {
+    corrcoef(Vector(1,2,3), Vector(2,3,3.4)) should be (0.97072 plusOrMinus 1e-5);
+    assert(corrcoef(Vector[Double](), Vector[Double]()).isNaN);
   }
 
   test("kendall") {

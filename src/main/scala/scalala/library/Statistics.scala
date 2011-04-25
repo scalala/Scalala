@@ -23,7 +23,7 @@ package library;
 import math._
 import Numerics._
 import operators.Implicits._
-import generic.collection.{CanViewAsVector}
+import generic.collection.{CanViewAsVector,CanViewAsTensor1}
 
 /**
  * Matlab-like statistical methods.
@@ -39,44 +39,42 @@ trait Statistics {
    */
   def normcdf(x: Double, mu : Double = 0.0, sigma : Double = 1.0) =
     .5 * (1 + erf((x - mu) / sqrt2 / sigma));
-
+  
   /**
-   * Computes the Pearson correlation coefficient between the two vectors.
+   * Computes the Pearson correlation coefficient between two objects that
+   * can be viewed as Tensor1 instances (such as arrays, vectors, counters)
+   * with values that can be viewed as doubles.
+   *
    * Code adapted excerpted from Wikipedia:
    *   http://en.wikipedia.org/wiki/Pearson%27s_correlation_coefficient
    */
-  def corr[X,XV,Y,YV](x : X, y : Y)
-  (implicit xvt : CanViewAsVector[X,XV], yvt : CanViewAsVector[Y,YV]) : Double = {
-    val _x = xvt(x);
-    val _y = yvt(y);
-    @inline implicit def xvtod(v : XV) = _x.scalar.toDouble(v);
-    @inline implicit def yvtod(v : YV) = _y.scalar.toDouble(v);
-    require(_x.size == _y.size, "Vectors must have same length");
+  def corrcoef[K,X,VX,Y,VY](x : X, y : Y)
+  (implicit xvt : CanViewAsTensor1[X,K,VX], yvt : CanViewAsTensor1[Y,K,VY],
+   vx : VX => Double, vy : VY => Double) : Double = {
+    // tensor view of x and y
+    val xt = xvt(x);
+    val yt = yvt(y);
 
-    val N = _x.size;
-    if (N == 0) {
-      return Double.NaN;
-    }
-
+    val N = xt.size;
     var sum_sq_x = 0.0;
     var sum_sq_y = 0.0;
     var sum_coproduct = 0.0;
-    var mean_x : Double = _x(0);
-    var mean_y : Double = _y(0);
-    var i = 2;
-    while (i <= N) {
-      val sweep = (i - 1.0) / i;
-      val delta_x = _x(i-1) - mean_x;
-      val delta_y = _y(i-1) - mean_y;
+    var mean_x = 0.0;
+    var mean_y = 0.0;
+    var i = 0;
+    (xt joinAll yt) { (k : K, xv : VX, yv : VY) =>
+      val sweep = i / (i + 1.0);
+      val delta_x = xv - mean_x;
+      val delta_y = yv - mean_y;
       sum_sq_x += (delta_x * delta_x * sweep);
       sum_sq_y += (delta_y * delta_y * sweep);
       sum_coproduct += (delta_x * delta_y * sweep);
+      i += 1;
       mean_x += (delta_x / i);
       mean_y += (delta_y / i);
-      i += 1;
     }
-    val pop_sd_x = math.sqrt( sum_sq_x / N );
-    val pop_sd_y = math.sqrt( sum_sq_y / N );
+    val pop_sd_x = math.sqrt(sum_sq_x / N);
+    val pop_sd_y = math.sqrt(sum_sq_y / N);
     val cov_x_y = sum_coproduct / N;
     return cov_x_y / (pop_sd_x * pop_sd_y);
   }
