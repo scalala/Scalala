@@ -108,7 +108,7 @@ with operators.MatrixOps[This] { self =>
   def foreachTriple[U](fn : (K1,K2,V)=>U) : Unit =
     foreachPair((k,v) => fn(k._1, k._2, v));
 
-  def foreachNonZeroTriple[U](fn : (K1,K2,V)=>U) : Unit =
+  def foreachNonZeroTriple[U](fn : (K1,K2,V)=>U) : Boolean =
     foreachNonZeroPair((k,v) => fn(k._1, k._2, v));
   
   def mapTriples[TT>:This,RV,That](fn : (K1,K2,V)=>RV)
