@@ -361,8 +361,7 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
     this(data, 0, 1, data.length)(s);
 
   def apply(range : Range) : DenseVectorRow[V] = {
-    // this really should be < and not <=
-    require(range.end < length, "Range out of bounds");
+    require(range.last < length, "Range out of bounds");
     new DenseVectorRow[V](data,
       offset = offset + stride * range.start,
       stride = stride * range.step,
@@ -403,8 +402,7 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
     this(data, 0, 1, data.length)(s);
 
   def apply(range : Range) : DenseVectorCol[V] = {
-    // this really should be < and not <=
-    require(range.end < length, "Range out of bounds");
+    require(range.last < length, "Range out of bounds");
     new DenseVectorCol[V](data,
       offset = offset + stride * range.start,
       stride = stride * range.step,
@@ -475,7 +473,6 @@ trait DenseVectorColConstructors {
     val result = zeros[V](size);
     var offset = 0;
     for(v <- vectors) {
-      println(result.size,offset,offset+v.size)
       result(offset until (offset + v.size)) := v;
       offset += v.size;
     }

@@ -89,6 +89,9 @@ class DenseVectorTest extends FunSuite with Checkers {
     z :+= 1;
 
     assert(x === DenseVector(1,2,2,1,0));
+    
+    assert(x(0 until 5) === x);
+    assert(try { x(0 to 5); false; } catch { case _ => true });
   }
 
   test("Transpose") {
