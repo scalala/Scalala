@@ -36,11 +36,11 @@ import java.util.Arrays
  *
  * @author dramage
  */
-@serializable
 @SerialVersionUID(1)
 trait DenseVector[@specialized(Int,Long,Float,Double) V]
 extends mutable.Vector[V] with mutable.VectorLike[V,DenseVector[V]]
-with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVector[V]] { self =>
+with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVector[V]]
+with Serializable { self =>
 
   /** Starting offset within data array. */
   val offset : Int;
