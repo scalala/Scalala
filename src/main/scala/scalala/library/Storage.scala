@@ -99,7 +99,7 @@ trait Storage {
   def storetxt(os: OutputStream, m: Matrix[Double], delimiter: String = "\t") {
     val bw = new BufferedWriter(new OutputStreamWriter(os))
     for (i <- 0 until m.numRows) {
-      bw.write(m(i,::).values.iterator map ("% 23.17g".format(_)) mkString delimiter)
+      bw.write(m(i,::).values.iterator map ("%.15e".format(_)) mkString delimiter)
       bw.newLine()
     }
     bw.flush()

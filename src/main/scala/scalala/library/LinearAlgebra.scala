@@ -28,7 +28,7 @@ import scalar.Scalar
 import generic.collection.CanViewAsVector
 import tensor.domain.TableDomain
 import tensor.dense.{DenseVector, DenseMatrix}
-import tensor.{DiagonalMatrix, MatrixSingularException, Matrix}
+import tensor.{DiagonalMatrix, MatrixSingularException, Matrix, Vector}
 
 
 /**
@@ -410,7 +410,12 @@ trait LinearAlgebra {
     pinv(X.mapValues(cast));
   }
 
-  def diag[S](v: scalala.tensor.Vector[S])(implicit s: Scalar[S])= new DiagonalMatrix(v);
+  /**
+   * A diagonal matrix whose elements are specified by the given vector.
+   */
+  def diag[S](v: scalala.tensor.Vector[S])(implicit s: Scalar[S]): DiagonalMatrix[Vector[S], S] =
+    new DiagonalMatrix(v)
+
 }
 
 object LinearAlgebra extends LinearAlgebra;
