@@ -88,7 +88,8 @@ self =>
     rv;
   }
 
-  def toString(maxLines : Int, maxWidth : Int) : String = {
+  def toString(maxLines : Int, maxWidth : Int,
+               mkValueString : V=>String) : String = {
     val showRows = if (numRows > maxLines) maxLines - 1 else numRows;
     def colWidth(col : Int) =
       (0 until showRows).map(row => mkValueString(this(row,col)).length+2).max;
@@ -116,8 +117,8 @@ self =>
           rv.append("...");
           if (row == 0) {
             rv.append(" (");
-            rv.append(numCols - colWidths.size);
-            rv.append(" more)");
+            rv.append(numCols);
+            rv.append(" total)");
           }
         }
         if (row + 1 < showRows) {
@@ -129,15 +130,15 @@ self =>
     if (numRows > showRows) {
       rv.append(newline);
       rv.append("... (");
-      rv.append(numRows - showRows);
-      rv.append(" more)");
+      rv.append(numRows);
+      rv.append(" total)");
     }
 
     rv.toString;
   }
 
   override def toString : String =
-    toString(maxLines = 11, maxWidth = 72);
+    toString(maxLines = 11, maxWidth = 72, mkValueString = buildMkValueString);
 
   override protected def canEqual(other : Any) : Boolean = other match {
     case that : Matrix[_] => true;

@@ -36,6 +36,20 @@ trait VectorColLike[@specialized(Int,Long,Float,Double) V, +This<:VectorCol[V]]
 extends VectorLike[V,This] with Tensor1ColLike[Int,V,IndexDomain,This] {
   override def t : VectorRow[V] =
     new VectorRow.View(repr);
+
+  def toString(rows : Int, mkValueString : V=>String) : String = {
+    val newline = System.getProperty("line.separator");
+    val rv = valuesIterator.take(rows).map(mkValueString).mkString(newline);
+    
+    if (length > rows) {
+      rv + newline + "... ("+(domain.size) +" total)";
+    } else {
+      rv;
+    }
+  }
+  
+  override def toString : String =
+    toString(10,buildMkValueString);
 }
 
 /**

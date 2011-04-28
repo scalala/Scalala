@@ -416,31 +416,50 @@ self =>
   def toMap : Map[K,V] =
     asMap.toMap;
 
-  protected[this] def mkKeyString(key : K) : String =
-    key.toString;
-
-  protected[this] def mkValueString(value : V) : String =
-    value.toString;
-
-  override def toString : String = {
+  protected[this] def buildMkValueString : V=>String = {
+    if (scalar == implicitly[Scalar[Double]])
+      (v : V) => String.format("% g".format(v.asInstanceOf[Double]));
+    else if (scalar == implicitly[Scalar[Float]])
+      (v : V) => String.format("% g".format(v.asInstanceOf[Float]));
+    else
+      (v : V) => v.toString;
+  }
+  
+  protected[this] def buildMkKeyString : K=>String = {
+    (k : K) => k.toString;
+  }
+  
+  /**
+   * Creates a string for the first n non-zero items using the given key string
+   * and value string builder.
+   */
+  def toString(n : Int, mkKeyString : K=>String, mkValueString : V=>String) : String = {
     val iter = keysIterator;
-    val keys = iter.take(10).toList;
+    val keys = iter.take(n).toList;
     
     if (keys.isEmpty) 
       return "";
     
     val newline = System.getProperty("line.separator");
     val keyWidth = keys.iterator.map(mkKeyString).map(_.length).max+1;
-    val rv = (for (key <- keys.iterator) yield {
+    val rv = (for (key <- nonzero.keys.iterator) yield {
       val ks = mkKeyString(key);
       ks + (" " * (keyWidth-ks.length)) + mkValueString(apply(key));
     }).mkString(newline);
     
     if (iter.hasNext) {
-      rv + newline + "... ("+(domain.size-10) +" more)";
+      rv + newline + "... ("+(domain.size) +" total)";
     } else {
       rv;
     }
+  }
+
+  /**
+   * Creates a string representation of the first 10 (potentially) non-zero
+   * items in the tensor.
+   */
+  override def toString : String = {
+    toString(10, buildMkKeyString, buildMkValueString);
   }
 
   //

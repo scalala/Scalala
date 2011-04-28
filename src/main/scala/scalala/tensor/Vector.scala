@@ -87,15 +87,6 @@ extends Tensor1Like[Int,V,IndexDomain,This] { self =>
   /** Returns a copy of this vector's data as a list. */
   def toArray(implicit m : ClassManifest[V]) =
     Array.tabulate(size)(i => this(i));
-
-  override def toString = {
-    val rv = valuesIterator.take(10).map(mkValueString).mkString("\n");
-    if (size > 10) {
-      rv + System.getProperty("line.separator") + "... ("+(size-10) +" more)";
-    } else {
-      rv;
-    }
-  }
 }
 
 /**

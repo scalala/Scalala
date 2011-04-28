@@ -35,19 +35,46 @@ import scalala.operators._;
  */
 trait VectorRowLike[@specialized(Int,Long,Float,Double) V, +This<:VectorRow[V]]
 extends VectorLike[V,This] with Tensor1RowLike[Int,V,IndexDomain,This] {
-
-  // TODO: improve this method to make it more Vector-like
-  override def toString = {
-    val rv = valuesIterator.take(10).map(mkValueString).mkString(" ");
-    if (size > 10) {
-      rv + " " + "... ("+(size-10) +" more)";
-    } else {
-      rv;
-    }
-  }
   
   override def t : VectorCol[V] =
     new VectorCol.View[V](repr);
+
+  def toString(maxWidth : Int, mkValueString : V=>String) : String = {
+    def colWidth(col : Int) = mkValueString(this(col)).length+2;
+
+    val colWidths = new scala.collection.mutable.ArrayBuffer[Int];
+    var col = 0;
+    while (col < size && colWidths.sum < maxWidth) {
+      colWidths += colWidth(col);
+      col += 1;
+    }
+    // make space for "... (7 total)"
+    while (colWidths.sum + maxWidth.toString.length + 12 > maxWidth) {
+      colWidths.remove(colWidths.length - 1);
+    }
+
+    val newline = System.getProperty("line.separator");
+
+    var rv = new StringBuilder;
+    for (col <- 0 until colWidths.length) {
+      val cell = mkValueString(this(col));
+      rv.append(cell);
+      rv.append(" " * (colWidths(col) - cell.length));
+      if (col == colWidths.length - 1) {
+        if (col < size - 1) {
+          rv.append("...");
+          rv.append(" (");
+          rv.append(length);
+          rv.append(" total)");
+        }
+      }
+    }
+    rv.append(newline);
+    rv.toString;
+  }
+
+  override def toString =
+    toString(72, buildMkValueString);
 }
 
 /**
