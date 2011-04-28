@@ -59,7 +59,7 @@ object CanCast {
   implicit object CanCastDD extends CanCast[Double,Double]
     { override def apply(v : Double) = v; }
 
-  object CanCastIdentity extends CanCast[AnyRef,AnyRef]
+  object CanCastIdentityAnyRef extends CanCast[AnyRef,AnyRef]
     { override def apply(v : AnyRef) = v; }
 
   implicit def CanCastIdentity[V] : CanCast[V,V] = 
