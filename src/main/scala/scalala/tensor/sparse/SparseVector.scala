@@ -37,8 +37,7 @@ import scalala.operators._;
 @SerialVersionUID(1)
 trait SparseVector[@specialized(Int,Long,Float,Double) V]
 extends SparseArrayTensor[Int,V] with SparseArrayTensorLike[Int,V,IndexDomain,SparseVector[V]]
-with mutable.Vector[V] with mutable.VectorLike[V,SparseVector[V]]
-with Serializable {
+with mutable.Vector[V] with mutable.VectorLike[V,SparseVector[V]] {
   override def length = data.length;
 
   override def apply(key : Int) =

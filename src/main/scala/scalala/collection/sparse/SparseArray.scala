@@ -50,8 +50,7 @@ import scalala.scalar.Scalar;
 @SerialVersionUID(1L)
 final class SparseArray[@specialized T]
 (val length : Int, protected var index : Array[Int], protected var data : Array[T], protected var used : Int, initialActiveLength : Int)
-(implicit m : ClassManifest[T], df : DefaultArrayValue[T])
-extends Serializable {
+(implicit m : ClassManifest[T], df : DefaultArrayValue[T]) {
 
   def this(length : Int, initialActiveLength : Int = 3)(implicit m : ClassManifest[T], d : DefaultArrayValue[T]) =
     this(length, new Array[Int](initialActiveLength), new Array[T](initialActiveLength), 0, initialActiveLength)(m, d);
