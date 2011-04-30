@@ -97,7 +97,7 @@ trait Tensor
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V]
 extends tensor.Tensor[K,V] with TensorLike[K,V,IterableDomain[K],Tensor[K,V]];
 
-object Tensor {
+object Tensor extends TensorImplicitsLevel1 {
   /** Constructs a tensor for the given domain. */
   def apply[K,V:Scalar](domain : IterableDomain[K]) : Tensor[K,V] = domain match {
     case d : IndexDomain => VectorCol(d);
@@ -137,6 +137,71 @@ object Tensor {
     override def apply(from : Tensor[K,V], keys : Seq[K]) =
       new VectorSlice.FromKeySeq[K,V,Tensor[K,V]](from, keys);
   }
+}
+
+/**
+ * Low priority implicits for mutable tensor updates (with cast).
+ *
+ * @author dramage
+ */
+trait TensorImplicitsLevel0 {
+  implicit def opSetTensorTensorCast[K,V1,V2,A,B]
+  (implicit v1 : A=>Tensor[K,V1], v2 : B=>tensor.Tensor[K,V2], cast : CanCast[V2,V1],
+   jj : CanJoin[A,B,K,V1,V2])
+  : BinaryUpdateOp[A,B,OpSet]
+  = new BinaryUpdateOp[A,B,OpSet] {
+    def opType = OpSet;
+    override def apply(a : A, b : B) = {
+      val _a = v1(a);
+      jj.joinAll(a,b,(k,v1,v2) => _a(k) = cast(v2));
+    }
+  }
+  
+  implicit def opSetTensorScalarCast[K,V1,V2]
+  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
+  : BinaryUpdateOp[Tensor[K,V1],V2,OpSet]
+  = new BinaryUpdateOp[Tensor[K,V1],V2,OpSet] {
+    def opType = OpSet;
+    override def apply(a : Tensor[K,V1], b : V2) = {
+      val v = cast(b);
+      a.transformPairs((k,v) => v);
+    }
+  }
+}
+
+/**
+ * Higher priority implicits for mutable tensor updates (no cast).
+ *
+ * @author dramage
+ */
+trait TensorImplicitsLevel1 extends TensorImplicitsLevel0 {
+  implicit def opUpdateTensorTensor[K,V1,V2,Op<:OpType,A,B]
+  (implicit v1 : A=>Tensor[K,V1], v2 : B=>tensor.Tensor[K,V2],
+   op : BinaryOp[V1,V2,Op,V1], jj : CanJoin[A,B,K,V1,V2])
+  : BinaryUpdateOp[A,B,Op]
+  = new BinaryUpdateOp[A,B,Op] {
+    override def opType = op.opType;
+    override def apply(a : A, b : B) = {
+      val _a = v1(a);
+      if (opType == OpMul || opType == OpAdd || opType == OpSub) {
+        jj.joinEitherNonZero(a,b,(k,v1,v2) => _a(k) = op(v1,v2));
+      } else {
+        jj.joinAll(a,b,(k,v1,v2) => _a(k) = op(v1,v2));
+      }
+    }
+  }
+  
+  implicit def opSetTensorTensor[K,V,A,B]
+  (implicit v1 : A=>Tensor[K,V], v2 : B=>tensor.Tensor[K,V],
+   jj : CanJoin[A,B,K,V,V])
+  : BinaryUpdateOp[A,B,OpSet]
+  = new BinaryUpdateOp[A,B,OpSet] {
+    def opType = OpSet;
+    override def apply(a : A, b : B) = {
+      val _a = v1(a);
+      jj.joinAll(a,b,(k,v1,v2) => _a(k) = v2);
+    }
+  }
 
   implicit def opUpdateTensorScalar[K,V1,V2,Op<:OpType]
   (implicit op : BinaryOp[V1,V2,Op,V1], s : Scalar[V2])
@@ -147,38 +212,8 @@ object Tensor {
       a.transformValues(v => op(v, b));
     }
   }
-
-  implicit def opUpdateTensorTensor[K,V1,V2,Op<:OpType]
-  (implicit op : BinaryOp[V1,V2,Op,V1])
-  : BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],Op]
-  = new BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],Op] {
-    override def opType = op.opType;
-    override def apply(a : Tensor[K,V1], b : tensor.Tensor[K,V2]) = {
-      a.checkDomain(b.domain);
-      a.transformPairs((k,v) => op(v,b(k)));
-    }
-  }
   
-  implicit def opSetTensor[K,V] : BinaryUpdateOp[Tensor[K,V],tensor.Tensor[K,V],OpSet]
-  = new BinaryUpdateOp[Tensor[K,V],tensor.Tensor[K,V],OpSet] {
-    def opType = OpSet;
-    override def apply(a : Tensor[K,V], b : tensor.Tensor[K,V]) = {
-      a.checkDomain(b.domain);
-      a.transformPairs((k,v) => b(k));
-    }
-  }
-  
-  implicit def opSetTensorCast[K,V1,V2](implicit cast : CanCast[V2,V1])
-  : BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],OpSet]
-  = new BinaryUpdateOp[Tensor[K,V1],tensor.Tensor[K,V2],OpSet] {
-    def opType = OpSet;
-    override def apply(a : Tensor[K,V1], b : tensor.Tensor[K,V2]) = {
-      a.checkDomain(b.domain);
-      a.transformPairs((k,v) => cast(b(k)));
-    }
-  }
-  
-  implicit def opSetScalar[K,V:Scalar]
+  implicit def opSetTensorScalar[K,V:Scalar]
   : BinaryUpdateOp[Tensor[K,V],V,OpSet]
   = new BinaryUpdateOp[Tensor[K,V],V,OpSet] {
     def opType = OpSet;
@@ -186,77 +221,5 @@ object Tensor {
       a.transformPairs((k,v) => b);
     }
   }
-  
-  implicit def opSetScalarCast[K,V1,V2]
-  (implicit cast : CanCast[V2,V1], s1 : Scalar[V1], s2 : Scalar[V2])
-  : BinaryUpdateOp[Tensor[K,V1],V2,OpSet]
-  = new BinaryUpdateOp[Tensor[K,V1],V2,OpSet] {
-    def opType = OpSet;
-    override def apply(a : Tensor[K,V1], b : V2) = {
-      val v = cast(b);
-      a.transformPairs((k,v) => v);
-    }
-  }
-
-
-  //
-  // Primitive implementations
-  // 
-
-//  class IntIntImpl extends Tensor[Int,Int] {
-//    import com.carrotsearch.hppc.{IntIntOpenHashMap => OpenHashMap};
-//    import com.carrotsearch.hppc.predicates.{IntPredicate => Predicate};
-//    private type K = Int;
-//    private type V = Int;
-//    
-//    //
-//    // Below this line is copy-and pasted
-//    //
-//
-//    val map = new OpenHashMap();
-//
-//    override val scalar : Scalar[V] = implicitly[Scalar[V]];
-//
-//    /** By default, act like a map. */
-//    override def checkKey(key : K) = true;
-//
-//    /** By default, return map's domain. */
-//    override def domain : IterableDomain[K] = {
-//      val set = map.keySet;
-//      new IterableDomain[K] {
-//        override def foreach[O](f : K => O) = {
-//          set.forEach(new Predicate() { override def apply(arg : K) = { f(arg); true } });
-//        }
-//
-//        override def iterator = new Iterator[K] {
-//          val iter = set.iterator;
-//          override def hasNext =
-//            iter.hasNext;
-//          override def next =
-//            iter.next.value;
-//        }
-//
-//        override def size =
-//          set.size;
-//
-//        override def contains(key : K) =
-//          set.contains(key);
-//      }
-//    }
-//
-//    override def apply(key : K) : V = {
-//      checkKey(key); if (map.containsKey(key)) map.lget() else 0;
-//    }
-//
-//    override def update(key : K, value : V) : Unit = {
-//      checkKey(key); map.put(key, value);
-//    }
-//  }
-//
-//  class ClosedDomainIntIntImpl(override val domain : IterableDomain[Int])
-//  extends IntIntImpl {
-//    override def checkKey(key : Int) =
-//      domain.contains(key);
-//  }
 }
 

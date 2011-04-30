@@ -89,6 +89,14 @@ class Counter2Test extends FunSuite with Checkers {
     assert(mutable.Counter2(("a","a",1),("b","b",2)) + mutable.Counter2(("a","a",3)) === Counter2(("a","a",4),("b","b",2)));
     assert(mutable.Counter2(("a","a",3)) + mutable.Counter2(("a","a",1),("b","b",2)) === Counter2(("a","a",4),("b","b",2)));
   }
+  
+  test("AddInto") {
+    val x = Counter2[String,String,Int]();
+    x += Counter2(("a","a",1));
+    assert(x === Counter2(("a","a",1)));
+    x += Counter2(("a","a",2),("a","b",4));
+    assert(x === Counter2(("a","a",3),("a","b",4)));
+  }
 
   test("Subtraction") {
     assert(mutable.Counter2(("a","a",1),("b","b",2)) - mutable.Counter2(("a","a",3)) === Counter2(("a","a",-2), ("b","b",2)));
