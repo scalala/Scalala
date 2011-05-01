@@ -123,13 +123,20 @@ trait CanBuildTensorFromImplicitsLevel2Row extends CanBuildTensorFromImplicitsLe
 trait CanBuildTensorFromImplicitsLevel3 extends CanBuildTensorFromImplicitsLevel2Row {
   import dense._;
   import sparse._;
-  import tensor.{Counter=>Ctr}
+  import tensor.{Counter,Counter2};
 
   implicit def canBuildCounterFromCounter[K,V:Scalar]
-  : CanBuildTensorFrom[Ctr[_,_], Domain1[K], K, V, mutable.Counter[K,V]]
-  = new CanBuildTensorFrom[Ctr[_,_], Domain1[K], K, V, mutable.Counter[K,V]] {
-    override def apply(from : Ctr[_,_], domain : Domain1[K]) =
+  : CanBuildTensorFrom[Counter[_,_], Domain1[K], K, V, mutable.Counter[K,V]]
+  = new CanBuildTensorFrom[Counter[_,_], Domain1[K], K, V, mutable.Counter[K,V]] {
+    override def apply(from : Counter[_,_], domain : Domain1[K]) =
       from.newBuilder(domain).asInstanceOf[TensorBuilder[K,V,mutable.Counter[K,V]]];
+  }
+  
+  implicit def canBuilderCounter2FromCounter2[K1,K2,V:Scalar]
+  : CanBuildTensorFrom[Counter2[_,_,_], Domain2[K1,K2], (K1,K2), V, mutable.Counter2[K1,K2,V]]
+  = new CanBuildTensorFrom[Counter2[_,_,_], Domain2[K1,K2], (K1,K2), V, mutable.Counter2[K1,K2,V]] {
+    override def apply(from : Counter2[_,_,_], domain : Domain2[K1,K2]) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[(K1,K2),V,mutable.Counter2[K1,K2,V]]];
   }
   
   implicit def canBuildDenseVectorColFromDenseTensor[V:Scalar]

@@ -183,11 +183,7 @@ trait TensorImplicitsLevel1 extends TensorImplicitsLevel0 {
     override def opType = op.opType;
     override def apply(a : A, b : B) = {
       val _a = v1(a);
-      if (opType == OpMul || opType == OpAdd || opType == OpSub) {
-        jj.joinEitherNonZero(a,b,(k,v1,v2) => _a(k) = op(v1,v2));
-      } else {
-        jj.joinAll(a,b,(k,v1,v2) => _a(k) = op(v1,v2));
-      }
+      jj.joinEitherNonZero(a,b,(k,v1,v2) => _a(k) = op(v1,v2));
     }
   }
   
