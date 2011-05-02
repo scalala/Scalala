@@ -82,6 +82,18 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(m === DenseMatrix((1,2,3),(0,5,6)));
   }
 
+  test("Sliced Transpose") {
+    val m = DenseMatrix((0, 1, 2),
+      (3, 4, 5));
+
+    // slice sub-matrix
+    val s1: mutable.Matrix[Int] = m(0 to 1, 1 to 2);
+    assert(s1 === DenseMatrix((1, 2), (4, 5)));
+
+    val t1: mutable.Matrix[Int] = s1.t
+    assert(t1 === DenseMatrix((1, 4), (2, 5)));
+  }
+
   test("Min/Max") {
     val m = DenseMatrix((1,0,0),(2,3,-1));
     assert(m.argmin === (1,2));

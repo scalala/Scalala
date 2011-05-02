@@ -378,7 +378,7 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
   }
 
   override def t : DenseVectorCol[V] =
-    new DenseVectorCol(data)(scalar);
+    new DenseVectorCol(data, offset, stride, length)(scalar);
 }
 
 object DenseVectorRow {
@@ -426,7 +426,7 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
   }
 
   override def t : DenseVectorRow[V] =
-    new DenseVectorRow(data)(scalar);
+    new DenseVectorRow(data, offset, stride, length)(scalar);
 }
 
 object DenseVectorCol extends DenseVectorColConstructors;

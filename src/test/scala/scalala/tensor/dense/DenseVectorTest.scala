@@ -89,9 +89,21 @@ class DenseVectorTest extends FunSuite with Checkers {
     z :+= 1;
 
     assert(x === DenseVector(1,2,2,1,0));
-    
+
     assert(x(0 until 5) === x);
     assert(try { x(0 to 5); false; } catch { case _ => true });
+  }
+
+  test("Slice and Transpose") {
+    val x = DenseVector[Int](1, 2, 3, 4, 5);
+
+    val s: DenseVectorCol[Int] = x(2 to 3);
+
+    assert(s === DenseVector(3, 4));
+
+    val t: mutable.Vector[Int] = s.t;
+
+    assert(t === DenseVector(3, 4).t);
   }
 
   test("Transpose") {
