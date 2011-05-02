@@ -396,6 +396,14 @@ trait DenseMatrixConstructors {
     rv;
   }
 
+  def eye[V](rows : Int, cols : Int)(implicit scalar : Scalar[V]) = {
+    val rv = zeros(rows, cols);
+    for (i <- 0 until scala.math.min(rows, cols)) {
+      rv(i, i) = scalar.one;
+    }
+    rv;
+  }
+
   /** Tabulate a matrix from a function from row,col position to value. */
   def tabulate[V:Scalar](rows : Int, cols : Int)(fn : (Int, Int) => V) = {
     implicit val mf = implicitly[Scalar[V]].manifest;
