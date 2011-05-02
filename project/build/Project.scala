@@ -16,7 +16,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) with ProguardProje
   //
 
   val JLine = "jline" % "jline" % "0.9.94"
-  val NetlibJava = "netlib" % "netlib-java" % "0.9.2"
+  val NetlibJava = "netlib" % "netlib-java" % "0.9.3"
   val ArpackCombo = "netlib" % "arpack-combo" % "0.1"
   val JCommon = "jfree" % "jcommon" % "1.0.16"
   val JFreeChart = "jfree" % "jfreechart" % "1.0.13"
