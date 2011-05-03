@@ -34,7 +34,7 @@ import tensor.{DiagonalMatrix, MatrixSingularException, Matrix, Vector}
 /**
  * Basic linear algebraic operations.
  *
- * @author dlwh,dramage,retronym,afwlehmann
+ * @author dlwh,dramage,retronym,afwlehmann,lancelet
  */
 trait LinearAlgebra {
 
@@ -415,6 +415,23 @@ trait LinearAlgebra {
    */
   def diag[S](v: scalala.tensor.Vector[S])(implicit s: Scalar[S]): DiagonalMatrix[Vector[S], S] =
     new DiagonalMatrix(v)
+
+  /**
+   * Vector cross product of 3D vectors a and b.
+   */
+  def cross[V1, V2, RV](a: DenseVector[V1], b: DenseVector[V2])(
+    implicit mul: BinaryOp[V1, V2, OpMul, RV],
+    sub: BinaryOp[RV, RV, OpSub, RV],
+    s: Scalar[RV]
+  ): DenseVector[RV] = {
+    require(a.length == 3)
+    require(b.length == 3)
+    DenseVector[RV](
+      sub(mul(a(1), b(2)), mul(a(2), b(1))),
+      sub(mul(a(2), b(0)), mul(a(0), b(2))),
+      sub(mul(a(0), b(1)), mul(a(1), b(0)))
+    )
+  }
 
 }
 
