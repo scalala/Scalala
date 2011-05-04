@@ -433,6 +433,28 @@ trait LinearAlgebra {
     )
   }
 
+  /**
+   * Computes the rank of a DenseMatrix[Double].
+   *
+   * The rank of the matrix is computed using the SVD method.  The singular values of the SVD
+   * which are greater than a specified tolerance are counted.
+   *
+   * @param m matrix for which to compute the rank
+   * @param tol optional tolerance for singular values.  If not supplied, the default
+   *   tolerance is: max(m.numCols, m.numRows) * eps * sigma_max, where
+   *   eps is the machine epsilon and sigma_max is the largest singular value of m.
+   * @return the rank of the matrix (number of singular values)
+   */
+  def rank(m: DenseMatrix[Double], tol: Option[Double] = None): Int = {    
+    val (u, s, vt) = svd(m)
+    val useTol = tol.getOrElse {
+      // we called LAPACK for the SVD method, so this is the LAPACK definition of eps.
+      val eps: Double = 2.0 * LAPACK.getInstance.dlamch("e")
+      math.max(m.numCols, m.numRows) * eps * s.max
+    }
+    s.data.count(_ > useTol)  // TODO: Use DenseVector[_].count() if/when that is implemented
+  }
+
 }
 
 object LinearAlgebra extends LinearAlgebra;
