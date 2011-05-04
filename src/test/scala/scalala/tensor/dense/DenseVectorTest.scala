@@ -107,27 +107,16 @@ class DenseVectorTest extends FunSuite with Checkers {
     assert(t === DenseVector(3, 4).t);
   }
 
-  test("Combined Assignment Bug: Picks wrong operator") {
+  // https://github.com/scalala/Scalala/pull/19
+  test("Supertype mutator") {
     val a = DenseVector(13, 42);
     val b = DenseVector(7, 42);
     val expected = DenseVector(6, 0);
-
+  
     val direct = a - b;
     assert(direct === expected);
-
+  
     (a: Tensor[Int, Int]) :-= b;
-    assert(a === expected);
-  }
-
-  test("Combined Assignment Bug: Picks correct operator") {
-    val a = DenseVector(13, 42);
-    val b = DenseVector(7, 42);
-    val expected = DenseVector(6, 0);
-
-    val direct = a - b;
-    assert(direct === expected);
-
-    a :-= b;
     assert(a === expected);
   }
 
