@@ -125,4 +125,13 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     }
   }
 
+  test("rank") {
+    val r1 = Matrix((1.,2.,3.), (1.,2.,3.), (1.,2.,3.))  // rank 1 matrix
+    val r2 = Matrix((1.,2.,3.), (4.,5.,6.), (7.,8.,9.))  // rank 2 matrix
+    val r3 = Matrix((1.,2.,3.), (4.,5.,6.), (6.,8.,9.))  // rank 3 matrix
+    assert(rank(r1) === 1)
+    assert(rank(r2) === 2)
+    assert(rank(r3) === 3)
+  }
+
 }
