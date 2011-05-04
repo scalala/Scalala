@@ -20,12 +20,14 @@
 package scalala;
 package library;
 
+import org.scalacheck.{Arbitrary,Gen}
 import org.scalatest._;
 import org.scalatest.junit._;
 import org.scalatest.prop._;
 import org.scalatest.matchers.ShouldMatchers;
 import org.junit.runner.RunWith;
 
+import scalala.tensor.dense.DenseVector
 import scalala.tensor.mutable.{Matrix,Vector}
 import scalala.library.LinearAlgebra._;
 
@@ -93,6 +95,34 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     val X = Matrix((54, 95), (23, 25), (70, 41), (31, 19))
     val I = Matrix.eye[Double](2)
     assert((pinv(X) * X) forallPairs ((idx,v) => math.abs(v-I(idx)) < 1e-15))
+  }
+
+  test("cross") {
+    // specific example; with prime elements
+    val (v1, v2, r) = (DenseVector(13, 3, 7), DenseVector(5, 11, 17), DenseVector(-26, -186, 128))
+    assert(cross(v1, v2) === r)
+    assert(cross(v2, v1) === r * -1)
+
+    // test using a re-write of the cross-product equation and a scalacheck arbitrary generator
+    implicit def arb3DVector: Arbitrary[DenseVector[Double]] = Arbitrary {
+      for {
+	els <- Gen.containerOfN[Array, Double](3, Gen.chooseNum[Double](-100.0, 100.0))
+      } yield DenseVector(els(0), els(1), els(2))
+    }
+    check {(a: DenseVector[Double], b: DenseVector[Double]) =>
+      val r = DenseVector(
+        a(1) * b(2) - a(2) * b(1),
+        a(2) * b(0) - a(0) * b(2),
+        a(0) * b(1) - a(1) * b(0))
+      cross(a, b) == r
+      cross(b, a) == r * -1.0
+    }
+
+    // test the failure that should occur if a or b does not have 3 components
+    val v4comp = DenseVector(1,2,3,4)
+    intercept[IllegalArgumentException] {
+      cross(v4comp, v4comp)
+    }
   }
 
 }
