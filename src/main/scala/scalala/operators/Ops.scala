@@ -86,14 +86,6 @@ trait NumericOps[+This] {
     this.:%(b);
 }
 
-object NumericOps {
-  def richArray[V:ClassManifest:Scalar](arr: Array[V]):NumericOps[Array[V]] = {
-    new NumericOps[Array[V]] {
-      def repr = arr;
-    }
-  }
-}
-
 /**
  * Operators for mutable numeric collections.
  *
