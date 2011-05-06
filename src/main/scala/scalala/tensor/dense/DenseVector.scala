@@ -28,6 +28,7 @@ import scalala.scalar.Scalar;
 import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
 import scalala.operators._
+import bundles.MutableInnerProductSpace
 import java.util.Arrays
 ;
 
@@ -113,6 +114,10 @@ object DenseVector extends DenseVectorConstructors {
   }
 
   class GenericDenseVectorColBase[@specialized V:Scalar:Manifest] {
+    def create(length : Int) = new DenseVectorCol(new Array[V](length));
+  }
+
+  class GenericDenseVectorBase[@specialized V:Scalar:Manifest] {
     def create(length : Int) = new DenseVectorCol(new Array[V](length));
   }
 
@@ -289,6 +294,9 @@ object DenseVector extends DenseVectorConstructors {
 
   implicit object CanJoinDVRDDVRD extends CanJoinDenseVectors[Double,Double,DenseVectorRow];
 
+  implicit object CanMapValuesDV extends GenericDenseVectorBase[Double]
+  with CanMapValuesDenseVector[Double,Double,DenseVector];
+
   implicit object CanMapValuesDVCDDVCD extends GenericDenseVectorColBase[Double]
   with CanMapValuesDenseVector[Double,Double,DenseVectorCol];
 
@@ -338,6 +346,19 @@ object DenseVector extends DenseVectorConstructors {
         a.length, a.data, a.offset, a.stride, b.data, b.offset, b.stride);
     }
   }
+
+  implicit def denseVectorColVSpace:MutableInnerProductSpace[Double,DenseVectorCol[Double]] = {
+    MutableInnerProductSpace.make[Double,DenseVectorCol[Double]]
+  };
+
+  implicit def denseVectorRowVSpace:MutableInnerProductSpace[Double,DenseVectorRow[Double]] = {
+    MutableInnerProductSpace.make[Double,DenseVectorRow[Double]]
+  };
+
+  implicit def denseVectorVSpace:MutableInnerProductSpace[Double,DenseVector[Double]] = {
+    MutableInnerProductSpace.make[Double,DenseVector[Double]]
+  };
+
 }
 
 /**
