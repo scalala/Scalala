@@ -51,7 +51,7 @@ extends PartialFunction[K, V] {
   /** @throws DomainException if domain is not equal to this domain. */
   def checkDomain(domain : Domain[K]) : Unit = {
     if (this.domain != domain)
-      throw new DomainException("Incompatible domain: "+domain);
+      throw new DomainException("Incompatible domain: "+domain + " for " + this.domain);
   }
 
   def apply(key : K) : V;
