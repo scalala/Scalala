@@ -39,8 +39,8 @@ class RandomTest extends FunSuite with Checkers {
     val X     = DenseMatrix.randn(mu, Sigma, 50000)(mt)
 
     val (chkSigma, chkMu) = covariance(X, Axis.Horizontal)
-    assert(chkMu forallPairs ( (i,v) => math.abs(v-mu(i)) < 1e-1 ))
-    assert(chkSigma forallPairs ( (idx,v) => math.abs(v-Sigma(idx)) < 1e-1 ))
+    assert(chkMu forallPairs ( (i,v) => math.abs(v-mu(i)) < 1e-1 ),chkMu)
+    assert(chkSigma forallPairs ( (idx,v) => math.abs(v-Sigma(idx)) < 1e-1 ), chkSigma)
   }
 }
 

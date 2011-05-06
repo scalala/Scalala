@@ -580,31 +580,22 @@ object Tensor {
       a.checkDomain(b.domain);
       
       // keep track of things that weren't zero but become zero after mutating
-      var newlyZero : scala.collection.mutable.HashSet[K] = null;
-      
+      val visited = scala.collection.mutable.HashSet[K]();
+
       val wholeDomainVisited = a.foreachNonZeroPair((k,aV) => {
-        if (aV != aZ) {
-          fn(k, aV, b(k));
-          
-          // workaround for mutations that result in a(k) = 0
-          // https://github.com/scalala/Scalala/pull/19
-          if (a(k) == aZ) {
-            if (newlyZero == null) {
-              newlyZero = new scala.collection.mutable.HashSet[K]();
-            }
-            newlyZero += k;
-          }
-        }
+        val bV = b(k);
+        if(aV != aZ || bV != bZ)
+          fn(k, aV, bV);
+        visited += k;
       });
-      
-      if (!wholeDomainVisited || a.domain != b.domain) {
+
+      if(!wholeDomainVisited || a.domain != b.domain)
         b.foreachNonZeroPair((k,bV) => {
           val aV = a(k);
-          if (aV == aZ && bV != bZ && (newlyZero == null || !newlyZero.contains(k))) {
+          if (aV == aZ && bV != bZ && (!visited.contains(k))) {
             fn(k, aV, bV);
           }
         });
-      }
     }
 
     override def joinBothNonZero[RV](_a : A, _b : B, fn : (K,V1,V2)=>RV) = {
