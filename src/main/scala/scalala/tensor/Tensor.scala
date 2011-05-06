@@ -618,15 +618,15 @@ object Tensor {
     }
   }
 
-//  implicit def opTensorUnary[K,V,RV,Op<:OpType,This,That]
-//  (implicit view : This=>Tensor[K,V],
-//   op : UnaryOp[V,Op,RV],
-//   bf : CanMapValues[This,V,RV,That])
-//  : UnaryOp[This,Op,That]
-//  = new UnaryOp[This,Op,That] {
-//    override def apply(from : This) =
-//      bf.map(from, op);
-//  }
+  implicit def opTensorUnary[K,V,RV,Op<:OpType,This,That]
+  (implicit view : This=>Tensor[K,V],
+   op : UnaryOp[V,Op,RV],
+   bf : CanMapValues[This,V,RV,That])
+  : UnaryOp[This,Op,That] = new UnaryOp[This,Op,That] {
+    def opType = op.opType;
+    override def apply(from : This) =
+      bf.map(from, op.apply _);
+  }
 
   implicit def opTensorTensor[K,D,V1,V2,Op<:OpType,RV,A,B,That]
   (implicit v1 : A=>Tensor[K,V1], v2 : B=>Tensor[K,V2],

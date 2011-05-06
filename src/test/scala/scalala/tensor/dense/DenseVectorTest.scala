@@ -174,4 +174,10 @@ class DenseVectorTest extends FunSuite with Checkers {
     val res = DenseVector(1,2,3,2,3,4);
     assert(DenseVector.vertcat(a1,a2) === res);
   }
+
+  test("Negation") {
+    val a1 = DenseVector(1,2,3);
+    assert(-a1 == DenseVector(-1,-2,-3))
+
+  }
 }
