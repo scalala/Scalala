@@ -56,7 +56,7 @@ object CanSqrt {
   }
 
   class OpMapValues[From,A,B,To](implicit op : CanSqrt[A,B], map : CanMapValues[From,A,B,To]) extends CanSqrt[From,To] {
-    def apply(v : From) = map.map(v, op);
+    def apply(v : From) = map.map(v, op.apply(_));
   }
 
   implicit def opMapValues[From,A,B,To](implicit map : CanMapValues[From,A,B,To], op : CanSqrt[A,B])

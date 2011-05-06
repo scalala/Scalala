@@ -29,7 +29,10 @@ import scalala.scalar.Scalar;
  *
  * @author dlwh
  */
-trait CanCopy[T] extends (T=>T);
+trait CanCopy[T] {
+  // Should not inherit from T=>T because those get  used by the compiler.
+  def apply(t: T):T
+}
 
 object CanCopy {
 
@@ -41,7 +44,7 @@ object CanCopy {
   }
 
   class OpMapValues[From,A](implicit op : CanCopy[A], map : CanMapValues[From,A,A,From]) extends CanCopy[From] {
-    def apply(v : From) = map.map(v, op);
+    def apply(v : From) = map.map(v, op.apply(_));
   }
 
   implicit def opMapValues[From,A](implicit map : CanMapValues[From,A,A,From], op : CanCopy[A])

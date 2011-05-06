@@ -30,9 +30,10 @@ import scala.collection.generic.CanBuildFrom;
  * @author dramage
  */
 @implicitNotFound(msg="Could not find a way to ${O} value of type ${This}")
-trait UnaryOp[@specialized -This, O<:OpType, +That]
-extends (This => That) {
+trait UnaryOp[@specialized -This, O<:OpType, +That] {
+  // should not inherit from This=>That because the compiler will try to use it as a conversion.
   def opType : O;
+  def apply(t: This):That
 }
 
 object UnaryOp {

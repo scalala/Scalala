@@ -755,7 +755,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
   = new UnaryOp[SparseArray[V],O,SparseArray[RV]] {
     def opType = op.opType;
     def apply(a : SparseArray[V]) =
-      a.map(op);
+      a.map(op apply _);
   }
   
   //

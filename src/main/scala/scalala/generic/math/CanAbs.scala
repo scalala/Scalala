@@ -63,7 +63,7 @@ object CanAbs {
   }
 
   class OpMapValues[From,A,B,To](implicit op : CanAbs[A,B], map : CanMapValues[From,A,B,To]) extends CanAbs[From,To] {
-    def apply(v : From) = map.map(v, op);
+    def apply(v : From) = map.map(v, op.apply(_));
   }
 
   implicit def opMapValues[From,A,B,To](implicit map : CanMapValues[From,A,B,To], op : CanAbs[A,B])

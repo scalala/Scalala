@@ -30,7 +30,10 @@ import scalala.scalar.Scalar;
  *
  * @author dramage
  */
-trait CanCreateZerosLike[-From, +To] extends (From=>To);
+trait CanCreateZerosLike[-From, +To] {
+  // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
+  def apply(from: From):To
+};
 
 object CanCreateZerosLike {
 
