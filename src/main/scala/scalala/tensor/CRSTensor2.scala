@@ -26,23 +26,23 @@ import generic.{TensorBuilder,TensorPairsMonadic};
 import scalala.scalar.Scalar;
 import scalala.generic.collection._
 import tensor.Counter2.Curried
-;
 
 /**
- * A map-like tensor that acts like a collection of key-value pairs where
- * the set of values may grow arbitrarily.
+ * A Tensor2 with an open row key domain that maps to an arbitrary Tensor1 as its rows.
+ *
+ * CRS = Compress Row Storage
  *
  * @author dlwh
  */
-trait Counter2Like
+trait CRSTensor2Like
 [K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V,
  +M1[VV] <: Curried[scala.collection.Map,K1]#Result[VV],
  +T <: Tensor1[K2,V],
- +This<:Counter2[K1,K2,V]]
+ +This<:CRSTensor2[K1,K2,V,T]]
 extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K2,K1],This]
-// TODO: this hsould work instead extends CRSTensor2Like[K1,K2,V,M1,T,This]
-//with TensorPairsMonadic[(K1,K2),V,This]
 { self =>
+
+  protected def k2domain:Domain1[K2];
 
   override def newBuilder[NK,NV:Scalar](domain : IterableDomain[NK])
   : TensorBuilder[NK,NV,Tensor[NK,NV]] = domain match {
@@ -58,6 +58,9 @@ extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K
 
   def data : M1[_<:T];
 
+
+  def apply(i: K1, j: K2) = data(i)(j);
+
   override def size = {
     var s = 0;
     for (m <- data.valuesIterator) {
@@ -69,17 +72,17 @@ extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K
   override def domain : Domain2[K1,K2] = {
     new Domain2[K1,K2] {
       def _1 = new SetDomain(data.keySet)
-      def _2 = new SetDomain(data.values.flatMap(_.domain).toSet);
+      def _2 = k2domain;
     }
   }
 
-  override def apply(k : K1, k2: K2) = data.get(k).map(t => t(k2)) getOrElse scalar.zero;
 
-  override def checkKey(k : K1, k2: K2) = ();
-  
+  override def checkKey(k : K1, k2: K2) = data(k).checkKey(k2);
+
+  // TODO: how to implement this nicely?
   override def checkDomain(d : scalala.tensor.domain.Domain[(K1,K2)]) = ();
 
-
+    
   //
   // faster implementations
   //
@@ -89,7 +92,7 @@ extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K
 
   override def foreachValue[U](fn : V => U) : Unit =
     valuesIterator.foreach(fn);
-
+    
   override def foreachTriple[U](fn : (K1,K2,V) => U) : Unit =
     triplesIterator.foreach(triple => fn(triple._1,triple._2,triple._3));
 
@@ -98,52 +101,35 @@ extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K
   override def valuesIterator = for (m <- data.valuesIterator; v <- m.valuesIterator) yield v
 
   override def pairsIterator = for ((k1,m) <- data.iterator; (k2,v) <- m.pairsIterator) yield (k1,k2)->v;
-
+  
   override def triplesIterator = for ((k1,m) <- data.iterator; (k2,v) <- m.pairsIterator) yield (k1,k2,v);
 }
+/**
+ * A Tensor2 with an open row key domain that maps to an arbitrary Tensor1 as its rows.
+ *
+ * CRS = Compress Row Storage
+ *
+ * @author dlwh
+ */
+trait CRSTensor2
+[K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V, +T<:Tensor1[K2,V]]
+extends Tensor2[K1,K2,V] with CRSTensor2Like[K1,K2,V,Curried[scala.collection.Map,K1]#Result,T,CRSTensor2[K1,K2,V,T]];
 
-trait Counter2
-[K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V]
-extends Tensor2[K1,K2,V] with Counter2Like[K1,K2,V,Curried[scala.collection.Map,K1]#Result,Counter[K2,V],Counter2[K1,K2,V]];
-
-object Counter2 {
-  def apply[K1,K2,V:Scalar]() : mutable.Counter2[K1,K2,V] =
-    mutable.Counter2();
-    
-  def apply[K1,K2,V:Scalar](values : (K1,K2,V)*) : mutable.Counter2[K1,K2,V] =
-    mutable.Counter2(values :_ *);
-    
-  def apply[K1,K2,V:Scalar](values : TraversableOnce[(K1,K2,V)]) : mutable.Counter2[K1,K2,V] =
-    mutable.Counter2(values);
-
-  def apply[K1,K2,V:Scalar](domain : Domain2[K1,K2]) =
-    mutable.Counter2(domain);
-
-  def count[K1,K2](items : TraversableOnce[(K1,K2)]) : mutable.Counter2[K1,K2,Int] =
-    mutable.Counter2.count(items);
-
+object CRSTensor2 {
   /**
-   * This is just a curried version of scala.collection.Map.
-   * Used to get around Scala's lack of partially applied types.
-   *
-   * @author dlwh
+   * Returns a new empty CRSTensor2 using the "template" to create rows. The actual rows are zero'd out versions of
+   * the template.
    */
-  trait Curried[M[_,_],K] {
-    type Result[V] = M[K,V];
+  def apply[K1,K2,V,T<:mutable.Tensor1[K2,V]](template: T)(implicit view: CanViewAsTensor1[T,K2,V],
+                                                     zeros: CanCreateZerosLike[T,T],
+                                                     scalar: Scalar[V]) : mutable.CRSTensor2[K1,K2,V,T] =
+    mutable.CRSTensor2[K1,K2,V,T](template);
+    
+  implicit def canSliceRow[K1,K2,V,T<:Tensor1[K2,V]] : CanSliceRow[CRSTensor2[K1,K2,V,T],K1,T]
+  = new CanSliceRow[CRSTensor2[K1,K2,V,T],K1,T] {
+    override def apply(from : CRSTensor2[K1,K2,V,T], row : K1) = from.data(row);
   }
 
 
-  implicit def canSliceRow[K1,K2,V:Scalar] : CanSliceRow[Counter2[K1,K2,V],K1,Counter[K2,V]]
-  = new CanSliceRow[Counter2[K1,K2,V],K1,Counter[K2,V]] {
-    val vS = implicitly[Scalar[V]];
-    override def apply(from : Counter2[K1,K2,V], row : K1) = from.data(row);
-  }
-
-//  implicit def Counter2CanSolveCounter[K1,K2,V]
-//  extends BinaryOp[Counter2[K1,K2,V],Counter[K2,V],OpSolveMatrixBy,Counter[K1,V]] {
-//    override def opType = OpSolveMatrixBy;
-//    override def apply(A : Counter2[K1,K2,V], V : Counter[K2,V]) = {
-//      val 
-//    }
 }
 

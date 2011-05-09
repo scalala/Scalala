@@ -38,9 +38,9 @@ import scala.collection.mutable.HashMap
 trait Counter2Like
 [K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V,
  +M1[VV]<:Curried[scala.collection.mutable.Map,K1]#Result[VV],
- +M2<:scala.collection.mutable.Map[K2,V],
+ +T<:scalala.tensor.mutable.Tensor1[K2,V],
  +This<:Counter2[K1,K2,V]]
-extends tensor.Counter2Like[K1,K2,V,M1,M2,This] with Tensor2Like[K1,K2,V,SetDomain[K1], SetDomain[K2], Domain2[K1,K2], Domain2[K2,K1], This] { self =>
+extends tensor.Counter2Like[K1,K2,V,M1,T,This] with Tensor2Like[K1,K2,V,SetDomain[K1], SetDomain[K2], Domain2[K1,K2], Domain2[K2,K1], This] { self =>
 
   def update(k1 : K1, k2: K2, v : V) =
     innerGetOrElseUpdate(k1,data)(k2) = v;
@@ -53,18 +53,18 @@ extends tensor.Counter2Like[K1,K2,V,M1,M2,This] with Tensor2Like[K1,K2,V,SetDoma
 trait Counter2
 [K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V]
 extends tensor.Counter2[K1,K2,V] with Tensor2[K1,K2,V]
-with Counter2Like[K1,K2, V,Curried[scala.collection.mutable.Map,K1]#Result,scala.collection.mutable.Map[K2,V],Counter2[K1,K2,V]];
+with Counter2Like[K1,K2, V,Curried[scala.collection.mutable.Map,K1]#Result,Counter[K2,V],Counter2[K1,K2,V]];
 
 object Counter2 {
   class Impl[K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V]
-  (override val data : scala.collection.mutable.Map[K1,scala.collection.mutable.Map[K2,V]])
+  (override val data : scala.collection.mutable.Map[K1,Counter[K2,V]])
   (implicit override val scalar : Scalar[V])
   extends Counter2[K1,K2,V];
 
   /** Returns a new empty counter. */
   def apply[K1,K2,V:Scalar]() : Counter2[K1,K2,V] = {
-    val map = new HashMap[K1,scala.collection.mutable.Map[K2,V]] {
-      override def default(k: K1) = scala.collection.mutable.Map[K2,V]();
+    val map = new HashMap[K1,Counter[K2,V]] {
+      override def default(k: K1) = Counter[K2,V]();
     }
     new Impl[K1,K2,V](map);
   }
@@ -94,10 +94,7 @@ object Counter2 {
   implicit def canSliceRow[K1,K2,V](implicit vS : Scalar[V])
   : CanSliceRow[Counter2[K1,K2,V],K1,Counter[K2,V]]
   = new CanSliceRow[Counter2[K1,K2,V],K1,Counter[K2,V]] {
-    override def apply(from : Counter2[K1,K2,V], row : K1) = new Counter[K2,V] {
-      def data = from.innerGetOrElseUpdate(row,from.data);
-      implicit val scalar = vS;
-    }
+    override def apply(from : Counter2[K1,K2,V], row : K1) = from.innerGetOrElseUpdate(row,from.data);
   }
   
   implicit def canSliceCol[K1,K2,V](implicit vS : Scalar[V])
@@ -112,20 +109,20 @@ object Counter2 {
           from(k1,col) = v;
           
         override def -=(k1 : K1) = {
-          from.data(k1) -= col;
+          from.data(k1)(col) = vS.zero;
           this;
         }
         
         override def +=(tup : (K1,V)) = {
-          from.data(tup._1) += (col -> tup._2);
+          from.data(tup._1)(col) = (tup._2);
           this;
         }
         
         override def iterator =
-          for ((k1,map) <- from.data.iterator) yield (k1,map.getOrElse(col,scalar.zero));
+          for ((k1,map) <- from.data.iterator) yield (k1,map(col));
           
         override def get(k1 : K1) =
-          from.data.get(k1).flatMap(_.get(col));
+          from.data.get(k1).map(_(col));
           
         override def keySet = from.data.keySet;
         

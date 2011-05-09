@@ -151,7 +151,7 @@ object Tensor2 {
   def apply[K1,K2,V:Scalar](domain : Domain2[K1,K2]) =
     mutable.Tensor2.apply(domain);
 
-  implicit def canSliceRow[K1,K2,V:Scalar] : CanSliceRow[Tensor2[K1,K2,V],K1,Tensor1Row[K2,V]]
+  implicit def canSliceRow[T2<:Tensor2[K1,K2,V],K1,K2,V:Scalar] : CanSliceRow[Tensor2[K1,K2,V],K1,Tensor1Row[K2,V]]
   = new CanSliceRow[Tensor2[K1,K2,V],K1,Tensor1Row[K2,V]] {
     override def apply(from : Tensor2[K1,K2,V], row : K1) =
       new RowSliceImpl[K1,K2,V,Tensor2[K1,K2,V]](from,row);
