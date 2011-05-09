@@ -134,6 +134,8 @@ object Counter extends CounterImplicitsLevel1 {
   def count[K](items : TraversableOnce[K]) : mutable.Counter[K,Int] =
     mutable.Counter.count(items);
 
+  def count[K](items: K*): mutable.Counter[K,Int] = count(items);
+
   implicit def CanMapValuesCounter
   [@specialized(Int) K, @specialized(Int,Double) V, @specialized(Int,Double) RV:Scalar]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]]
   = new CanMapValues[Counter[K,V],V,RV,Counter[K,RV]] {
