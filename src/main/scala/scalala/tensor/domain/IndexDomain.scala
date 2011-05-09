@@ -41,7 +41,7 @@ extends Domain1[Int] with Domain1Like[Int,IndexDomain] {
     case _ => super.product[B,That](that);
   }
 
-  override def toIndexedSeq =
+  override def toIndexedSeq[B>:Int] =
     Range(0,size);
     
   override def contains(key : Int) =

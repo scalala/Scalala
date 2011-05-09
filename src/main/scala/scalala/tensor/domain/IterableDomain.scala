@@ -29,7 +29,8 @@ package domain;
  * @author dramage
  */
 trait IterableDomainLike[@specialized(Int,Long) A, +This<:IterableDomain[A]]
-extends DomainLike[A,This] { outer =>
+extends DomainLike[A,This] with Iterable[A] { outer =>
+  override def repr: This = this.asInstanceOf[This];
   /** Applies the given function to every element of the domain. */
   def foreach[O](f : A => O);
 
@@ -47,20 +48,20 @@ extends DomainLike[A,This] { outer =>
   /** Number of elements in the domain. */
   def size : Int;
 
-  def toIndexedSeq =
-    iterator.toIndexedSeq;
+//  def toIndexedSeq =
+//    iterator.toIndexedSeq;
 
-  def toArray(implicit mf : Manifest[A]) =
-    iterator.toArray;
+//  def toArray(implicit mf : Manifest[A]) =
+//    iterator.toArray;
 
-  def filter(fn : A => Boolean) : List[A] =
-    iterator.filter(fn).toList;
+//  def filter(fn : A => Boolean) : List[A] =
+//    iterator.filter(fn).toList;
 
-  def max(implicit ord : Ordering[A]) =
-    iterator.max(ord);
+//  def max(implicit ord : Ordering[A]) =
+//    iterator.max(ord);
 
-  def min(implicit ord : Ordering[A]) =
-    iterator.min(ord);
+//  def min(implicit ord : Ordering[A]) =
+//    iterator.min(ord);
 
   override def equals(other : Any) = other match {
     case that : IterableDomain[_] =>

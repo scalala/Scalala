@@ -28,6 +28,7 @@ package domain;
  */
 trait Domain1Like[@specialized(Int,Long) A, +This<:Domain1[A]]
 extends IterableDomainLike[A,This] { outer =>
+  override def repr: This = this.asInstanceOf[This];
 
   /** Constructs the union of this and the other domain. */
   override def union(that : IterableDomain[A]) : IterableDomain[A] = that match {

@@ -22,7 +22,7 @@ package tensor;
 package domain;
 
 /**
- * Trait that represents the onion of two domains.
+ * Trait that represents the union of two domains.
  *
  * @author dramage
  */
