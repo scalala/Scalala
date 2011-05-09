@@ -24,6 +24,8 @@ package math;
 
 import scalala.generic.collection.CanCreateZerosLike;
 import scalala.operators._;
+import scalala.tensor.Tensor;
+import scalala.scalar.ScalarDecimal;
 
 /**
  * Construction delegate for mean(From).
@@ -78,6 +80,25 @@ object CanMean { // extends LowPriorityCanMean {
         k += 1;
       }
       m;
+    }
+  }
+
+  /** Numerically stable generic one-pass mean computation. */
+  implicit def TensorMean[T,V,D](implicit tv : T=>Tensor[_,V],
+    sd : ScalarDecimal[V,D],
+    add : BinaryOp[D,D,OpAdd,D],
+    sub : BinaryOp[V,D,OpSub,D],
+    div : BinaryOp[D,Int,OpDiv,D],
+    mul : BinaryOp[D,Double,OpMul,D])
+  : CanMean[T,D] = new CanMean[T,D] {
+    def apply(tensor : T) = {
+      var m = sd.decimal.zero;
+      var k = 0;
+      tensor.foreachNonZeroValue(x => {
+        k += 1;
+        m = add(m,div(sub(x,m),k));
+      });
+      mul(m,  k.toDouble / tensor.size);
     }
   }
 

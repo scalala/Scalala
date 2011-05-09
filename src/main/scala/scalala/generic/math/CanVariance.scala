@@ -24,6 +24,8 @@ package math;
 
 import scalala.generic.collection.CanCreateZerosLike;
 import scalala.operators._;
+import scalala.tensor.Tensor;
+import scalala.scalar.ScalarDecimal;
 
 /**
  * Construction delegate for variance(From).
@@ -72,6 +74,31 @@ object CanVariance {
         q = q + (k - 1) * xMm * xMmDk
       }
       q / (k - 1);
+    }
+  }
+  
+  implicit def TensorVariance[T,V,D](implicit view : T=>Tensor[_,V],
+    sd : ScalarDecimal[V,D],
+    sub  : BinaryOp[V,D,OpSub,D],
+    add  : BinaryOp[D,D,OpAdd,D],
+    div  : BinaryOp[D,Int,OpDiv,D],
+    mul1 : BinaryOp[D,D,OpMul,D],
+    mul2 : BinaryOp[D,Int,OpMul,D])
+  : CanVariance[T,D]
+  = new CanVariance[T,D] {
+    override def apply(tensor : T) = {
+      var m = sd.decimal.zero;
+      var q = sd.decimal.zero;
+      var k = 0;
+      // TODO: this could be more efficient by using foreachNonZeroValue
+      tensor.foreachValue(x => {
+        k += 1;
+        val xMm = sub(x, m);
+        val xMmDk = div(xMm, k);
+        m = add(m, xMmDk);
+        q = add(q, mul2(mul1(xMm,xMmDk), k-1));
+      });
+      div(q, k-1);
     }
   }
 }

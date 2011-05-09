@@ -55,8 +55,13 @@ class CounterTest extends FunSuite with Checkers {
   test("Zero + non zero is nonzero") {
     val a = mutable.Counter[Int,Double](1->0.0)
     val b = mutable.Counter(1->0.15951);
-    println(a,a+b, b);
     assert(a + b === b, (a + b).toString + " not equal " + b)
+  }
+
+  test("Mean") {
+    assert(Counter(0->0,1->1,2->2).mean === 1.0);
+    assert(Counter(0->0.0,1->3.0).mean === 1.5);
+    assert(Counter(0->3l).mean === 3.0);
   }
 }
 

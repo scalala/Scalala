@@ -191,6 +191,10 @@ object Complex { outer =>
       implicitly[scalala.collection.sparse.DefaultArrayValue[Complex]];
   }
 
+  implicit object decimal extends ScalarDecimal[Complex,Complex] {
+    def decimal = scalar;
+  }
+
   //
   // neg
   //

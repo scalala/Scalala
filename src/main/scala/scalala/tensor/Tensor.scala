@@ -24,8 +24,10 @@ import domain._;
 import generic._;
 
 import scalala.operators._;
-import scalala.scalar.Scalar;
+import scalala.scalar.{Scalar,ScalarDecimal};
 import scalala.generic.collection._;
+
+import scalala.generic.math.{CanMean,CanVariance,CanSqrt};
 
 /**
  * A Tensor is a map from keys K (with a domain) to numeric scalar values V.
@@ -346,7 +348,7 @@ self =>
   // Collection level queries
   //
 
-  /** Returns a key associated with the largest value in the map. */
+  /** Returns a key associated with the largest value in the tensor. */
   def argmax : K = {
     if (!pairsIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .max");
@@ -356,7 +358,7 @@ self =>
     arg;
   }
 
-  /** Returns a key associated with the smallest value in the map. */
+  /** Returns a key associated with the smallest value in the tensor. */
   def argmin : K = {
     if (!pairsIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .min");
@@ -366,7 +368,7 @@ self =>
     arg;
   }
 
-  /** Returns the max of the values in this map. */
+  /** Returns the max of the values in this tensor. */
   def max : V = {
     if (!valuesIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .max");
@@ -379,7 +381,7 @@ self =>
     }
   }
 
-  /** Returns the min of the values in this map. */
+  /** Returns the min of the values in this tensor. */
   def min : V = {
     if (!valuesIterator.hasNext) {
       throw new UnsupportedOperationException("Empty .min");
@@ -392,12 +394,33 @@ self =>
     }
   }
 
-  /** Returns the sum of the values in this map. */
+  /** Returns the sum of the values in this tensor. */
   def sum : V = {
     var sum = scalar.zero;
     foreachNonZeroValue(v => sum = scalar.+(sum,v));
     return sum;
   }
+
+  /**
+   * Returns the mean of the values in this tensor.  The returned type
+   * is a decimal version of the scalar type of this tensor.
+   */
+  def mean[D](implicit calc : CanMean[This,D]) : D =
+    calc(repr);
+
+  /**
+   * Returns the mean of the values in this tensor.  The returned type
+   * is a decimal version of the scalar type of this tensor.
+   */
+  def variance[D](implicit calc : CanVariance[This,D]) : D =
+    calc(repr);
+  
+  /**
+   * Returns the mean of the values in this tensor.  The returned type
+   * is a decimal version of the scalar type of this tensor.
+   */
+  def stddev[D](implicit calc : CanVariance[This,D], sqrt : CanSqrt[D,D]) : D =
+    sqrt(calc(repr));
 
   //
   // Conversions
