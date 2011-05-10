@@ -80,6 +80,9 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
 
     val C = Matrix((1,2,3),(2,4,6),(0,-1,0)) // 1st and 2nd row linearly dep.
     det(C) should be (0.0 plusOrMinus 1e-15)
+
+    val D = Matrix((-1,1,-1),(1,2,3),(3,-10,1))
+    det(D) should be (-8.0 plusOrMinus 1e-8)
   }
 
   test("inv") {
