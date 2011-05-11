@@ -345,8 +345,15 @@ trait LinearAlgebra {
     // Since det(AB) = det(A) * det(B), the LU factorization is well-suited for
     // the computation of the determinant of general N-by-N matrices.
     val (m, ipiv) = LU(X)
-    val numExchangedRows = (0 /: ipiv)(_ + math.min(1,_))
-    var acc = if (numExchangedRows % 2 == 1) 1.0 else -1.0
+
+    // Count the number of exchanged rows.  ipiv contains an array of swapped indices,
+    //  but it also contains indices that weren't swapped.  To count the swapped
+    //  indices, we have to compare them against their position within the array.  A
+    //  final complication is that the array indices are 1-based, due to the LU call
+    //  into LAPACK.
+    val numExchangedRows = ipiv.map(_ - 1).zipWithIndex.count { piv => piv._1 != piv._2 }
+
+    var acc = if (numExchangedRows % 2 == 1) -1.0 else 1.0
     for (i <- 0 until m.numRows)
       acc *= m(i,i)
 
