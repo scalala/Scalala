@@ -141,6 +141,11 @@ object Counter2 {
     }
   }
 
-
+//  implicit def Counter2CanSolveCounter[K1,K2,V]
+//  extends BinaryOp[Counter2[K1,K2,V],Counter[K2,V],OpSolveMatrixBy,Counter[K1,V]] {
+//    override def opType = OpSolveMatrixBy;
+//    override def apply(A : Counter2[K1,K2,V], V : Counter[K2,V]) = {
+//      val 
+//    }
 }
 

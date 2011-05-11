@@ -37,7 +37,7 @@ trait CanBuildTensorForBinaryOp[-A, -B, D, K, V, Op, +To] {
 
 object CanBuildTensorForBinaryOp {
   implicit def canBuildTensorLeft[A,B,D,K,V,Op,To]
-  (implicit va : A=>Tensor[K,_], bf : CanBuildTensorFrom[A,D,K,V,To])
+  (implicit va : A=>Tensor[_,_], bf : CanBuildTensorFrom[A,D,K,V,To])
   : CanBuildTensorForBinaryOp[A,B,D,K,V,Op,To]
   = new CanBuildTensorForBinaryOp[A,B,D,K,V,Op,To] {
     def apply(a : A, b : B, domain : D)  = bf.apply(a, domain);

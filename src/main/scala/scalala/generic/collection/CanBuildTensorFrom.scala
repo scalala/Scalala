@@ -132,10 +132,24 @@ trait CanBuildTensorFromImplicitsLevel3 extends CanBuildTensorFromImplicitsLevel
       from.newBuilder(domain).asInstanceOf[TensorBuilder[K,V,mutable.Counter[K,V]]];
   }
   
-  implicit def canBuilderCounter2FromCounter2[K1,K2,V:Scalar]
+  implicit def canBuildCounter2FromCounter2[K1,K2,V:Scalar]
   : CanBuildTensorFrom[Counter2[_,_,_], Domain2[K1,K2], (K1,K2), V, mutable.Counter2[K1,K2,V]]
   = new CanBuildTensorFrom[Counter2[_,_,_], Domain2[K1,K2], (K1,K2), V, mutable.Counter2[K1,K2,V]] {
     override def apply(from : Counter2[_,_,_], domain : Domain2[K1,K2]) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[(K1,K2),V,mutable.Counter2[K1,K2,V]]];
+  }
+  
+  implicit def canBuildCounterFromCounter2[K,V:Scalar]
+  : CanBuildTensorFrom[Counter2[_,_,_], Domain1[K], K, V, mutable.Counter[K,V]]
+  = new CanBuildTensorFrom[Counter2[_,_,_], Domain1[K], K, V, mutable.Counter[K,V]] {
+    override def apply(from : Counter2[_,_,_], domain : Domain1[K]) =
+      from.newBuilder(domain).asInstanceOf[TensorBuilder[K,V,mutable.Counter[K,V]]];
+  }
+  
+  implicit def canBuildCounter2FromCounter[K1,K2,V:Scalar]
+  : CanBuildTensorFrom[Counter[_,_], Domain2[K1,K2], (K1,K2), V, mutable.Counter2[K1,K2,V]]
+  = new CanBuildTensorFrom[Counter[_,_], Domain2[K1,K2], (K1,K2), V, mutable.Counter2[K1,K2,V]] {
+    override def apply(from : Counter[_,_], domain : Domain2[K1,K2]) =
       from.newBuilder(domain).asInstanceOf[TensorBuilder[(K1,K2),V,mutable.Counter2[K1,K2,V]]];
   }
   

@@ -207,7 +207,7 @@ object Tensor2 {
     viewB : B=>Tensor2[K2,K3,V2],
     sliceB : CanSliceCol[B,K3,BCol],
     domainB : CanGetDomain2[B,InnerDomain,BDomainCol,BDomain],
-    mul : BinaryOp[ARow,BCol,OpMulRowVectorBy,RV],
+    mul : BinaryOp[ARow,BCol,OpMulInner,RV],
     domainR : CanBuildDomain2[ADomainRow,BDomainCol,RDomain],
     bf : CanBuildTensorForBinaryOp[A,B,RDomain,(K1,K3),RV,OpMulMatrixBy,That],
     scalar : Scalar[RV])

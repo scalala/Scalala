@@ -402,22 +402,22 @@ self =>
   }
 
   /**
-   * Returns the mean of the values in this tensor.  The returned type
-   * is a decimal version of the scalar type of this tensor.
+   * Returns the mean of the values in this tensor.
+   * The returned type is a decimal version of the scalar type of this tensor.
    */
   def mean[D](implicit calc : CanMean[This,D]) : D =
     calc(repr);
 
   /**
-   * Returns the mean of the values in this tensor.  The returned type
-   * is a decimal version of the scalar type of this tensor.
+   * Returns the variance of the values in this tensor.
+   * The returned type is a decimal version of the scalar type of this tensor.
    */
   def variance[D](implicit calc : CanVariance[This,D]) : D =
     calc(repr);
   
   /**
-   * Returns the mean of the values in this tensor.  The returned type
-   * is a decimal version of the scalar type of this tensor.
+   * Returns the standard deviation of the values in this tensor.
+   * The returned type is a decimal version of the scalar type of this tensor.
    */
   def stddev[D](implicit calc : CanVariance[This,D], sqrt : CanSqrt[D,D]) : D =
     sqrt(calc(repr));

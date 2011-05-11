@@ -120,4 +120,9 @@ class Counter2Test extends FunSuite with Checkers {
     assert(mutable.Counter2(("a","a",1),("b","b",2)) :* mutable.Counter2(("a","a",3)) === Counter2(("a","a",3)));
     assert(mutable.Counter2(("a","a",3)) :* mutable.Counter2(("a","a",1),("b","b",2)) === Counter2(("a","a",3)));
   }
+  
+  test("Shaped Multiplication") {
+    assert(Counter2((0,'a',1),(1,'a',2),(1,'b',3)) * Counter2(('a',0,1),('b',0,2)) ===
+      Counter2((0,0,1),(1,0,8)));
+  }
 }
