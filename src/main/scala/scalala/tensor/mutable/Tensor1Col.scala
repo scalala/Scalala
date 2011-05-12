@@ -40,7 +40,7 @@ extends tensor.Tensor1ColLike[K,V,D,This] with Tensor1Like[K,V,D,This] {
 }
 
 /**
- * Mutable tensor.Tensor1.
+ * Mutable tensor.Tensor1Col.
  *
  * @author dramage
  */

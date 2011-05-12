@@ -28,7 +28,7 @@ import scalala.scalar.Scalar;
 import scalala.generic.collection.CanBuildTensorFrom;
 
 /**
- * Implementation trait for a one-axis tensor shaped as a row.
+ * Implementation trait for a one-axis tensor shaped as a column.
  *
  * @author dramage
  */
@@ -50,7 +50,7 @@ extends Tensor1Like[K,V,D,This] with operators.ColOps[This] { self =>
 }
 
 /**
- * One-axis tensor shaped as a row.
+ * One-axis tensor shaped as a column.
  *
  * @author dramage
  */
