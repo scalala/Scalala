@@ -1,7 +1,6 @@
 import sbt._
 import java.util.jar.Attributes.Name._
 
-
 class Project(info: ProjectInfo) extends DefaultProject(info) with ProguardProject {
   // 
   // repositories
@@ -26,7 +25,7 @@ class Project(info: ProjectInfo) extends DefaultProject(info) with ProguardProje
   val ScalaCheck = "org.scala-tools.testing" %% "scalacheck" % "1.8" % "test"
 
   val ScalaTest = buildScalaVersion match {
-    case "2.9.0.RC2" => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
+    case "2.9.0"     => "org.scalatest" % "scalatest" % "1.4.RC2" % "test"
     case "2.8.1"     => "org.scalatest" % "scalatest" % "1.3" % "test"
     case x           => error("Unsupported Scala version " + x)
   }
@@ -42,7 +41,8 @@ class Project(info: ProjectInfo) extends DefaultProject(info) with ProguardProje
   override def compileOptions =
     Optimise :: Deprecation ::
     target(Target.Java1_5) ::
-    Unchecked :: CompileOption("-no-specialization") ::
+    Unchecked ::
+    CompileOption("-no-specialization") ::
     super.compileOptions.toList
 
   override def packageOptions = ManifestAttributes(
