@@ -86,7 +86,39 @@ trait Counter
 [@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
 extends Tensor1[K,V] with CounterLike[K,V,scala.collection.Map[K,V],Counter[K,V]];
 
-object Counter {
+private[scalala]
+trait CounterRowProxyLike[K,V,+This<:CounterRowProxy[K,V]]
+extends Tensor1ProxyLike[K,V,Domain1[K],Counter[K,V],This]
+with Tensor1RowLike[K,V,Domain1[K],This];
+
+private[scalala]
+trait CounterRowProxy[K,V]
+extends Tensor1Proxy[K,V,Counter[K,V]] with Tensor1Row[K,V]
+with CounterRowProxyLike[K,V,CounterRowProxy[K,V]];
+
+private[scalala]
+trait CounterColProxyLike[K,V,+This<:CounterColProxy[K,V]]
+extends Tensor1ProxyLike[K,V,Domain1[K],Counter[K,V],This]
+with Tensor1ColLike[K,V,Domain1[K],This];
+
+private[scalala]
+trait CounterColProxy[K,V]
+extends Tensor1Proxy[K,V,Counter[K,V]] with Tensor1Col[K,V]
+with CounterColProxyLike[K,V,CounterColProxy[K,V]];
+
+trait CounterImplicitsLevel0 {
+  /** View a Counter as a row. */
+  implicit def counterAsRow[K,V](counter : Counter[K,V]) : Tensor1Row[K,V]
+  = new CounterRowProxy[K,V] { override def inner = counter; }
+}
+
+trait CounterImplicitsLevel1 extends CounterImplicitsLevel0 {
+  /** View a Counter as a column. */
+  implicit def counterAsCol[K,V](counter : Counter[K,V]) : Tensor1Col[K,V]
+  = new CounterColProxy[K,V] { override def inner = counter; }
+}
+
+object Counter extends CounterImplicitsLevel1 {
   def apply[K,V:Scalar]() : mutable.Counter[K,V] =
     mutable.Counter();
   
@@ -121,6 +153,5 @@ object Counter {
       rv;
     }
   }
-
 }
 
