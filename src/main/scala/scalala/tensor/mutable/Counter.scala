@@ -74,6 +74,8 @@ object Counter {
     items.foreach(rv(_) += 1);
     rv;
   }
+
+  def count[K](items: K*): mutable.Counter[K,Int] = count(items);
   
   def apply[K,V:Scalar](domain : Domain1[K]) : Counter[K,V] =
     new Impl(scala.collection.mutable.HashMap[K,V]());
