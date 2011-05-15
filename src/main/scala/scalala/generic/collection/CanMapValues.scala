@@ -21,6 +21,7 @@ package scalala;
 package generic;
 package collection;
 
+import scalala.scalar.Complex
 import scalala.collection.sparse.{SparseArray,DefaultArrayValue};
 
 /**
@@ -59,6 +60,7 @@ object CanMapValues {
   implicit object OpArrayLL extends OpArray[Long,Long];
   implicit object OpArrayFF extends OpArray[Float,Float];
   implicit object OpArrayDD extends OpArray[Double,Double];
+  implicit object OpArrayCC extends OpArray[Complex,Complex];
   implicit object OpArrayID extends OpArray[Int,Double];
   implicit object OpArraySD extends OpArray[Short,Double];
   implicit object OpArrayLD extends OpArray[Long,Double];
@@ -88,6 +90,7 @@ object CanMapValues {
   implicit object OpSparseArrayLL extends OpSparseArray[Long,Long];
   implicit object OpSparseArrayFF extends OpSparseArray[Float,Float];
   implicit object OpSparseArrayDD extends OpSparseArray[Double,Double];
+  implicit object OpSparseArrayCC extends OpSparseArray[Complex,Complex];
   implicit object OpSparseArrayID extends OpSparseArray[Int,Double];
   implicit object OpSparseArraySD extends OpSparseArray[Short,Double];
   implicit object OpSparseArrayLD extends OpSparseArray[Long,Double];

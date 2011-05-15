@@ -25,6 +25,7 @@ import matchers.ShouldMatchers
 import org.scalatest.junit._
 import org.scalatest.prop._
 import org.junit.runner.RunWith
+import scalala.scalar.Complex
 import scalala.tensor.mutable.{Matrix, Vector}
 import Library._
 import tensor.dense.{DenseVectorCol, DenseVector}
@@ -52,6 +53,19 @@ class LibraryTest extends FunSuite with Checkers with ShouldMatchers {
 
   test("exp") {
     assert(exp(Array(1,2,3,4)).toList === List(1,2,3,4).map(_.toDouble).map(math.exp))
+  }
+
+  test("Complex:exp") {
+    // exp(0 + 0i)
+    assert(exp(Complex(0,0)) === Complex(1,0))
+    // exp(0 + Pi * i / 2)
+    val t1 = exp(Complex(0, math.Pi / 2))
+    t1.real should be (0.0 plusOrMinus 1e-10)
+    t1.imag should be (1.0 plusOrMinus 1e-10)
+    // exp(5 + 7i)
+    val t2 = exp(Complex(5, 7))
+    t2.real should be (111.889 plusOrMinus 1e-3)
+    t2.imag should be (97.505 plusOrMinus 1e-3)
   }
 
   test("Tensor:Norm") {
