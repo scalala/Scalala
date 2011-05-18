@@ -54,4 +54,43 @@ class ComplexTest extends FunSuite with Checkers {
     val c = (1.7 + 2.1*i);
     assert(c * c.conjugate === 7.3);
   }
+
+  test("List[Complex].sum (test ComplexIsFractional)") {
+    val x = List((5 + 7*i), (1 + 3*i), (13 + 17*i))
+    assert(x.sum === (19 + 27*i))
+  }
+
+  test("List[Complex].product (test ComplexIsFractional)") {
+    val x = List((5 + 7*i), (1 + 3*i), (13 + 17*i))
+    assert(x.product === (-582 + 14*i))
+  }
+
+  test("List[Complex].sorted (test ComplexOrdering)") {
+    val x = List((5 + 7*i), (1 + 3*i), (13 + 17*i))
+    assert(x.sorted === List((1 + 3*i), (5 + 7*i), (13 + 17*i)))
+  }
+
+  test("Only permit conversion to built-in numeric types when purely real.") {
+    val a = 5 + 0*i  // should allow conversion
+    val b = 5 + 5*i  // should bork with an IllegalArgumentException
+
+    def toDouble[Complex](c: Complex)(implicit n: Numeric[Complex]): Double = 
+      n.toDouble(c)
+    def toFloat[Complex](c: Complex)(implicit n: Numeric[Complex]): Float =
+      n.toFloat(c)
+    def toInt[Complex](c: Complex)(implicit n: Numeric[Complex]): Int =
+      n.toInt(c)
+    def toLong[Complex](c: Complex)(implicit n: Numeric[Complex]): Long =
+      n.toLong(c)
+
+    assert(toDouble(a) === 5)
+    assert(toFloat(a) === 5)
+    assert(toInt(a) === 5)
+    assert(toLong(a) === 5)
+    intercept[IllegalArgumentException] { toDouble(b) }
+    intercept[IllegalArgumentException] { toFloat(b) }
+    intercept[IllegalArgumentException] { toInt(b) }
+    intercept[IllegalArgumentException] { toLong(b) }
+  }
+
 }
