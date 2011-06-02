@@ -82,6 +82,18 @@ object PaintScale {
     new TexturePaint(img, new Rectangle2D.Double(0,0,5,5));
   }
 
+  /** The Category10 palette from Protovis http://vis.stanford.edu/protovis/docs/color.html */
+  lazy val Category10 : Array[Color] = Array(
+    "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+    "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+  ).map(Color.decode);
+
+  /** The Category20 palette from Protovis http://vis.stanford.edu/protovis/docs/color.html */
+  lazy val Category20 : Array[Color] = Category10 ++ Array(
+    "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
+    "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5"
+  ).map(Color.decode);
+
   implicit def paintScaleFromRange(vLowerUpper : (Double,Double)) : PaintScale =
     StaticPaintScale(vLowerUpper._1, vLowerUpper._2);
 

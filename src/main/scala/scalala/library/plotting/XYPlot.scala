@@ -151,11 +151,8 @@ object XYPlot {
   }
 
   // color cycle ignoring bright colors
-  val paints = Array[Paint](
-     VERY_DARK_RED, VERY_DARK_BLUE, VERY_DARK_GREEN, VERY_DARK_YELLOW, VERY_DARK_MAGENTA, VERY_DARK_CYAN,
-     Color.darkGray,
-     DARK_RED, DARK_BLUE, DARK_GREEN, DARK_MAGENTA, DARK_CYAN
-  );
+  val paints : Array[Paint] = PaintScale.Category20.asInstanceOf[Array[Paint]];
+  
   def paint(series : Int) =
     paints(series % paints.length);
 
@@ -167,22 +164,26 @@ object XYPlot {
   def stroke(series : Int) =
     strokes(series % strokes.length);
 
-  val fillPaints = DefaultDrawingSupplier.DEFAULT_FILL_PAINT_SEQUENCE;
+  val fillPaints = paints; // DefaultDrawingSupplier.DEFAULT_FILL_PAINT_SEQUENCE;
   def fillPaint(series : Int) =
     fillPaints(series % fillPaints.length);
 
-  val outlinePaints = DefaultDrawingSupplier.DEFAULT_OUTLINE_PAINT_SEQUENCE;
+  val outlinePaints = paints; // DefaultDrawingSupplier.DEFAULT_OUTLINE_PAINT_SEQUENCE;
   def outlinePaint(series : Int) =
     outlinePaints(series % outlinePaints.length);
 
   val outlineStrokes = DefaultDrawingSupplier.DEFAULT_OUTLINE_STROKE_SEQUENCE;
   def outlineStroke(series : Int) =
     outlineStrokes(series % outlineStrokes.length);
-
-  val dot =
-    new java.awt.geom.Ellipse2D.Double(-1,-1,2,2);
  
   val transparent = new Color(255,255,255,0);
+
+  //
+  // shapes
+  //
+  
+  val dot =
+    new java.awt.geom.Ellipse2D.Double(-1,-1,2,2);
 
   val plus = {
     val shape = new java.awt.geom.GeneralPath();

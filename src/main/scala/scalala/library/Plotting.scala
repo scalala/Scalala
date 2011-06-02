@@ -130,7 +130,7 @@ trait Plotting {
    * @param tips Optional mouse-over tooltips for some points.
    */
   def plot[K,X,XV,Y,YV]
-  (x : X, y : Y, style : Char = '-', name : String = null)
+  (x : X, y : Y, style : Char = '-', name : String = null, lines : Boolean = true, shapes : Boolean = false)
    // labels : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]],
    // tips : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]])
   (implicit xyplot : XYPlot = figures.figure.plot,
@@ -185,22 +185,20 @@ trait Plotting {
     renderer.setSeriesItemLabelsVisible(series, labels != null);
 
     style match {
-    case '-' => {
-        renderer.setSeriesLinesVisible(0, true);
-        renderer.setSeriesShapesVisible(0, false);
-      }
-    case '.' => {
+      case '-' =>
+        // default line type
+        renderer.setSeriesLinesVisible(0,lines);
+        renderer.setSeriesShapesVisible(0,shapes);
+      case '.' =>
         renderer.setSeriesLinesVisible(0,false);
         renderer.setSeriesShapesVisible(0,true);
         renderer.setSeriesShape(0,XYPlot.dot);
-      }
-    case '+' => {
+      case '+' =>
         renderer.setSeriesLinesVisible(0,false);
         renderer.setSeriesShapesVisible(0,true);
         renderer.setSeriesShape(0,XYPlot.plus);
-      }
-    case _ =>
-      throw new IllegalArgumentException("Expected style to be one of - . or +")
+      case _ =>
+        throw new IllegalArgumentException("Expected style to be one of - . or +")
     }
 
     // set standard tick unit back to default (non-int) if we see non-ints
@@ -368,6 +366,10 @@ trait Plotting {
     xyplot.plot.getDomainAxis.setLowerBound(binner.splits(0)-width/2.0);
     xyplot.plot.getDomainAxis.setUpperBound(binner.splits(binner.splits.length-1)+width/2.0);
 
+    // set standard tick unit back to default (non-int)
+    xyplot.setXAxisDecimalTickUnits();
+    xyplot.setYAxisDecimalTickUnits();
+
     xyplot.plot.setDataset(series,dataset);
     xyplot.plot.setRenderer(series,renderer);
     xyplot.refresh();
@@ -510,5 +512,6 @@ trait Plotting {
  *
  * @author dramage
  */
-object Plotting extends Plotting { }
+object Plotting extends Plotting {
+}
 
