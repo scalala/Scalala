@@ -36,7 +36,7 @@ trait UnaryOp[@specialized -This, O<:OpType, +That] {
   def apply(t: This):That
 }
 
-object UnaryOp {
+object UnaryOp extends UnaryTupleOps {
   
   //
   // Negation
@@ -57,28 +57,6 @@ object UnaryOp {
   implicit object OpNegD extends UnaryOp[Double,OpNeg,Double]
     { def opType = OpNeg; def apply(v : Double) = -v; }
     
-    
-  //
-  // Tuples
-  //
-
-  implicit def OpTuple2[V1,V2,RV1,RV2,O<:OpType]
-  (implicit op1 : UnaryOp[V1,O,RV1], op2 : UnaryOp[V2,O,RV2])
-  : UnaryOp[(V1,V2),O,(RV1,RV2)]
-  = new UnaryOp[(V1,V2),O,(RV1,RV2)] {
-    def opType = op1.opType;
-    def apply(v : (V1,V2)) = (op1(v._1), op2(v._2));
-  }
-
-  implicit def OpTuple3[V1,V2,V3,RV1,RV2,RV3,O<:OpType]
-  (implicit op1 : UnaryOp[V1,O,RV1], op2 : UnaryOp[V2,O,RV2],
-   op3 : UnaryOp[V3,O,RV3])
-  : UnaryOp[(V1,V2,V3),O,(RV1,RV2,RV3)]
-  = new UnaryOp[(V1,V2,V3),O,(RV1,RV2,RV3)] {
-    def opType = op1.opType;
-    def apply(v : (V1,V2,V3)) = (op1(v._1), op2(v._2), op3(v._3));
-  }
-  
   //
   // Maps
   //

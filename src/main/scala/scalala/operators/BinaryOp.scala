@@ -37,7 +37,7 @@ extends ((A,B) => To) {
   def opType : O;
 }
 
-trait LowPriorityBinaryOpImplicits {
+trait BinaryOpImplicitsLevel0 {
   /**
    * Recursively add together the values from two maps.  Assumes all keys
    * are in both maps.
@@ -59,7 +59,7 @@ trait LowPriorityBinaryOpImplicits {
   }
 }
 
-object BinaryOp extends LowPriorityBinaryOpImplicits {
+object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
 
   // Int <-> Int
 
@@ -289,6 +289,234 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   implicit object OpNeDI extends BinaryOp[Double,Int,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Double, b : Int) = a != b; }
 
+  // Int <-> Float
+  
+  implicit object OpAddIF extends BinaryOp[Int,Float,OpAdd,Float]
+    { def opType = OpAdd; def apply(a : Int, b : Float) = a + b; }
+  
+  implicit object OpSubIF extends BinaryOp[Int,Float,OpSub,Float]
+    { def opType = OpSub; def apply(a : Int, b : Float) = a - b; }
+  
+  implicit object OpMulIF extends BinaryOp[Int,Float,OpMul,Float]
+    { def opType = OpMul; def apply(a : Int, b : Float) = a * b; }
+  
+  implicit object OpDivIF extends BinaryOp[Int,Float,OpDiv,Float]
+    { def opType = OpDiv; def apply(a : Int, b : Float) = a / b; }
+  
+  implicit object OpModIF extends BinaryOp[Int,Float,OpMod,Float]
+    { def opType = OpMod; def apply(a : Int, b : Float) = a % b; }
+  
+  implicit object OpPowIF extends BinaryOp[Int,Float,OpPow,Double]
+    { def opType = OpPow; def apply(a : Int, b : Float) = math.pow(a,b); }
+    
+  implicit object OpLTIF extends BinaryOp[Int,Float,OpLT,Boolean]
+    { def opType = OpLT; def apply(a : Int, b : Float) = a < b; }
+  
+  implicit object OpLTEIF extends BinaryOp[Int,Float,OpLTE,Boolean]
+    { def opType = OpLTE; def apply(a : Int, b : Float) = a <= b; }
+  
+  implicit object OpGTIF extends BinaryOp[Int,Float,OpGT,Boolean]
+    { def opType = OpGT; def apply(a : Int, b : Float) = a > b; }
+  
+  implicit object OpGTEIF extends BinaryOp[Int,Float,OpGTE,Boolean]
+    { def opType = OpGTE; def apply(a : Int, b : Float) = a >= b; }
+  
+  implicit object OpEqIF extends BinaryOp[Int,Float,OpEq,Boolean]
+    { def opType = OpEq; def apply(a : Int, b : Float) = a == b; }
+  
+  implicit object OpNeIF extends BinaryOp[Int,Float,OpNe,Boolean]
+    { def opType = OpNe; def apply(a : Int, b : Float) = a != b; }
+    
+  // Float <-> Int
+  
+  implicit object OpAddFI extends BinaryOp[Float,Int,OpAdd,Float]
+    { def opType = OpAdd; def apply(a : Float, b : Int) = a + b; }
+  
+  implicit object OpSubFI extends BinaryOp[Float,Int,OpSub,Float]
+    { def opType = OpSub; def apply(a : Float, b : Int) = a - b; }
+  
+  implicit object OpMulFI extends BinaryOp[Float,Int,OpMul,Float]
+    { def opType = OpMul; def apply(a : Float, b : Int) = a * b; }
+  
+  implicit object OpDivFI extends BinaryOp[Float,Int,OpDiv,Float]
+    { def opType = OpDiv; def apply(a : Float, b : Int) = a / b; }
+  
+  implicit object OpModFI extends BinaryOp[Float,Int,OpMod,Float]
+    { def opType = OpMod; def apply(a : Float, b : Int) = a % b; }
+  
+  implicit object OpPowFI extends BinaryOp[Float,Int,OpPow,Double]
+    { def opType = OpPow; def apply(a : Float, b : Int) = math.pow(a,b); }
+    
+  implicit object OpLTFI extends BinaryOp[Float,Int,OpLT,Boolean]
+    { def opType = OpLT; def apply(a : Float, b : Int) = a < b; }
+  
+  implicit object OpLTEFI extends BinaryOp[Float,Int,OpLTE,Boolean]
+    { def opType = OpLTE; def apply(a : Float, b : Int) = a <= b; }
+  
+  implicit object OpGTFI extends BinaryOp[Float,Int,OpGT,Boolean]
+    { def opType = OpGT; def apply(a : Float, b : Int) = a > b; }
+  
+  implicit object OpGTEFI extends BinaryOp[Float,Int,OpGTE,Boolean]
+    { def opType = OpGTE; def apply(a : Float, b : Int) = a >= b; }
+  
+  implicit object OpEqFI extends BinaryOp[Float,Int,OpEq,Boolean]
+    { def opType = OpEq; def apply(a : Float, b : Int) = a == b; }
+  
+  implicit object OpNeFI extends BinaryOp[Float,Int,OpNe,Boolean]
+    { def opType = OpNe; def apply(a : Float, b : Int) = a != b; }
+  
+  // Int <-> Long
+  
+  implicit object OpAddIL extends BinaryOp[Int,Long,OpAdd,Long]
+    { def opType = OpAdd; def apply(a : Int, b : Long) = a + b; }
+  
+  implicit object OpSubIL extends BinaryOp[Int,Long,OpSub,Long]
+    { def opType = OpSub; def apply(a : Int, b : Long) = a - b; }
+  
+  implicit object OpMulIL extends BinaryOp[Int,Long,OpMul,Long]
+    { def opType = OpMul; def apply(a : Int, b : Long) = a * b; }
+  
+  implicit object OpDivIL extends BinaryOp[Int,Long,OpDiv,Long]
+    { def opType = OpDiv; def apply(a : Int, b : Long) = a / b; }
+  
+  implicit object OpModIL extends BinaryOp[Int,Long,OpMod,Long]
+    { def opType = OpMod; def apply(a : Int, b : Long) = a % b; }
+  
+  implicit object OpPowIL extends BinaryOp[Int,Long,OpPow,Double]
+    { def opType = OpPow; def apply(a : Int, b : Long) = math.pow(a,b); }
+    
+  implicit object OpLTIL extends BinaryOp[Int,Long,OpLT,Boolean]
+    { def opType = OpLT; def apply(a : Int, b : Long) = a < b; }
+  
+  implicit object OpLTEIL extends BinaryOp[Int,Long,OpLTE,Boolean]
+    { def opType = OpLTE; def apply(a : Int, b : Long) = a <= b; }
+  
+  implicit object OpGTIL extends BinaryOp[Int,Long,OpGT,Boolean]
+    { def opType = OpGT; def apply(a : Int, b : Long) = a > b; }
+  
+  implicit object OpGTEIL extends BinaryOp[Int,Long,OpGTE,Boolean]
+    { def opType = OpGTE; def apply(a : Int, b : Long) = a >= b; }
+  
+  implicit object OpEqIL extends BinaryOp[Int,Long,OpEq,Boolean]
+    { def opType = OpEq; def apply(a : Int, b : Long) = a == b; }
+  
+  implicit object OpNeIL extends BinaryOp[Int,Long,OpNe,Boolean]
+    { def opType = OpNe; def apply(a : Int, b : Long) = a != b; }
+    
+  // Long <-> Int
+  
+  implicit object OpAddLI extends BinaryOp[Long,Int,OpAdd,Long]
+    { def opType = OpAdd; def apply(a : Long, b : Int) = a + b; }
+  
+  implicit object OpSubLI extends BinaryOp[Long,Int,OpSub,Long]
+    { def opType = OpSub; def apply(a : Long, b : Int) = a - b; }
+  
+  implicit object OpMulLI extends BinaryOp[Long,Int,OpMul,Long]
+    { def opType = OpMul; def apply(a : Long, b : Int) = a * b; }
+  
+  implicit object OpDivLI extends BinaryOp[Long,Int,OpDiv,Long]
+    { def opType = OpDiv; def apply(a : Long, b : Int) = a / b; }
+  
+  implicit object OpModLI extends BinaryOp[Long,Int,OpMod,Long]
+    { def opType = OpMod; def apply(a : Long, b : Int) = a % b; }
+  
+  implicit object OpPowLI extends BinaryOp[Long,Int,OpPow,Double]
+    { def opType = OpPow; def apply(a : Long, b : Int) = math.pow(a,b); }
+    
+  implicit object OpLTLI extends BinaryOp[Long,Int,OpLT,Boolean]
+    { def opType = OpLT; def apply(a : Long, b : Int) = a < b; }
+  
+  implicit object OpLTELI extends BinaryOp[Long,Int,OpLTE,Boolean]
+    { def opType = OpLTE; def apply(a : Long, b : Int) = a <= b; }
+  
+  implicit object OpGTLI extends BinaryOp[Long,Int,OpGT,Boolean]
+    { def opType = OpGT; def apply(a : Long, b : Int) = a > b; }
+  
+  implicit object OpGTELI extends BinaryOp[Long,Int,OpGTE,Boolean]
+    { def opType = OpGTE; def apply(a : Long, b : Int) = a >= b; }
+  
+  implicit object OpEqLI extends BinaryOp[Long,Int,OpEq,Boolean]
+    { def opType = OpEq; def apply(a : Long, b : Int) = a == b; }
+  
+  implicit object OpNeLI extends BinaryOp[Long,Int,OpNe,Boolean]
+    { def opType = OpNe; def apply(a : Long, b : Int) = a != b; }
+  
+  // Float <-> Double
+  
+  implicit object OpAddFD extends BinaryOp[Float,Double,OpAdd,Double]
+    { def opType = OpAdd; def apply(a : Float, b : Double) = a + b; }
+  
+  implicit object OpSubFD extends BinaryOp[Float,Double,OpSub,Double]
+    { def opType = OpSub; def apply(a : Float, b : Double) = a - b; }
+  
+  implicit object OpMulFD extends BinaryOp[Float,Double,OpMul,Double]
+    { def opType = OpMul; def apply(a : Float, b : Double) = a * b; }
+  
+  implicit object OpDivFD extends BinaryOp[Float,Double,OpDiv,Double]
+    { def opType = OpDiv; def apply(a : Float, b : Double) = a / b; }
+  
+  implicit object OpModFD extends BinaryOp[Float,Double,OpMod,Double]
+    { def opType = OpMod; def apply(a : Float, b : Double) = a % b; }
+  
+  implicit object OpPowFD extends BinaryOp[Float,Double,OpPow,Double]
+    { def opType = OpPow; def apply(a : Float, b : Double) = math.pow(a,b); }
+    
+  implicit object OpLTFD extends BinaryOp[Float,Double,OpLT,Boolean]
+    { def opType = OpLT; def apply(a : Float, b : Double) = a < b; }
+  
+  implicit object OpLTEFD extends BinaryOp[Float,Double,OpLTE,Boolean]
+    { def opType = OpLTE; def apply(a : Float, b : Double) = a <= b; }
+  
+  implicit object OpGTFD extends BinaryOp[Float,Double,OpGT,Boolean]
+    { def opType = OpGT; def apply(a : Float, b : Double) = a > b; }
+  
+  implicit object OpGTEFD extends BinaryOp[Float,Double,OpGTE,Boolean]
+    { def opType = OpGTE; def apply(a : Float, b : Double) = a >= b; }
+  
+  implicit object OpEqFD extends BinaryOp[Float,Double,OpEq,Boolean]
+    { def opType = OpEq; def apply(a : Float, b : Double) = a == b; }
+  
+  implicit object OpNeFD extends BinaryOp[Float,Double,OpNe,Boolean]
+    { def opType = OpNe; def apply(a : Float, b : Double) = a != b; }
+    
+  // Double <-> Float
+  
+  implicit object OpAddDF extends BinaryOp[Double,Float,OpAdd,Double]
+    { def opType = OpAdd; def apply(a : Double, b : Float) = a + b; }
+  
+  implicit object OpSubDF extends BinaryOp[Double,Float,OpSub,Double]
+    { def opType = OpSub; def apply(a : Double, b : Float) = a - b; }
+  
+  implicit object OpMulDF extends BinaryOp[Double,Float,OpMul,Double]
+    { def opType = OpMul; def apply(a : Double, b : Float) = a * b; }
+  
+  implicit object OpDivDF extends BinaryOp[Double,Float,OpDiv,Double]
+    { def opType = OpDiv; def apply(a : Double, b : Float) = a / b; }
+  
+  implicit object OpModDF extends BinaryOp[Double,Float,OpMod,Double]
+    { def opType = OpMod; def apply(a : Double, b : Float) = a % b; }
+  
+  implicit object OpPowDF extends BinaryOp[Double,Float,OpPow,Double]
+    { def opType = OpPow; def apply(a : Double, b : Float) = math.pow(a,b); }
+    
+  implicit object OpLTDF extends BinaryOp[Double,Float,OpLT,Boolean]
+    { def opType = OpLT; def apply(a : Double, b : Float) = a < b; }
+  
+  implicit object OpLTEDF extends BinaryOp[Double,Float,OpLTE,Boolean]
+    { def opType = OpLTE; def apply(a : Double, b : Float) = a <= b; }
+  
+  implicit object OpGTDF extends BinaryOp[Double,Float,OpGT,Boolean]
+    { def opType = OpGT; def apply(a : Double, b : Float) = a > b; }
+  
+  implicit object OpGTEDF extends BinaryOp[Double,Float,OpGTE,Boolean]
+    { def opType = OpGTE; def apply(a : Double, b : Float) = a >= b; }
+  
+  implicit object OpEqDF extends BinaryOp[Double,Float,OpEq,Boolean]
+    { def opType = OpEq; def apply(a : Double, b : Float) = a == b; }
+  
+  implicit object OpNeDF extends BinaryOp[Double,Float,OpNe,Boolean]
+    { def opType = OpNe; def apply(a : Double, b : Float) = a != b; }
+
   // Long <-> Double
   
   implicit object OpAddLD extends BinaryOp[Long,Double,OpAdd,Double]
@@ -443,35 +671,6 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
   : BinaryOp[A,B,OpMulMatrixBy,RV]
   = new BinaryOp[A,B,OpMulMatrixBy,RV] {
     def opType = OpMulMatrixBy; def apply(a : A, b : B) = op(a,b);
-  }
-    
-  //
-  // Tuples
-  //
-
-  implicit def OpTuple2Tuple2[VA1,VA2,VB1,VB2,RV1,RV2,O<:OpType]
-  (implicit op1 : BinaryOp[VA1,VB1,O,RV1], op2 : BinaryOp[VA2,VB2,O,RV2],
-   c1 : CompatibleShape[VA1,VB1], c2 : CompatibleShape[VA2,VB2])
-  : BinaryOp[(VA1,VA2),(VB1,VB2),O,(RV1,RV2)]
-  = new BinaryOp[(VA1,VA2),(VB1,VB2),O,(RV1,RV2)] {
-    def opType = op1.opType;
-    def apply(a : (VA1,VA2), b : (VB1,VB2)) = (op1(a._1,b._1), op2(a._2,b._2));
-  }
-  
-  implicit def OpTuple2Scalar[VA1,VA2,VB,RV1,RV2,O<:OpType]
-  (implicit op1 : BinaryOp[VA1,VB,O,RV1], op2 : BinaryOp[VA2,VB,O,RV2], s : Scalar[VB])
-  : BinaryOp[(VA1,VA2),VB,O,(RV1,RV2)]
-  = new BinaryOp[(VA1,VA2),VB,O,(RV1,RV2)] {
-    def opType = op1.opType;
-    def apply(a : (VA1,VA2), b : VB) = (op1(a._1,b), op2(a._2,b));
-  }
-  
-  implicit def OpScalarTuple2[VA,VB1,VB2,RV1,RV2,O<:OpType]
-  (implicit op1 : BinaryOp[VA,VB1,O,RV1], op2 : BinaryOp[VA,VB2,O,RV2], s : Scalar[VA])
-  : BinaryOp[VA,(VB1,VB2),O,(RV1,RV2)]
-  = new BinaryOp[VA,(VB1,VB2),O,(RV1,RV2)] {
-    def opType = op1.opType;
-    def apply(a : VA, b : (VB1,VB2)) = (op1(a,b._1), op2(a,b._2));
   }
   
   //
@@ -633,59 +832,5 @@ object BinaryOp extends LowPriorityBinaryOpImplicits {
       rv;
     }
   }
-  
-//  //
-//  // Functions
-//  //
-//  
-//  /** Allows function compisition e.g. math.cos _ * math.sin _ */
-//  implicit def OpFunctionFunction[K,V1,V2,RV,O<:OpType]
-//  (implicit op : BinaryOp[V1,V2,O,RV])
-//  : BinaryOp[K=>V1, K=>V2, O, K=>RV]
-//  = new BinaryOp[K=>V1, K=>V2, O, K=>RV] {
-//    def apply(a : K=>V1, b : K=>V2) = (k : K) => op(a(k),b(k));
-//  }
 }
-
-//
-///**
-// * Base class for BinaryOp on a pair of scala maps on all values where at
-// * least one map contains the given key.
-// *
-// * @author dramage
-// */
-//class MapMapEitherNonZeroOp[K,V1,V2,RV](op : BinaryOp[V1,V2,RV], ul : V1 => RV, ur : V2 => RV)
-//extends BinaryOp[Map[K,V1],scala.collection.Map[K,V2],Map[K,RV]] {
-//  def apply(a : Map[K,V1], b : scala.collection.Map[K,V2]) : Map[K,RV] = {
-//    (a.keySet ++ b.keySet).map(
-//      k => {
-////        (k, op(a.getOrElse(k, sa.zero), b.getOrElse(k, sb.zero)));
-//        if (a contains k) {
-//          if (b contains k) {
-//            // in both a and b
-//            (k, op(a(k),b(k)));
-//          } else {
-//            // only in a
-//            (k, ul(a(k)));
-//          }
-//        } else {
-//          // only in b
-//          (k, ur(b(k)));
-//        }
-//      }
-//    ).toMap;
-//  }
-//}
-//
-///**
-// * Base class for BinaryOp on a pair of scala maps on all values where at
-// * both maps contains the given key.
-// *
-// * @author dramage
-// */
-//class MapMapBothNonZeroOp[K,V1,V2,RV](implicit op : BinaryOp[V1,V2,RV])
-//extends BinaryOp[Map[K,V1],Map[K,V2],Map[K,RV]] {
-//  def apply(a : Map[K,V1], b : Map[K,V2]) =
-//    (a.keySet & b.keySet).map(k => (k,op(a(k),b(k)))).toMap;
-//}
 
