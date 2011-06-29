@@ -47,5 +47,5 @@ trait CanSliceRow[-From, K, +To] {
  * @author dramage
  */
 trait CanSliceCol[-From, K, +To] {
-  def apply(from : From, row : K) : To;
+  def apply(from : From, col : K) : To;
 }
