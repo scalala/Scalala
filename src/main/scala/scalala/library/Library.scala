@@ -245,13 +245,13 @@ trait Library {
     logNormalize(log(value))
   }
 
-  def logAndNormalizeRows[T,K1,K2,V,Row,ADomain,That](matrix: T)(implicit canLog: CanLog[Row,Row],
-                                                    view: T=>Tensor2[K1,K2,V],
+  def logAndNormalizeRows[T,K1,K2,Row,ADomain,That](matrix: T)(implicit view: T=>Tensor2[K1,K2,Double],
                                                     domainA : CanGetDomain[T,ADomain],
                                                     sliceRows: CanSliceRow[T,K1,Row],
-                                                    view2: Row => Tensor1[K2,V] with NumericOps[Row], sm: CanSoftmax[Row],
+                                                    canLog: CanMapValues[Row,Double,Double,Row],
+                                                    view2: Row => Tensor1[K2,Double] with NumericOps[Row], sm: CanSoftmax[Row],
                                                     op : BinaryOp[Row,Double,OpSub,Row],
-                                                    bf : CanBuildTensorFrom[T,ADomain,(K1,K2),V,That]): That = {
+                                                    bf : CanBuildTensorFrom[T,ADomain,(K1,K2),Double,That]): That = {
     val builder = bf(matrix,domainA(matrix));
     for(k1 <- matrix.domain._1) {
       val row: Row = sliceRows(matrix, k1);
