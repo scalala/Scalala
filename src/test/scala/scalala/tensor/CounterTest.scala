@@ -63,5 +63,12 @@ class CounterTest extends FunSuite with Checkers {
     assert(Counter(0->0.0,1->3.0).mean === 1.5);
     assert(Counter(0->3l).mean === 3.0);
   }
+
+  test("assignment checks both domains") {
+    val a = Counter[Int,Int]()
+    val b = Counter[Int,Int](3->4)
+    a := b
+    assert(a === b)
+  }
 }
 

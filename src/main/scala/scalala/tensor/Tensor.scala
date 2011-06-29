@@ -592,7 +592,16 @@ object Tensor {
       val a = viewA(_a);
       val b = viewB(_b);
       a.checkDomain(b.domain);
-      a.foreachPair((k,aV) => fn(k,aV,b(k)));
+      val visited = scala.collection.mutable.HashSet[K]()
+      a.foreachPair{(k,aV) =>
+        fn(k,aV,b(k))
+        visited += k
+      };
+      b.foreachPair{ (k,bV) =>
+        if(!visited(k)) {
+          fn(k,a(k),bV)
+        }
+      }
     }
 
     override def joinEitherNonZero[RV](_a : A, _b : B, fn : (K,V1,V2)=>RV) = {
