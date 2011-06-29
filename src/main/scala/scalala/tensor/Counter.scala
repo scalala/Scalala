@@ -55,8 +55,14 @@ extends Tensor1Like[K,V,SetDomain[K],This] { self =>
   override def domain : SetDomain[K] = new SetDomain(data.keySet);
   
   override def size = data.size;
-  
+
+  def isEmpty = data.isEmpty
+
+  def contains(k: K) = data.contains(k);
+
   override def apply(k : K) = data.getOrElse(k,scalar.zero);
+
+  def get(k: K) = data.get(k);
 
   override def checkKey(k : K) = ();
   

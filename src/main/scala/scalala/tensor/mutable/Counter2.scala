@@ -38,7 +38,7 @@ import scala.collection.mutable.HashMap
 trait Counter2Like
 [K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V,
  +M1[VV]<:Curried[scala.collection.mutable.Map,K1]#Result[VV],
- +T<:scalala.tensor.mutable.Tensor1[K2,V],
+ +T<:scalala.tensor.mutable.Counter[K2,V],
  +This<:Counter2[K1,K2,V]]
 extends tensor.Counter2Like[K1,K2,V,M1,T,This] with Tensor2Like[K1,K2,V,SetDomain[K1], SetDomain[K2], Domain2[K1,K2], Domain2[K2,K1], This] { self =>
 

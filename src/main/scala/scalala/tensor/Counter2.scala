@@ -37,7 +37,7 @@ import tensor.Counter2.Curried
 trait Counter2Like
 [K1, @specialized(Int,Long) K2, @specialized(Int,Long,Float,Double) V,
  +M1[VV] <: Curried[scala.collection.Map,K1]#Result[VV],
- +T <: Tensor1[K2,V],
+ +T <: Counter[K2,V],
  +This<:Counter2[K1,K2,V]]
 extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K2,K1],This]
 // TODO: this hsould work instead extends CRSTensor2Like[K1,K2,V,M1,T,This]
@@ -78,6 +78,10 @@ extends Tensor2Like[K1,K2,V,SetDomain[K1],SetDomain[K2],Domain2[K1,K2],Domain2[K
   override def checkKey(k : K1, k2: K2) = ();
   
   override def checkDomain(d : scalala.tensor.domain.Domain[(K1,K2)]) = ();
+
+  def contains(k: K1) = data.contains(k);
+
+  def contains(k1: K1, k2: K2) = data.contains(k1) && data(k1).contains(k2)
 
 
   //
