@@ -373,13 +373,16 @@ trait DenseVectorConstructors extends DenseVectorColConstructors;
  *
  * @author dramage
  */
-class DenseVectorRow[@specialized(Int,Long,Float,Double) V]
-(override val data : Array[V], override val offset : Int,
+final class DenseVectorRow[@specialized(Int,Long,Float,Double) V]
+(override final val data : Array[V], override final val offset : Int,
  override val stride : Int, override val length : Int)
 (implicit override val scalar : Scalar[V])
 extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,DenseVectorRow[V]] {
   def this(data : Array[V])(implicit s : Scalar[V]) =
     this(data, 0, 1, data.length)(s);
+
+  // we have this pointless override to encourage hotspot to inline
+  @inline override def apply(key: Int) = data(offset + key * stride);
 
   def apply(range : Range) : DenseVectorRow[V] = {
     require(range.last < length, "Range out of bounds");
@@ -422,13 +425,16 @@ object DenseVectorRow {
  *
  * @author dramage
  */
-class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
+final class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
 (override val data : Array[V], override val offset : Int,
  override val stride : Int, override val length : Int)
 (implicit override val scalar : Scalar[V])
 extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,DenseVectorCol[V]]  {
   def this(data : Array[V])(implicit s : Scalar[V]) =
     this(data, 0, 1, data.length)(s);
+
+  // we have this pointless override to encourage hotspot to inline
+  @inline override def apply(key: Int) = data(offset + key * stride);
 
   def apply(range : Range) : DenseVectorCol[V] = {
     require(range.last < length, "Range out of bounds");
