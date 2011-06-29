@@ -196,7 +196,7 @@ trait Numerics {
 
   /**
    * Sums together the first length elements in log space.
-   * The length parameter is used.
+   * The length parameter is used to make things faster.
    *
    * This method needs to be fast. Don't scala-ify it.
    * @return log(\sum^length exp(a_i))
