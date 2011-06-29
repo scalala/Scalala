@@ -139,6 +139,26 @@ object Counter2 {
     override def apply(from : Counter2[K1,K2,V], row : K1) = from.data(row);
   }
 
+  implicit def canSliceCol[K1,K2,V:Scalar]: CanSliceCol[Counter2[K1,K2,V],K2,Counter[K1,V]]
+  = new CanSliceCol[Counter2[K1,K2,V],K2,Counter[K1,V]] {
+    val vS = implicitly[Scalar[V]];
+    def apply(from: Counter2[K1, K2, V], col: K2) = new Counter[K1,V] {
+      val scalar = vS;
+      def data = new MapSlice(from.data,col);
+    }
+  }
+
+  import scala.collection.Map
+  private class MapSlice[K1,K2,V](m: Map[K1,Counter[K2,V]],col: K2) extends Map[K1,V] {
+    def get(key: K1) = m.get(key).flatMap(_.get(col))
+
+    def iterator = for( (k,inner) <- m.iterator if inner.contains(col)) yield (k,inner(col))
+
+    def +[B1 >: V](kv: (K1, B1)) = Map(kv) ++ this;
+
+    def -(key: K1) = Map() ++ this - key
+  }
+
 //  implicit def Counter2CanSolveCounter[K1,K2,V]
 //  extends BinaryOp[Counter2[K1,K2,V],Counter[K2,V],OpSolveMatrixBy,Counter[K1,V]] {
 //    override def opType = OpSolveMatrixBy;

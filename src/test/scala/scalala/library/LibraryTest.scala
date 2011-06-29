@@ -50,6 +50,12 @@ class LibraryTest extends FunSuite with Checkers with ShouldMatchers {
     assert(stddev(Iterator(1,2,3,4)) === 1.2909944487358056)
   }
 
+  test("sum") {
+    assert(sum(Matrix((0,2),(2,4))).toList === List(2,6))
+    assert(sum(Matrix((1.0,3.0),(2.0,4.0))).toList === List(3,7))
+    assert(sum(Matrix((1.0,3.0),(2.0,4.0)),Axis.Vertical).toList === List(4,6))
+  }
+
   test("exp") {
     assert(exp(Array(1,2,3,4)).toList === List(1,2,3,4).map(_.toDouble).map(math.exp))
   }

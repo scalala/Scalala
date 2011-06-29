@@ -21,13 +21,13 @@ package scalala;
 package library;
 
 import scalala.generic.math._
-import scalala.operators.{OpSub, NumericOps, OpDiv, BinaryOp}
 import scalala.tensor.mutable.Counter;
 import tensor._
 import dense._
 import domain.CanGetDomain
-import scalala.generic.collection.{CanBuildTensorFrom, CanSliceRow}
 import scalar.Scalar
+import operators._
+import scalala.generic.collection.{CanMapValues, CanSliceCol, CanBuildTensorFrom, CanSliceRow}
 
 /**
  * Library of scalala basic mathematical functions.
@@ -115,8 +115,11 @@ trait Library {
   def softmax[V](value: V)(implicit softmax: CanSoftmax[V]) : Double =
     softmax.softmax(value)
 
-  object Axis extends Enumeration {
-    val Horizontal, Vertical = Value
+  sealed trait Axis;
+  object Axis {
+    type Value = Axis
+    case object Horizontal extends Axis;
+    case object Vertical extends Axis;
   }
 
   /**
@@ -199,6 +202,25 @@ trait Library {
         }
         (Sigma / math.max(1, K-1), mu)
     }
+  }
+
+  /** Sums the tensor2 along the horizontal axis */
+  def sum[K1,K2,V,T,ADomain,Row](matrix: T,
+                                 axis: Axis.Horizontal.type = Axis.Horizontal)
+                                (implicit view: T=>Tensor2[K1,K2,V],
+                                 sliceRows: CanSliceRow[T,K1,Row],
+                                 opAdd: BinaryOp[Row,Row,OpAdd,Row]):Row  = {
+    matrix.domain._1.view.map(sliceRows(matrix,_)).reduceLeft(opAdd);
+  }
+
+
+  /** Sums the tensor2 along the vertical axis */
+  def sum[K1,K2,V,T,ADomain,Col](matrix: T,
+                                 axis: Axis.Vertical.type)
+                                (implicit view: T=>Tensor2[K1,K2,V],
+                                 sliceCols: CanSliceCol[T,K2,Col],
+                                 opAdd: BinaryOp[Col,Col,OpAdd,Col]):Col  = {
+    matrix.domain._2.view.map(sliceCols(matrix,_)).reduceLeft(opAdd);
   }
 
   //
