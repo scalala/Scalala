@@ -48,6 +48,7 @@ import scalala.scalar.Scalar;
  * @author dlwh, dramage
  */
 @SerialVersionUID(1L)
+@serializable
 final class SparseArray[@specialized T]
 (val length : Int, protected var index : Array[Int], protected var data : Array[T], protected var used : Int, initialActiveLength : Int)
 (implicit m : ClassManifest[T], df : DefaultArrayValue[T]) {
@@ -1137,6 +1138,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
  * 
  * @author dramage
  */
+@serializable
 sealed trait DefaultArrayValue[@specialized T] {
   def value : T;
 }
