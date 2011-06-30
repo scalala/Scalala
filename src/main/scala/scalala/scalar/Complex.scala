@@ -20,13 +20,17 @@
 package scalala;
 package scalar;
 
+import scala.math.{ Fractional, Numeric, Ordering };
 import scalala.operators._;
 
 /**
  * Immutable complex numbex number representation backed by doubles
  * for the real and imaginary parts.
  *
- * @author dramage
+ * Integration with `scala.math.Numeric` and `scala.math.Fractional` is
+ * provided.
+ * 
+ * @author dramage, lancelet
  */
 case class Complex(real : Double, imag : Double) {
   override def toString = real + " + " + imag + "i";
@@ -116,19 +120,6 @@ case class Complex(real : Double, imag : Double) {
 }
 
 object Complex { outer =>
-  /**
-   * Ordering for complex numbers: orders lexicographically first on
-   * the real, then on the imaginary part of the number.
-   */
-  implicit object ordering extends Ordering[Complex] {
-    override def compare(a : Complex, b : Complex) = {
-      if (a.real < b.real) -1
-      else if (a.real > b.real) 1
-      else if (a.imag < b.imag) -1
-      else if (a.imag > b.imag) 1
-      else 0;
-    }
-  }
 
   /** Constant Complex(0,0). */
   val zero = new Complex(0,0);
@@ -341,5 +332,57 @@ object Complex { outer =>
 
   implicit object DivCD extends BinaryOp[Complex,Double,OpDiv,Complex]
   { def opType = OpDiv; def apply(a : Complex, b : Double) = a / b; }
+
+  //
+  // scala.math.Numeric and scala.math.Fractional
+  //
+  // TODO: Implement scala.math.Integral trait, if this is ever required
+  //       for some reason.
+
+  /** `Complex` as `scala.math.Numeric` trait.
+    * Conversions to `Int`, `Long`, `Float` and `Double` are only performed
+    * if the imaginary component of the complex number is exactly 0. */
+  trait ComplexIsConflicted extends Numeric[Complex] {
+    def plus(x: Complex, y: Complex): Complex = x + y
+    def minus(x: Complex, y: Complex): Complex = x - y
+    def times(x: Complex, y: Complex): Complex = x * y
+    def negate(x: Complex): Complex = -x
+    def fromInt(x: Int): Complex = Complex(x, 0)
+    def toInt(x: Complex): Int = strictlyReal(x).toInt
+    def toLong(x: Complex): Long = strictlyReal(x).toLong
+    def toFloat(x: Complex): Float = strictlyReal(x).toFloat
+    def toDouble(x: Complex): Double = strictlyReal(x)
+
+    /** Checks that a `Complex` number is strictly real, and returns the real
+      * component. */
+    private def strictlyReal(x: Complex): Double = {
+      require(x.imag == 0.0)  // only proceed if x.imag is *exactly* zero
+      x.real
+    }
+  }
+  /** `Complex` as `scala.math.Fractional` trait. */
+  trait ComplexIsFractional extends ComplexIsConflicted
+		            with Fractional[Complex]
+  {
+    def div(x: Complex, y: Complex): Complex = x / y
+  }
+  /** Ordering for complex numbers: orders lexicographically first
+    * on the real, then on the imaginary part of the number. */ 
+  trait ComplexOrdering extends Ordering[Complex] {
+    override def compare(a : Complex, b : Complex) = {
+      if (a.real < b.real) -1
+      else if (a.real > b.real) 1
+      else if (a.imag < b.imag) -1
+      else if (a.imag > b.imag) 1
+      else 0;
+    }
+  }
+  /** Implicit object providing `scala.math.Fractional` capabilities.
+    * Although complex numbers have no natural ordering, some kind of
+    * `Ordering` is required because `Numeric` extends `Ordering`.  Hence,
+    * an ordering based upon the real then imaginary components is used. */
+  implicit object ComplexIsFractional extends ComplexIsFractional
+                                      with ComplexOrdering
+
 }
 

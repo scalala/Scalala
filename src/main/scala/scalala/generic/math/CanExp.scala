@@ -25,6 +25,7 @@ package math;
 import collection.CanMapValues;
 
 import scalala.operators.{UnaryOp,OpType};
+import scalala.scalar.Complex
 
 /**
  * Operator type for exp(A).
@@ -60,6 +61,10 @@ object CanExp {
     def apply(v : Double) = scala.math.exp(v);
   }
 
+  implicit object OpC extends CanExp[Complex,Complex] {
+    def apply(v: Complex) = Complex(scala.math.cos(v.imag), scala.math.sin(v.imag)) * scala.math.exp(v.real)
+  }
+
   class OpMapValues[From,A,B,To](implicit op : CanExp[A,B], map : CanMapValues[From,A,B,To]) extends CanExp[From,To] {
     def apply(v : From) = map.map(v, op.apply(_));
   }
@@ -71,5 +76,6 @@ object CanExp {
   implicit object OpArrayL extends OpMapValues[Array[Long],Long,Double,Array[Double]]()(OpL,CanMapValues.OpArrayLD);
   implicit object OpArrayF extends OpMapValues[Array[Float],Float,Double,Array[Double]]()(OpF,CanMapValues.OpArrayFD);
   implicit object OpArrayD extends OpMapValues[Array[Double],Double,Double,Array[Double]]()(OpD,CanMapValues.OpArrayDD);
+  implicit object OpArrayC extends OpMapValues[Array[Complex],Complex,Complex,Array[Complex]]()(OpC,CanMapValues.OpArrayCC);
 }
 

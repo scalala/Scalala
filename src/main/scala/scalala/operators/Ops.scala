@@ -357,33 +357,6 @@ extends NumericOps[V] {
 }
 
 /**
- * Numeric operator support for tuples of numeric values.
- *
- * @author dramage
- */
-class RichTuple2[@specialized A, @specialized B]
-(override val repr : (A,B))
-extends MutableNumericOps[(A,B)];
-
-/**
- * Numeric operator support for tuples of numeric values.
- *
- * @author dramage
- */
-class RichTuple3[@specialized A, @specialized B, @specialized C]
-(override val repr : (A,B,C))
-extends MutableNumericOps[(A,B,C)];
-
-/**
- * Numeric operator support for tuples of numeric values.
- *
- * @author dramage
- */
-class RichTuple4[@specialized A, @specialized B, @specialized C, @specialized D]
-(override val repr : (A,B,C,D))
-extends MutableNumericOps[(A,B,C,D)];
-
-/**
  * Adds rich math operators to a map.  Adds mutable as well as
  * immutable operators because inner data structures may be mutable.
  *
@@ -463,6 +436,11 @@ extends NumericOps[A=>B] {
   }
 }
 
+trait ImplicitsLevel0 {
+  implicit def richScalar[@specialized V:Scalar](value : V) =
+    new RichScalar(value);
+}
+
 /**
  * Implicit promotions of built-in scala types to enriched numerically valued
  * equivalents.  After importing the members of this class, you can directly
@@ -470,19 +448,7 @@ extends NumericOps[A=>B] {
  *
  * @author dramage
  */
-object Implicits {
-  implicit def richScalar[@specialized V:Scalar](value : V) =
-    new RichScalar(value);
-
-  implicit def richTuple2[@specialized A, @specialized B](value : (A,B)) =
-    new RichTuple2(value);
-
-  implicit def richTuple3[@specialized A, @specialized B, @specialized C](value : (A,B,C)) =
-    new RichTuple3(value);
-
-  implicit def richTuple4[@specialized A, @specialized B, @specialized C, @specialized D](value : (A,B,C,D)) =
-    new RichTuple4(value);
-  
+object Implicits extends RichTupleImplicits with ImplicitsLevel0 {
   implicit def richMap[M<:scala.collection.Map[_,_]](map : M) = new RichMap(map);
   
   implicit def richSeq[S<:scala.collection.Seq[_]](seq : S) = new RichSeq(seq);
