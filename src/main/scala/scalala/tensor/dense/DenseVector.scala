@@ -104,7 +104,42 @@ with DenseArrayTensor[Int,V] with DenseArrayTensorLike[Int,V,IndexDomain,DenseVe
     new DenseVectorCol(this.data, offset, stride, length);
 }
 
-object DenseVector extends DenseVectorConstructors {
+trait LowPriorityDenseImplicits {
+  class CanJoinDenseWithNonDense[
+    @specialized(Int,Long,Float,Double) V1,
+    @specialized(Int,Long,Float,Double) V2,
+    DV[V]<:DenseVector[V]] extends CanJoin[DV[V1], Vector[V2], Int, V1, V2] {
+    def joinAll[RV](a: DV[V1], b: Vector[V2], fn: (Int, V1, V2) => RV) {
+      a.checkDomain(b.domain)
+      for( (i,v2) <- b.pairs) {
+        fn(i,a(i),v2)
+      }
+
+    }
+
+    def joinBothNonZero[RV](a: DV[V1], b: Vector[V2], fn: (Int, V1, V2) => RV) {
+      joinAll(a,b,fn)
+    }
+
+    def joinEitherNonZero[RV](a: DV[V1], b: Vector[V2], fn: (Int, V1, V2) => RV) {
+      joinAll(a,b,fn)
+    }
+  }
+
+  /** Optimized base class for joining dense columns. */
+    implicit def canJoinDenseVectorColsWithNonDense[V1, V2]
+  : CanJoinDenseWithNonDense[V1, V2, DenseVectorCol] =
+  new CanJoinDenseWithNonDense[V1, V2, DenseVectorCol];
+
+  /** Optimized base class for joining dense rows. */
+  implicit def canJoinDenseVectorRowsWithNonDense[V1, V2]
+  : CanJoinDenseWithNonDense[V1, V2, DenseVectorRow] =
+  new CanJoinDenseWithNonDense[V1, V2, DenseVectorRow];
+
+
+}
+
+object DenseVector extends DenseVectorConstructors with LowPriorityDenseImplicits {
   //
   // Generic optimized routines
   //
@@ -120,6 +155,8 @@ object DenseVector extends DenseVectorConstructors {
   class GenericDenseVectorBase[@specialized V:Scalar:Manifest] {
     def create(length : Int) = new DenseVectorCol(new Array[V](length));
   }
+
+
 
   /** Optimized base class for joining two dense tensors. */
   class CanJoinDenseVectors[
@@ -284,8 +321,6 @@ object DenseVector extends DenseVectorConstructors {
 
 
 
-
-
   //
   // Specialized objects for generic routines
   //
@@ -425,6 +460,7 @@ object DenseVectorRow {
  *
  * @author dramage
  */
+@serializable
 final class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
 (override val data : Array[V], override val offset : Int,
  override val stride : Int, override val length : Int)
