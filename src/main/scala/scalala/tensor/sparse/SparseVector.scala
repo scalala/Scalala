@@ -34,6 +34,7 @@ import scalala.operators._;
  *
  * @author dramage
  */
+@serializable
 @SerialVersionUID(1)
 trait SparseVector[@specialized(Int,Long,Float,Double) V]
 extends SparseArrayTensor[Int,V] with SparseArrayTensorLike[Int,V,IndexDomain,SparseVector[V]]
@@ -78,6 +79,8 @@ object SparseVector {
   /** Tabulate a vector with the value at each offset given by the function. */
   def tabulate[V:Scalar:ClassManifest:DefaultArrayValue](size : Int)(f : (Int => V)) =
     new SparseVectorCol(SparseArray.tabulate(size)(f));
+
+
 }
 
 class SparseVectorRow[@specialized(Int,Long,Float,Double) V]
