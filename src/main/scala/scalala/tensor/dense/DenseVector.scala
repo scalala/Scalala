@@ -568,12 +568,5 @@ trait DenseVectorColConstructors {
     tabulate(size)(i => mt.nextInt(imax));
   }
 
-   /***
-    * n evenly spaced points between a and b
-    */
-  def linspace(a: Double, b: Double, n: Int= 100):DenseVectorCol[Double] = {
-    tabulate(n)(i => a + (b - a) / n * i)
-  }
-
 }
 
