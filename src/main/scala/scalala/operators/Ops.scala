@@ -441,6 +441,15 @@ trait ImplicitsLevel0 {
     new RichScalar(value);
 }
 
+trait ImplicitsLevel1 {
+  implicit def richMap[M<:scala.collection.Map[_,_]](map : M) = new RichMap(map);
+  
+  implicit def richSeq[S<:scala.collection.Seq[_]](seq : S) = new RichSeq(seq);
+  
+  implicit def richArray[@specialized V:Scalar](arr : Array[V]) = new RichArray(arr);
+
+}
+
 /**
  * Implicit promotions of built-in scala types to enriched numerically valued
  * equivalents.  After importing the members of this class, you can directly
@@ -448,11 +457,7 @@ trait ImplicitsLevel0 {
  *
  * @author dramage
  */
-object Implicits extends RichTupleImplicits with ImplicitsLevel0 {
-  implicit def richMap[M<:scala.collection.Map[_,_]](map : M) = new RichMap(map);
-  
-  implicit def richSeq[S<:scala.collection.Seq[_]](seq : S) = new RichSeq(seq);
-  
-  implicit def richArray[@specialized V](arr : Array[V]) = new RichArray(arr);
+object Implicits extends RichTupleImplicits with ImplicitsLevel1 {
+  implicit def richArrayMatrix[@specialized V:Scalar:ClassManifest](arr : Array[Array[V]]) = new RichArrayMatrix(arr);
 }
 
