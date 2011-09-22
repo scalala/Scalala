@@ -441,7 +441,7 @@ trait ImplicitsLevel0 {
     new RichScalar(value);
 }
 
-trait ImplicitsLevel1 {
+trait ImplicitsLevel1 extends ImplicitsLevel0 {
   implicit def richMap[M<:scala.collection.Map[_,_]](map : M) = new RichMap(map);
   
   implicit def richSeq[S<:scala.collection.Seq[_]](seq : S) = new RichSeq(seq);
