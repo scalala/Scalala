@@ -27,6 +27,8 @@ import domain.IndexDomain;
 import scalala.generic.collection.{CanAppendColumns};
 import scalala.operators._;
 
+import dense.{DenseVector,DenseVectorCol};
+
 /**
  * Implementation trait for a row vector.
  *
@@ -37,6 +39,13 @@ extends VectorLike[V,This] with Tensor1ColLike[Int,V,IndexDomain,This] {
   override def t : VectorRow[V] =
     new VectorRow.View(repr);
 
+  /** Returns a copy of this vector as a DenseVectorCol. */
+  override def toDense : DenseVectorCol[V] = {
+    val rv = DenseVector.zeros(length);
+    rv := repr;
+    rv;
+  }
+  
   def toString(rows : Int, mkValueString : V=>String) : String = {
     val newline = System.getProperty("line.separator");
     val rv = valuesIterator.take(rows).map(mkValueString).mkString(newline);

@@ -56,5 +56,10 @@ object VectorSlice {
   extends VectorSlice[K, V, Coll] {
     override def lookup(key : Int) = keys(key);
     override def length = keys.size;
+    override def toDense = {
+      val rv = dense.DenseVector.zeros[V](length);
+      rv := repr;
+      rv;
+    }
   }
 }

@@ -26,6 +26,8 @@ import scalala.scalar.Scalar;
 import scalala.generic.collection._;
 import scalala.operators._;
 
+import dense.DenseMatrix;
+
 /**
  * Implementation trait for a matrix.
  *
@@ -77,7 +79,7 @@ self =>
   }
 
   /** Returns the sum of the diagonal elements of this matrix. */
-  def trace(implicit add : BinaryOp[V,V,OpAdd,V]) : V= {
+  def trace(implicit add : BinaryOp[V,V,OpAdd,V]) : V = {
     var rv = this(0,0);
     var i = 1;
     var n = math.min(numRows, numCols);
@@ -85,6 +87,13 @@ self =>
       rv = add(rv, this(i,i));
       i += 1;
     }
+    rv;
+  }
+
+  /** Returns a copy of this matrix as a DenseMatrix. */
+  def toDense : DenseMatrix[V] = {
+    val rv = DenseMatrix.zeros(numRows, numCols);
+    rv := repr;
     rv;
   }
 
@@ -147,6 +156,16 @@ self =>
   
   override def t : Matrix[V] =
     new MatrixTranspose.Impl[V,Matrix[V]](repr);
+    
+  //
+  // row and column accessors
+  //
+  
+//  def rows[TT:>This,That](implicit CanSliceRow[TT,K1,That]) : Tensor2RowsMonadic[K2,V,This,That] =
+//    new Tensor2RowsMonadic[K2,V,This,That] { override def repr = self.repr; }
+//  
+//  def cols[TT:>This,That](implicit CanSliceCol[TT,K2,That]) : Tensor2ColsMonadic[K1,V,This,That] =
+//    new Tensor2ColsMonadic[K1,V,This,That] { override def repr = self.repr; }
 }
 
 trait Matrix[@specialized(Int,Long,Float,Double) V]

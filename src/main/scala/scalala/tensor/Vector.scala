@@ -24,6 +24,8 @@ import domain.IndexDomain;
 
 import scalala.generic.collection._;
 
+import dense.DenseVector;
+
 /**
  * Vectors are Tensor1s on the non-negative integers.
  *
@@ -79,6 +81,9 @@ extends Tensor1Like[Int,V,IndexDomain,This] { self =>
     case c : VectorCol[_] => this.asInstanceOf[VectorCol[V]];
     case _ => new VectorCol.View(repr);
   }
+
+  /** Returns a copy of this vector as a dense vector, preserving shape. */
+  def toDense : DenseVector[V];
 
   /** Returns a copy of this vector's data as a list. */
   def toList =

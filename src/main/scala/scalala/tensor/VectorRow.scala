@@ -28,6 +28,8 @@ import generic.TensorBuilder;
 import scalala.generic.collection.{CanSliceCol};
 import scalala.operators._;
 
+import dense.{DenseVector,DenseVectorRow};
+
 /**
  * Implementation trait for a row vector.
  *
@@ -38,6 +40,13 @@ extends VectorLike[V,This] with Tensor1RowLike[Int,V,IndexDomain,This] {
   
   override def t : VectorCol[V] =
     new VectorCol.View[V](repr);
+
+  /** Returns a copy of this vector as a DenseVectorRow. */
+  override def toDense : DenseVectorRow[V] = {
+    val rv = DenseVector.zeros(length).t;
+    rv := repr;
+    rv;
+  }
 
   def toString(maxWidth : Int, mkValueString : V=>String) : String = {
     def colWidth(col : Int) = mkValueString(this(col)).length+2;
