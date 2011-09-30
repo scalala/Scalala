@@ -35,55 +35,117 @@ trait NumericOps[+This] {
 
   def unary_-[TT>:This,That](implicit op : UnaryOp[TT,OpNeg,That]) = op(repr);
 
-  def :+[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAdd,That]) = op(repr,b);
+  /** Element-wise sum of this and b. */
+  def :+ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAdd,That]) = op(repr,b);
+  
+  /** Returns the operator delegate used in :+ */
+  def :+?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAdd,That]) = op;
 
-  def :-[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSub,That]) = op(repr,b);
+  /** Element-wise difference of this and b. */
+  def :- [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSub,That]) = op(repr,b);
+  
+  /** Returns the operator delegate used in :- */
+  def :-?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSub,That]) = op;
 
-  def :*[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMul,That]) = op(repr,b);
+  /** Element-wise product of this and b. */
+  def :* [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMul,That]) = op(repr,b);
 
-  def :/[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpDiv,That]) = op(repr,b);
+  /** Returns the operator delegate used in :* */
+  def :*?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMul,That]) = op;
 
-  def :%[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMod,That]) = op(repr,b);
+  /** Element-wise quotient of this and b. */
+  def :/ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpDiv,That]) = op(repr,b);
 
-  def :^[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpPow,That]) = op(repr,b);
+  /** Returns the operator delegate used in :/ */
+  def :/?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpDiv,That]) = op;
 
-  def :<[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpLT,That]) = op(repr,b);
+  /** Element-wise modulo of this and b. */
+  def :% [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMod,That]) = op(repr,b);
 
-  def :<=[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpLTE,That]) = op(repr,b);
+  /** Returns the operator delegate used in :% */
+  def :%?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMod,That]) = op;
 
-  def :>[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpGT,That]) = op(repr,b);
+  /** Element-wise exponentiation of this and b. */
+  def :^ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpPow,That]) = op(repr,b);
 
-  def :>=[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpGTE,That]) = op(repr,b);
+  /** Returns the operator delegate used in :^ */
+  def :^?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpPow,That]) = op;
 
-  def :==[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpEq,That]) = op(repr,b);
+  /** Element-wise less=than comparator of this and b. */
+  def :< [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpLT,That]) = op(repr,b);
 
-  def :!=[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpNe,That]) = op(repr,b);
+  /** Returns the operator delegate used in :< */
+  def :<?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpLT,That]) = op;
 
-  def dot[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulInner,That]) = op(repr,b);
+  /** Element-wise less-than-or-equal-to comparator of this and b. */
+  def :<= [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpLTE,That]) = op(repr,b);
+
+  /** Returns the operator delegate used in :<= */
+  def :<=?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpLTE,That]) = op;
+
+  /** Element-wise greater-than comparator of this and b. */
+  def :> [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpGT,That]) = op(repr,b);
+
+  /** Returns the operator delegate used in :> */
+  def :>?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpGT,That]) = op;
+
+  /** Element-wise greater-than-or-equal-to comparator of this and b. */
+  def :>= [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpGTE,That]) = op(repr,b);
+
+  /** Returns the operator delegate used in :>= */
+  def :>=?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpGTE,That]) = op;
+
+  /** Element-wise equality comparator of this and b. */
+  def :== [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpEq,That]) = op(repr,b);
+
+  /** Returns the operator delegate used in :== */
+  def :==?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpEq,That]) = op;
+
+  /** Elemeent-wise inequality comparator of this and b. */
+  def :!= [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpNe,That]) = op(repr,b);
+
+  /** Returns the operator delegate used in :!= */
+  def :!=?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpNe,That]) = op;
+
+  /** Inner product of this and b. */
+  def dot [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulInner,That]) = op(repr,b);
+
+  /** Returns the operator delegate used in dot */
+  def dotOp[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulInner,That]) = op;
 
   //
   // Operator aliases
   //
 
   /** Alias for :+(b) for all b. */
-  final def +[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAdd,That]) =
-    this.:+(b);
+  final def + [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAdd,That]) = this.:+(b);
+
+  /** Returns the operator delegate used in + */
+  final def +?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAdd,That]) = op;
 
   /** Alias for :-(b) for all b. */
-  final def -[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSub,That]) =
-    this.:-(b);
+  final def - [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSub,That]) = this.:-(b);
+
+  /** Returns the operator delegate used in - */
+  final def -?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSub,That]) = op;
 
   /** Alias for :*(b) when b is a scalar. */
-  final def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMul,That], sb : Scalar[B]) =
-    this.:*(b);
+  final def * [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMul,That], sb : Scalar[B]) = this.:*(b);
+
+  /** Returns the operator delegate used in * */
+  final def *?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMul,That], sb : Scalar[B]) = op;
 
   /** Alias for :/(b) when b is a scalar. */
-  final def /[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpDiv,That], sb : Scalar[B]) =
-    this.:/(b);
+  final def / [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpDiv,That], sb : Scalar[B]) = this.:/(b);
+
+  /** Returns the operator delegate used in / */
+  final def /?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpDiv,That], sb : Scalar[B]) = op;
 
   /** Alias for :%(b) when b is a scalar. */
-  final def %[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMod,That], sb : Scalar[B]) =
-    this.:%(b);
+  final def % [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMod,That], sb : Scalar[B]) = this.:%(b);
+
+  /** Returns the operator delegate used in % */
+  final def %?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMod,That], sb : Scalar[B]) = op;
 }
 
 /**
@@ -94,60 +156,103 @@ trait NumericOps[+This] {
 trait MutableNumericOps[+This] extends NumericOps[This] {
   def repr : This;
 
-  def :=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSet]) : This = {
+  /** Mutates this by element-wise assignment of b into this. */
+  def := [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSet]) : This = {
     op(repr,b);
     return repr;
   }
   
-  def :+=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAdd]) : This = {
+  /** Returns the operator delegate used in := */
+  def :=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSet]) = op;
+  
+  /** Mutates this by element-wise addition of b into this. */
+  def :+= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAdd]) : This = {
     op(repr,b);
     return repr;
   }
 
-  def :-=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSub]) : This = {
+  /** Returns the operator delegate used in :+= */
+  def :+=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAdd]) = op;
+
+  /** Mutates this by element-wise subtraction of b from this */
+  def :-= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSub]) : This = {
     op(repr,b);
     return repr;
   }
 
-  def :*=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMul]) : This = {
+  /** Returns the operator delegate used in :-= */
+  def :-=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSub]) = op;
+
+  /** Mutates this by element-wise multiplication of b into this. */
+  def :*= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMul]) : This = {
     op(repr,b);
     return repr;
   }
 
-  def :/=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpDiv]) : This = {
+  /** Returns the operator delegate used in :*= */
+  def :*=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMul]) = op;
+
+  /** Mutates this by element-wise division of b into this */
+  def :/= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpDiv]) : This = {
     op(repr,b);
     return repr;
   }
 
-  def :%=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMod]) : This = {
+  /** Returns the operator delegate used in :/= */
+  def :/=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpDiv]) = op;
+
+  /** Mutates this by element-wise modulo of b into this. */
+  def :%= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMod]) : This = {
     op(repr,b);
     return repr;
   }
 
-  def :^=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpPow]) : This = {
+  /** Returns the operator delegate used in :%= */
+  def :%=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMod]) = op;
+
+  /** Mutates this by element-wise exponentiation of this by b. */
+  def :^= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpPow]) : This = {
     op(repr,b);
     return repr;
   }
+
+  /** Returns the operator delegate used in :^= */
+  def :^=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpPow]) = op;
 
   /** Alias for :+=(b) for all b. */
-  final def +=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAdd]) =
+  final def += [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAdd]) =
     this.:+=[TT,B](b);
 
+  /** Returns the operator delegate used in += */
+  final def +=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpAdd]) = op;
+
   /** Alias for :-=(b) for all b. */
-  final def -=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSub]) =
+  final def -= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSub]) =
     this.:-=[TT,B](b);
 
+  /** Returns the operator delegate used in -= */
+  final def -=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpSub]) = op;
+
   /** Alias for :*=(b) when b is a scalar. */
-  final def *=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMul], sb : Scalar[B]) =
+  final def *= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMul], sb : Scalar[B]) =
     this.:*=[TT,B](b);
 
+  /** Returns the operator delegate used in *= */
+  final def *=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMul], sb : Scalar[B]) = op;
+
   /** Alias for :/=(b) when b is a scalar. */
-  final def /=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpDiv], sb : Scalar[B]) =
+  final def /= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpDiv], sb : Scalar[B]) =
     this.:/=[TT,B](b);
 
+  /** Returns the operator delegate used in /= */
+  final def /=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpDiv], sb : Scalar[B]) = op;
+
   /** Alias for :%=(b) when b is a scalar. */
-  final def %=[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMod], sb : Scalar[B]) =
+  final def %= [TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMod], sb : Scalar[B]) =
     this.:%=[TT,B](b);
+    
+  /** Returns the operator delegate used in %= */
+  final def %=?[TT>:This,B](b : B)(implicit op : BinaryUpdateOp[TT,B,OpMod], sb : Scalar[B]) = op;
 }
 
 //
@@ -160,11 +265,19 @@ trait MutableNumericOps[+This] extends NumericOps[This] {
  * @author dramage
  */
 trait ColOps[+This] extends NumericOps[This] {
-  def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulColVectorBy,That]) : That =
+  /** Shaped multiplication of this by b. */
+  def * [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulColVectorBy,That]) : That =
     op(repr, b);
-  
-  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
+
+  /** Returns the operator delegate used in * */
+  def *?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulColVectorBy,That]) = op;
+
+  /** A transposed view of this column. */
+  def t [TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
+
+  /** Returns the operator delegate used in t */
+  def tOp[TT>:This,That](implicit op : CanTranspose[TT,That]) = op;
 }
 
 
@@ -174,11 +287,19 @@ trait ColOps[+This] extends NumericOps[This] {
  * @author dramage
  */
 trait RowOps[+This] extends NumericOps[This] {
-  def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulRowVectorBy,That]) : That =
+  /** Shaped multiplication of this by b. */
+  def * [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulRowVectorBy,That]) : That =
     op(repr, b);
+    
+  /** Returns the operator delegate used in * */
+  def *?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulRowVectorBy,That]) = op;
 
-  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
+  /** A transposed view of this column. */
+  def t [TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
+  
+  /** Returns the operator delegate used in t */
+  def tOp[TT>:This,That](implicit op : CanTranspose[TT,That]) = op;
 }
 
 /**
@@ -187,14 +308,26 @@ trait RowOps[+This] extends NumericOps[This] {
  * @author dramage
  */
 trait MatrixOps[+This] extends NumericOps[This] {
-  def *[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulMatrixBy,That]) =
+  /** Shaped multiplication of this by b. */
+  def * [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulMatrixBy,That]) =
     op.apply(repr,b);
 
-  def \[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSolveMatrixBy,That]) =
+  /** Returns the operator delegate used in * */
+  def *?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulMatrixBy,That]) = op;
+
+  /** Shaped solve of this by b. */
+  def \ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSolveMatrixBy,That]) =
     op.apply(repr,b);
 
-  def t[TT>:This,That](implicit op : CanTranspose[TT,That]) =
+  /** Returns the operator delegate used in \ */
+  def \?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpSolveMatrixBy,That]) = op;
+
+  /** A transposed view of this matrix. */
+  def t [TT>:This,That](implicit op : CanTranspose[TT,That]) =
     op.apply(repr);
+    
+  /** Returns the operator delegate used in t */
+  def tOp[TT>:This,That](implicit op : CanTranspose[TT,That]) = op;
 }
 
 // /**

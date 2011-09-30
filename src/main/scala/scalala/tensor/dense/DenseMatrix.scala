@@ -387,7 +387,7 @@ trait DenseMatrixConstructors {
   def ones[V:Scalar](rows : Int, cols : Int) =
     fill(rows, cols)(implicitly[Scalar[V]].one);
 
-  /** Creates an identity matrix with size rows and columsn. */
+  /** Creates an identity matrix with size rows and columns. */
   def eye[V](size : Int)(implicit scalar : Scalar[V]) = {
     val rv = zeros(size, size);
     for (i <- 0 until size) {
@@ -396,6 +396,7 @@ trait DenseMatrixConstructors {
     rv;
   }
 
+  /** Creates a non-square "identity" matrix of the given size. */
   def eye[V](rows : Int, cols : Int)(implicit scalar : Scalar[V]) = {
     val rv = zeros(rows, cols);
     for (i <- 0 until scala.math.min(rows, cols)) {
