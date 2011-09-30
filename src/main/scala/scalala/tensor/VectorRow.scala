@@ -48,7 +48,8 @@ extends VectorLike[V,This] with Tensor1RowLike[Int,V,IndexDomain,This] {
     rv;
   }
 
-  def toString(maxWidth : Int, mkValueString : V=>String) : String = {
+  def toString(maxWidth : Int = jline.Terminal.getTerminal.getTerminalWidth,
+               mkValueString : V=>String = buildMkValueString) : String = {
     def colWidth(col : Int) = mkValueString(this(col)).length+2;
 
     val colWidths = new scala.collection.mutable.ArrayBuffer[Int];
@@ -57,9 +58,11 @@ extends VectorLike[V,This] with Tensor1RowLike[Int,V,IndexDomain,This] {
       colWidths += colWidth(col);
       col += 1;
     }
-    // make space for "... (7 total)"
-    while (colWidths.sum + maxWidth.toString.length + 12 > maxWidth) {
-      colWidths.remove(colWidths.length - 1);
+    // make space for "... (K total)"
+    if (colWidths.size < length) {
+      while (colWidths.sum + maxWidth.toString.length + 12 >= maxWidth) {
+        colWidths.remove(colWidths.length - 1);
+      }
     }
 
     val newline = System.getProperty("line.separator");
@@ -83,7 +86,8 @@ extends VectorLike[V,This] with Tensor1RowLike[Int,V,IndexDomain,This] {
   }
 
   override def toString =
-    toString(72, buildMkValueString);
+    toString(maxWidth = jline.Terminal.getTerminal.getTerminalWidth,
+             mkValueString = buildMkValueString);
 }
 
 /**

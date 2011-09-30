@@ -46,11 +46,13 @@ extends VectorLike[V,This] with Tensor1ColLike[Int,V,IndexDomain,This] {
     rv;
   }
   
-  def toString(rows : Int, mkValueString : V=>String) : String = {
+  def toString(maxLines : Int = jline.Terminal.getTerminal.getTerminalHeight - 3,
+               mkValueString : V=>String = buildMkValueString) : String = {
+    val showRows = if (length > maxLines) maxLines - 1 else length;
     val newline = System.getProperty("line.separator");
-    val rv = valuesIterator.take(rows).map(mkValueString).mkString(newline);
+    val rv = valuesIterator.take(showRows).map(mkValueString).mkString(newline);
     
-    if (length > rows) {
+    if (length > showRows) {
       rv + newline + "... ("+(domain.size) +" total)";
     } else {
       rv;
@@ -58,7 +60,8 @@ extends VectorLike[V,This] with Tensor1ColLike[Int,V,IndexDomain,This] {
   }
   
   override def toString : String =
-    toString(10,buildMkValueString);
+    toString(maxLines = jline.Terminal.getTerminal.getTerminalHeight - 3,
+             mkValueString = buildMkValueString);
 }
 
 /**

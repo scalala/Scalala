@@ -97,8 +97,9 @@ self =>
     rv;
   }
 
-  def toString(maxLines : Int, maxWidth : Int,
-               mkValueString : V=>String) : String = {
+  def toString(maxLines : Int = jline.Terminal.getTerminal.getTerminalHeight - 3,
+               maxWidth : Int = jline.Terminal.getTerminal.getTerminalWidth,
+               mkValueString : V=>String = buildMkValueString) : String = {
     val showRows = if (numRows > maxLines) maxLines - 1 else numRows;
     def colWidth(col : Int) =
       (0 until showRows).map(row => mkValueString(this(row,col)).length+2).max;
@@ -109,9 +110,15 @@ self =>
       colWidths += colWidth(col);
       col += 1;
     }
-    // make space for "... (7 more)"
-    while (colWidths.sum + (numCols - colWidths.size).toString.length + 11 > maxWidth) {
-      colWidths.remove(colWidths.length - 1);
+    
+    // make space for "... (K total)"
+    if (colWidths.size < numCols) {
+      while (colWidths.sum + numCols.toString.length + 12 >= maxWidth) {
+        if (colWidths.isEmpty) {
+          return "%d x %d matrix".format(numRows, numCols);
+        }
+        colWidths.remove(colWidths.length - 1);
+      }
     }
 
     val newline = System.getProperty("line.separator");
@@ -145,9 +152,11 @@ self =>
 
     rv.toString;
   }
-
+  
   override def toString : String =
-    toString(maxLines = 11, maxWidth = 72, mkValueString = buildMkValueString);
+    toString(maxLines = jline.Terminal.getTerminal.getTerminalHeight - 3,
+             maxWidth = jline.Terminal.getTerminal.getTerminalWidth,
+             mkValueString = buildMkValueString);
 
   override protected def canEqual(other : Any) : Boolean = other match {
     case that : Matrix[_] => true;
