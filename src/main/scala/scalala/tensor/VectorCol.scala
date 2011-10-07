@@ -46,7 +46,7 @@ extends VectorLike[V,This] with Tensor1ColLike[Int,V,IndexDomain,This] {
     rv;
   }
   
-  def toString(maxLines : Int = jline.Terminal.getTerminal.getTerminalHeight - 3,
+  def toString(maxLines : Int = ScalalaConsole.terminalHeight - 3,
                mkValueString : V=>String = buildMkValueString) : String = {
     val showRows = if (length > maxLines) maxLines - 1 else length;
     val newline = System.getProperty("line.separator");
@@ -60,7 +60,7 @@ extends VectorLike[V,This] with Tensor1ColLike[Int,V,IndexDomain,This] {
   }
   
   override def toString : String =
-    toString(maxLines = jline.Terminal.getTerminal.getTerminalHeight - 3,
+    toString(maxLines = ScalalaConsole.terminalHeight - 3,
              mkValueString = buildMkValueString);
 }
 

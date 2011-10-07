@@ -97,8 +97,8 @@ self =>
     rv;
   }
 
-  def toString(maxLines : Int = jline.Terminal.getTerminal.getTerminalHeight - 3,
-               maxWidth : Int = jline.Terminal.getTerminal.getTerminalWidth,
+  def toString(maxLines : Int = ScalalaConsole.terminalHeight - 3,
+               maxWidth : Int = ScalalaConsole.terminalWidth,
                mkValueString : V=>String = buildMkValueString) : String = {
     val showRows = if (numRows > maxLines) maxLines - 1 else numRows;
     def colWidth(col : Int) =
@@ -154,8 +154,8 @@ self =>
   }
   
   override def toString : String =
-    toString(maxLines = jline.Terminal.getTerminal.getTerminalHeight - 3,
-             maxWidth = jline.Terminal.getTerminal.getTerminalWidth,
+    toString(maxLines = ScalalaConsole.terminalHeight - 3,
+             maxWidth = ScalalaConsole.terminalWidth,
              mkValueString = buildMkValueString);
 
   override protected def canEqual(other : Any) : Boolean = other match {

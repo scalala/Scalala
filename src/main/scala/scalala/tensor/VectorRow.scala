@@ -48,7 +48,7 @@ extends VectorLike[V,This] with Tensor1RowLike[Int,V,IndexDomain,This] {
     rv;
   }
 
-  def toString(maxWidth : Int = jline.Terminal.getTerminal.getTerminalWidth,
+  def toString(maxWidth : Int = ScalalaConsole.terminalWidth,
                mkValueString : V=>String = buildMkValueString) : String = {
     def colWidth(col : Int) = mkValueString(this(col)).length+2;
 
@@ -86,7 +86,7 @@ extends VectorLike[V,This] with Tensor1RowLike[Int,V,IndexDomain,This] {
   }
 
   override def toString =
-    toString(maxWidth = jline.Terminal.getTerminal.getTerminalWidth,
+    toString(maxWidth = ScalalaConsole.terminalWidth,
              mkValueString = buildMkValueString);
 }
 
