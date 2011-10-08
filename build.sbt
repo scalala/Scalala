@@ -50,12 +50,13 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   }
 }
 
-publishTo <<= version { (v: String) =>
-  if(v endsWith "-SNAPSHOT")
-    Some(ScalaToolsSnapshots)
-  else
-    Some(ScalaToolsReleases)
+publishTo <<= (version) { version: String =>
+  val nexus = "http://nexus.scala-tools.org/content/repositories/"
+  if (version.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "snapshots/") 
+  else                                   Some("releases"  at nexus + "releases/")
 }
+
+credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
 javacOptions ++= Seq("-source", "1.5", "-target", "1.5")
 
