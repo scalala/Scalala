@@ -257,6 +257,143 @@ trait LinearAlgebra {
     A
   }
 
+ /**
+  * QR Factorization with pivoting
+  *
+  * input: A m x n matrix
+  * output: (Q,R,P,pvt) where AP = QR
+  *   Q: m x m
+  *   R: m x n
+  *   P: n x n : permutation matrix (P(pvt(i),i) = 1)
+  *   pvt : pivot indices
+  */
+  def qrp(A: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Int], Array[Int]) = {
+    val m = A.numRows
+    val n = A.numCols
+    val lapack = LAPACK.getInstance();
+
+    //Get optimal workspace size
+    // we do this by sending -1 as lwork to the lapack function
+    val work = new Array[Double](1)
+    var info = new intW(0)
+    lapack.dgeqrf(m, n, null, m, null, work, -1, info);
+    val lwork1 = if(info.`val` != 0) n else work(0).toInt
+    lapack.dorgqr(m, m, math.min(m,n), null, m, null, work, -1, info);
+    val lwork2 = if(info.`val` != 0) n else work(0).toInt;
+    //allocate workspace mem. as max of lwork1 and lwork3
+    val workspace = new Array[Double](math.max(lwork1, lwork2));
+
+    //Perform the QR factorization with dgep3
+    val maxd = math.max(m,n)
+    val AFact = DenseMatrix.zeros[Double](m,maxd)
+    val pvt = new Array[Int](n)
+    val tau = new Array[Double](math.min(m,n))
+    for(r <- 0 until m; c <- 0 until n) AFact(r,c) = A(r,c)
+      lapack.dgeqp3(m, n, AFact.data, m, pvt, tau, workspace, workspace.length, info);
+
+    //Error check
+    if (info.`val` > 0)
+      throw new NotConvergedException(NotConvergedException.Iterations)
+    else if (info.`val` < 0)
+      throw new IllegalArgumentException()
+
+    //Get R
+    val R = DenseMatrix.zeros[Double](m,n)
+
+    for(c <- 0 until maxd if(c < n);
+        r <- 0 until m if(r <= c))
+        R(r,c) = AFact(r,c)
+
+    //Get Q from the matrix returned by dgep3
+    val Q = DenseMatrix.zeros[Double](m,m)
+    lapack.dorgqr(m, m, math.min(m,n), AFact.data, m, tau, workspace, workspace.length, info);
+    for(r <- 0 until m;
+        c <- 0 until maxd if(c < m))
+        Q(r,c) = AFact(r,c)
+
+    //Error check
+    if (info.`val` > 0)
+      throw new NotConvergedException(NotConvergedException.Iterations)
+    else if (info.`val` < 0)
+      throw new IllegalArgumentException()
+
+    //Get P
+    for(i <- 0 until pvt.length) pvt(i)-=1
+    val P = DenseMatrix.zeros[Int](n,n)
+    for(i <- 0 until n)
+      P(pvt(i), i) = 1
+
+    (Q,R,P,pvt)
+  }
+
+  /**
+  * QR Factorization
+  *
+  * input: A m x n matrix
+  * optional: skipQ - if true, don't reconstruct orthogonal matrix Q (instead returns (null,R))
+  * output: (Q,R)
+  *   Q: m x m
+  *   R: m x n
+  */
+  def qr(A: DenseMatrix[Double], skipQ : Boolean = false): (DenseMatrix[Double], DenseMatrix[Double]) = {
+    val m = A.numRows
+    val n = A.numCols
+    val lapack = LAPACK.getInstance();
+
+    //Get optimal workspace size
+    // we do this by sending -1 as lwork to the lapack function
+    val work = new Array[Double](1)
+    var info = new intW(0)
+    lapack.dgeqrf(m, n, null, m, null, work, -1, info);
+    val lwork1 = if(info.`val` != 0) n else work(0).toInt
+    lapack.dorgqr(m, m, math.min(m,n), null, m, null, work, -1, info);
+    val lwork2 = if(info.`val` != 0) n else work(0).toInt;
+    //allocate workspace mem. as max of lwork1 and lwork3
+    val workspace = new Array[Double](math.max(lwork1, lwork2));
+
+    //Perform the QR factorization with dgeqrf
+    val maxd = math.max(m,n)
+    val mind = math.max(m,n)
+    val outputMat = DenseMatrix.zeros[Double](m,maxd)
+    val tau = new Array[Double](math.min(m,n))
+    for(r <- 0 until m; c <- 0 until n) outputMat(r,c) = A(r,c)
+    lapack.dgeqrf(m, n, outputMat.data, m, workspace, tau, workspace.length, info);
+
+    //Error check
+    if (info.`val` > 0)
+      throw new NotConvergedException(NotConvergedException.Iterations)
+    else if (info.`val` < 0)
+      throw new IllegalArgumentException()
+
+    //Get R
+    val R = DenseMatrix.zeros[Double](m,n)
+    for(c <- 0 until maxd if(c < n);
+        r <- 0 until m if(r <= c))
+      R(r,c) = outputMat(r,c)
+
+    //unless the skipq flag is set
+    if(!skipQ){
+      //Get Q from the matrix returned by dgep3
+      val Q = DenseMatrix.zeros[Double](m,m)
+      lapack.dorgqr(m, m, math.min(m,n), outputMat.data, m, tau, workspace, workspace.length, info);
+      for(r <- 0 until m;
+          c <- 0 until maxd if(c < m))
+        Q(r,c) = outputMat(r,c)
+
+      //Error check
+      if (info.`val` > 0)
+        throw new NotConvergedException(NotConvergedException.Iterations)
+      else if (info.`val` < 0)
+        throw new IllegalArgumentException()
+      (Q,R)
+    }
+    //skip Q and just return R
+    else (null,R)
+  }
+
+  
+  
+
   /**
    * Computes all eigenvalues (and optionally right eigenvectors) of the given
    * real symmetric matrix X.
