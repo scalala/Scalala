@@ -24,6 +24,8 @@ import generic.collection.{CanViewAsTensor1,CanViewAsTensor2};
 
 import plotting._;
 
+import java.awt.Color;
+
 /**
  * Matlab-like plotting routines.
  *
@@ -214,24 +216,35 @@ trait Plotting {
   /**
    * Displays a scatter plot of x versus y, each point drawn at the given
    * size and mapped with the given color.
+   *
+   * @param x The x coordinates to draw as provided by anything that can be seen as a Tensor1.
+   * @param y The y coordinates to draw as provided by anything that can be seen as a Tensor1.
+   * @param s The size of each circle (on the same scale as the domain axis);
+   * @param c A partial function (e.g. a Map) from item ids to the color to draw the bubble.
+   *   Missing colors are drawn with a hashed pattern.
+   * @param labels Labels to draw next to each point.
+   * @param tips Tooltips to show on mouseover for each point.
+   * @param name Series name for legend
    */
-  def scatter[K,X,XV,Y,YV,S,SV,C,CV]
-  (x : X, y : Y, size : S, color : C,
+  def scatter[K,X,XV,Y,YV,S,SV]
+  (x : X, y : Y, size : S,
+   colors : PartialFunction[K,java.awt.Paint],
    labels : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]],
    tips : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]],
-   paintScale : PaintScale = DynamicPaintScale(),
    name : String = null)
   (implicit xyplot : XYPlot = figures.figure.plot,
    xtv : CanViewAsTensor1[X,K,XV], ytv : CanViewAsTensor1[Y,K,YV],
-   stv : CanViewAsTensor1[S,K,SV], ctv : CanViewAsTensor1[C,K,CV])
+   stv : CanViewAsTensor1[S,K,SV])
   : Unit = {
 
     val series = xyplot.nextSeries;
 
-    val (xt,yt,st,ct) = (xtv(x), ytv(y), stv(size), ctv(color));
+    val (xt,yt,st) = (xtv(x), ytv(y), stv(size));
     require(xt.domain == yt.domain, "x and y must have same domain");
 
     val items = xt.domain.toIndexedSeq;
+
+    val paintScale = CategoricalPaintScale[K](colors);
 
     // initialize dataset
     val dataset = XYZDataset(
@@ -244,22 +257,12 @@ trait Plotting {
       tip = (k : K) => if (tips != null && tips.isDefinedAt(k)) tips(k) else null
     );
 
-    val staticScale : StaticPaintScale = paintScale match {
-      case static : StaticPaintScale =>
-        static;
-
-      case dynamic : DynamicPaintScale => {
-        val values = items.view.map(item => ct.scalar.toDouble(ct(item)));
-        dynamic(lower = values.min, upper = values.max);
-      }
-    }
-
     // initialize the series renderer
     import org.jfree.chart.renderer.xy.XYBubbleRenderer;
     val renderer = new XYBubbleRenderer(XYBubbleRenderer.SCALE_ON_DOMAIN_AXIS) {;
       val stroke = new java.awt.BasicStroke(0f);
       override def getItemPaint(series : Int, item : Int) : java.awt.Paint =
-        staticScale.color(ct.scalar.toDouble(ct(items(item))));
+        paintScale(items(item));
       override def getItemStroke(series : Int, item : Int) = stroke;
     }
 
@@ -380,8 +383,7 @@ trait Plotting {
    * provides color for one square of the image.
    *
    * @param img A matrix containing the colors to plot
-   * @param scale Scale used for converting matrix values to colors.  By
-   *   default, uses a dynamically ranged scale from blue to red
+   * @param scale Scale used for converting matrix values to colors.
    * @param showScale If true, show the paint scale legend
    * @param name Series name
    * @param offset Offset for indexing the top-left corner of the matrix
@@ -390,7 +392,7 @@ trait Plotting {
    */
   def image[M,V]
   (img : M,
-   scale : PaintScale = DynamicPaintScale(),
+   scale : GradientPaintScale[Double] = null,
    showScale : Boolean = true,
    name : String = null,
    offset : (Int,Int) = (0,0),
@@ -445,26 +447,33 @@ trait Plotting {
     renderer.setSeriesItemLabelGenerator(series, labelGenerator);
     renderer.setSeriesItemLabelsVisible(series, labels != null);
 
-    val staticScale : StaticPaintScale = scale match {
-      case static : StaticPaintScale =>
-        static;
-
-      case dynamic : DynamicPaintScale => {
-        val values = items.view.map(item =>
-          mt.scalar.toDouble(mt(item._1, item._2))).filter(!_.isNaN);
-        if (values.isEmpty) {
-          dynamic(lower = Double.NaN, upper = Double.NaN);
-        } else {
-          dynamic(lower = values.min, upper = values.max);
-        }
-      }
+    val staticScale = {
+      if (scale == null)
+        GradientPaintScaleFactory[Double]().apply(mt.values.toList.map(mt.scalar.toDouble)).asInstanceOf[GradientPaintScale[Double]]
+      else
+        scale
     }
+    
+//    val staticScale : StaticPaintScale = scale match {
+//      case static : StaticPaintScale =>
+//        static;
+//
+//      case dynamic : DynamicPaintScale => {
+//        val values = items.view.map(item =>
+//          mt.scalar.toDouble(mt(item._1, item._2))).filter(!_.isNaN);
+//        if (values.isEmpty) {
+//          dynamic(lower = Double.NaN, upper = Double.NaN);
+//        } else {
+//          dynamic(lower = values.min, upper = values.max);
+//        }
+//      }
+//    }
 
     val paintScale = new org.jfree.chart.renderer.PaintScale {
       override def getLowerBound = staticScale.lower;
       override def getUpperBound = staticScale.upper;
       override def getPaint(value : Double) =
-        staticScale.color(value);
+        staticScale(value);
     }
 
     renderer.setPaintScale(paintScale);
@@ -491,7 +500,6 @@ trait Plotting {
       import org.jfree.chart.title._;
       import org.jfree.ui._;
       import org.jfree.chart.block._;
-      import java.awt.Color;
       legend.setMargin(new RectangleInsets(40, 2, 40, 2));
       legend.setPadding(new RectangleInsets(10, 2, 10, 2));
       legend.setBorder(1,1,1,1);

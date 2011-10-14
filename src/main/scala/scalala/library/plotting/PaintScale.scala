@@ -26,25 +26,30 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 /**
- * Paint scale for for a color-coded dataset.
+ * Maps items of type T to a well defined Paint (usually a color).
+ *
+ * An implicit conversion exists to make a singleton PaintScaleFactory from
+ * a PaintScale instance, which means that PaintScales can be provided
+ * directly whenever a PaintScaleFactory is required.
  *
  * @author dramage
  */
-sealed trait PaintScale;
+sealed trait PaintScale[T] extends (T => Paint);
 
 /**
- * Static, pre-specified paint scale from lower to upper using the given gradient.
- * Colors from the given gradient are used to linearly represent values between
+ * A simple numeric paint scale for mapping a number within a range to a
+ * corresponding element of a pre-computed color gradient.  Colors from the
+ * given gradient array are used linearly to represent values between
  * lower and upper.
  *
  * @author dramage
  */
-case class StaticPaintScale(
-  lower : Double, upper : Double,
-  gradient : Array[Color] = PaintScale.WhiteToBlack)
-extends PaintScale {
-  def color(value : Double) : Paint = {
-    if (value.isNaN) {
+case class GradientPaintScale[T]
+(lower : T, upper : T, gradient : Array[Color] = PaintScale.WhiteToBlack)
+(implicit view : T=>Double)
+extends PaintScale[T] {
+  def apply(value : T) : Paint = {
+    if (view(value).isNaN) {
       PaintScale.nanPaint
     } else {
       val index = gradient.length * (value - lower) / (upper - lower);
@@ -54,22 +59,40 @@ extends PaintScale {
 }
 
 /**
- * Specifes a gradient, and returns a StaticPaintScale when a lower and upper
- * bound are supplied.
+ * Maps items to colors using the given partial function.  If no color
+ * is provided for the given item, then returns PaintScale.nanPaint.
  *
  * @author dramage
  */
-case class DynamicPaintScale(
-  gradient : Array[Color] = PaintScale.WhiteToBlack)
-extends PaintScale {
-  def apply(lower : Double, upper : Double) =
-    StaticPaintScale(lower, upper, gradient);
+case class CategoricalPaintScale[T]
+(categories : PartialFunction[T,Paint])
+extends PaintScale[T] {
+  def apply(value : T) : Paint = {
+    if (!categories.isDefinedAt(value)) {
+      PaintScale.nanPaint
+    } else {
+      categories(value)
+    }
+  }
 }
 
-/**
- * Color graident code from http://www.mbeckler.org/heatMap/heatMap.html
- */
 object PaintScale {
+
+  /** Creates a GradientPaintScale automatically for the given range. */
+  implicit def gradientTuple[T](vLowerUpper : (T,T))(implicit view : T=>Double)
+  : GradientPaintScale[T] =
+    GradientPaintScale[T](vLowerUpper._1, vLowerUpper._2);
+
+  /** Creates a CategoricalPaintScale from the provided partial function. */
+  implicit def literalColorMap[T](map : PartialFunction[T,Paint])
+  : CategoricalPaintScale[T] =
+    CategoricalPaintScale[T](map);
+
+
+  //
+  // Default colors and patterns.
+  //
+
   /** For painting NaN. */
   val nanPaint = {
     val img = new BufferedImage(5,5,BufferedImage.TYPE_INT_ARGB);
@@ -93,9 +116,6 @@ object PaintScale {
     "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
     "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5"
   ).map(Color.decode);
-
-  implicit def paintScaleFromRange(vLowerUpper : (Double,Double)) : PaintScale =
-    StaticPaintScale(vLowerUpper._1, vLowerUpper._2);
 
   /** Produces a gradient using the University of Minnesota's school colors, from maroon (low) to gold (high) */
   lazy val MaroonToGold = createGradient(new Color(0xA0, 0x00, 0x00), new Color(0xFF, 0xFF, 0x00), 256);
