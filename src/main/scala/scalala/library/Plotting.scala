@@ -217,6 +217,8 @@ trait Plotting {
    * Displays a scatter plot of x versus y, each point drawn at the given
    * size and mapped with the given color.
    *
+   * Example usage: https://gist.github.com/1288473
+   *
    * @param x The x coordinates to draw as provided by anything that can be seen as a Tensor1.
    * @param y The y coordinates to draw as provided by anything that can be seen as a Tensor1.
    * @param s The size of each circle (on the same scale as the domain axis);
