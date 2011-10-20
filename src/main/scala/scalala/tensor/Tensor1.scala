@@ -38,6 +38,38 @@ trait Tensor1Like
  +D<:Domain1[K], +This<:Tensor1[K,V]]
 extends TensorLike[K,V,D,This] { self =>
 
+  /**
+   * Constructs a new Tensor1 like this one based on accumulating values
+   * from the given initial start value, like a foldLeft that returns all
+   * intermediate results.
+   */
+  def accumulate[Z,TT>:This,That](z : Z)(op : (Z,V) => Z)
+  (implicit zs : Scalar[Z], bf : CanBuildTensorFrom[TT,D,K,Z,That]) = {
+    val builder = bf(repr, domain);
+    var acc = z;
+    this.foreachPair((k,v) => {
+      acc = op(acc,v);
+      builder(k) = acc;
+    });
+    builder.result;
+  }
+
+  /**
+   * Returns the culumulative sum of this Tensor1.  Note that this is only
+   * well defined for domains that have a natural and consistent iteration
+   * order.
+   */
+  def cumsum[TT>:This,That](implicit bf : CanBuildTensorFrom[TT,D,K,V,That], add : BinaryOp[V,V,OpAdd,V]) : That =
+    accumulate(scalar.zero)(add);
+
+  /**
+   * Returns the culumulative sum of this Tensor1.  Note that this is only
+   * well defined for domains that have a natural and consistent iteration
+   * order.
+   */
+  def cumprod[TT>:This,That](implicit bf : CanBuildTensorFrom[TT,D,K,V,That], mul : BinaryOp[V,V,OpMul,V]) : That =
+    accumulate(scalar.one)(mul);
+
   /** Returns the k-norm of this tensor. */
   def norm(n : Double) : Double = {
     if (n == 1) {
