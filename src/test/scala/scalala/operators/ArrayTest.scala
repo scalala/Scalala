@@ -60,5 +60,13 @@ class ArrayTest extends FunSuite with Checkers {
     assert((a / 2.0).toList === List(0.5,1.0,1.5));
     assert((a % 2).toList === List(1,0,1));
   }
+  
+  test("Binary Ops") {
+    val a = mk(0,-1,2);
+    val b = mk(0.0,0.0,3.0);
+    assert((a :&& b).toList === List(false,false,true));
+    assert((a :|| b).toList === List(false,true,true));
+    assert((a :^^ b).toList === List(false,true,false));
+  }
 }
 

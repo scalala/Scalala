@@ -56,7 +56,14 @@ object UnaryOp extends UnaryTupleOps {
 
   implicit object OpNegD extends UnaryOp[Double,OpNeg,Double]
     { def opType = OpNeg; def apply(v : Double) = -v; }
-    
+  
+  //
+  // Not
+  //
+  
+  implicit object OpNotB extends UnaryOp[Boolean,OpNot,Boolean]
+    { def opType = OpNot; def apply(v : Boolean) = !v; }
+  
   //
   // Maps
   //

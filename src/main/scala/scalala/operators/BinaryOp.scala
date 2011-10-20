@@ -98,6 +98,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeII extends BinaryOp[Int,Int,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Int, b : Int) = a != b; }
+  
+  implicit object OpAndII extends BinaryOp[Int,Int,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Int, b : Int) = a != 0 && b != 0; }
+  
+  implicit object OpOrII extends BinaryOp[Int,Int,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Int, b : Int) = a != 0 || b != 0; }
+
+  implicit object OpXorII extends BinaryOp[Int,Int,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Int, b : Int) = (a != 0) ^ (b != 0); }
 
   // Long <-> Long
 
@@ -136,6 +145,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeLL extends BinaryOp[Long,Long,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Long, b : Long) = a != b; }
+  
+  implicit object OpAndLL extends BinaryOp[Long,Long,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Long, b : Long) = a != 0 && b != 0; }
+  
+  implicit object OpOrLL extends BinaryOp[Long,Long,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Long, b : Long) = a != 0 || b != 0; }
+
+  implicit object OpXorLL extends BinaryOp[Long,Long,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Long, b : Long) = (a != 0) ^ (b != 0); }
     
   // Float <-> Float
 
@@ -174,6 +192,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeFF extends BinaryOp[Float,Float,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Float, b : Float) = a != b; }
+  
+  implicit object OpAndFF extends BinaryOp[Float,Float,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Float, b : Float) = a != 0 && b != 0; }
+  
+  implicit object OpOrFF extends BinaryOp[Float,Float,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Float, b : Float) = a != 0 || b != 0; }
+
+  implicit object OpXorFF extends BinaryOp[Float,Float,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Float, b : Float) = (a != 0) ^ (b != 0); }
     
   // Double <-> Double
   
@@ -213,6 +240,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   implicit object OpNeDD extends BinaryOp[Double,Double,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Double, b : Double) = a != b; }
   
+  implicit object OpAndDD extends BinaryOp[Double,Double,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Double, b : Double) = a != 0 && b != 0; }
+  
+  implicit object OpOrDD extends BinaryOp[Double,Double,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Double, b : Double) = a != 0 || b != 0; }
+
+  implicit object OpXorDD extends BinaryOp[Double,Double,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Double, b : Double) = (a != 0) ^ (b != 0); }
+  
   // Int <-> Double
   
   implicit object OpAddID extends BinaryOp[Int,Double,OpAdd,Double]
@@ -250,6 +286,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeID extends BinaryOp[Int,Double,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Int, b : Double) = a != b; }
+  
+  implicit object OpAndID extends BinaryOp[Int,Double,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Int, b : Double) = a != 0 && b != 0; }
+  
+  implicit object OpOrID extends BinaryOp[Int,Double,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Int, b : Double) = a != 0 || b != 0; }
+
+  implicit object OpXorID extends BinaryOp[Int,Double,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Int, b : Double) = (a != 0) ^ (b != 0); }
     
   // Double <-> Int
   
@@ -288,6 +333,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeDI extends BinaryOp[Double,Int,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Double, b : Int) = a != b; }
+  
+  implicit object OpAndDI extends BinaryOp[Double,Int,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Double, b : Int) = a != 0 && b != 0; }
+  
+  implicit object OpOrDI extends BinaryOp[Double,Int,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Double, b : Int) = a != 0 || b != 0; }
+
+  implicit object OpXorDI extends BinaryOp[Double,Int,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Double, b : Int) = (a != 0) ^ (b != 0); }
 
   // Int <-> Float
   
@@ -326,6 +380,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeIF extends BinaryOp[Int,Float,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Int, b : Float) = a != b; }
+  
+  implicit object OpAndIF extends BinaryOp[Int,Float,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Int, b : Float) = a != 0 && b != 0; }
+  
+  implicit object OpOrIF extends BinaryOp[Int,Float,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Int, b : Float) = a != 0 || b != 0; }
+
+  implicit object OpXorIF extends BinaryOp[Int,Float,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Int, b : Float) = (a != 0) ^ (b != 0); }
     
   // Float <-> Int
   
@@ -365,6 +428,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   implicit object OpNeFI extends BinaryOp[Float,Int,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Float, b : Int) = a != b; }
   
+  implicit object OpAndFI extends BinaryOp[Float,Int,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Float, b : Int) = a != 0 && b != 0; }
+  
+  implicit object OpOrFI extends BinaryOp[Float,Int,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Float, b : Int) = a != 0 || b != 0; }
+
+  implicit object OpXorFI extends BinaryOp[Float,Int,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Float, b : Int) = (a != 0) ^ (b != 0); }
+  
   // Int <-> Long
   
   implicit object OpAddIL extends BinaryOp[Int,Long,OpAdd,Long]
@@ -402,6 +474,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeIL extends BinaryOp[Int,Long,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Int, b : Long) = a != b; }
+  
+  implicit object OpAndIL extends BinaryOp[Int,Long,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Int, b : Long) = a != 0 && b != 0; }
+  
+  implicit object OpOrIL extends BinaryOp[Int,Long,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Int, b : Long) = a != 0 || b != 0; }
+
+  implicit object OpXorIL extends BinaryOp[Int,Long,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Int, b : Long) = (a != 0) ^ (b != 0); }
     
   // Long <-> Int
   
@@ -441,6 +522,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   implicit object OpNeLI extends BinaryOp[Long,Int,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Long, b : Int) = a != b; }
   
+  implicit object OpAndLI extends BinaryOp[Long,Int,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Long, b : Int) = a != 0 && b != 0; }
+  
+  implicit object OpOrLI extends BinaryOp[Long,Int,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Long, b : Int) = a != 0 || b != 0; }
+
+  implicit object OpXorLI extends BinaryOp[Long,Int,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Long, b : Int) = (a != 0) ^ (b != 0); }
+  
   // Float <-> Double
   
   implicit object OpAddFD extends BinaryOp[Float,Double,OpAdd,Double]
@@ -478,6 +568,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeFD extends BinaryOp[Float,Double,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Float, b : Double) = a != b; }
+  
+  implicit object OpAndFD extends BinaryOp[Float,Double,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Float, b : Double) = a != 0 && b != 0; }
+  
+  implicit object OpOrFD extends BinaryOp[Float,Double,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Float, b : Double) = a != 0 || b != 0; }
+
+  implicit object OpXorFD extends BinaryOp[Float,Double,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Float, b : Double) = (a != 0) ^ (b != 0); }
     
   // Double <-> Float
   
@@ -516,6 +615,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeDF extends BinaryOp[Double,Float,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Double, b : Float) = a != b; }
+  
+  implicit object OpAndDF extends BinaryOp[Double,Float,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Double, b : Float) = a != 0 && b != 0; }
+  
+  implicit object OpOrDF extends BinaryOp[Double,Float,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Double, b : Float) = a != 0 || b != 0; }
+
+  implicit object OpXorDF extends BinaryOp[Double,Float,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Double, b : Float) = (a != 0) ^ (b != 0); }
 
   // Long <-> Double
   
@@ -554,6 +662,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeLD extends BinaryOp[Long,Double,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Long, b : Double) = a != b; }
+  
+  implicit object OpAndLD extends BinaryOp[Long,Double,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Long, b : Double) = a != 0 && b != 0; }
+  
+  implicit object OpOrLD extends BinaryOp[Long,Double,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Long, b : Double) = a != 0 || b != 0; }
+
+  implicit object OpXorLD extends BinaryOp[Long,Double,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Long, b : Double) = (a != 0) ^ (b != 0); }
     
   // Double <-> Long
   
@@ -592,6 +709,15 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   
   implicit object OpNeDL extends BinaryOp[Double,Long,OpNe,Boolean]
     { def opType = OpNe; def apply(a : Double, b : Long) = a != b; }
+  
+  implicit object OpAndDL extends BinaryOp[Double,Long,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Double, b : Long) = a != 0 && b != 0; }
+  
+  implicit object OpOrDL extends BinaryOp[Double,Long,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Double, b : Long) = a != 0 || b != 0; }
+
+  implicit object OpXorDL extends BinaryOp[Double,Long,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Double, b : Long) = (a != 0) ^ (b != 0); }
 
   // Boolean * Anything and vice versa
 

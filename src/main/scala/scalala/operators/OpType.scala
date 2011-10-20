@@ -136,12 +136,45 @@ trait OpSet extends OpType;
 object OpSet extends OpSet;
 
 /**
+ * Type marker for BinaryOp A :&& B
+ *
+ * @author dramage
+ */
+trait OpAnd extends OpType;
+object OpAnd extends OpAnd;
+
+/**
+ * Type marker for BinaryOp A :|| B
+ *
+ * @author dramage
+ */
+trait OpOr extends OpType;
+object OpOr extends OpOr;
+
+/**
+ * Type marker for BinaryOp A :^^ B
+ *
+ * @author dramage
+ */
+trait OpXor extends OpType;
+object OpXor extends OpXor;
+
+/**
  * Type marker for UnaryOp -A.
  *
  * @author dramage
  */
 trait OpNeg extends OpType;
 object OpNeg extends OpNeg;
+
+/**
+ * Type marker for UnaryOp !A.
+ *
+ * @author dramage
+ */
+trait OpNot extends OpType;
+object OpNot extends OpNot;
+
 
 /**
  * Type marker for inner (dot) product of A and B.

@@ -35,6 +35,8 @@ trait NumericOps[+This] {
 
   def unary_-[TT>:This,That](implicit op : UnaryOp[TT,OpNeg,That]) = op(repr);
 
+  def unary_![TT>:This,That](implicit op : UnaryOp[TT,OpNot,That]) = op(repr);
+
   /** Element-wise sum of this and b. */
   def :+ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAdd,That]) = op(repr,b);
   
@@ -101,11 +103,29 @@ trait NumericOps[+This] {
   /** Returns the operator delegate used in :== */
   def :==?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpEq,That]) = op;
 
-  /** Elemeent-wise inequality comparator of this and b. */
+  /** Element-wise inequality comparator of this and b. */
   def :!= [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpNe,That]) = op(repr,b);
 
   /** Returns the operator delegate used in :!= */
   def :!=?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpNe,That]) = op;
+
+  /** Element-wise logical "and" operator -- returns true if corresponding elements are non-zero. */
+  def :&& [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAnd,That]) = op(repr,b);
+
+  /** Returns the operator delegate used in :&& */
+  def :&&?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAnd,That]) = op;
+
+  /** Element-wise logical "or" operator -- returns true if either element is non-zero. */
+  def :|| [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpOr,That]) = op(repr,b);
+
+  /** Returns the operator delegate used in :|| */
+  def :||?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpOr,That]) = op;
+
+  /** Element-wise logical "xor" operator -- returns true if only one of the corresponding elements is non-zero. */
+  def :^^ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpXor,That]) = op(repr,b);
+
+  /** Returns the operator delegate used in :^^ */
+  def :^^?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpXor,That]) = op;
 
   /** Inner product of this and b. */
   def dot [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMulInner,That]) = op(repr,b);
@@ -146,6 +166,24 @@ trait NumericOps[+This] {
 
   /** Returns the operator delegate used in % */
   final def %?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpMod,That], sb : Scalar[B]) = op;
+  
+  /** Alias for :&&(b) for all b. */
+  final def && [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAnd,That]) = this.:&&(b);
+
+  /** Returns the operator delegate used in && */
+  final def &&?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpAnd,That]) = op;
+  
+  /** Alias for :||(b) for all b. */
+  final def || [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpOr,That]) = this.:||(b);
+
+  /** Returns the operator delegate used in || */
+  final def ||?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpOr,That]) = op;
+  
+  /** Alias for :^^(b) for all b. */
+  final def ^^ [TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpXor,That]) = this.:^^(b);
+
+  /** Returns the operator delegate used in ^^ */
+  final def ^^?[TT>:This,B,That](b : B)(implicit op : BinaryOp[TT,B,OpXor,That]) = op;
 }
 
 /**
