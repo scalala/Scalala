@@ -719,6 +719,23 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
   implicit object OpXorDL extends BinaryOp[Double,Long,OpXor,Boolean]
     { def opType = OpXor; def apply(a : Double, b : Long) = (a != 0) ^ (b != 0); }
 
+  // Boolean <-> Boolean
+  
+  implicit object OpEqBB extends BinaryOp[Boolean,Boolean,OpEq,Boolean]
+    { def opType = OpEq; def apply(a : Boolean, b : Boolean) = a == b; }
+  
+  implicit object OpNeBB extends BinaryOp[Boolean,Boolean,OpNe,Boolean]
+    { def opType = OpNe; def apply(a : Boolean, b : Boolean) = a != b; }
+  
+  implicit object OpAndBB extends BinaryOp[Boolean,Boolean,OpAnd,Boolean]
+    { def opType = OpAnd; def apply(a : Boolean, b : Boolean) = a && b; }
+  
+  implicit object OpOrBB extends BinaryOp[Boolean,Boolean,OpOr,Boolean]
+    { def opType = OpOr; def apply(a : Boolean, b : Boolean) = a || b; }
+
+  implicit object OpXorBB extends BinaryOp[Boolean,Boolean,OpXor,Boolean]
+    { def opType = OpXor; def apply(a : Boolean, b : Boolean) = a ^ b; }
+
   // Boolean * Anything and vice versa
 
   implicit object OpMulBB extends BinaryOp[Boolean,Boolean,OpMul,Boolean]
@@ -760,7 +777,7 @@ object BinaryOp extends BinaryTupleOps with BinaryOpImplicitsLevel0 {
     def opType = OpMul; def apply(a : V, b : Boolean) = if (b) a else s.zero;
   }
 
-    // Double <-> Boolean
+  // Double <-> Boolean
 
   implicit object OpAddDB extends BinaryOp[Double,Boolean,OpAdd,Double]
     { def opType = OpAdd; def apply(a : Double, b : Boolean) = if(b) a + 1 else a; }
