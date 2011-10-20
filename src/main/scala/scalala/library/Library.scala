@@ -285,6 +285,14 @@ trait Library {
     builder.result;
   }
 
+  /**
+   * Generates a vector of linearly spaced values between a and b (inclusive).
+   * The returned vector will have length elements, defaulting to 100.
+   */
+  def linspace(a : Double, b : Double, length : Int = 100) : DenseVectorCol[Double] = {
+    val increment = (b - a) / (length - 1);
+    DenseVectorCol.tabulate(length)(i => a + increment * i);
+  }
 }
 
 object Library extends Library;
