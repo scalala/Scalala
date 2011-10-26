@@ -68,7 +68,7 @@ extends PaintScaleFactory[T] {
 case class CategoricalPaintScaleFactory[T]() extends PaintScaleFactory[T] {
   override def apply(items : Traversable[T]) : PaintScale[T] = {
     val distinct = items.toList.distinct;
-    CategoricalPaintScale[T](Map() ++ (distinct zip Stream.continually(PaintScale.Category20.toList).flatten));
+    CategoricalPaintScale[T](Map() ++ (distinct zip Stream.continually(PaintScale.Category20.values.toList).flatten));
   }
 }
 
