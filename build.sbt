@@ -15,8 +15,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "netlib" % "netlib-java" % "0.9.3",
-  "netlib" % "arpack-combo" % "0.1",
+  "com.googlecode.netlib-java" % "netlib-java" % "0.9.3",
   "jfree" % "jcommon" % "1.0.16",
   "jfree" % "jfreechart" % "1.0.13",
   "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1",
