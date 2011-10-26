@@ -101,24 +101,15 @@ trait Plotting {
 
   /** Saves the current figure at the requested dpi to the given filename. */
   def saveas(filename : String, dpi : Int = 72)(implicit figure : Figure = figure) : Unit = {
-    import java.io._;
-
     // make sure figure is visible or saved image will come up empty
     figure.refresh();
-
-    lazy val fos = new FileOutputStream(filename);
-    if (filename.toLowerCase.endsWith(".eps")) {
-      figure.writeEPS(fos,dpi);
-      fos.close();
-    } else if (filename.toLowerCase.endsWith(".png")) {
-      figure.writePNG(fos,dpi);
-      fos.close();
-    } else if (filename.toLowerCase.endsWith(".pdf")) {
-      figure.writePDF(fos);
-      fos.close();
-    } else {
-      throw new IOException("Unrecognized file extension: should be eps, png, or pdf");
-    }
+    
+    plotting.ExportGraphics.writeFile(
+      new java.io.File(filename),
+      draw = figure.drawPlots _,
+      width = figure.contents.getWidth,
+      height = figure.contents.getHeight,
+      dpi = dpi);
   }
 
   /**

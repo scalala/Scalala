@@ -130,84 +130,7 @@ class Figure(figures : Figures) {
     frame.setVisible(visible);
   }
 
-  // export the plot
-  def writeEPS(out : java.io.OutputStream, dpi : Int) {
-    // default dpi is 72
-    val scale = dpi / 72.0;
-    val width = (contents.getWidth  * scale).toInt;
-    val height = (contents.getHeight * scale).toInt;
-
-    // an attempt at getting the renderer to do high-res correctly. failed.
-    /*
-    for (plot <- plots) {
-      import java.awt.RenderingHints._;
-      val hints = new java.awt.RenderingHints(KEY_DITHERING, VALUE_DITHER_DISABLE);
-      for (pair <- List((KEY_ANTIALIASING, VALUE_ANTIALIAS_OFF),
-                        (KEY_STROKE_CONTROL, VALUE_STROKE_PURE),
-                        (KEY_TEXT_ANTIALIASING, VALUE_TEXT_ANTIALIAS_OFF))) {
-        hints.put(pair._1,pair._2);
-      }
-      plot.chart.setRenderingHints(hints);
-    }
-    */
-
-    // create an eps document at the appropriate dpi
-    import org.apache.xmlgraphics.java2d.ps.EPSDocumentGraphics2D;
-    val g2d = new EPSDocumentGraphics2D(false);
-    g2d.setGraphicContext(new org.apache.xmlgraphics.java2d.GraphicContext);
-    g2d.setupDocument(out, width, height);
-    g2d.scale(scale, scale);
-    drawPlots(g2d);
-    g2d.finish();
-  }
-
-  def writePNG(out : java.io.OutputStream, dpi : Int) {
-    // default dpi is 72
-    val scale = dpi / 72.0;
-    val width = (contents.getWidth  * scale).toInt;
-    val height = (contents.getHeight * scale).toInt;
-
-    import java.awt.image.BufferedImage;
-    val image = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
-    val g2d = image.createGraphics();
-    g2d.scale(scale, scale);
-    drawPlots(g2d);
-    g2d.dispose;
-
-    javax.imageio.ImageIO.write(image, "png", out);
-  }
-
-  /** Contributed by Robby McKilliam */
-  def writePDF(out : java.io.OutputStream) {
-    import com.lowagie.text.Document;
-    import com.lowagie.text.Rectangle;
-    import com.lowagie.text.pdf.PdfWriter;
-
-    val width  = contents.getWidth;
-    val height = contents.getHeight;
-
-    val document = new Document();
-
-    try {
-      document.setPageSize(new Rectangle(width, height));
-      val writer = PdfWriter.getInstance(document, out);
-      document.open();
-
-      val cb = writer.getDirectContent();
-      val tp = cb.createTemplate(width, height);
-      val g2d = tp.createGraphics(width, height);
-
-      drawPlots(g2d);
-
-      g2d.dispose;
-
-      cb.addTemplate(tp, 1, 0, 0, 1, 0, 0);
-    } finally {
-      document.close();
-    }
-  }
-
-  protected def drawPlots(g2d : Graphics2D) {
+  def drawPlots(g2d : Graphics2D) {
     val plotWidth  = contents.getWidth / cols;
     val plotHeight = contents.getHeight / rows;
     var px = 0; var py = 0;
@@ -222,3 +145,4 @@ class Figure(figures : Figures) {
     }
   }
 }
+
