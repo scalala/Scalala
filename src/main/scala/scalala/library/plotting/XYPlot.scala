@@ -22,7 +22,6 @@ package library;
 package plotting;
 
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.axis.{NumberAxis,TickUnits,NumberTickUnit};
 
@@ -129,7 +128,7 @@ class XYPlot(figure : Figure) {
 
   /** The ChartPanel for this plot */
   lazy val panel =
-    new ChartPanel(chart);
+    new org.jfree.chart.ChartPanel(chart);
 
   /** Shows the given chart */
   def refresh() = figure.refresh()
