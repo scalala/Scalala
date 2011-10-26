@@ -46,6 +46,7 @@ object ScalalaConsole {
         "-nocompdaemon",
         "-classpath", System.getProperty("java.class.path"),
         "-no-specialization",
+        "-Yrepl-sync",
         "-usejavacp",
         "-i", file.getAbsolutePath
       ) ++ args
