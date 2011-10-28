@@ -59,8 +59,14 @@ object ExportGraphics {
       } finally {
         fos.close();
       }
+    } else if (file.getName.toLowerCase.endsWith(".svg")) {
+      try {
+        writeSVG(fos,draw,width,height);
+      } finally {
+        fos.close();
+      }
     } else {
-      throw new IOException("Unrecognized file extension: should be png, eps, or pdf");
+      throw new IOException("Unrecognized file extension: should be png, svg, eps, or pdf");
     }
   }
 
@@ -150,6 +156,24 @@ object ExportGraphics {
     } finally {
       document.close();
     }
+  }
+  
+  /**
+   * Writes the given drawable to the given OutputStream at the given dpi,
+   * formatted as pdf. Contributed by Robby McKilliam.
+   */
+  def writeSVG(out : OutputStream, draw : Drawable, width : Int, height : Int) {
+    import org.apache.batik.svggen.SVGGraphics2D;
+    import org.apache.batik.dom.GenericDOMImplementation;
+    import org.w3c.dom.Document;
+    import java.io.OutputStreamWriter;
+    
+    val dom = GenericDOMImplementation.getDOMImplementation();
+    val document = dom.createDocument("http://www.w3.org/2000/svg","svg",null);
+    val g2d = new SVGGraphics2D(document);
+    draw(g2d);
+    g2d.stream(new OutputStreamWriter(out, "UTF-8"), true);
+    g2d.dispose();
   }
 }
 

@@ -19,7 +19,9 @@ libraryDependencies ++= Seq(
   "jfree" % "jcommon" % "1.0.16",
   "jfree" % "jfreechart" % "1.0.13",
   "org.apache.xmlgraphics" % "xmlgraphics-commons" % "1.3.1",
-  "com.lowagie" % "itext" % "2.1.5" intransitive(),
+  "org.apache.xmlgraphics" % "batik-dom" % "1.7",    // for svg gen
+  "org.apache.xmlgraphics" % "batik-svggen" % "1.7", // for svg gen
+  "com.lowagie" % "itext" % "2.1.5" intransitive(),  // for pdf gen
   "junit" % "junit" % "4.5" % "test"
 )
 
