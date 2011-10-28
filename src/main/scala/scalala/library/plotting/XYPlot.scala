@@ -150,7 +150,7 @@ object XYPlot {
   }
 
   // color cycle ignoring bright colors
-  val paints : Array[Paint] = PaintScale.Category20.asInstanceOf[Array[Paint]];
+  val paints : Array[Paint] = PaintScale.Category20.values.asInstanceOf[Array[Paint]];
   
   def paint(series : Int) =
     paints(series % paints.length);

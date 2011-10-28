@@ -107,6 +107,11 @@ object PaintScale {
 
   /** The Category10 palette from Protovis http://vis.stanford.edu/protovis/docs/color.html */
   object Category10 {
+    val values : Array[Color] = Array(
+      "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+      "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+    ).map(Color.decode);
+    
     val blue = values(0);
     val orange = values(1);
     val green = values(2);
@@ -118,16 +123,16 @@ object PaintScale {
     val gold = values(8);
     val teal = values(9);
     
-    val values : Array[Color] = Array(
-      "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-      "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
-    ).map(Color.decode);
-    
     def apply(i : Int) = values(i);
   }
   
   /** The Category20 palette from Protovis http://vis.stanford.edu/protovis/docs/color.html */
   object Category20 {
+    val values : Array[Color] = Category10.values ++ Array(
+      "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
+      "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5"
+    ).map(Color.decode);
+    
     val lightblue = values(10);
     val lightorange = values(11);
     val lightgreen = values(12);
@@ -139,10 +144,7 @@ object PaintScale {
     val lightgold = values(18);
     val lightteal = values(19);
     
-    val values : Array[Color] = Category10.values ++ Array(
-      "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5",
-      "#c49c94", "#f7b6d2", "#c7c7c7", "#dbdb8d", "#9edae5"
-    ).map(Color.decode);
+    def apply(i : Int) = values(i);
   }
 
   // color literals from protoivs  
