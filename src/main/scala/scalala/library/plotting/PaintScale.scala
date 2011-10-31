@@ -78,6 +78,32 @@ extends PaintScale[T] {
 
 object PaintScale {
 
+  /**
+   * Convert a color description string into a color suitable for plotting.
+   * @param colorcode A string that is a single character (like "k"), a name
+   * (like "black"), "r,g,b" or, "[r,g,b]"
+   *
+   * @author Patryk Laurent
+   */
+  def convertToColor(colorcode:String) : java.awt.Color = {
+      val rgbcsv =  "(.*),(.*),(.*)".r;
+      colorcode.toLowerCase.replace(" ", "").replace("[","").replace("]", "") match {
+          case "y" | "yellow"  => yellow
+          case "m" | "magenta" => magenta
+          case "c" | "cyan"    => cyan
+          case "r" | "red"     => red
+          case "g" | "green"   => green
+          case "b" | "blue"    => blue
+          case "w" | "white"   => white
+          case "k" | "black"   => black
+          case rgbcsv(r,g,b)   => new java.awt.Color(r.toInt,g.toInt,b.toInt)
+          case uninterpretable:String => throw new IllegalArgumentException(
+            "Expected color code to be either y m c r g b w k OR R,G,B or " +
+            "[R,G,B] where R,G,B are numbers such that 0<=R,G,B<=255, but got '" +
+            uninterpretable + "' instead.")
+      }
+  }
+
   /** Creates a GradientPaintScale automatically for the given range. */
   implicit def gradientTuple[T](vLowerUpper : (T,T))(implicit view : T=>Double)
   : GradientPaintScale[T] =
@@ -147,7 +173,9 @@ object PaintScale {
     def apply(i : Int) = values(i);
   }
 
-  // color literals from protoivs  
+  //
+  // A large pallete of color literals from ProtoVis
+  //
   val aliceblue = Color.decode( "#f0f8ff");
   val antiquewhite = Color.decode( "#faebd7");
   val aqua = Color.decode( "#00ffff");

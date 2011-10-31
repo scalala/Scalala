@@ -123,7 +123,8 @@ trait Plotting {
    * @param tips Optional mouse-over tooltips for some points.
    */
   def plot[K,X,XV,Y,YV]
-  (x : X, y : Y, style : Char = '-', name : String = null, lines : Boolean = true, shapes : Boolean = false)
+  (x : X, y : Y, style : Char = '-', colorcode : String = null, name : String = null,
+  lines : Boolean = true, shapes : Boolean = false)
    // labels : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]],
    // tips : PartialFunction[K,String] = null.asInstanceOf[PartialFunction[K,String]])
   (implicit xyplot : XYPlot = figures.figure.plot,
@@ -153,11 +154,19 @@ trait Plotting {
 
     // initialize the series renderer
     val renderer = new org.jfree.chart.renderer.xy.XYLineAndShapeRenderer();
-    renderer.setSeriesPaint(0, XYPlot.paint(series));
-    renderer.setSeriesShape(0, XYPlot.shape(series));
+
+    if (colorcode != null) {
+      val color = PaintScale.convertToColor(colorcode);
+      renderer.setSeriesPaint(0, color);
+      renderer.setSeriesFillPaint(0, color);
+      renderer.setSeriesOutlinePaint(0, color);
+    } else {
+      renderer.setSeriesPaint(0, XYPlot.paint(series));
+      renderer.setSeriesFillPaint(0, XYPlot.fillPaint(series));
+      renderer.setSeriesOutlinePaint(0, XYPlot.outlinePaint(series));
+    }
     renderer.setSeriesStroke(0, XYPlot.stroke(series));
-    renderer.setSeriesFillPaint(0, XYPlot.fillPaint(series));
-    renderer.setSeriesOutlinePaint(0, XYPlot.outlinePaint(series));
+    renderer.setSeriesShape(0, XYPlot.shape(series));
     renderer.setSeriesOutlineStroke(0, XYPlot.outlineStroke(series));
 
     val tooltipGenerator = new org.jfree.chart.labels.XYToolTipGenerator() {
