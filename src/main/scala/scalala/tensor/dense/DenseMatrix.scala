@@ -42,6 +42,8 @@ import library.{LinearAlgebra, Random}
  *
  * @author dramage
  */
+@SerialVersionUID(1)
+@serializable
 class DenseMatrix[@specialized(Int,Long,Float,Double) V]
 (override val numRows : Int, override val numCols : Int, data_ : Array[V])
 (implicit override val scalar : Scalar[V])
