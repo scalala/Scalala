@@ -36,8 +36,8 @@ object ExportGraphics {
 
   /**
    * Writes the given drawable to a new file of the given name with
-   * the given dpi (ignored for PDF).  The extension of the file
-   * determines its format, with options png, eps, and pdf.
+   * the given dpi (for rasterized formats only).  The extension of the file
+   * determines its format, with options png, eps, svg, and pdf.
    */
   def writeFile(file : File, draw : Drawable, width : Int, height : Int, dpi : Int = 72) = {
     lazy val fos = new FileOutputStream(file);
@@ -49,7 +49,7 @@ object ExportGraphics {
       }
     } else if (file.getName.toLowerCase.endsWith(".eps")) {
       try {
-        writeEPS(fos,draw,width,height,dpi);
+        writeEPS(fos,draw,width,height);
       } finally {
         fos.close();
       }
@@ -59,12 +59,12 @@ object ExportGraphics {
       } finally {
         fos.close();
       }
-    } else if (file.getName.toLowerCase.endsWith(".svg")) {
-      try {
-        writeSVG(fos,draw,width,height);
-      } finally {
-        fos.close();
-      }
+//    } else if (file.getName.toLowerCase.endsWith(".svg")) {
+//      try {
+//        writeSVG(fos,draw,width,height);
+//      } finally {
+//        fos.close();
+//      }
     } else {
       throw new IOException("Unrecognized file extension: should be png, svg, eps, or pdf");
     }
@@ -93,44 +93,22 @@ object ExportGraphics {
   }
 
   /**
-   * Writes the given drawable to the given OutputStream at the given dpi,
-   * formatted as eps.
+   * Writes the given drawable to the given OutputStream formatted as eps.
    */
-  def writeEPS(out : OutputStream, draw : Drawable, width : Int, height : Int, dpi : Int = 72) {
+  def writeEPS(out : OutputStream, draw : Drawable, width : Int, height : Int) {
     import org.apache.xmlgraphics.java2d.ps.EPSDocumentGraphics2D;
     import org.apache.xmlgraphics.java2d.GraphicContext;
-    
-    // default dpi is 72
-    val scale = dpi / 72.0;
-    val swidth = (width * scale).toInt;
-    val sheight = (height * scale).toInt;
 
-    // an attempt at getting the renderer to do high-res correctly. failed.
-    /*
-    for (plot <- plots) {
-      import java.awt.RenderingHints._;
-      val hints = new java.awt.RenderingHints(KEY_DITHERING, VALUE_DITHER_DISABLE);
-      for (pair <- List((KEY_ANTIALIASING, VALUE_ANTIALIAS_OFF),
-                        (KEY_STROKE_CONTROL, VALUE_STROKE_PURE),
-                        (KEY_TEXT_ANTIALIASING, VALUE_TEXT_ANTIALIAS_OFF))) {
-        hints.put(pair._1,pair._2);
-      }
-      plot.chart.setRenderingHints(hints);
-    }
-    */
-
-    // create an eps document at the appropriate dpi
     val g2d = new EPSDocumentGraphics2D(false);
     g2d.setGraphicContext(new GraphicContext);
-    g2d.setupDocument(out, swidth, sheight);
-    g2d.scale(scale, scale);
+    g2d.setupDocument(out, width, height);
     draw(g2d);
     g2d.finish();
   }
 
   /**
-   * Writes the given drawable to the given OutputStream at the given dpi,
-   * formatted as pdf. Contributed by Robby McKilliam.
+   * Writes the given drawable to the given OutputStream formatted as pdf.
+   * Contributed by Robby McKilliam.
    */
   def writePDF(out : OutputStream, draw : Drawable, width : Int, height : Int) {
     import com.lowagie.text.Document;
@@ -158,22 +136,21 @@ object ExportGraphics {
     }
   }
   
-  /**
-   * Writes the given drawable to the given OutputStream at the given dpi,
-   * formatted as pdf. Contributed by Robby McKilliam.
-   */
-  def writeSVG(out : OutputStream, draw : Drawable, width : Int, height : Int) {
-    import org.apache.batik.svggen.SVGGraphics2D;
-    import org.apache.batik.dom.GenericDOMImplementation;
-    import org.w3c.dom.Document;
-    import java.io.OutputStreamWriter;
-    
-    val dom = GenericDOMImplementation.getDOMImplementation();
-    val document = dom.createDocument("http://www.w3.org/2000/svg","svg",null);
-    val g2d = new SVGGraphics2D(document);
-    draw(g2d);
-    g2d.stream(new OutputStreamWriter(out, "UTF-8"), true);
-    g2d.dispose();
-  }
+//  /**
+//   * Writes the given drawable to the given OutputStream formatted as svg.
+//   */
+//  def writeSVG(out : OutputStream, draw : Drawable, width : Int, height : Int) {
+//    import org.apache.batik.svggen.SVGGraphics2D;
+//    import org.apache.batik.dom.GenericDOMImplementation;
+//    import org.w3c.dom.Document;
+//    import java.io.OutputStreamWriter;
+//    
+//    val dom = GenericDOMImplementation.getDOMImplementation();
+//    val document = dom.createDocument("http://www.w3.org/2000/svg","svg",null);
+//    val g2d = new SVGGraphics2D(document);
+//    draw(g2d);
+//    g2d.stream(new OutputStreamWriter(out, "UTF-8"), true);
+//    g2d.dispose();
+//  }
 }
 
