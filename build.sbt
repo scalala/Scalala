@@ -1,13 +1,13 @@
 
 name := "scalala"
 
-version := "1.0.0.RC2-SNAPSHOT"
+version := "1.0.0.RC2"
 
 organization := "org.scalala"
 
 scalaVersion := "2.9.1"
 
-crossScalaVersions := Seq("2.8.1", "2.8.2", "2.9.1")
+crossScalaVersions := Seq("2.8.2", "2.9.1")
 
 resolvers ++= Seq(
   "ScalaNLP Maven2" at "http://repo.scalanlp.org/repo",
