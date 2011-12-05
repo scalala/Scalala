@@ -1,7 +1,7 @@
 
 name := "scalala"
 
-version := "1.0.0.RC2"
+version := "1.0.0.RC3-SNAPSHOT"
 
 organization := "org.scalala"
 
