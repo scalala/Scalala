@@ -163,8 +163,8 @@ trait TensorImplicitsLevel0 {
   = new BinaryUpdateOp[Tensor[K,V1],V2,OpSet] {
     def opType = OpSet;
     override def apply(a : Tensor[K,V1], b : V2) = {
-      val v = cast(b);
-      a.transformPairs((k,v) => v);
+      val newV = cast(b);
+      a.transformPairs((k,oldV) => newV);
     }
   }
 }
