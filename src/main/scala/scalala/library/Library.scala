@@ -178,8 +178,8 @@ trait Library {
     axis match {
       case Axis.Horizontal =>
         val dim   = X.numRows
-        var mu    = DenseVector.tabulate[Double](dim)(X(_,0))
-        var Sigma = DenseMatrix.zeros[Double](dim, dim)
+        val mu    = DenseVector.tabulate[Double](dim)(X(_,0))
+        val Sigma = DenseMatrix.zeros[Double](dim, dim)
         var K     = 1.0
         for (i <- 1 until X.numCols) {
           val xMinusMu = X(::,i) - mu
@@ -191,8 +191,8 @@ trait Library {
 
       case Axis.Vertical =>
         val dim   = X.numCols
-        var mu    = DenseVector.tabulate[Double](dim)(X(0,_))
-        var Sigma = DenseMatrix.zeros[Double](dim, dim)
+        val mu    = DenseVector.tabulate[Double](dim)(X(0,_))
+        val Sigma = DenseMatrix.zeros[Double](dim, dim)
         var K     = 1.0
         for (i <- 1 until X.numRows) {
           val xMinusMu = X(i,::) - mu

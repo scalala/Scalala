@@ -474,7 +474,7 @@ trait DenseMatrixConstructors {
    */
   def randn(mu: Vector[Double], sigma: Matrix[Double], numSamples: Int)(implicit mt : MersenneTwisterFast): DenseMatrix[Double] = {
     require(numSamples >= 1, "Must request at least one sample");
-    require(sigma.isSymmetric, "Sigma must be symetric");
+    require(sigma.isSymmetric, "Sigma must be symmetric");
     require(mu.size == sigma.numCols, "mu must be same length as sigma");
 
     // Assuming multivariate samples with zero mean, the general form of
