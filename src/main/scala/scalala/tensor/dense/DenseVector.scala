@@ -449,9 +449,9 @@ object DenseVectorRow {
   /**
    * Tabulate a vector with the value at each offset given by the function.
    */
-  def tabulate[V: Scalar](size: Int)(f: (Int => V)) = {
+  def tabulate[V: Scalar](size: Int)(f: (Int => V)): DenseVectorRow[V] = {
     implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(Array.tabulate(size)(f));
+    new DenseVectorRow(Array.tabulate(size)(f));
   }
 }
 
