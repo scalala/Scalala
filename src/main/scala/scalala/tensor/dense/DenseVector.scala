@@ -29,8 +29,6 @@ import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
 import scalala.operators._
 import bundles.MutableInnerProductSpace
-import java.util.Arrays
-;
 
 /**
  * A vector backed by a dense array.
@@ -397,13 +395,6 @@ object DenseVector extends DenseVectorConstructors with LowPriorityDenseImplicit
 }
 
 /**
- * Constructors for dense vectors.
- *
- * @author dramage
- */
-trait DenseVectorConstructors extends DenseVectorColConstructors;
-
-/**
  * DenseVectors as a row.
  *
  * @author dramage
@@ -438,21 +429,6 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
 
   override def t : DenseVectorCol[V] =
     new DenseVectorCol(data, offset, stride, length)(scalar);
-}
-
-object DenseVectorRow {
-  def apply[@specialized(Int,Long,Float,Double) V:Scalar](domain : IndexDomain) = {
-    implicit val m = implicitly[Scalar[V]].manifest;
-    new DenseVectorRow(new Array[V](domain.size));
-  }
-
-  /**
-   * Tabulate a vector with the value at each offset given by the function.
-   */
-  def tabulate[V: Scalar](size: Int)(f: (Int => V)): DenseVectorRow[V] = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorRow(Array.tabulate(size)(f));
-  }
 }
 
 /**
@@ -492,81 +468,175 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
     new DenseVectorRow(data, offset, stride, length)(scalar);
 }
 
-object DenseVectorCol extends DenseVectorColConstructors;
+/**
+ * Common constructors shared by DenseVectorRow and DenseVectorCol.
+ * @author dramage, afwlehmann
+ *
+ */
+trait CommonDenseVectorConstructors [+This[_] <: DenseVector[_]] {
+  /**
+   * Constructs a DenseVector from the given values.
+   */
+  def apply[@specialized V: Scalar](values: Array[V]): This[V]
 
-trait DenseVectorColConstructors {
-  /** Constructs a DenseVector for the given IndexDomain. */
-  def apply[S:Scalar](domain : IndexDomain) =
-    zeros(domain.size);
-
-  /** Constructs a literal DenseVector. */
-  def apply[V:Scalar](values : V*) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(values.toArray);
+  /**
+   * Constructs a DenseVector from the given values.
+   */
+  def apply[@specialized V: Scalar](values: V*): This[V] = {
+    implicit val mf = implicitly[Scalar[V]].manifest
+    apply(values.toArray)
   }
 
-  /** Dense vector containing the given value for all elements. */
-  def fill[V:Scalar](size : Int)(value : V) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(Array.fill(size)(value));
+  /**
+   * Constructs a DenseVector for the given IndexDomain.
+   */
+  def apply[@specialized V: Scalar](domain: IndexDomain): This[V] =
+    zeros(domain.size)
+
+  /**
+   * Dense vector containing the given value for all elements.
+   */
+  def fill[V: Scalar](size: Int)(value: V): This[V] = {
+    implicit val mf = implicitly[Scalar[V]].manifest
+    apply(Array.fill(size)(value))
   }
 
-  /** Dense vector of zeros of the given size. */
-  def zeros[V](size : Int)(implicit s : Scalar[V]) = {
-    if (s.isPrimitive) {
-      new DenseVectorCol(s.manifest.newArray(size));
-    } else {
-      fill(size)(s.zero);
-    }
+  /**
+   * DenseVector of zeros of the given size.
+   */
+  def zeros[V](size: Int)(implicit s: Scalar[V]): This[V] = {
+    if (s.isPrimitive)
+      apply(s.manifest.newArray(size))
+    else
+      fill(size)(s.zero)
   }
 
-  /** Dense vector of ones of the given size. */
-  def ones[V:Scalar](size : Int) =
-    fill(size)(implicitly[Scalar[V]].one);
+  /**
+   * DenseVector of ones of the given size.
+   */
+  def ones[V: Scalar](size: Int): This[V] =
+    fill(size)(implicitly[Scalar[V]].one)
 
-  /** Tabulate a vector with the value at each offset given by the function. */
-  def tabulate[V:Scalar](size : Int)(f : (Int => V)) = {
-    implicit val mf = implicitly[Scalar[V]].manifest;
-    new DenseVectorCol(Array.tabulate(size)(f));
+  /**
+   * Tabulate a DenseVector with the value at each offset given by the function.
+   */
+  def tabulate[V: Scalar](size: Int)(f: (Int => V)): This[V] = {
+    implicit val mf = implicitly[Scalar[V]].manifest
+    apply(Array.tabulate(size)(f))
   }
 
   /**
    * Returns a vector with numbers from 'from' up to (but not including)
    * 'until' incrementing by 'by' at each step.
    */
-  def range(from : Int, until : Int, by : Int = 1) =
-    new DenseVectorCol[Int](Array.range(from, until, by));
+  def range(from: Int, until: Int, by: Int = 1): This[Int] =
+    apply[Int](Array.range(from, until, by))
 
-
-  /**Concatenates two or more vectors together into a large vector. Assumes column vectors. */
-  def vertcat[V:Scalar](vectors: Vector[V]*) = {
-    val size = vectors.foldLeft(0)(_ + _.size);
-    val result = zeros[V](size);
-    var offset = 0;
-    for(v <- vectors) {
-      result(offset until (offset + v.size)) := v;
-      offset += v.size;
+  /**
+   * A vector of the given size with uniform random values from [0,1).
+   */
+  def rand(size: Int, mt: MersenneTwisterFast = Random.mt): This[Double] =
+    mt.synchronized {
+      tabulate(size)(i => mt.nextDouble)
     }
-    result;
-  }
-
-  /** A vector of the given size with uniform random values between 0 and 1. */
-  def rand(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
-    tabulate(size)(i => mt.nextDouble);
-  }
 
   /**
    * A vector of the given size with normally distributed random values
    * with mean 0 and standard deviation 1.
    */
-  def randn(size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
-    tabulate(size)(i => mt.nextGaussian);
-  }
+  def randn(size: Int, mt: MersenneTwisterFast = Random.mt): This[Double] =
+    mt.synchronized {
+      tabulate(size)(i => mt.nextGaussian)
+    }
 
-  /** A vector of the given size of random integers in the range [0..max). */
-  def randi(imax : Int, size : Int, mt : MersenneTwisterFast = Random.mt) = mt.synchronized {
-    tabulate(size)(i => mt.nextInt(imax));
-  }
-
+  /**
+   * A vector of the given size of random integers in the range [0..max).
+   */
+  def randi(imax: Int, size: Int, mt: MersenneTwisterFast = Random.mt): This[Int] =
+    mt.synchronized {
+      tabulate(size)(i => mt.nextInt(imax))
+    }
 }
+
+/**
+ * @author dramage, afwlehmann
+ */
+object DenseVectorRow extends CommonDenseVectorConstructors[DenseVectorRow] {
+  /**
+   * {@inheritDoc}
+   */
+  override def apply[@specialized V: Scalar](values: Array[V]): DenseVectorRow[V] =
+    new DenseVectorRow[V](values)
+
+  /**
+   * Horizontal concatenation of two or more row vectors into one large vector.
+   */
+  def horzcat[V: Scalar](vectors: VectorRow[V]*): DenseVectorRow[V] = {
+    val size = vectors.foldLeft(0)(_ + _.size)
+    val result = zeros[V](size)
+    var offset = 0
+    for (v <- vectors) {
+      result(offset until (offset + v.size)) := v
+      offset += v.size
+    }
+    result
+  }
+
+  /**
+   * Vertical concatenation of two or more row vectors into one matrix.
+   * @throws IllegalArgumentException if vectors have different sizes
+   */
+  def vertcat[V: Scalar](vectors: VectorRow[V]*): DenseMatrix[V] = {
+    val size = vectors.head.size
+    if (!(vectors forall (_.size == size)))
+      throw new IllegalArgumentException("All vectors must have the same size!")
+    val result = DenseMatrix.zeros[V](vectors.size, size)
+    for ((v, row) <- vectors zip (0 until vectors.size))
+      result(row,::) := v
+    result
+  }
+}
+
+/**
+ * @author dramage, afwlehmann
+ */
+trait DenseVectorColConstructors extends CommonDenseVectorConstructors[DenseVectorCol] {
+  /**
+   * {@inheritDoc}
+   */
+  override def apply[@specialized V: Scalar](values: Array[V]): DenseVectorCol[V] =
+    new DenseVectorCol[V](values)
+
+  /**
+   * Horizontal concatenation of two or more row vectors into one matrix.
+   * @throws IllegalArgumentException if vectors have different sizes
+   */
+  def horzcat[V: Scalar](vectors: VectorCol[V]*): DenseMatrix[V] = {
+    val size = vectors.head.size
+    if (!(vectors forall (_.size == size)))
+      throw new IllegalArgumentException("All vectors must have the same size!")
+    val result = DenseMatrix.zeros[V](vectors.size, size)
+    for ((v, col) <- vectors zip (0 until vectors.size))
+      result(::,col) := v
+    result
+  }
+
+  /**
+   * Vertical concatenation of two or more column vectors into one large vector.
+   */
+  def vertcat[V: Scalar](vectors: VectorCol[V]*): DenseVectorCol[V] = {
+    val size = vectors.foldLeft(0)(_ + _.size)
+    val result = zeros[V](size)
+    var offset = 0
+    for (v <- vectors) {
+      result(offset until (offset + v.size)) := v
+      offset += v.size
+    }
+    result
+  }
+}
+
+object DenseVectorCol extends DenseVectorColConstructors
+
+trait DenseVectorConstructors extends DenseVectorColConstructors
 
