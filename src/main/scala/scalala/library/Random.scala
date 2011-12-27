@@ -48,14 +48,25 @@ import random.MersenneTwisterFast
  * @author dramage,afwlehmann
  */
 object Random {
-  /** Returns a pseudo-random number from the interval 0 to 1. */
-  def rand()(implicit mt : MersenneTwisterFast) : Double = mt.synchronized {
-    mt.nextDouble;
+  /**
+   * Returns a pseudo-random number from [0,1).
+   */
+  def rand()(implicit mt: MersenneTwisterFast): Double = mt.synchronized {
+    mt.nextDouble()
   }
 
-  /** Returns a pseudo-random gaussian variable. */
-  def randn()(implicit mt : MersenneTwisterFast) = mt.synchronized {
-    mt.nextGaussian;
+  /**
+   * Returns a pseudo-random gaussian variable.
+   * */
+  def randn()(implicit mt: MersenneTwisterFast) = mt.synchronized {
+    mt.nextGaussian()
+  }
+
+  /**
+   * Returns a pseudo-random integer between 0 (incl.) and `max` (excl.).
+   */
+  def randi(max: Int)(implicit mt: MersenneTwisterFast) = mt.synchronized {
+    mt.nextInt(max)
   }
 
   lazy val seed : Long = {
