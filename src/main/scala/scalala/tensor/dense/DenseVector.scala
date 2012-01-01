@@ -418,7 +418,6 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
       length = range.size);
   }
 
-
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
     implicit val mf = implicitly[Scalar[V2]].manifest;
     domain match {
@@ -429,6 +428,9 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
 
   override def t : DenseVectorCol[V] =
     new DenseVectorCol(data, offset, stride, length)(scalar);
+
+  // Override asRow to avoid unnecessary copies.
+  @inline override def asRow: DenseVectorRow[V] = this
 }
 
 /**
@@ -466,6 +468,9 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
 
   override def t : DenseVectorRow[V] =
     new DenseVectorRow(data, offset, stride, length)(scalar);
+
+  // Override asCol to avoid unnecessary copies.
+  @inline override def asCol: DenseVectorCol[V] = this
 }
 
 /**
