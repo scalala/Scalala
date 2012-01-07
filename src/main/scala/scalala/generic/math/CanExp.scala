@@ -24,8 +24,9 @@ package math;
 
 import collection.CanMapValues;
 
-import scalala.operators.{UnaryOp,OpType};
+import scalala.operators.{UnaryOp}
 import scalala.scalar.Complex
+import scalala.tensor.{Matrix, Vector}
 
 /**
  * Operator type for exp(A).
@@ -77,5 +78,15 @@ object CanExp {
   implicit object OpArrayF extends OpMapValues[Array[Float],Float,Double,Array[Double]]()(OpF,CanMapValues.OpArrayFD);
   implicit object OpArrayD extends OpMapValues[Array[Double],Double,Double,Array[Double]]()(OpD,CanMapValues.OpArrayDD);
   implicit object OpArrayC extends OpMapValues[Array[Complex],Complex,Complex,Array[Complex]]()(OpC,CanMapValues.OpArrayCC);
+
+  implicit object OpVectorI extends OpMapValues[Vector[Int],Int,Double,Vector[Double]]()
+  implicit object OpVectorL extends OpMapValues[Vector[Long],Long,Double,Vector[Double]]()
+  implicit object OpVectorF extends OpMapValues[Vector[Float],Float,Double,Vector[Double]]()
+  implicit object OpVectorD extends OpMapValues[Vector[Double],Double,Double,Vector[Double]]()
+
+  implicit object OpMatrixI extends OpMapValues[Matrix[Int],Int,Double,Matrix[Double]]()
+  implicit object OpMatrixL extends OpMapValues[Matrix[Long],Long,Double,Matrix[Double]]()
+  implicit object OpMatrixF extends OpMapValues[Matrix[Float],Float,Double,Matrix[Double]]()
+  implicit object OpMatrixD extends OpMapValues[Matrix[Double],Double,Double,Matrix[Double]]()
 }
 

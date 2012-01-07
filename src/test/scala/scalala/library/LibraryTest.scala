@@ -28,7 +28,7 @@ import org.junit.runner.RunWith
 import scalala.scalar.Complex
 import scalala.tensor.mutable.{Matrix, Vector}
 import Library._
-import tensor.dense.{DenseVectorCol, DenseVector}
+import tensor.dense.{DenseVector, DenseMatrix}
 
 @RunWith(classOf[JUnitRunner])
 class LibraryTest extends FunSuite with Checkers with ShouldMatchers {
@@ -37,6 +37,8 @@ class LibraryTest extends FunSuite with Checkers with ShouldMatchers {
     assert(log(2.8) === 1.0296194171811581)
     assert(log(1) === 0)
     assert(log(Array(1,2,3,4)).toList === List(0.0, 0.6931471805599453, 1.0986122886681098, 1.3862943611198906))
+    assert(log(DenseVector(1,2,3,4)) === DenseVector(0.0, 0.6931471805599453, 1.0986122886681098, 1.3862943611198906))
+    assert(log(DenseMatrix((1,2,3,4))) === DenseMatrix((0.0, 0.6931471805599453, 1.0986122886681098, 1.3862943611198906)))
   }
 
   test("mean") {
@@ -58,7 +60,11 @@ class LibraryTest extends FunSuite with Checkers with ShouldMatchers {
   }
 
   test("exp") {
-    assert(exp(Array(1,2,3,4)).toList === List(1,2,3,4).map(_.toDouble).map(math.exp))
+    exp(1.0296194171811581) should be (2.8)
+    exp(0) should be (1)
+    exp(Array(0.0, 0.6931471805599453, 1.0986122886681098, 1.3862943611198906)) should equal (Array(1,2,3,4))
+    exp(DenseVector(0.0, 0.6931471805599453, 1.0986122886681098, 1.3862943611198906)).toList should equal (List(1,2,3,4))
+    exp(DenseMatrix((0.0, 0.6931471805599453, 1.0986122886681098, 1.3862943611198906))) should equal (DenseMatrix((1,2,3,4)))
   }
 
   test("Complex:exp") {

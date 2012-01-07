@@ -137,4 +137,23 @@ class LinearAlgebraTest extends FunSuite with Checkers with ShouldMatchers {
     assert(rank(r3) === 3)
   }
 
+  test("qr") {
+    val A = Matrix((1.0, 1.0, 1.0), (4.0, 2.0, 1.0), (16.0, 4.0, 1.0))
+    val (_Q, _R) = qr(A)
+
+    val expectedQ = Matrix((-0.06052275326,-0.6022239035,-0.7960297521),
+                           (-0.2420910130,-0.7648243574,0.5970223140),
+                           (-0.9683640522,0.2288450833,-0.09950371901))
+    _Q.numRows should  be (expectedQ.numRows)
+    _Q.numCols should  be (expectedQ.numCols)
+    _Q foreachPair { case ((i,j), v) => v should be (expectedQ(i,j) plusOrMinus 1e-8) }
+
+    val expectedR = Matrix((-16.52271164,-4.418160988,-1.270977818),
+      (0.,-1.216492285,-1.138203178),
+      (0.,0.,-0.2985111571))
+    _R.numRows should  be (expectedR.numRows)
+    _R.numCols should  be (expectedR.numCols)
+    _R foreachPair { case ((i,j), v) => v should be (expectedR(i,j) plusOrMinus 1e-8) }
+  }
+
 }

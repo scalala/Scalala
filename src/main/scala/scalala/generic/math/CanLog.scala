@@ -23,8 +23,9 @@ package generic;
 package math;
 
 import collection.CanMapValues;
-
-import scalala.operators.{UnaryOp,OpType};
+import scalala.operators.UnaryOp
+import tensor.{Matrix, Vector}
+;
 
 /**
  * Operator type for log(A).
@@ -59,7 +60,7 @@ object CanLog {
   implicit object OpD extends CanLog[Double,Double] {
     def apply(v : Double) = scala.math.log(v);
   }
-
+  
   class OpMapValues[From,A,B,To](implicit op : CanLog[A,B], map : CanMapValues[From,A,B,To]) extends CanLog[From,To] {
     def apply(v : From) = map.map(v, op.apply(_));
   }
@@ -71,5 +72,15 @@ object CanLog {
   implicit object OpArrayL extends OpMapValues[Array[Long],Long,Double,Array[Double]]()(OpL,CanMapValues.OpArrayLD);
   implicit object OpArrayF extends OpMapValues[Array[Float],Float,Double,Array[Double]]()(OpF,CanMapValues.OpArrayFD);
   implicit object OpArrayD extends OpMapValues[Array[Double],Double,Double,Array[Double]]()(OpD,CanMapValues.OpArrayDD);
+
+  implicit object OpVectorI extends OpMapValues[Vector[Int],Int,Double,Vector[Double]]()
+  implicit object OpVectorL extends OpMapValues[Vector[Long],Long,Double,Vector[Double]]()
+  implicit object OpVectorF extends OpMapValues[Vector[Float],Float,Double,Vector[Double]]()
+  implicit object OpVectorD extends OpMapValues[Vector[Double],Double,Double,Vector[Double]]()
+
+  implicit object OpMatrixI extends OpMapValues[Matrix[Int],Int,Double,Matrix[Double]]()
+  implicit object OpMatrixL extends OpMapValues[Matrix[Long],Long,Double,Matrix[Double]]()
+  implicit object OpMatrixF extends OpMapValues[Matrix[Float],Float,Double,Matrix[Double]]()
+  implicit object OpMatrixD extends OpMapValues[Matrix[Double],Double,Double,Matrix[Double]]()
 }
 
