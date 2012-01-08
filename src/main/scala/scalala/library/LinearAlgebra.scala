@@ -354,10 +354,11 @@ trait LinearAlgebra {
     //Perform the QR factorization with dgeqrf
     val maxd = math.max(m,n)
     val mind = math.max(m,n)
+    val tau = new Array[Double](mind)
     val outputMat = DenseMatrix.zeros[Double](m,maxd)
-    val tau = new Array[Double](math.min(m,n))
-    for(r <- 0 until m; c <- 0 until n) outputMat(r,c) = A(r,c)
-    lapack.dgeqrf(m, n, outputMat.data, m, workspace, tau, workspace.length, info);
+    for(r <- 0 until m; c <- 0 until n)
+      outputMat(r,c) = A(r,c)
+    lapack.dgeqrf(m, n, outputMat.data, m, tau, workspace, workspace.length, info);
 
     //Error check
     if (info.`val` > 0)
@@ -367,8 +368,7 @@ trait LinearAlgebra {
 
     //Get R
     val R = DenseMatrix.zeros[Double](m,n)
-    for(c <- 0 until maxd if(c < n);
-        r <- 0 until m if(r <= c))
+    for(c <- 0 until maxd if(c < n); r <- 0 until m if(r <= c))
       R(r,c) = outputMat(r,c)
 
     //unless the skipq flag is set
@@ -391,8 +391,8 @@ trait LinearAlgebra {
     else (null,R)
   }
 
-  
-  
+
+
 
   /**
    * Computes all eigenvalues (and optionally right eigenvectors) of the given
