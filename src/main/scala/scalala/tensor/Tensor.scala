@@ -542,10 +542,10 @@ object Tensor {
       new TensorSlice.FromKeyMap[K1, K2, V, Tensor[K1,V]](from, keymap);
   }
 
-  implicit def canSliceVector[K, V:Scalar] =
-  new CanSliceVector[Tensor[K,V], K, Vector[V]] {
+  implicit def canSliceVectorCol[K, V:Scalar] =
+  new CanSliceVector[Tensor[K,V], K, VectorCol[V]] {
     override def apply(from : Tensor[K,V], keys : Seq[K]) =
-      new VectorSlice.FromKeySeq[K,V,Tensor[K,V]](from, keys);
+      new VectorColSlice.FromKeySeq[K,V,Tensor[K,V]](from, keys);
   }
 
   implicit def canMapValues[K, V, RV, This, D, That]

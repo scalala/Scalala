@@ -21,9 +21,9 @@ package scalala;
 package tensor;
 
 import domain.{IterableDomain,Domain1,Domain2,IndexDomain};
-import generic.TensorBuilder;
+import generic.{TensorBuilder};
 
-import scalala.generic.collection.{CanSliceCol,CanBuildTensorFrom};
+import scalala.generic.collection.{CanSliceCol,CanBuildTensorFrom,CanSliceVector};
 import scalala.scalar.Scalar;
 import scalala.operators._;
 
@@ -91,6 +91,12 @@ object Tensor1Row {
       }
       builder.result;
     }
+  }
+
+  implicit def canSliceVectorRow[K, V:Scalar] =
+  new CanSliceVector[Tensor[K,V], K, VectorRow[V]] {
+    override def apply(from : Tensor[K,V], keys : Seq[K]) =
+      new VectorRowSlice.FromKeySeq[K,V,Tensor[K,V]](from, keys);
   }
 }
 

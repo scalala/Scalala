@@ -54,9 +54,72 @@ with Tensor1Slice[K,Int,V,Coll]
 with Vector[V]
 with VectorSliceLike[K, IterableDomain[K], V, Coll, VectorSlice[K, V, Coll]];
 
-object VectorSlice {
+
+/**
+ * Implementation trait for a VectorRow-like view of a mutable Tensor.
+ *
+ * @author dramage
+ */
+trait VectorRowSliceLike
+[@specialized(Int,Long) K, +D<:IterableDomain[K],
+ @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll<:Tensor[K,V],
+ +This<:VectorRowSlice[K,V,Coll]]
+extends tensor.VectorRowSliceLike[K, D, V, Coll, This]
+with VectorSliceLike[K, D, V, Coll, This]
+with VectorRowLike[V, This];
+
+/**
+ * VectorRow-like view of a mutable Tensor.
+ *
+ * @author dramage
+ */
+trait VectorRowSlice
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll<:Tensor[K, V]]
+extends tensor.VectorRowSlice[K,V,Coll]
+with VectorSlice[K,V,Coll]
+with VectorRow[V]
+with VectorRowSliceLike[K, IterableDomain[K], V, Coll, VectorRowSlice[K, V, Coll]];
+
+object VectorRowSlice {
   class FromKeySeq[K, V:Scalar, +Coll<:Tensor[K, V]]
   (underlying : Coll, keys : Seq[K])
-  extends tensor.VectorSlice.FromKeySeq[K,V,Coll](underlying, keys)
-  with VectorSlice[K,V,Coll];
+  extends tensor.VectorRowSlice.FromKeySeq[K,V,Coll](underlying, keys)
+  with VectorRowSlice[K,V,Coll];
 }
+
+/**
+ * Implementation trait for a VectorCol-like view of a mutable Tensor.
+ *
+ * @author dramage
+ */
+trait VectorColSliceLike
+[@specialized(Int,Long) K, +D<:IterableDomain[K],
+ @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll<:Tensor[K,V],
+ +This<:VectorColSlice[K,V,Coll]]
+extends tensor.VectorColSliceLike[K, D, V, Coll, This]
+with VectorSliceLike[K, D, V, Coll, This]
+with VectorColLike[V, This];
+
+/**
+ * VectorCol-like view of a mutable Tensor.
+ *
+ * @author dramage
+ */
+trait VectorColSlice
+[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double,Boolean) V,
+ +Coll<:Tensor[K, V]]
+extends tensor.VectorColSlice[K,V,Coll]
+with VectorSlice[K,V,Coll]
+with VectorCol[V]
+with VectorColSliceLike[K, IterableDomain[K], V, Coll, VectorColSlice[K, V, Coll]];
+
+object VectorColSlice {
+  class FromKeySeq[K, V:Scalar, +Coll<:Tensor[K, V]]
+  (underlying : Coll, keys : Seq[K])
+  extends tensor.VectorColSlice.FromKeySeq[K,V,Coll](underlying, keys)
+  with VectorColSlice[K,V,Coll];
+}
+

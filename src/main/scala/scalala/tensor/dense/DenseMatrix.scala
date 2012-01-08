@@ -82,6 +82,20 @@ with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
 
   override def apply(row : Int, col : Int) =
     data(index(row,col));
+    
+  /** Special case DenseVectorRow slice. */
+  def apply(row : Int, cols : Range) = {
+    checkKey(row,cols.last);
+    new DenseVectorRow(data, offset = index(row,cols.head),
+      stride = cols.step * numRows, length = cols.length)
+  }
+  
+  /** Special case DenseVectorCol slice. */
+  def apply(rows : Range, col : Int) = {
+    checkKey(rows.last,col);
+    new DenseVectorCol(data, offset = index(rows.head,col),
+      stride = rows.step, length = rows.length)
+  }
 
   override def update(row : Int, col : Int, value : V) =
     data(index(row,col)) = value;

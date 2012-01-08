@@ -23,6 +23,8 @@ package mutable;
 
 import domain.{Domain1,IndexDomain};
 
+import scalala.generic.collection.{CanSliceVector};
+
 import scalala.scalar.Scalar;
 
 /**
@@ -66,6 +68,12 @@ object Tensor1Row {
   with Tensor1Like[K,V,Domain1[K],View[K,V]] {
     override def repr : View[K,V] = this;
     override def t : Tensor1Col[K,V] = inner;
+  }
+  
+  implicit def canSliceVectorRow[K, V:Scalar] =
+  new CanSliceVector[Tensor[K,V], K, VectorRow[V]] {
+    override def apply(from : Tensor[K,V], keys : Seq[K]) =
+      new VectorRowSlice.FromKeySeq[K,V,Tensor[K,V]](from, keys);
   }
 }
 

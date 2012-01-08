@@ -41,13 +41,13 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(m === DenseMatrix((0,2,3),(3,5,6)));
     
     // slice row
-    val s2 : mutable.VectorRow[Int] = m(0, ::);
+    val s2 : DenseVectorRow[Int] = m(0, ::);
     assert(s2 === DenseVector(0,2,3));
     s2 *= 2;
     assert(m === DenseMatrix((0,4,6),(3,5,6)));
     
     // slice column
-    val s3 : mutable.VectorCol[Int] = m(::, 1);
+    val s3 : DenseVectorCol[Int] = m(::, 1);
     assert(s3 === DenseVector(4,5));
     s3 -= 1;
     assert(m === DenseMatrix((0,3,6),(3,4,6)));
@@ -61,11 +61,17 @@ class DenseMatrixTest extends FunSuite with Checkers {
     assert(s5 === DenseMatrix((3,6),(4,6)));
     
     // slice part of a row
-    m(0, 1 to 2) += 1;
+    val s6a : DenseVectorRow[Int] = m(0, 1 to 2);
+    s6a += 2;
+    val s6b : mutable.VectorRow[Int] = m(0,IndexedSeq(2,1));
+    s6b -= 1;
     assert(m === DenseMatrix((0,4,7),(3,4,6)));
     
     // slice part of a column
-    m(0 to 1, 0) += 3;
+    val s7a : DenseVectorCol[Int] = m(0 to 1, 0);
+    s7a += 2;
+    val s7b : mutable.VectorCol[Int] = m(IndexedSeq(1,0),0);
+    s7b += 1;
     assert(m === DenseMatrix((3,4,7),(6,4,6)));
   }
 

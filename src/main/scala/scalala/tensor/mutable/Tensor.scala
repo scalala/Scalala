@@ -133,9 +133,9 @@ object Tensor extends TensorImplicitsLevel1 {
   }
 
   implicit def canSliceVector[K, V:Scalar] =
-  new CanSliceVector[Tensor[K,V], K, Vector[V]] {
+  new CanSliceVector[Tensor[K,V], K, VectorCol[V]] {
     override def apply(from : Tensor[K,V], keys : Seq[K]) =
-      new VectorSlice.FromKeySeq[K,V,Tensor[K,V]](from, keys);
+      new VectorColSlice.FromKeySeq[K,V,Tensor[K,V]](from, keys);
   }
 }
 
