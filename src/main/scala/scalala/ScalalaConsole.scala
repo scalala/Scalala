@@ -56,7 +56,7 @@ object ScalalaConsole {
   }
   
   /** The width of the console, or 80 if it can't be discovered. */
-  def terminalWidth : Int = {
+  lazy val terminalWidth : Int = {
     // this ugly try-catch is here to use scala's built-in jline,
     // which only exists in scala > 2.9
     try {
@@ -75,8 +75,9 @@ object ScalalaConsole {
       }
     }
   };
-  
-  def terminalHeight : Int = {
+
+  /** The height of the console, or 24 if it can't be discovered. */
+  lazy val terminalHeight : Int = {
     // this ugly try-catch is here to use scala's built-in jline,
     // which only exists in scala > 2.9
     try {
