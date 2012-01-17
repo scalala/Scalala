@@ -89,36 +89,23 @@ trait Numerics {
     (-tmp + log(2.5066282746310005*ser / x));
   }
 
-  private val SQRT_PI = sqrt(Pi);
-
-  private val ERF_A = 8. / (3. * Pi) * (Pi - 3) / (4 - Pi);
-  private val ERF_B = 4. / Pi;
-
+  // erf and erfi: cribbed from http://en.wikipedia.org/wiki/Error_function
+  private val erf_a = 0.147
   /**
-  * Approximation to the inverse ERF. Based on
-  * homepages.physik.uni-muenchen.de/~Winitzki/erf-approx.pdf
-  */
-  def erfi(x:Double) = {
-    val x2 = x*x;
-    val lg1mx2 = log(1- x2);
-    val c = 2 / Pi / ERF_A + lg1mx2/2;
-    val result =  sqrt(-c + sqrt( c*c - 1/ ERF_A * lg1mx2))
-    if (x < 0) -1 * result
-    else result
+   * An approximation to the error function
+   */
+  def erf(x: Double) = {
+    val x2 = x*x
+    val inner = exp(-1*x2*(4/Pi + erf_a*x2) /
+                    (1.0 + erf_a*x2))
+    signum(x)*sqrt(1.0 - inner)
   }
 
-  /**
-  * 1- erf(x)
-  */
-  def erfc(x: Double) =  1 - erf(x);
-
-  /**
-  * approximation to the erf function, for gaussian integrals.
-  */
-  def erf(x: Double) = {
-    val mag = 1 - gamma(.5,x*x)/sqrt(Pi);
-    if (x < 0) -1.0 * mag // ERF is odd.
-    else mag
+  def erfi(x: Double) = {
+    val x2 = x*x
+    val i1 = 2.0/(Pi*erf_a) + log(1-x2)/2.0
+    val i2 = log(1-x2)/erf_a
+    signum(x) * sqrt( sqrt(i1*i1 - i2) - i1 )
   }
 
   /**
