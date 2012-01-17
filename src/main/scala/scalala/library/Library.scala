@@ -27,7 +27,7 @@ import dense._
 import domain.CanGetDomain
 import scalar.Scalar
 import operators._
-import scalala.generic.collection.{CanMapValues, CanSliceCol, CanBuildTensorFrom, CanSliceRow}
+import scalala.generic.collection._
 
 /**
  * Library of scalala basic mathematical functions.
@@ -167,6 +167,11 @@ trait Library {
   }
 
   /**
+   * Creates a copy of the object using the CanCopy implicit.
+   */
+  def copy[T](t: T)(implicit canCopy: CanCopy[T]) = canCopy(t)
+
+  /**
    * The covariance matrix and mean of the given dataset X where the samples of
    * a multivariate random distribution are stacked along the given axis.
    */
@@ -293,6 +298,7 @@ trait Library {
     val increment = (b - a) / (length - 1);
     DenseVectorCol.tabulate(length)(i => a + increment * i);
   }
+
 }
 
 object Library extends Library;
