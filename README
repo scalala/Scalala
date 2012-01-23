@@ -1,4 +1,3 @@
-
 Scalala is a high performance numeric linear algebra library for Scala,
 with rich Matlab-like operators on vectors and matrices; a library of
 numerical routines; support for plotting.
@@ -26,7 +25,7 @@ The source currently lives on github.  You can download a copy:
   git clone https://github.com/scalala/Scalala.git
 
 Scalala is built with sbt, which is included in the repository or
-can be downloaded from http://code.google.com/p/simple-build-tool/.
+can be downloaded from https://github.com/harrah/xsbt/wiki.
 
 Run sbt (./sbt) and invoke one or more of the following targets:
   update      -- Downloads scalala's dependencies
