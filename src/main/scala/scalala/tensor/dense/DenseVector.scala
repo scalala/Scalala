@@ -29,6 +29,7 @@ import scalala.library.random.MersenneTwisterFast;
 import scalala.library.Random;
 import scalala.operators._
 import bundles.MutableInnerProductSpace
+import java.util.Arrays
 
 /**
  * A vector backed by a dense array.
@@ -368,6 +369,18 @@ object DenseVector extends DenseVectorConstructors with LowPriorityDenseImplicit
     }
   }
 
+    /** BLAS-optimized vector subtraction. */
+  implicit object DenseVectorDSubDenseVectorDInto
+  extends BinaryUpdateOp[DenseVector[Double],DenseVector[Double],OpSub] {
+    override def opType = OpSub;
+    override def apply(a : DenseVector[Double], b : DenseVector[Double]) = {
+      require(a.length == b.length, "Vectors must have same length");
+      // System.err.println("BLAS!");
+      org.netlib.blas.Daxpy.daxpy(
+        a.length, -1.0, b.data, b.offset, b.stride, a.data, a.offset, a.stride);
+    }
+  }
+
   /** BLAS-optimized vector-vector inner product. */
   implicit object DenseVectorDInnerMulDenseVectorD
   extends BinaryOp[DenseVectorRow[Double],DenseVectorCol[Double],OpMulRowVectorBy,Double] {
@@ -377,6 +390,19 @@ object DenseVector extends DenseVectorConstructors with LowPriorityDenseImplicit
       // System.err.println("BLAS!");
       org.netlib.blas.Ddot.ddot(
         a.length, a.data, a.offset, a.stride, b.data, b.offset, b.stride);
+    }
+  }
+
+
+  /** BLAS-optimized forwarding calls from UpdateOp to Op */
+  implicit def binaryOpFromBinaryUpdateOp[DV<:DenseVector[Double],Other,Op<:OpType](implicit copy: CanCopy[DV], op: BinaryUpdateOp[DV,Other,Op]) = {
+    new BinaryOp[DV,Other,Op,DV] {
+      override def opType = op.opType;
+      override def apply(a : DV, b : Other) = {
+        val c = copy(a)
+        op(c,b)
+        c
+      }
     }
   }
 
@@ -503,7 +529,26 @@ trait CommonDenseVectorConstructors [+This[_] <: DenseVector[_]] {
    */
   def fill[V: Scalar](size: Int)(value: V): This[V] = {
     implicit val mf = implicitly[Scalar[V]].manifest
-    apply(Array.fill(size)(value))
+    // this is too slow: apply(Array.fill(size)(value))
+    if(mf.getClass.isAssignableFrom(java.lang.Double.TYPE)) {
+      val arr = new Array[V](size)
+      Arrays.fill(arr.asInstanceOf[Array[Double]],value.asInstanceOf[Double])
+      apply(arr)
+    } else if(mf.getClass.isAssignableFrom(java.lang.Float.TYPE)) {
+      val arr = new Array[V](size)
+      Arrays.fill(arr.asInstanceOf[Array[Float]],value.asInstanceOf[Float])
+      apply(arr)
+    } else if(mf.getClass.isAssignableFrom(java.lang.Integer.TYPE)) {
+      val arr = new Array[V](size)
+      Arrays.fill(arr.asInstanceOf[Array[Int]],value.asInstanceOf[Int])
+      apply(arr)
+    } else if(mf.getClass.isAssignableFrom(java.lang.Long.TYPE)) {
+      val arr = new Array[V](size)
+      Arrays.fill(arr.asInstanceOf[Array[Long]],value.asInstanceOf[Long])
+      apply(arr)
+    } else {
+      apply(Array.fill(size)(value))
+    }
   }
 
   /**
