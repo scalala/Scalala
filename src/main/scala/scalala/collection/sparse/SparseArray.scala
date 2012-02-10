@@ -20,7 +20,9 @@ import scala.collection.generic._;
 import scala.collection.mutable._;
 
 import scalala.operators._;
-import scalala.scalar.Scalar;
+import scalala.scalar.Scalar
+import java.util.Arrays
+;
 
 /**
  * <p>Nearly-drop-in replacement for Array[T](length) that does not store
@@ -52,6 +54,13 @@ import scalala.scalar.Scalar;
 final class SparseArray[@specialized T]
 (val length : Int, protected var index : Array[Int], protected var data : Array[T], protected var used : Int, initialActiveLength : Int)
 (implicit m : ClassManifest[T], df : DefaultArrayValue[T]) {
+
+  def copy: SparseArray[T] = {
+    val newData = m.newArray(data.length)
+    Array.copy(data,0,newData,0,data.length)
+    new SparseArray(length, Arrays.copyOf(index, index.length), newData, used, initialActiveLength)
+  }
+
 
   def this(length : Int, initialActiveLength : Int = 3)(implicit m : ClassManifest[T], d : DefaultArrayValue[T]) =
     this(length, new Array[Int](initialActiveLength), new Array[T](initialActiveLength), 0, initialActiveLength)(m, d);
