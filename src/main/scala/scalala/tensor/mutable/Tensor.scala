@@ -199,12 +199,13 @@ trait TensorImplicitsLevel1 extends TensorImplicitsLevel0 {
     }
   }
 
-  implicit def opUpdateTensorScalar[K,V1,V2,Op<:OpType]
-  (implicit op : BinaryOp[V1,V2,Op,V1], s : Scalar[V2])
-  : BinaryUpdateOp[Tensor[K,V1],V2,Op]
-  = new BinaryUpdateOp[Tensor[K,V1],V2,Op] {
+  // uses a view to reduce its priority
+  implicit def opUpdateTensorScalar[K,V1,V2,A,Op<:OpType]
+  (implicit v1: A=>Tensor[K,V1], op : BinaryOp[V1,V2,Op,V1], s : Scalar[V2])
+  : BinaryUpdateOp[A,V2,Op]
+  = new BinaryUpdateOp[A,V2,Op] {
     override def opType = op.opType;
-    override def apply(a : Tensor[K,V1], b : V2) = {
+    override def apply(a : A, b : V2) = {
       a.transformValues(v => op(v, b));
     }
   }

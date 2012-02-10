@@ -101,6 +101,9 @@ final class SparseArray[@specialized T]
   /** A copy of the values in this array. */
   def valueArray : Array[T] = data.take(used);
 
+  /** Raw access to the underlying data array. Use with caution */
+  def rawValueArray : Array[T] = data
+
   /**
    * Returns the offset into index and data for the requested vector
    * index.  If the requested index is not found, the return value is

@@ -82,12 +82,17 @@ object SparseVector {
   def tabulate[V:Scalar:ClassManifest:DefaultArrayValue](size : Int)(f : (Int => V)) =
     new SparseVectorCol(SparseArray.tabulate(size)(f));
 
+
+  /*
+   * Implicits for functions
+   */
+
     /** Optimized base class for creating zeros */
   trait CanCreateZerosSparseVector
-  [@specialized V, @specialized RV, DV[V]<:SparseVector[V]]
-    extends CanCreateZerosLike[DV[V],DV[RV]] {
-    def create(length : Int) : DV[RV];
-    def apply(v1: DV[V]) = create(v1.length);
+  [@specialized V, @specialized RV, SV[V]<:SparseVector[V]]
+    extends CanCreateZerosLike[SV[V],SV[RV]] {
+    def create(length : Int) : SV[RV];
+    def apply(v1: SV[V]) = create(v1.length);
   }
 
 
@@ -146,6 +151,102 @@ object SparseVector {
       new SparseVectorCol[V](v1.data.copy)
     }
   }
+
+  /* Implicits for operations */
+  implicit object SparseVectorDInnerMulSparseVectorD
+  extends BinaryOp[SparseVectorRow[Double],SparseVectorCol[Double],OpMulRowVectorBy,Double] {
+    override def opType = OpMulRowVectorBy;
+    override def apply(a : SparseVectorRow[Double], b : SparseVectorCol[Double]) = {
+      require(a.length == b.length, "Vectors must have same length");
+        a dot b
+    }
+  }
+
+  implicit object SparseVectorDDotSparseVectorD
+  extends BinaryOp[SparseVector[Double],SparseVector[Double],OpMulInner,Double] {
+    override def opType = OpMulInner;
+    override def apply(a : SparseVector[Double], b : SparseVector[Double]) = {
+      require(a.length == b.length, "Vectors must have same length");
+      val aData = a.data
+      val bData = b.data
+      val activeA = aData.activeLength
+      val activeB = bData.activeLength
+
+      var sum = 0.0
+      var ai = 0
+      var bi = 0
+      while(ai < activeA) {
+        while(bi < activeB && bData.indexAt(bi) < aData.indexAt(ai))
+          bi += 1
+        if(bi < activeB && bData.indexAt(bi) == aData.indexAt(ai))
+          sum += bData.valueAt(bi) * aData.valueAt(ai)
+        ai += 1
+      }
+      sum
+    }
+  }
+
+  implicit object VectorDAddSparseVectorDInto
+  extends BinaryUpdateOp[mutable.Vector[Double],SparseVector[Double],OpAdd] {
+    override def opType = OpAdd;
+    override def apply(a : mutable.Vector[Double], b : SparseVector[Double]) {
+      require(a.length == b.length, "Vectors must have same length");
+      val bIndex = b.data.indexArray
+      val bData = b.data.rawValueArray
+      val activeB = b.data.activeLength
+
+      var bi = 0
+      while(bi < activeB) {
+        a(bIndex(bi)) += bData(bi)
+        bi += 1
+      }
+    }
+  }
+
+  implicit object SparseVectorDMulDoubleInto
+  extends BinaryUpdateOp[SparseVector[Double],Double,OpMul] {
+    override def opType = OpMul;
+    override def apply(a : SparseVector[Double], b : Double) {
+      val bData = a.data.rawValueArray
+      val activeB = a.data.activeLength
+
+      var bi = 0
+      while(bi < activeB) {
+        bData(bi) *= b
+        bi += 1
+      }
+    }
+  }
+
+  implicit object VectorDSubSparseVectorDInto
+  extends BinaryUpdateOp[mutable.Vector[Double],SparseVector[Double],OpSub] {
+    override def opType = OpSub;
+    override def apply(a : mutable.Vector[Double], b : SparseVector[Double]) {
+      require(a.length == b.length, "Vectors must have same length");
+      val bIndex = b.data.indexArray
+      val bData = b.data.rawValueArray
+      val activeB = b.data.activeLength
+
+      var bi = 0
+      while(bi < activeB) {
+        a(bIndex(bi)) -= bData(bi)
+        bi += 1
+      }
+    }
+  }
+
+  implicit def binaryOpFromBinaryUpdateOp[SV<:SparseVector[Double],Other,Op<:OpType](implicit copy: CanCopy[SV], op: BinaryUpdateOp[SV,Other,Op]) = {
+    new BinaryOp[SV,Other,Op,SV] {
+      override def opType = op.opType;
+      override def apply(a : SV, b : Other) = {
+        val c = copy(a)
+        op(c,b)
+        c
+      }
+    }
+  }
+
+  implicit val vspace = scalala.operators.bundles.MutableInnerProductSpace.make[Double,scalala.tensor.sparse.SparseVector[Double]]
 }
 
 class SparseVectorRow[@specialized(Int,Long,Float,Double) V]
