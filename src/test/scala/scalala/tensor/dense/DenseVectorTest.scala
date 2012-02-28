@@ -111,6 +111,9 @@ class DenseVectorTest extends FunSuite with Checkers {
     val t: mutable.Vector[Int] = s.t;
 
     assert(t === DenseVector(3, 4).t);
+
+    val emptySlice = x(2 until 2)
+    assert(emptySlice === DenseVector[Int]())
   }
 
   // https://github.com/scalala/Scalala/pull/19

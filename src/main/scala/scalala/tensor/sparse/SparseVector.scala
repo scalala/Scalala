@@ -29,6 +29,7 @@ import scalala.scalar.Scalar;
 
 import scalala.operators._
 import scalala.generic.collection.{CanCopy, CanCreateZerosLike, CanSliceCol, CanAppendColumns}
+import dense.DenseVector
 ;
 
 /**
@@ -183,6 +184,38 @@ object SparseVector {
         ai += 1
       }
       sum
+    }
+  }
+
+  implicit object SparseVectorDDotDenseVectorD
+  extends BinaryOp[SparseVector[Double],DenseVector[Double],OpMulInner,Double] {
+    override def opType = OpMulInner;
+    override def apply(a : SparseVector[Double], b : DenseVector[Double]) = {
+      require(a.length == b.length, "Vectors must have same length");
+      val aData = a.data
+      val bData = b.data
+      val activeA = aData.activeLength
+      val bStep = b.stride
+
+      var sum = 0.0
+      var ai = 0
+      var bPos = 0
+      while(ai < activeA) {
+        val aIndex = aData.indexAt(ai)
+        bPos = bStep * aIndex + b.offset
+        sum += bData(bPos) * aData.valueAt(ai)
+        ai += 1
+      }
+      sum
+    }
+  }
+
+  implicit object DenseVectorDDotSparseVectorD
+  extends BinaryOp[DenseVector[Double],SparseVector[Double],OpMulInner,Double] {
+    override def opType = OpMulInner;
+    override def apply(a : DenseVector[Double], b : SparseVector[Double]) = {
+      require(a.length == b.length, "Vectors must have same length");
+        b dot a
     }
   }
 

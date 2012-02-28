@@ -437,11 +437,14 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
   @inline override def apply(key: Int) = data(offset + key * stride);
 
   def apply(range : Range) : DenseVectorRow[V] = {
-    require(range.last < length, "Range out of bounds");
-    new DenseVectorRow[V](data,
-      offset = offset + stride * range.start,
-      stride = stride * range.step,
-      length = range.size);
+    if(range.isEmpty) DenseVectorRow.zeros[V](0)
+    else {
+      require(range.last < length, "Range out of bounds");
+      new DenseVectorRow[V](data,
+        offset = offset + stride * range.start,
+        stride = stride * range.step,
+        length = range.size);
+    }
   }
 
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
@@ -477,11 +480,14 @@ extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,De
   @inline override def apply(key: Int) = data(offset + key * stride);
 
   def apply(range : Range) : DenseVectorCol[V] = {
-    require(range.last < length, "Range out of bounds");
-    new DenseVectorCol[V](data,
-      offset = offset + stride * range.start,
-      stride = stride * range.step,
-      length = range.size);
+    if(range.isEmpty) DenseVectorCol.zeros[V](0)
+    else {
+      require(range.last < length, "Range out of bounds");
+      new DenseVectorCol[V](data,
+        offset = offset + stride * range.start,
+        stride = stride * range.step,
+        length = range.size);
+    }
   }
 
   override def newBuilder[K2,V2:Scalar](domain : IterableDomain[K2]) = {
