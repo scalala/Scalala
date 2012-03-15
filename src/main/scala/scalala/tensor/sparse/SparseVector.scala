@@ -64,6 +64,8 @@ with mutable.Vector[V] with mutable.VectorLike[V,SparseVector[V]] {
     data.foreachActivePair(fn);
     data.activeLength == data.length;
   }
+
+  override def pairsIteratorNonZero:Iterator[(Int,V)] = data.activeIterator
 }
 
 object SparseVector {
