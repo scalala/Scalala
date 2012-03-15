@@ -51,7 +51,7 @@ extends Tensor1Like[K,V,SetDomain[K],This] { self =>
   }
 
   def data : M;
-  
+
   override def domain : SetDomain[K] = new SetDomain(data.keySet);
   
   override def size = data.size;
@@ -60,7 +60,9 @@ extends Tensor1Like[K,V,SetDomain[K],This] { self =>
 
   def contains(k: K) = data.contains(k);
 
-  override def apply(k : K) = data.getOrElse(k,scalar.zero);
+  override def apply(k : K) = {
+    data.get(k) getOrElse scalar.zero
+  };
 
   def get(k: K) = data.get(k);
 
@@ -76,10 +78,10 @@ extends Tensor1Like[K,V,SetDomain[K],This] { self =>
     data.foreach(fn.tupled);
   
   override def foreachKey[U](fn : K => U) : Unit =
-    data.keys.foreach(fn);
+    data.keysIterator.foreach(fn);
   
   override def foreachValue[U](fn : V => U) : Unit =
-    data.values.foreach(fn);
+    data.valuesIterator.foreach(fn);
     
   override def keysIterator = data.keysIterator;
   

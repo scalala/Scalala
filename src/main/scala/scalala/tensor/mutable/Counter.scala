@@ -51,7 +51,7 @@ object Counter {
   @serializable
   class Impl[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
   (override val data : scala.collection.mutable.Map[K,V])
-  (implicit override val scalar : Scalar[V])
+  (implicit override final val scalar : Scalar[V])
   extends Counter[K,V];
 
   /** Returns an empty counter. */
