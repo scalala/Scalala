@@ -4,7 +4,7 @@ package bundles
 
 import scalar.Scalar
 import generic.math.CanNorm
-import generic.collection.{CanCopy, CanMapValues, CanCreateZerosLike}
+import generic.collection.{CanZipMapValues, CanCopy, CanMapValues, CanCreateZerosLike}
 
 /**
  * A VectorSpace has vectors S with vector addition and multiplication
@@ -17,6 +17,7 @@ trait VectorSpace[S,V] {
   implicit def numericOps(t: V):NumericOps[V];
   implicit def hasValuesMonadic(t: V):HasValuesMonadic[V,S]
   implicit def mapValues: CanMapValues[V,S,S,V]
+  implicit def zipMapValues: CanZipMapValues[V,S,S,V]
 
   implicit val zeros: CanCreateZerosLike[V, V];
   def ones(v: V) = zeros(v) + field.one;
@@ -69,6 +70,7 @@ object VectorSpace {
                          _numericOps: V=>NumericOps[V],
                          _hasValuesMonadic: V=>HasValuesMonadic[V,S],
                          _mapValues: CanMapValues[V,S,S,V],
+                         _zipMapValues: CanZipMapValues[V,S,S,V],
                          _zeros: CanCreateZerosLike[V, V],
 //                         _negV : UnaryOp[V,OpNeg,V],
                          _addSV : BinaryOp[S,V,OpAdd,V],
@@ -91,6 +93,7 @@ object VectorSpace {
       def numericOps(t: V):NumericOps[V] = _numericOps(t)
       def hasValuesMonadic(t: V):HasValuesMonadic[V,S] = _hasValuesMonadic(t)
       def mapValues: CanMapValues[V,S,S,V] = _mapValues;
+      def zipMapValues: CanZipMapValues[V,S,S,V] = _zipMapValues;
 
       implicit val zeros: CanCreateZerosLike[V, V] = _zeros
 
@@ -122,6 +125,7 @@ object MutableVectorSpace {
 
                          _hasValuesMonadic: V=>HasValuesMonadic[V,S],
                          _mapValues: CanMapValues[V,S,S,V],
+                         _zipMapValues: CanZipMapValues[V,S,S,V],
                          _zeros: CanCreateZerosLike[V, V],
                          _copy: CanCopy[V],
 //                         _negV : UnaryOp[V,OpNeg,V],
@@ -157,6 +161,7 @@ object MutableVectorSpace {
       def numericOps(t: V) = _numericOps(t)
       def hasValuesMonadic(t: V):HasValuesMonadic[V,S] = _hasValuesMonadic(t)
       def mapValues: CanMapValues[V,S,S,V] = _mapValues;
+      def zipMapValues: CanZipMapValues[V,S,S,V] = _zipMapValues;
 
       implicit val zeros: CanCreateZerosLike[V, V] = _zeros
       implicit val copy: CanCopy[V] = _copy;
@@ -208,6 +213,7 @@ object InnerProductSpace {
                          _numericOps: V=>NumericOps[V],
                          _hasValuesMonadic: V=>HasValuesMonadic[V,S],
                          _mapValues: CanMapValues[V,S,S,V],
+                         _zipMapValues: CanZipMapValues[V,S,S,V],
                          _zeros: CanCreateZerosLike[V, V],
 //                         _negV : UnaryOp[V,OpNeg,V],
                          _addSV : BinaryOp[S,V,OpAdd,V],
@@ -231,6 +237,7 @@ object InnerProductSpace {
       def numericOps(t: V):NumericOps[V] = _numericOps(t)
       def hasValuesMonadic(t: V):HasValuesMonadic[V,S] = _hasValuesMonadic(t)
       def mapValues: CanMapValues[V,S,S,V] = _mapValues;
+      def zipMapValues: CanZipMapValues[V,S,S,V] = _zipMapValues;
 
       implicit val zeros: CanCreateZerosLike[V, V] = _zeros
 
@@ -266,6 +273,7 @@ object MutableInnerProductSpace {
                          _numericOps: V=>MutableNumericOps[V],
                          _hasValuesMonadic: V=>HasValuesMonadic[V,S],
                          _mapValues: CanMapValues[V,S,S,V],
+                         _zipMapValues: CanZipMapValues[V,S,S,V],
                          _zeros: CanCreateZerosLike[V, V],
                          _copy: CanCopy[V],
 //                         _negV : UnaryOp[V,OpNeg,V],
@@ -302,6 +310,7 @@ object MutableInnerProductSpace {
       def numericOps(t: V) = _numericOps(t)
       def hasValuesMonadic(t: V):HasValuesMonadic[V,S] = _hasValuesMonadic(t)
       def mapValues: CanMapValues[V,S,S,V] = _mapValues;
+      def zipMapValues: CanZipMapValues[V,S,S,V] = _zipMapValues;
 
       implicit val zeros: CanCreateZerosLike[V, V] = _zeros
       implicit val copy: CanCopy[V] = _copy;

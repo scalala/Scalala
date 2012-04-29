@@ -220,17 +220,53 @@ object DenseVector extends DenseVectorConstructors with LowPriorityDenseImplicit
   /** Optimized base class for mapping dense columns. */
   implicit def canMapValuesDenseVectorCols[@specialized V, @specialized RV:Scalar:Manifest]
   : CanMapValuesDenseVector[V, RV, DenseVectorCol] =
-  new GenericDenseVectorColBase with CanMapValuesDenseVector[V, RV, DenseVectorCol];
+    new GenericDenseVectorColBase with CanMapValuesDenseVector[V, RV, DenseVectorCol];
 
   /** Optimized base class for mapping dense rows. */
   implicit def canMapValuesDenseVectorRows[@specialized V, @specialized RV:Scalar:Manifest]
   : CanMapValuesDenseVector[V, RV, DenseVectorRow] =
-  new GenericDenseVectorRowBase with CanMapValuesDenseVector[V, RV, DenseVectorRow];
+    new GenericDenseVectorRowBase with CanMapValuesDenseVector[V, RV, DenseVectorRow];
 
   /** optimized for just mapping densevectors */
   implicit def canMapValuesDenseVectors[@specialized V, @specialized RV:Scalar:Manifest]
   : CanMapValuesDenseVector[V, RV, DenseVector] =
-  new GenericDenseVectorColBase with CanMapValuesDenseVector[V, RV, DenseVector];
+    new GenericDenseVectorColBase with CanMapValuesDenseVector[V, RV, DenseVector];
+
+  /** Optimized base class for mapping a dense tensor. */
+  trait CanZipMapValuesDenseVector
+  [@specialized V, @specialized RV, DV[V]<:DenseVector[V]]
+    extends CanZipMapValues[DV[V],V,RV,DV[RV]] {
+    def create(length : Int) : DV[RV];
+
+    /**Maps all corresponding values from the two collection. */
+    def map(from: DV[V], from2: DV[V], fn: (V, V) => RV) = {
+      require(from.length == from2.length, "Vector lengths must match!")
+      val result = create(from.length)
+      var i = 0
+      while (i < from.length) {
+        result(i) = fn(from(i), from2(i))
+        i += 1
+      }
+      result
+    }
+  }
+
+  /** Optimized base class for mapping dense columns. */
+  implicit def canZipMapValuesDenseVectorCols[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanZipMapValuesDenseVector[V, RV, DenseVectorCol] =
+    new GenericDenseVectorColBase with CanZipMapValuesDenseVector[V, RV, DenseVectorCol];
+
+  /** Optimized base class for mapping dense rows. */
+  implicit def canZipMapValuesDenseVectorRows[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanZipMapValuesDenseVector[V, RV, DenseVectorRow] =
+    new GenericDenseVectorRowBase with CanZipMapValuesDenseVector[V, RV, DenseVectorRow];
+
+  /** optimized for just mapping densevectors */
+  implicit def canZipMapValuesDenseVectors[@specialized V, @specialized RV:Scalar:Manifest]
+  : CanZipMapValuesDenseVector[V, RV, DenseVector] =
+    new GenericDenseVectorColBase with CanZipMapValuesDenseVector[V, RV, DenseVector];
+
+
 
   /** Optimized base class for mapping a dense tensor. */
   trait CanMapKeyValuePairsDenseVector
