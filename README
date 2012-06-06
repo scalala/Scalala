@@ -33,6 +33,7 @@ Run sbt (./sbt) and invoke one or more of the following targets:
   test        -- Runs the unit tests
   doc         -- Builds scaladoc for the public API
   proguard    -- Builds a distributable jar
+  gen-idea    -- Generate an IntelliJ IDEA project
 
 For project maintainers, the project can be deployed with:
   publish
