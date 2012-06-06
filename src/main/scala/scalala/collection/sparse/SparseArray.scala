@@ -50,10 +50,9 @@ import java.util.Arrays
  * @author dlwh, dramage
  */
 @SerialVersionUID(1L)
-@serializable
 final class SparseArray[@specialized T]
 (val length : Int, protected var index : Array[Int], protected var data : Array[T], protected var used : Int, initialActiveLength : Int)
-(implicit m : ClassManifest[T], df : DefaultArrayValue[T]) {
+(implicit m : ClassManifest[T], df : DefaultArrayValue[T]) extends Serializable {
 
   def copy: SparseArray[T] = {
     val newData = m.newArray(data.length)
@@ -1150,8 +1149,7 @@ trait SparseArrayOps extends LowPrioritySparseArrayOps {
  * 
  * @author dramage
  */
-@serializable
-sealed trait DefaultArrayValue[@specialized T] {
+sealed trait DefaultArrayValue[@specialized T] extends Serializable {
   def value : T;
 }
 
