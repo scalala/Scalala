@@ -5,9 +5,9 @@ version := "1.0.0.RC3-SNAPSHOT"
 
 organization := "org.scalala"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.9.2"
 
-crossScalaVersions := Seq("2.8.2", "2.9.1")
+crossScalaVersions := Seq("2.8.2", "2.9.1", "2.9.2")
 
 resolvers ++= Seq(
   "ScalaNLP Maven2" at "http://repo.scalanlp.org/repo",
@@ -31,7 +31,7 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   sv match {
-    case "2.9.1" =>
+    case "2.9.1" | "2.9.2" =>
       deps :+ ("jline" % "jline" % "0.9.94") // ("org.scala-lang" % "jline" % "2.9.1")
     case x if x.startsWith("2.8") =>
       deps :+ ("jline" % "jline" % "0.9.94")
@@ -41,9 +41,9 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
   sv match {
-    case "2.9.1" =>
+    case "2.9.1" | "2.9.2" =>
       (deps :+ ("org.scalatest" % "scalatest" % "1.4.RC2" % "test")
-            :+ ("org.scala-tools.testing" %% "scalacheck" % "1.9" % "test"))
+            :+ ("org.scala-tools.testing" % "scalacheck_2.9.1" % "1.9" % "test"))
     case x if x.startsWith("2.8") =>
       (deps :+ ("org.scalatest" % "scalatest" % "1.3" % "test")
             :+ ("org.scala-tools.testing" % "scalacheck_2.8.1" % "1.8" % "test"))
@@ -53,7 +53,7 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 
 publishTo <<= (version) { version: String =>
   val nexus = "http://nexus.scala-tools.org/content/repositories/"
-  if (version.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "snapshots/") 
+  if (version.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "snapshots/")
   else                                   Some("releases"  at nexus + "releases/")
 }
 
@@ -77,7 +77,7 @@ proguardOptions ++= Seq (
   keepMain("scalala.ScalalaConsole$"),
   keepMain("scala.tools.nsc.MainGenericRunner"),
   "-dontoptimize",
-  "-dontobfuscate", 
+  "-dontobfuscate",
   keepLimitedSerializability,
   keepAllScala,
   "-keep class ch.epfl.** { *; }",
