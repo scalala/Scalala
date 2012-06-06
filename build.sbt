@@ -30,8 +30,9 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 }
 
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
+  val Scala210 = """2\.10\.0.*""".r
   sv match {
-    case "2.9.1" | "2.9.2" =>
+    case "2.9.1" | "2.9.2" | Scala210() =>
       deps :+ ("jline" % "jline" % "0.9.94") // ("org.scala-lang" % "jline" % "2.9.1")
     case x if x.startsWith("2.8") =>
       deps :+ ("jline" % "jline" % "0.9.94")
@@ -40,7 +41,9 @@ libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
 }
 
 libraryDependencies <<= (scalaVersion, libraryDependencies) { (sv, deps) =>
+  val Scala210 = """2\.10\.0.*""".r
   sv match {
+    case Scala210() => deps
     case "2.9.1" | "2.9.2" =>
       (deps :+ ("org.scalatest" % "scalatest" % "1.4.RC2" % "test")
             :+ ("org.scala-tools.testing" % "scalacheck_2.9.1" % "1.9" % "test"))

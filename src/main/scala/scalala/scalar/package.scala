@@ -27,13 +27,6 @@ package scalala;
 package object scalar {
   val i = Complex.i;
 
-  class RichScalar(value : Double) {
-    def + (c : Complex) : Complex = Complex(value,0) + c;
-    def - (c : Complex) : Complex = Complex(value,0) - c;
-    def * (c : Complex) : Complex = Complex(value,0) * c;
-    def / (c : Complex) : Complex = Complex(value,0) / c;
-  }
-
   implicit def richInt(value : Int) =
     new RichScalar(value);
 
