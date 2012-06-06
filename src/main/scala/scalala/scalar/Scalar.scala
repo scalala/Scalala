@@ -29,8 +29,7 @@ import scalala.collection.sparse.DefaultArrayValue;
  * @author dramage
  */
 @implicitNotFound(msg="${V} is not a scalar value")
-@serializable
-trait Scalar[@specialized(Int,Short,Long,Float,Double) V] {
+trait Scalar[@specialized(Int,Short,Long,Float,Double) V] extends Serializable {
   def zero : V;
 
   def one : V;

@@ -42,7 +42,7 @@ trait Numerics {
       x += 1;
     }
 
-    val f = 1./(x * x);
+    val f = 1d/(x * x);
     val t = f*(-1/12.0 +
             f*(1/120.0 +
             f*(-1/252.0 +
@@ -112,7 +112,7 @@ trait Numerics {
   * Incomplete lgamma function.
   */
   def lgamma(a: Double, z:Double) = {
-    var res = 0.;
+    var res = 0d;
     var m = 21
     while( m > 1) {
       res = ((1.0-m)*(m-1.0-a)) / (2*m -1+z -a + res);

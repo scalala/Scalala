@@ -48,11 +48,10 @@ extends tensor.Counter[K,V] with Tensor1[K,V]
 with CounterLike[K,V,scala.collection.mutable.Map[K,V],Counter[K,V]];
 
 object Counter {
-  @serializable
   class Impl[@specialized(Int,Long) K, @specialized(Int,Long,Float,Double) V]
   (override val data : scala.collection.mutable.Map[K,V])
   (implicit override final val scalar : Scalar[V])
-  extends Counter[K,V];
+  extends Counter[K,V] with Serializable;
 
   /** Returns an empty counter. */
   def apply[K,V:Scalar]() : Counter[K,V] =
