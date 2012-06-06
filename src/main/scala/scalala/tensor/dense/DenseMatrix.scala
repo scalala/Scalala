@@ -43,12 +43,12 @@ import library.{LinearAlgebra, Random}
  * @author dramage
  */
 @SerialVersionUID(1)
-@serializable
 class DenseMatrix[@specialized(Int,Long,Float,Double) V]
 (override val numRows : Int, override val numCols : Int, data_ : Array[V])
 (implicit override val scalar : Scalar[V])
 extends DenseArrayTensor[(Int,Int),V] with DenseArrayTensorLike[(Int,Int),V,TableDomain,DenseMatrix[V]]
-with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]] {
+with mutable.Matrix[V] with mutable.MatrixLike[V,DenseMatrix[V]]
+with Serializable {
   override val data = data_ // workaround for https://lampsvn.epfl.ch/trac/scala/ticket/4013
   
   if (numRows * numCols != data_.length)

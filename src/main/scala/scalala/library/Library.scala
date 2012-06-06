@@ -190,7 +190,7 @@ trait Library {
           val xMinusMu = X(::,i) - mu
           K     += 1
           mu    += xMinusMu / K
-          Sigma += xMinusMu * xMinusMu.t * (1. - 1. / K)
+          Sigma += xMinusMu * xMinusMu.t * (1d - 1d / K)
         }
         (Sigma / math.max(1, K-1), mu)
 
@@ -203,7 +203,7 @@ trait Library {
           val xMinusMu = X(i,::) - mu
           K     += 1
           mu    += xMinusMu / K
-          Sigma += xMinusMu.t * xMinusMu * (1. - 1. / K)
+          Sigma += xMinusMu.t * xMinusMu * (1d - 1d / K)
         }
         (Sigma / math.max(1, K-1), mu)
     }

@@ -503,12 +503,11 @@ extends DenseVector[V] with mutable.VectorRow[V] with mutable.VectorRowLike[V,De
  *
  * @author dramage
  */
-@serializable
 final class DenseVectorCol[@specialized(Int,Long,Float,Double) V]
 (override val data : Array[V], override val offset : Int,
  override val stride : Int, override val length : Int)
 (implicit override val scalar : Scalar[V])
-extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,DenseVectorCol[V]]  {
+extends DenseVector[V] with mutable.VectorCol[V] with mutable.VectorColLike[V,DenseVectorCol[V]] with Serializable {
   def this(data : Array[V])(implicit s : Scalar[V]) =
     this(data, 0, 1, data.length)(s);
 
